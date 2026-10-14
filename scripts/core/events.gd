@@ -13,3 +13,5 @@ signal player_died
 # Enemies
 signal enemy_damaged(enemy: Node, amount: int)
 signal enemy_killed(enemy: Node)
+## An enemy noticed the player (once per detection, not every frame).
+signal enemy_detected_player(enemy: Node)

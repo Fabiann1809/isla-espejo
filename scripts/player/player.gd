@@ -49,6 +49,7 @@ var _action_dir := Vector2.ZERO
 
 
 func _ready() -> void:
+	add_to_group("player")
 	_hurtbox.invulnerability_check = is_invulnerable
 	_hurtbox.hit.connect(_on_hurtbox_hit)
 	_hitbox.hit_landed.connect(_on_hitbox_hit_landed)
@@ -87,6 +88,10 @@ func _physics_process(delta: float) -> void:
 ## True while the player cannot be damaged (dash i-frames, after a hit, or dead).
 func is_invulnerable() -> bool:
 	return state == State.DASH or state == State.DEAD or _invulnerable_left > 0.0
+
+
+func is_dead() -> bool:
+	return state == State.DEAD
 
 
 ## Limits the camera to a rectangle in world coordinates (usually the level bounds).

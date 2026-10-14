@@ -8,6 +8,9 @@ var _log := {"attacked": 0, "hit_enemy": 0, "damaged": 0, "health": 0, "died": 0
 
 
 func _initialize() -> void:
+	create_timer(120.0).timeout.connect(func() -> void:
+		printerr("TIMEOUT")
+		quit(1))
 	var events: Node = root.get_node("Events")
 	events.player_attacked.connect(func(_d: Vector2) -> void: _log.attacked += 1)
 	events.player_hit_enemy.connect(func(_e: Node, _dmg: int) -> void: _log.hit_enemy += 1)
@@ -104,7 +107,7 @@ func _tap(action: String) -> void:
 	press.action = action
 	press.pressed = true
 	Input.parse_input_event(press)
-	await _frames(3)
+	await _frames(5)
 	var release := InputEventAction.new()
 	release.action = action
 	release.pressed = false

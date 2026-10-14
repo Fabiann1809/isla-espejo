@@ -9,6 +9,7 @@ jobs:
   godot-check:
     name: godot-check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       GODOT_VERSION: "4.7.2"
     steps:
@@ -42,6 +43,9 @@ jobs:
 
       - name: Combat test
         run: ~/godot/godot --headless --path . --script res://tests/test_combat.gd
+
+      - name: Enemy test
+        run: ~/godot/godot --headless --path . --script res://tests/test_enemy.gd
 
       - name: Run the main scene for a few frames
         run: ~/godot/godot --headless --path . --quit-after 60

@@ -6,6 +6,9 @@ var _ok := true
 
 
 func _initialize() -> void:
+	create_timer(120.0).timeout.connect(func() -> void:
+		printerr("TIMEOUT")
+		quit(1))
 	var room: Node = load("res://scenes/levels/test_room.tscn").instantiate()
 	root.add_child(room)
 	await _frames(3)
@@ -80,7 +83,7 @@ func _tap(action: String) -> void:
 	press.action = action
 	press.pressed = true
 	Input.parse_input_event(press)
-	await _frames(3)
+	await _frames(5)
 	var release := InputEventAction.new()
 	release.action = action
 	release.pressed = false

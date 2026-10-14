@@ -45,8 +45,8 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** jugador y enemigos de prueba se hacen daño y mueren, y los eventos de combate se emiten por el bus.
 
 ## 4. Enemigos base — B  ← 3
-- [ ] Clase base de enemigo con vida, daño, estados (idle, patrulla, persecución, ataque, muerte) y datos en `data/enemies/`
-- [ ] Detección del jugador (rango de visión y señal `player_detected`)
+- [x] Clase base de enemigo con vida, daño, estados (idle, patrulla, persecución, ataque, muerte) y datos en `data/enemies/` (`scripts/enemies/enemy.gd`, plantilla `scenes/enemies/grunt.tscn`)
+- [x] Detección del jugador (rango de visión, cono, línea de visión y señal `player_detected`)
 - [ ] **Bestia de la niebla** (embiste)
 - [ ] **Sombra errante** (teletransporte)
 - [ ] **Murciélago** (picado rápido)

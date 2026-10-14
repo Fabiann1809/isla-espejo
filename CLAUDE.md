@@ -14,7 +14,7 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
 1. Work on **one task at a time**, in the order of `docs/TAREAS.md`, and only on tasks assigned to you (A or B) unless told otherwise. Do not add anything that is not in the docs.
 2. A task is done only when:
    - the project opens and runs with no errors in the Godot console,
-   - `godot --headless --path . --script res://tests/run_checks.gd` and every `tests/test_*.gd` exit with code 0 (add a `tests/test_<system>.gd` for each new gameplay system),
+   - `godot --headless --path . --script res://tests/run_checks.gd` and every `tests/test_*.gd` exit with code 0 (add a `tests/test_<system>.gd` for each new gameplay system; in tests never `preload` scenes or reference `class_name` types of scripts that use autoloads: load at runtime and use untyped variables),
    - its "Hecho cuando" criterion is verified,
    - a short explanation of what was done and why is given to the user (in Spanish).
 3. If anything is ambiguous or touches the scope, **ask the user** before assuming. Never expand the scope: anything marked as out of scope or as an extra in the docs is not built unless the user says so.
@@ -46,6 +46,7 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
     - Collision layers (named in `project.godot`): 1 `world`, 2 `player` (body + Hurtbox), 3 `enemy` (body + Hurtbox), 4 `player_attack`, 5 `enemy_attack`. Player Hitbox: layer 4, mask 3. Enemy/trap Hitbox: layer 5, mask 2.
     - Bodies only collide with `world` (and the player body also with `enemy`); damage is decided only by Hitbox vs Hurtbox.
     - Combat code publishes what happens on the `Events` autoload (`scripts/core/events.gd`); the AI and HUD listen there. Add a signal there when a new gameplay fact must be observable.
+    - **Enemies**: inherit `scenes/enemies/enemy.tscn` (see `grunt.tscn`), create an `EnemyData` `.tres` in `data/enemies/` and set it as `data`. Only override the `_process_*` / `_start_attack` hooks of `scripts/enemies/enemy.gd` (in a script extending `Enemy`) when the behaviour differs. Never copy `enemy.gd`. The AI director tunes enemies through the `*_multiplier` properties before adding them to the tree.
 19. Use the input actions defined in `project.godot` (`move_*`, `dash`, `attack`, `skill_1..3`, `interact`). Never hardcode keys.
 20. Placeholders: until real sprites exist, use `ColorRect`/simple shapes. Never block a task waiting for art.
 

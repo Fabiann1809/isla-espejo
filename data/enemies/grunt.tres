@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"grunt"
+display_name = "Soldado (plantilla)"
+placeholder_color = Color(0.8, 0.25, 0.25, 1)
+max_health = 3
+move_speed = 40.0
+chase_speed = 70.0
+detection_range = 120.0
+lose_range = 220.0
+vision_angle = 360.0
+attack_range = 22.0
+attack_damage = 1
+attack_windup = 0.4
+attack_time = 0.15
+attack_cooldown = 0.8
+hurt_time = 0.3
+knockback_speed = 120.0
+knockback_resistance = 0.0
+patrol_radius = 60.0
+patrol_wait = 1.0

@@ -17,6 +17,13 @@ func _ready() -> void:
 	changed.emit(current, max_health)
 
 
+## Changes the maximum and refills health (used when stats come from data or director modifiers).
+func set_max_health(value: int) -> void:
+	max_health = maxi(value, 1)
+	current = max_health
+	changed.emit(current, max_health)
+
+
 func take_damage(amount: int, from_position := Vector2.ZERO) -> void:
 	if is_dead() or amount <= 0:
 		return
