@@ -8,9 +8,9 @@ Cada tarea grande tiene su checklist, un criterio **Hecho cuando** y un responsa
 Reglas: una tarea a la vez, en orden (salvo las que son independientes), push directo a `main` con el juego funcionando y el chequeo en verde, y marcar `[x]` en este archivo en el mismo commit. Alcance en `docs/JUEGO.md`.
 
 ## Estado actual
-- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas), 8 (perfil del jugador, IA capa 1) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
 - **Persona A, siguiente:** el escenario 1 (tarea 7). Necesita los enemigos y el jefe de la tarea 4 (persona B).
-- **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido), el sistema de diálogo de la 12, y el arranque de la 8. Ver `docs/EMPEZAR.md`.
+- **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido), el sistema de diálogo de la 12 y la **9 (la isla reacciona)**, que ya tiene el perfil que necesita. La 8 la adelantó la persona A. Ver `docs/EMPEZAR.md`.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
@@ -99,14 +99,14 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 **Hecho cuando:** se puede jugar el escenario 1 de principio a fin (inicio, salas, Anciano, jefe, fragmento) y cada partida genera un recorrido distinto.
 
-## 8. Perfil del jugador (IA capa 1) — B  ← 3, 5
-- [ ] Autoload `PlayerProfile` que escucha los eventos del bus de combate
-- [ ] Registrar métricas: ataques cuerpo a cuerpo, esquivas, uso de habilidades, daño recibido, tiempo por sala, salas evadidas, detecciones
-- [ ] Calcular `aggression` y `stealth` (0–1) con media móvil
-- [ ] Clasificar el perfil: agresivo, sigiloso o equilibrado
-- [ ] Guardar y cargar `user://profile.json` con `"version": 1`
-- [ ] Pruebas con perfiles simulados (valores de ejemplo) para validar la clasificación
-- [ ] Pantalla de resumen de perfil al morir
+## 8. Perfil del jugador (IA capa 1) — B (adelantada por A)  ← 3, 5
+- [x] Autoload `PlayerProfile` que escucha los eventos del bus de combate
+- [x] Registrar métricas: ataques cuerpo a cuerpo, esquivas, uso de habilidades, daño recibido, tiempo por sala, salas evadidas, detecciones
+- [x] Calcular `aggression` y `stealth` (0–1) con media móvil
+- [x] Clasificar el perfil: agresivo, sigiloso o equilibrado
+- [x] Guardar y cargar `user://profile.json` con `"version": 1`
+- [x] Pruebas con perfiles simulados (valores de ejemplo) para validar la clasificación
+- [x] Pantalla de resumen de perfil al morir
 
 **Hecho cuando:** tras jugar, el perfil refleja el estilo (probado con una partida agresiva y otra sigilosa), se guarda y se recupera al reiniciar el juego.
 

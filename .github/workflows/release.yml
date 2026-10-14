@@ -47,9 +47,9 @@ jobs:
         run: ~/godot/godot --headless --path . --import || true
 
       - name: Run the tests before building
-        run: |
-          ~/godot/godot --headless --path . --script res://tests/run_checks.gd
-          for t in tests/test_*.gd; do ~/godot/godot --headless --path . --script res://$t; done
+        env:
+          GODOT: ~/godot/godot
+        run: bash tools/run_tests.sh
 
       - name: Export Windows build
         run: |

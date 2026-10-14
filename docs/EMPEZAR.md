@@ -26,17 +26,16 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 
 ## 3. Flujo de trabajo
 - Se trabaja directo en `main`, sin pull requests.
-- Antes de cada push: `git pull --rebase`, ejecutar el juego, y pasar las pruebas:
+- Antes de cada push: `git pull --rebase`, ejecutar el juego, y pasar las pruebas con un solo comando:
   ```
-  godot --headless --path . --script res://tests/run_checks.gd
-  godot --headless --path . --script res://tests/test_player.gd
-  godot --headless --path . --script res://tests/test_combat.gd
-  godot --headless --path . --script res://tests/test_enemy.gd
-  godot --headless --path . --script res://tests/test_map_generator.gd
-  godot --headless --path . --script res://tests/test_level_build.gd
-  godot --headless --path . --script res://tests/test_skills.gd
+  ./tools/run_tests.sh                    # todas
+  ./tools/run_tests.sh test_skills        # solo una
   ```
-  Todas deben terminar con código 0. GitHub las repite en cada push (pestaña Actions); si salen en rojo, se arregla antes de seguir.
+  En Windows se usa Git Bash y se indica dónde está Godot (la versión `_console.exe`):
+  ```
+  export GODOT="C:/ruta/a/Godot_v4.7.2-stable_win64_console.exe"
+  ```
+  El script falla si una prueba termina con error, se cuelga o imprime un `SCRIPT ERROR` (GDScript sigue ejecutando tras un error, así que el código de salida solo no basta). GitHub lo repite en cada push (pestaña Actions); si sale en rojo, se arregla antes de seguir.
 - Un commit por tarea, en inglés y con formato `tipo(ámbito): resumen`, por ejemplo `feat(enemies): add fog beast`. Sin atribución de IA.
 - Marca la tarea como `[x]` en `docs/TAREAS.md` en el mismo commit.
 - **No pisarse:** antes de editar una escena `.tscn`, avisa si la otra persona la está tocando. Los archivos compartidos (`project.godot`, `data/`, `scripts/core/events.gd`) se cambian en commits pequeños y avisando.
@@ -51,6 +50,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | Enemigo base | `scripts/enemies/enemy.gd`, `enemy_data.gd`, `scenes/enemies/enemy.tscn` | Estados, detección, persecución, ataque con aviso |
 | Plantilla de enemigo | `scenes/enemies/grunt.tscn`, `data/enemies/grunt.tres` | Ejemplo a copiar |
 | HUD | `scenes/ui/hud.tscn` | Corazones de vida |
+| Perfil del jugador (IA capa 1) | `scripts/ai/`, `data/ai/profile_config.tres` | Aprende si juegas agresivo o sigiloso y lo guarda entre partidas. El director leerá `PlayerProfile.live_scores()` |
 | Habilidades | `scripts/skills/`, `data/skills/` | Raíces, Corriente y Sombra. Teclas `1 2 3`; se desbloquean con `player.skills.unlock(...)` |
 | Generador de mapas | `scripts/world/map_generator.gd`, `level.gd`, `room.gd` | Mapas distintos en cada partida con salas hechas a mano (ver `CLAUDE.md`) |
 | Nivel de prueba | `scenes/levels/test_level.tscn` | Genera un mapa; `R` crea otro. Es la escena que abre F5 |

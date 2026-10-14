@@ -2,6 +2,10 @@ extends Node
 ## Global event bus (autoload "Events"). Gameplay code emits, other systems listen.
 ## The adaptive AI and the HUD only read from here, never from combat code directly.
 
+# Run flow
+## A map has been built and the player placed in it: a new run starts.
+signal level_started(scenario_id: StringName, map_seed: int)
+
 # Player
 signal player_attacked(direction: Vector2)
 signal player_dashed(direction: Vector2)

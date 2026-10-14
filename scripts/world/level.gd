@@ -57,6 +57,7 @@ func generate(new_seed := 0) -> void:
 	_compute_bounds()
 	_place_player()
 	generated.emit(layout)
+	Events.level_started.emit(scenario.id, current_seed)
 
 
 func room_at(coord: Vector2i) -> Room:

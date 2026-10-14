@@ -25,9 +25,9 @@ Controles provisionales: `WASD` mover, `Espacio` esquivar, `J` atacar, `1 2 3` h
 
 ## Verificación local
 ```
-godot --headless --path . --script res://tests/run_checks.gd
+./tools/run_tests.sh
 ```
-Debe terminar con código 0. Es la misma comprobación que ejecuta CI en cada push. También hay pruebas de juego en `tests/test_*.gd`.
+Ejecuta la comprobación general y todas las pruebas de juego (`tests/test_*.gd`). Es lo mismo que ejecuta CI en cada push. En Windows, desde Git Bash, con `GODOT` apuntando a la versión `_console.exe` de Godot.
 
 ## Descargar una versión jugable
 Las versiones publicadas están en la pestaña **Releases** del repositorio (zip para Windows, sin instalar nada).

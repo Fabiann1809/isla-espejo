@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ProfileConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/profile_config.gd" id="1_1tiof"]
+
+[resource]
+script = ExtResource("1_1tiof")
+skill_styles = {
+&"current": &"aggressive",
+&"roots": &"aggressive",
+&"shadow": &"stealth"
+}
+texts = {
+"aggression": "Agresión",
+"continue": "Pulsa E para volver a intentarlo",
+"message_aggressive": "La isla te vio luchar de frente. La próxima vez estará lista para ti.",
+"message_balanced": "La isla aún no sabe cómo eres. Sigue observándote.",
+"message_stealth": "La isla te sintió moverte entre las sombras. Aprenderá a mirar mejor.",
+"stat_attacks": "Ataques: %d",
+"stat_detections": "Veces detectado: %d",
+"stat_evaded": "Salas evadidas: %d",
+"stat_rooms": "Salas visitadas: %d",
+"stat_skills": "Habilidades usadas: %d",
+"stat_time": "Tiempo: %s",
+"stealth": "Sigilo",
+"style_aggressive": "Agresivo",
+"style_balanced": "Equilibrado",
+"style_label": "Estilo de juego",
+"style_stealth": "Sigiloso",
+"title": "La isla te recuerda"
+}

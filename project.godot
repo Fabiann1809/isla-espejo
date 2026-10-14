@@ -25,6 +25,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 [autoload]
 
 Events="*res://scripts/core/events.gd"
+PlayerProfile="*res://scripts/ai/player_profile.gd"
 
 [display]
 

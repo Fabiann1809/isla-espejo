@@ -35,26 +35,10 @@ jobs:
       - name: Import project
         run: ~/godot/godot --headless --path . --import || true
 
-      - name: Smoke test (load every script and scene)
-        run: ~/godot/godot --headless --path . --script res://tests/run_checks.gd
-
-      - name: Player gameplay test
-        run: ~/godot/godot --headless --path . --script res://tests/test_player.gd
-
-      - name: Combat test
-        run: ~/godot/godot --headless --path . --script res://tests/test_combat.gd
-
-      - name: Enemy test
-        run: ~/godot/godot --headless --path . --script res://tests/test_enemy.gd
-
-      - name: Map generator test
-        run: ~/godot/godot --headless --path . --script res://tests/test_map_generator.gd
-
-      - name: Level build test
-        run: ~/godot/godot --headless --path . --script res://tests/test_level_build.gd
-
-      - name: Skills test
-        run: ~/godot/godot --headless --path . --script res://tests/test_skills.gd
+      - name: Tests (smoke check + every tests/test_*.gd)
+        env:
+          GODOT: ~/godot/godot
+        run: bash tools/run_tests.sh
 
       - name: Run the main scene for a few frames
         run: ~/godot/godot --headless --path . --quit-after 60
