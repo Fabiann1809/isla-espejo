@@ -24,10 +24,12 @@ func _initialize() -> void:
 	await _frames(30)
 	_check(player.state == player.State.IDLE, "returns to idle after the swing")
 
+	_reset_dummy(dummy, player)
 	await _tap("attack")
 	await _frames(30)
 	_check(dummy.hits == 2, "second swing after cooldown hits (hits=%d)" % dummy.hits)
 
+	_reset_dummy(dummy, player)
 	player.facing = Vector2.LEFT
 	await _frames(30)
 	await _tap("attack")
@@ -56,6 +58,12 @@ func _initialize() -> void:
 	quit(0 if _ok else 1)
 
 
+## The dummy is knocked back by every hit; put it back in front of the player.
+func _reset_dummy(dummy: Node2D, player: Node2D) -> void:
+	dummy.global_position = player.global_position + Vector2(20, 0)
+	dummy.velocity = Vector2.ZERO
+
+
 func _check(condition: bool, message: String) -> void:
 	print(("PASS " if condition else "FAIL ") + message)
 	if not condition:
@@ -72,7 +80,7 @@ func _tap(action: String) -> void:
 	press.action = action
 	press.pressed = true
 	Input.parse_input_event(press)
-	await _frames(2)
+	await _frames(3)
 	var release := InputEventAction.new()
 	release.action = action
 	release.pressed = false

@@ -1,8 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="Script" path="res://scripts/world/test_room.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/training_dummy.tscn" id="3"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/spike_trap.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(976, 16)
@@ -53,4 +56,13 @@ position = Vector2(-120, 50)
 [node name="Dummy3" parent="." instance=ExtResource("3")]
 position = Vector2(30, 110)
 
+[node name="Trap1" parent="." instance=ExtResource("4")]
+position = Vector2(-60, -20)
+
+[node name="Trap2" parent="." instance=ExtResource("4")]
+position = Vector2(-44, -20)
+retracted_time = 1.0
+
 [node name="Player" parent="." instance=ExtResource("1")]
+
+[node name="Hud" parent="." instance=ExtResource("5")]

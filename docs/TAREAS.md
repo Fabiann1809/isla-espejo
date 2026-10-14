@@ -35,12 +35,12 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** Nico se mueve, esquiva y ataca con fluidez en una sala de prueba y la cámara lo sigue sin saltos.
 
 ## 3. Vida, daño y muerte — A  ← 2
-- [ ] Componente reutilizable de vida (`HealthComponent`) para jugador y enemigos
-- [ ] Hitbox / hurtbox con capas de colisión definidas y documentadas
-- [ ] Daño, retroceso (knockback) y parpadeo al recibir daño
-- [ ] Muerte del jugador con señal `player_died`
-- [ ] HUD básico: barra de vida
-- [ ] Bus de eventos (autoload) para que otros sistemas escuchen lo que pasa (la IA lo usará)
+- [x] Componente reutilizable de vida (`HealthComponent`) para jugador y enemigos
+- [x] Hitbox / hurtbox con capas de colisión definidas y documentadas
+- [x] Daño, retroceso (knockback) y parpadeo al recibir daño
+- [x] Muerte del jugador con señal `player_died`
+- [x] HUD básico: barra de vida
+- [x] Bus de eventos (autoload) para que otros sistemas escuchen lo que pasa (la IA lo usará)
 
 **Hecho cuando:** jugador y enemigos de prueba se hacen daño y mueren, y los eventos de combate se emiten por el bus.
 

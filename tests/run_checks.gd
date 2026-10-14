@@ -6,7 +6,7 @@ extends SceneTree
 const SKIP_DIRS := [".godot", ".git", "addons", "docs"]
 
 
-func _init() -> void:
+func _initialize() -> void:
 	var failures: Array[String] = []
 	var checked := 0
 	for path in _collect("res://"):
