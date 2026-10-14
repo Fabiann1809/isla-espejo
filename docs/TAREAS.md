@@ -26,11 +26,11 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 2. Nico: movimiento, esquiva y ataque — A  ← 1
 - [x] Movimiento en 8 direcciones (base inicial)
 - [x] Esquiva (dash) con recarga (base inicial)
-- [ ] Ataque con espada con hitbox, dirección y tiempo de recarga
-- [ ] Estados del jugador (idle, mover, esquivar, atacar, dañado, muerto) con máquina de estados simple
-- [ ] Invulnerabilidad breve durante la esquiva
-- [ ] Valores ajustables desde el inspector (`@export`)
-- [ ] Cámara que sigue a Nico con suavizado y límites por escenario
+- [x] Ataque con espada con hitbox, dirección y tiempo de recarga
+- [x] Estados del jugador (idle, mover, esquivar, atacar, dañado, muerto) con máquina de estados simple
+- [x] Invulnerabilidad breve durante la esquiva
+- [x] Valores ajustables desde el inspector (`@export`)
+- [x] Cámara que sigue a Nico con suavizado y límites por escenario
 
 **Hecho cuando:** Nico se mueve, esquiva y ataca con fluidez en una sala de prueba y la cámara lo sigue sin saltos.
 

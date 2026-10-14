@@ -37,5 +37,8 @@ jobs:
       - name: Smoke test (load every script and scene)
         run: ~/godot/godot --headless --path . --script res://tests/run_checks.gd
 
+      - name: Player gameplay test
+        run: ~/godot/godot --headless --path . --script res://tests/test_player.gd
+
       - name: Run the main scene for a few frames
         run: ~/godot/godot --headless --path . --quit-after 60

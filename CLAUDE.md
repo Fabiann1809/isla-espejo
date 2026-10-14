@@ -14,14 +14,14 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
 1. Work on **one task at a time**, in the order of `docs/TAREAS.md`, and only on tasks assigned to you (A or B) unless told otherwise. Do not add anything that is not in the docs.
 2. A task is done only when:
    - the project opens and runs with no errors in the Godot console,
-   - `godot --headless --path . --script res://tests/run_checks.gd` exits with code 0,
+   - `godot --headless --path . --script res://tests/run_checks.gd` and every `tests/test_*.gd` exit with code 0 (add a `tests/test_<system>.gd` for each new gameplay system),
    - its "Hecho cuando" criterion is verified,
    - a short explanation of what was done and why is given to the user (in Spanish).
 3. If anything is ambiguous or touches the scope, **ask the user** before assuming. Never expand the scope: anything marked as out of scope or as an extra in the docs is not built unless the user says so.
 4. Never break what already works. If a change could affect another system, run the project and check that system before committing.
 
 ## Git and collaboration
-5. Work directly on `main` and push to it (no pull requests needed). Before every push: `git pull --rebase`, run the project, and run `godot --headless --path . --script res://tests/run_checks.gd` (must exit 0). Never push something that does not open or breaks what already worked. CI (`godot-check`) runs on every push; if it fails, fix it first.
+5. Work directly on `main` and push to it (no pull requests needed). Before every push: `git pull --rebase`, run the project, and run `godot --headless --path . --script res://tests/run_checks.gd` and the `tests/test_*.gd` files (all must exit 0). Never push something that does not open or breaks what already worked. CI (`godot-check`) runs on every push; if it fails, fix it first.
    - Optional: use a short-lived branch `feature/<short-name>` for a big or risky change, then merge it into `main`.
 6. One commit per task or fix. Tick the task checkbox (`[x]`) in `docs/TAREAS.md` in the same commit.
 7. Commit format: [Conventional Commits](https://www.conventionalcommits.org/) in English: `type(scope): imperative summary`.
@@ -41,14 +41,15 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
 15. The adaptive AI lives in `scripts/ai/` and is separated from combat code. Combat code only **emits events** (e.g. "player dashed", "player hit enemy", "enemy detected player"); the AI listens. Use signals or a small event bus autoload.
 16. The player profile is saved to `user://profile.json`. Keep the format versioned (`"version": 1`).
 17. Resolution is 640x360 with integer scaling and *nearest* filtering. Do not change display settings without asking.
-18. Use the input actions defined in `project.godot` (`move_*`, `dash`, `attack`, `skill_1..3`, `interact`). Never hardcode keys.
-19. Placeholders: until real sprites exist, use `ColorRect`/simple shapes. Never block a task waiting for art.
+18. Hitboxes/hurtboxes are `Area2D` nodes: keep `monitorable = true` (turning it off makes the area blind to bodies). Collision layers: 1 world, 2 player, 3 enemy, 4 player_attack, 5 enemy_attack (named in `project.godot`).
+19. Use the input actions defined in `project.godot` (`move_*`, `dash`, `attack`, `skill_1..3`, `interact`). Never hardcode keys.
+20. Placeholders: until real sprites exist, use `ColorRect`/simple shapes. Never block a task waiting for art.
 
 ## Art and assets
-20. Characters are made by the team in **Pixelorama**: 32x32 sprites, one shared palette of 16–24 colors, minimum animations idle / walk / attack / hurt / die (8 directions for Nico and bosses, 4 for the rest).
-21. Tilesets are 16x16 (a free pack may be used; record it in `CREDITS.md`). Every third-party asset must be listed in `CREDITS.md` **in the same commit** that adds it, with its license.
-22. Keep source art (`.pxo`) next to exported PNGs under `assets/sprites/<name>/`.
+21. Characters are made by the team in **Pixelorama**: 32x32 sprites, one shared palette of 16–24 colors, minimum animations idle / walk / attack / hurt / die (8 directions for Nico and bosses, 4 for the rest).
+22. Tilesets are 16x16 (a free pack may be used; record it in `CREDITS.md`). Every third-party asset must be listed in `CREDITS.md` **in the same commit** that adds it, with its license.
+23. Keep source art (`.pxo`) next to exported PNGs under `assets/sprites/<name>/`.
 
 ## Safety
-23. No API keys, tokens or personal data in code, docs, logs or commits.
-24. The repository is public: do not publish anything that is not meant to be public.
+24. No API keys, tokens or personal data in code, docs, logs or commits.
+25. The repository is public: do not publish anything that is not meant to be public.
