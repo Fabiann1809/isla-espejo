@@ -94,15 +94,23 @@ Todo el escenario 1 es el molde. Para las Ruinas de la Montaña y el Templo del 
 - Para que un enemigo **vea más lejos o menos**, usa `can_see()` (ya aplica `vision_multiplier` y la visibilidad del jugador, que baja con Sombra). No hagas detecciones propias.
 - Añade el enemigo al `enemy_pool` del escenario (`data/scenarios/*.tres`) y, si quieres que la IA lo favorezca para un estilo, a `enemy_weights` en `data/ai/director_rules.tres`.
 
-## 6. Qué puede empezar ya la persona B
-Las tareas de B cuyas dependencias están listas:
-1. **Tarea 4: los 6 enemigos.** La base ya existe. Empezar por **Bestia de la niebla** (embiste) y **Murciélago** (picado rápido), que son los más simples. Se entregan en tandas de 2 o 3.
-2. **Tarea 13: menús, pausa, guardado y créditos.** Depende solo del combate, que ya está.
-3. **Tarea 14: sonido y música.** Elegir packs gratuitos y registrarlos en `CREDITS.md`.
-4. **Tarea 12 (parte del sistema de diálogo).** La caja de texto se puede hacer ya, leyendo de `data/dialogues/`.
-5. Las tareas **8 (perfil del jugador)** y **9 (la isla reacciona)** ya están hechas: no las rehagas. Si quieres cambiar cómo reacciona la isla, edita `data/ai/director_rules.tres` (o `tools/make_director_data.gd` y regenera).
+## 6. Reparto actual: qué hace cada persona
+**Ya está hecho (no lo rehagas):** Nico, combate, vida y daño, habilidades (Raíces, Corriente, Sombra), generador de mapas, **la IA completa** (perfil del jugador y director), sistema de diálogo, interacción (cofres, NPC), jefe base, **y el escenario 1 jugable de principio a fin** (Bosque de la Aurora). Detalle en la tabla de la sección 4 y en `docs/TAREAS.md` (sección "Estado actual").
 
-Mientras tanto la persona A avanza con las tareas 5 (habilidades) y 6 (generador de mapas).
+### Persona B, por dónde empezar
+1. **Tarea 4: los 6 enemigos.** Empezar por **Bestia de la niebla** (embiste) y **Murciélago** (picado rápido), que son los más simples; entregar en tandas de 2 o 3. Sigue las convenciones de abajo ("Para que el director controle tus enemigos") y copia `scenes/enemies/grunt.tscn` + `data/enemies/grunt.tres`. Cuando existan los del bosque (Bestia de la niebla y Sombra errante), cámbialos en el `enemy_pool` de `data/scenarios/forest.tres` (hoy usa el soldado de plantilla). Añade una prueba por enemigo (copia `tests/test_enemy.gd`).
+2. **Tarea 12: los textos.** El sistema de diálogo ya existe; falta escribir `data/dialogues/viajera.json` y `mercader.json` (copia `elder.json`; mira el formato arriba) y los textos de la historia (prólogo, final).
+3. **Tarea 13: menús, pausa, guardado y créditos.** El progreso a guardar vive en `GameState` (ya tiene `to_dict()`/`from_dict()`) y el perfil en `PlayerProfile`.
+4. **Tarea 14: sonido y música.** Elegir packs gratuitos y registrarlos en `CREDITS.md` (con su licencia).
+
+### Persona A, lo que sigue
+Escenarios 2 y 3 (tareas 10 y 11): tilesets, salas y jefes, siguiendo la guía de arriba. Eso toca `scripts/world/`, `data/scenarios/` y `data/rooms/`.
+
+### Para no pisarse
+- **B** trabaja en `scripts/enemies/`, `scenes/enemies/`, `data/enemies/`, `data/dialogues/`, `scripts/ui/` (menús) y `assets/audio/`.
+- **A** trabaja en `scripts/world/`, `scenes/levels/`, `data/scenarios/`, `data/rooms/`, `data/themes/` y `assets/tilesets/`.
+- Si necesitas tocar algo del otro (por ejemplo, el `enemy_pool` de un escenario), hazlo en un commit pequeño y avisa.
+- Los archivos compartidos (`project.godot`, `scripts/core/events.gd`, `data/ai/`) se cambian con commits pequeños y se avisa antes.
 
 ## 7. Arte (Pixelorama)
 - Personajes en **32x32**, una paleta única de 16 a 24 colores, tilesets de **16x16**.
@@ -112,4 +120,4 @@ Mientras tanto la persona A avanza con las tareas 5 (habilidades) y 6 (generador
 - Los diseños de `docs/referencias/` son una guía, no sprites finales.
 
 ## 8. Mensaje para pegarle a tu Claude Code
-> Lee `CLAUDE.md`, `docs/JUEGO.md`, `docs/TAREAS.md` y `docs/EMPEZAR.md` de este repositorio. Soy la persona B. Empieza por la tarea 4 (enemigos): primero la Bestia de la niebla y el Murciélago, usando la base de `scripts/enemies/enemy.gd`. Sigue las reglas de `CLAUDE.md`: una tarea a la vez, commits convencionales en inglés sin atribución de IA, pruebas antes de cada push y `git pull --rebase`. Si algo es ambiguo o toca el alcance, pregúntame antes de decidir.
+> Lee `CLAUDE.md`, `docs/JUEGO.md`, `docs/TAREAS.md` y `docs/EMPEZAR.md` de este repositorio. Soy la persona B. Empieza por la tarea 4 (enemigos): primero la Bestia de la niebla y el Murciélago, heredando de `scenes/enemies/enemy.tscn` (mira `grunt.tscn` y las convenciones de `docs/EMPEZAR.md`, sección 5), con una prueba por enemigo. Sigue las reglas de `CLAUDE.md`: una tarea a la vez, commits convencionales en inglés sin atribución de IA, `./tools/run_tests.sh` antes de cada push (en Windows con `GODOT` apuntando a la versión `_console.exe`) y `git pull --rebase`. Tu zona de trabajo está en la sección 6 de `docs/EMPEZAR.md`; no modifiques `scripts/world/` sin avisarme. Si algo es ambiguo o toca el alcance, pregúntame antes de decidir.

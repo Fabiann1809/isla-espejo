@@ -11,8 +11,8 @@ Reglas: una tarea a la vez, en orden (salvo las que son independientes), push di
 - **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas), 8 (perfil del jugador, IA capa 1), 9 (la isla reacciona, IA capa 2) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
 - **Escenario 1 (tarea 7): jugable de principio a fin** con soldados de plantilla: bosque, 10 salas, Anciano, cofres, jefe, fragmento verde, habilidad Raíces y salida. Solo falta cambiar los soldados por los enemigos del bosque de la tarea 4 (de B). Hecho también el sistema de diálogo; B solo escribe los textos de la Viajera y el Mercader.
 - **La IA ya está completa** (capas 1 y 2). Quien haga los enemigos y escenarios solo debe respetar las convenciones de `docs/EMPEZAR.md` (sección 5) para que el director los controle.
-- **Persona A, siguiente:** el escenario 1 (tarea 7). Necesita los enemigos y el jefe de la tarea 4 (persona B).
-- **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido) y el sistema de diálogo de la 12. Las tareas 8 y 9 ya las adelantó la persona A: **no hay que rehacerlas**. Ver `docs/EMPEZAR.md`.
+- **Persona A, siguiente:** los escenarios 2 y 3 (tareas 10 y 11), siguiendo la guía de `docs/EMPEZAR.md`.
+- **Persona B puede empezar ya:** 4 (los 6 enemigos), 12 (solo los textos de la Viajera y el Mercader), 13 (menús y guardado) y 14 (sonido). Las tareas 5, 6, 8 y 9, el sistema de diálogo y el escenario 1 ya los hizo la persona A: **no hay que rehacerlos**. Ver `docs/EMPEZAR.md`, sección 6.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
