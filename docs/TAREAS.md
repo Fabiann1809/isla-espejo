@@ -9,6 +9,7 @@ Reglas: una tarea a la vez, en orden (salvo las que son independientes), push di
 
 ## Estado actual
 - **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas), 8 (perfil del jugador, IA capa 1), 9 (la isla reacciona, IA capa 2) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **Escenario 1 (tarea 7) en curso:** hecho el aspecto del bosque, las 10 salas, el Anciano y los cofres. Falta el jefe, el fragmento, la habilidad Raíces y la salida (los hace A). Hecho también el sistema de diálogo; B solo escribe los textos de la Viajera y el Mercader.
 - **La IA ya está completa** (capas 1 y 2). Quien haga los enemigos y escenarios solo debe respetar las convenciones de `docs/EMPEZAR.md` (sección 5) para que el director los controle.
 - **Persona A, siguiente:** el escenario 1 (tarea 7). Necesita los enemigos y el jefe de la tarea 4 (persona B).
 - **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido) y el sistema de diálogo de la 12. Las tareas 8 y 9 ya las adelantó la persona A: **no hay que rehacerlas**. Ver `docs/EMPEZAR.md`.
@@ -94,8 +95,8 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; cambiar el `enemy_pool` de `data/scenarios/forest.tres` por la Bestia de la niebla y la Sombra errante cuando existan)
 - [ ] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces)
 - [ ] Al derrotarlo: fragmento verde y habilidad **Raíces**
-- [ ] NPC **Anciano** con 3 estados de diálogo
-- [ ] Cofres y recompensas básicas
+- [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)
+- [x] Cofres y recompensas básicas (corazón extra y curación)
 - [ ] Salida al escenario 2
 
 **Hecho cuando:** se puede jugar el escenario 1 de principio a fin (inicio, salas, Anciano, jefe, fragmento) y cada partida genera un recorrido distinto.
@@ -145,8 +146,8 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** el escenario 3 es completable y se obtiene el último fragmento.
 
 ## 12. Diálogos, historia y final — B  ← 7
-- [ ] Sistema de diálogo (caja de texto, avance, retratos opcionales) leyendo de `data/dialogues/`
-- [ ] Redactar los 3 estados de diálogo de Anciano, Viajera y Mercader
+- [x] Sistema de diálogo (caja de texto, avance, retratos opcionales) leyendo de `data/dialogues/` (hecho por A; faltan los retratos, que son opcionales)
+- [ ] Redactar los 3 estados de diálogo de Anciano (hecho), Viajera y Mercader (pendientes: copiar `elder.json`)
 - [ ] Prólogo y textos de inicio de capítulo
 - [ ] Diálogos de jefes (antes y después)
 - [ ] Textos de muerte y reinicio ("La isla vuelve a empezar…")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="2"]
@@ -14,6 +14,9 @@ size = Vector2(22, 18)
 
 [sub_resource type="RectangleShape2D" id="3"]
 size = Vector2(12, 12)
+
+[sub_resource type="CircleShape2D" id="4"]
+radius = 14.0
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
@@ -44,6 +47,13 @@ script = ExtResource("3")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("3")
+
+[node name="InteractArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea"]
+shape = SubResource("4")
 
 [node name="AttackPivot" type="Node2D" parent="."]
 

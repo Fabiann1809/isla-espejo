@@ -1,31 +1,37 @@
 [gd_resource type="Resource" script_class="ScenarioData" format=3]
 
-[ext_resource type="Resource" path="res://data/rooms/forest_boss.tres" id="1_skptb"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="2_s1e0w"]
-[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="3_wvcyj"]
-[ext_resource type="Resource" path="res://data/rooms/forest_clearing_a.tres" id="4_mqtxf"]
-[ext_resource type="Resource" path="res://data/rooms/forest_clearing_b.tres" id="5_mugix"]
-[ext_resource type="Resource" path="res://data/rooms/forest_river.tres" id="6_k8rcn"]
-[ext_resource type="Resource" path="res://data/rooms/forest_dense.tres" id="7_rxlfs"]
-[ext_resource type="Resource" path="res://data/rooms/forest_watch.tres" id="8_5vu37"]
-[ext_resource type="Resource" path="res://data/rooms/forest_event.tres" id="9_dqrix"]
-[ext_resource type="Resource" path="res://data/rooms/forest_reward.tres" id="10_k7olh"]
-[ext_resource type="Resource" path="res://data/rooms/forest_special.tres" id="11_mxaao"]
-[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="12_iy2ip"]
-[ext_resource type="Resource" path="res://data/rooms/forest_start.tres" id="13_7iwbh"]
-[ext_resource type="Resource" path="res://data/themes/forest.tres" id="14_nwdx8"]
+[ext_resource type="Resource" path="res://data/rooms/forest_boss.tres" id="1_mqtxf"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="2_mugix"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="3_k8rcn"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="4_rxlfs"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/elder.tscn" id="5_5vu37"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="6_dqrix"]
+[ext_resource type="Resource" path="res://data/rooms/forest_clearing_a.tres" id="7_k7olh"]
+[ext_resource type="Resource" path="res://data/rooms/forest_clearing_b.tres" id="8_mxaao"]
+[ext_resource type="Resource" path="res://data/rooms/forest_river.tres" id="9_iy2ip"]
+[ext_resource type="Resource" path="res://data/rooms/forest_dense.tres" id="10_7iwbh"]
+[ext_resource type="Resource" path="res://data/rooms/forest_watch.tres" id="11_nwdx8"]
+[ext_resource type="Resource" path="res://data/rooms/forest_event.tres" id="12_cxxwv"]
+[ext_resource type="Resource" path="res://data/rooms/forest_reward.tres" id="13_q2d2u"]
+[ext_resource type="Resource" path="res://data/rooms/forest_special.tres" id="14_kw76a"]
+[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="15_n0i0u"]
+[ext_resource type="Resource" path="res://data/rooms/forest_start.tres" id="16_8bqs7"]
+[ext_resource type="Resource" path="res://data/themes/forest.tres" id="17_6rtq2"]
 
 [resource]
-script = ExtResource("12_iy2ip")
+script = ExtResource("15_n0i0u")
 id = &"forest"
 display_name = "Bosque de la Aurora"
+chapter_title = "El bosque despierta."
 grid_size = Vector2i(5, 6)
 min_main_path = 7
 max_main_path = 12
 side_rooms = 4
 reward_rooms = 2
-theme = ExtResource("14_nwdx8")
-start_room = ExtResource("13_7iwbh")
-boss_room = ExtResource("1_skptb")
-rooms = Array[ExtResource("3_wvcyj")]([ExtResource("4_mqtxf"), ExtResource("5_mugix"), ExtResource("6_k8rcn"), ExtResource("7_rxlfs"), ExtResource("8_5vu37"), ExtResource("9_dqrix"), ExtResource("10_k7olh"), ExtResource("11_mxaao")])
-enemy_pool = Array[PackedScene]([ExtResource("2_s1e0w")])
+theme = ExtResource("17_6rtq2")
+start_room = ExtResource("16_8bqs7")
+boss_room = ExtResource("1_mqtxf")
+rooms = Array[ExtResource("6_dqrix")]([ExtResource("7_k7olh"), ExtResource("8_mxaao"), ExtResource("9_iy2ip"), ExtResource("10_7iwbh"), ExtResource("11_nwdx8"), ExtResource("12_cxxwv"), ExtResource("13_q2d2u"), ExtResource("14_kw76a")])
+enemy_pool = Array[PackedScene]([ExtResource("4_rxlfs")])
+npc_scene = ExtResource("5_5vu37")
+chest_scenes = Array[PackedScene]([ExtResource("2_mugix"), ExtResource("3_k8rcn")])

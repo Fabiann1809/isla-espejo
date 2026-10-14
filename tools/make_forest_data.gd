@@ -40,6 +40,7 @@ func _initialize() -> void:
 	var scenario := ScenarioData.new()
 	scenario.id = &"forest"
 	scenario.display_name = "Bosque de la Aurora"
+	scenario.chapter_title = "El bosque despierta."
 	scenario.theme = load("res://data/themes/forest.tres")
 	scenario.grid_size = Vector2i(5, 6)
 	scenario.min_main_path = 7
@@ -59,6 +60,9 @@ func _initialize() -> void:
 	# Placeholder until the forest creatures (Bestia de la niebla, Sombra errante) exist.
 	var pool: Array[PackedScene] = [load("res://scenes/enemies/grunt.tscn")]
 	scenario.enemy_pool = pool
+	scenario.npc_scene = load("res://scenes/npcs/elder.tscn")
+	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
+	scenario.chest_scenes = chests
 	ResourceSaver.save(scenario, "res://data/scenarios/forest.tres")
 	print("forest data written")
 	quit()

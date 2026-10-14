@@ -64,6 +64,8 @@ func generate(new_seed := 0) -> void:
 	_compute_bounds()
 	_place_player()
 	generated.emit(layout)
+	if scenario.chapter_title != "":
+		Events.message_requested.emit(scenario.chapter_title)
 
 
 ## The director's room weights combined with any manual ones.
@@ -112,6 +114,9 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 		RoomData.RoomType.EVENT:
 			_spawn_single(room, scenario.npc_scene, "NpcSpawn")
+		RoomData.RoomType.REWARD:
+			if not scenario.chest_scenes.is_empty():
+				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
 
 
 func _spawn_single(room: Room, scene: PackedScene, container: String) -> void:
@@ -195,6 +200,7 @@ func _place_player() -> void:
 	if player == null:
 		player = player_scene.instantiate()
 		add_child(player)
+		GameState.apply_to_player(player)
 	var start_room: Room = rooms[layout.start_cell]
 	player.global_position = start_room.global_position + start_room.player_spawn()
 	if player.has_method("set_camera_limits"):

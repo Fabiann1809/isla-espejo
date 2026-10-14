@@ -5,18 +5,26 @@ const HEART_SIZE := Vector2(10, 10)
 const HEART_FULL := Color(0.85, 0.2, 0.25)
 const HEART_EMPTY := Color(0.25, 0.1, 0.12)
 
-const TOAST_SECONDS := 4.5
+const TOAST_SECONDS := 3.2
+const TOAST_FADE := 0.8
 
 @onready var _hearts: HBoxContainer = $Margin/Hearts
 @onready var _message: Label = $Message
 @onready var _toast: Label = $Toast
+@onready var _prompt: Label = $Prompt
+
+var _toast_queue: Array[String] = []
+var _toast_busy := false
 
 
 func _ready() -> void:
 	Events.player_health_changed.connect(_on_player_health_changed)
 	Director.plan_made.connect(_on_plan_made)
+	Events.message_requested.connect(show_toast)
+	Events.interaction_prompt_changed.connect(_on_prompt_changed)
 	_message.hide()
 	_toast.hide()
+	_prompt.hide()
 
 
 func show_message(text: String) -> void:
@@ -24,15 +32,34 @@ func show_message(text: String) -> void:
 	_message.show()
 
 
-## A line from the island that fades away by itself.
+## A line that fades away by itself. Several lines are shown one after another.
 func show_toast(text: String) -> void:
-	_toast.text = text
+	if text == "":
+		return
+	_toast_queue.append(text)
+	if not _toast_busy:
+		_show_next_toast()
+
+
+func _show_next_toast() -> void:
+	if _toast_queue.is_empty():
+		_toast_busy = false
+		return
+	_toast_busy = true
+	_toast.text = _toast_queue.pop_front()
 	_toast.modulate.a = 1.0
 	_toast.show()
 	var tween := create_tween()
 	tween.tween_interval(TOAST_SECONDS)
-	tween.tween_property(_toast, "modulate:a", 0.0, 1.0)
-	tween.tween_callback(_toast.hide)
+	tween.tween_property(_toast, "modulate:a", 0.0, TOAST_FADE)
+	tween.tween_callback(func() -> void:
+		_toast.hide()
+		_show_next_toast())
+
+
+func _on_prompt_changed(prompt: String) -> void:
+	_prompt.text = "[E] " + prompt
+	_prompt.visible = prompt != ""
 
 
 func _on_plan_made(plan: DirectorPlan) -> void:

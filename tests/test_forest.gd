@@ -103,6 +103,14 @@ func _test_built_level() -> void:
 		if ground == null or ground.get_used_cells().size() != 30 * 18:
 			themed = false
 	_check(themed, "every room has its Ground, Decor and Border tile layers and a fully painted floor")
+	var npcs := level.get_tree().get_nodes_in_group("npcs")
+	var chests := level.get_tree().get_nodes_in_group("chests")
+	_check(npcs.size() == 1 and npcs[0].get_parent().data.type == RoomData.RoomType.EVENT,
+			"the Anciano waits in the event room")
+	var chests_ok := chests.size() == 2
+	for chest in chests:
+		chests_ok = chests_ok and chest.get_parent().data.type == RoomData.RoomType.REWARD
+	_check(chests_ok, "there is one chest in each of the 2 reward rooms")
 	var first_room = level.rooms.values()[0]
 	_check(first_room.get_node("Walls").get_child_count() > 0 and first_room.get_node("Walls").find_children("*", "ColorRect", true, false).is_empty(),
 			"the walls keep their collision but no longer draw flat rectangles")

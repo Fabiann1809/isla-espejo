@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="1"]
+
+[node name="ChestHeart" instance=ExtResource("1")]
+reward = 1
+amount = 1
+message = "Has encontrado una mejora: un corazón más."

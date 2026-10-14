@@ -2,6 +2,18 @@ extends Node
 ## Global event bus (autoload "Events"). Gameplay code emits, other systems listen.
 ## The adaptive AI and the HUD only read from here, never from combat code directly.
 
+# Story and interaction
+signal dialogue_started(dialogue_id: StringName)
+signal dialogue_finished(dialogue_id: StringName, state: StringName)
+## Text of the nearest interactable object (empty when there is none), for the HUD.
+signal interaction_prompt_changed(prompt: String)
+## A line to show the player (rewards, chapter titles...).
+signal message_requested(text: String)
+signal chest_opened(chest: Node)
+signal boss_defeated(boss_id: StringName)
+signal fragment_collected(fragment_id: StringName)
+signal scenario_completed(scenario_id: StringName)
+
 # Run flow
 ## A map has been built and the player placed in it: a new run starts.
 signal level_started(scenario_id: StringName, map_seed: int)

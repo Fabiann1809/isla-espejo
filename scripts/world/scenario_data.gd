@@ -6,6 +6,8 @@ extends Resource
 @export var id: StringName = &"scenario"
 ## Player-facing name (Spanish).
 @export var display_name := "Escenario"
+## Shown when the chapter starts (Spanish), e.g. "El bosque despierta."
+@export var chapter_title := ""
 
 @export_group("Layout")
 @export var grid_size := Vector2i(5, 5)
@@ -35,3 +37,5 @@ extends Resource
 @export var enemy_pool: Array[PackedScene] = []
 @export var boss_scene: PackedScene
 @export var npc_scene: PackedScene
+## Chests that fill the reward rooms (one is picked for each).
+@export var chest_scenes: Array[PackedScene] = []

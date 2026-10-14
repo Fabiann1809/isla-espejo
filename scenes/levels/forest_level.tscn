@@ -10,6 +10,7 @@
 script = ExtResource("1")
 scenario = ExtResource("2")
 player_scene = ExtResource("3")
+unlock_all_skills = false
 
 [node name="Hud" parent="." instance=ExtResource("4")]
 

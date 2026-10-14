@@ -41,5 +41,12 @@ func heal(amount: int) -> void:
 	changed.emit(current, max_health)
 
 
+## Adds to the maximum and to the current health (a heart container).
+func increase_max(amount: int) -> void:
+	max_health += amount
+	current += amount
+	changed.emit(current, max_health)
+
+
 func is_dead() -> bool:
 	return current <= 0

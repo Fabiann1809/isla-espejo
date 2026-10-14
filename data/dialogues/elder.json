@@ -1,0 +1,29 @@
+{
+	"speaker": "El Anciano",
+	"states": {
+		"first": [
+			"Otro viajero... La isla ya te estaba esperando.",
+			{"speaker": "Nico", "text": "¿Dónde estoy? Mi brújula está rota y necesito volver a casa."},
+			"Si buscas el camino de regreso, primero tendrás que aprender a escuchar a la isla.",
+			"El bosque guarda algo que te pertenece. Pero no todo lo que protege quiere ser encontrado."
+		],
+		"again": [
+			"El Guardián vigila el corazón del bosque, al final del camino.",
+			"Sus raíces te frenarán. Si logras vencerlo, quizá la isla te preste su fuerza.",
+			"Y recuerda: la isla observa cómo luchas."
+		],
+		"final": [
+			{"speaker": "Nico", "text": "Lo logré. El fragmento verde... la brújula vuelve a brillar."},
+			"Uno de tres. Las ruinas de la montaña guardan el siguiente.",
+			"Ve con cuidado. La isla aprende de ti más de lo que crees."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["forest_boss_defeated"]},
+		{"state": "again", "requires": ["met_elder"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_elder"]
+	}
+}

@@ -53,6 +53,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | El director (IA capa 2) | `scripts/ai/director*.gd`, `data/ai/director_rules.tres` | Lee el perfil y adapta enemigos y salas del siguiente mapa. Reglas editables en el `.tres`. El HUD muestra la frase de la isla y la pantalla de muerte lista lo que cambiará |
 | Perfil del jugador (IA capa 1) | `scripts/ai/`, `data/ai/profile_config.tres` | Aprende si juegas agresivo o sigiloso y lo guarda entre partidas. El director leerá `PlayerProfile.live_scores()` |
 | Habilidades | `scripts/skills/`, `data/skills/` | Raíces, Corriente y Sombra. Teclas `1 2 3`; se desbloquean con `player.skills.unlock(...)` |
+| Interacción y diálogos | `scripts/world/interactable.gd`, `npc.gd`, `chest.gd`, `scripts/core/dialogue.gd`, `game_state.gd`, `data/dialogues/` | `E` interactúa con cofres y NPC. Los diálogos son archivos JSON (formato abajo). El progreso de la historia vive en `GameState` |
 | Escenario 1: Bosque de la Aurora | `data/scenarios/forest.tres`, `scenes/levels/forest_level.tscn`, `scenes/levels/rooms/forest/` | Es la escena que abre F5. 10 salas con tileset de Kenney (CC0). Se editan con `python tools/make_forest_rooms.py` |
 | Generador de mapas | `scripts/world/map_generator.gd`, `level.gd`, `room.gd` | Mapas distintos en cada partida con salas hechas a mano (ver `CLAUDE.md`) |
 | Nivel de prueba | `scenes/levels/test_level.tscn` | Genera un mapa; `R` crea otro. Es la escena que abre F5 |
@@ -66,6 +67,14 @@ Capas de colisión: 1 mundo · 2 jugador · 3 enemigo · 4 ataque del jugador ·
 3. Si su comportamiento es distinto, crea un script que extienda `Enemy` y sobrescribe solo `_process_chase`, `_start_attack`, `_process_attack`… Nunca copies `enemy.gd`.
 4. Añade una comprobación en `tests/test_enemy.gd` (o un test nuevo `tests/test_<nombre>.gd`).
 5. Pruébalo en la sala de pruebas (puedes instanciarlo ahí temporalmente, sin subir ese cambio).
+
+### Cómo escribir el diálogo de un NPC (Viajera, Mercader...)
+1. Crea `data/dialogues/<id>.json` (copia `elder.json`). Cada NPC necesita **tres estados**: `first` (primer encuentro), `again` (ya lo conoces) y `final` (después de vencer al jefe de su capítulo).
+2. Las líneas son texto, o `{"speaker": "Nico", "text": "..."}` si habla otra persona.
+3. `rules` decide qué estado suena: la primera regla cuyas banderas (`requires`) están todas puestas. La **última regla debe ser un valor por defecto sin `requires`**.
+4. `on_finish` pone banderas al terminar un estado (por ejemplo `first` marca `met_elder`, y así la próxima vez sale `again`).
+5. Crea la escena del NPC heredando de `scenes/npcs/npc.tscn` (como `elder.tscn`), con su `dialogue_id`, y asígnala a `npc_scene` del escenario (`data/scenarios/*.tres`).
+6. Las banderas de jefes derrotados se llaman `<escenario>_boss_defeated` (por ejemplo `forest_boss_defeated`); la prueba `tests/test_dialogues.gd` valida el formato de todos los archivos.
 
 ### Para que el director controle tus enemigos
 - El **nombre del archivo de la escena** es el id del enemigo (`bestia_de_la_niebla.tscn` → `bestia_de_la_niebla`). El director usa ese id en `enemy_weights` para decidir cuáles aparecen más.

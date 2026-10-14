@@ -39,6 +39,10 @@ var _dash_cooldown_left := 0.0
 var _attack_cooldown_left := 0.0
 var _invulnerable_left := 0.0
 var _stealth_left := 0.0
+## True while a dialogue is open: the player cannot move, attack or cast.
+var _locked := false
+var _interact_block_left := 0.0
+var _nearby: Interactable = null
 var _move_dir := Vector2.ZERO
 var _action_dir := Vector2.ZERO
 
@@ -50,6 +54,7 @@ var _action_dir := Vector2.ZERO
 @onready var _hitbox: Hitbox = $AttackPivot/Hitbox
 @onready var _slash: ColorRect = $AttackPivot/Slash
 @onready var _camera: Camera2D = $Camera2D
+@onready var _interact_area: Area2D = $InteractArea
 
 
 func _ready() -> void:
@@ -60,6 +65,8 @@ func _ready() -> void:
 	health.changed.connect(func(current: int, maximum: int) -> void:
 		Events.player_health_changed.emit(current, maximum))
 	health.died.connect(die)
+	Events.dialogue_started.connect(_on_dialogue_started)
+	Events.dialogue_finished.connect(_on_dialogue_finished)
 	_set_attack_active(false)
 	Events.player_health_changed.emit(health.current, health.max_health)
 
@@ -73,7 +80,8 @@ func _physics_process(delta: float) -> void:
 		if _stealth_left <= 0.0:
 			end_stealth()
 
-	_move_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	_interact_block_left = maxf(_interact_block_left - delta, 0.0)
+	_move_dir = Vector2.ZERO if _locked else Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if _move_dir != Vector2.ZERO and state in [State.IDLE, State.MOVE]:
 		facing = _move_dir.normalized()
 
@@ -90,6 +98,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 
 	move_and_slide()
+	_update_interaction()
 	_update_visuals()
 
 
@@ -104,7 +113,12 @@ func is_dead() -> bool:
 
 ## Skills can only be cast while moving freely, not while attacking, dashing, hurt or dead.
 func can_cast() -> bool:
-	return state == State.IDLE or state == State.MOVE
+	return not _locked and (state == State.IDLE or state == State.MOVE)
+
+
+## True when the player can use an object (not busy, not in a dialogue).
+func can_interact() -> bool:
+	return not _locked and _interact_block_left == 0.0 and (state == State.IDLE or state == State.MOVE)
 
 
 func is_stealthed() -> bool:
@@ -154,6 +168,37 @@ func die() -> void:
 	Events.player_died.emit()
 
 
+## Finds the nearest usable object in reach, tells the HUD, and uses it when E is pressed.
+func _update_interaction() -> void:
+	var best: Interactable = null
+	var best_distance := INF
+	if can_interact():
+		for area in _interact_area.get_overlapping_areas():
+			var item := area as Interactable
+			if item == null or not item.enabled:
+				continue
+			var distance := global_position.distance_to(item.global_position)
+			if distance < best_distance:
+				best = item
+				best_distance = distance
+	if best != _nearby:
+		_nearby = best
+		Events.interaction_prompt_changed.emit(best.prompt if best != null else "")
+	if best != null and Input.is_action_just_pressed("interact"):
+		best.interact(self)
+
+
+func _on_dialogue_started(_dialogue_id: StringName) -> void:
+	_locked = true
+	velocity = Vector2.ZERO
+
+
+func _on_dialogue_finished(_dialogue_id: StringName, _state: StringName) -> void:
+	_locked = false
+	# The key that closed the dialogue must not open the next interaction in the same instant.
+	_interact_block_left = 0.3
+
+
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 	health.take_damage(damage, from_position)
 	Events.player_damaged.emit(damage, from_position)
@@ -171,6 +216,8 @@ func _process_free(_delta: float) -> void:
 	velocity = _move_dir * speed
 	state = State.MOVE if _move_dir != Vector2.ZERO else State.IDLE
 
+	if _locked:
+		return
 	if Input.is_action_just_pressed("attack") and _attack_cooldown_left == 0.0:
 		_start_attack()
 	elif Input.is_action_just_pressed("dash") and _dash_cooldown_left == 0.0:
