@@ -5,7 +5,7 @@ Cada tarea grande tiene su checklist, un criterio **Hecho cuando** y un responsa
 - **B (contenido e IA):** perfil del jugador, director, enemigos, NPCs, arte e interfaz.
 - **A+B:** se reparte dentro de la tarea.
 
-Reglas: una tarea a la vez, en orden (salvo las que son independientes), una rama `feature/...` por tarea, PR a `main` con CI en verde, y marcar `[x]` en este archivo dentro del mismo PR. Alcance en `docs/JUEGO.md`.
+Reglas: una tarea a la vez, en orden (salvo las que son independientes), push directo a `main` con el juego funcionando y el chequeo en verde, y marcar `[x]` en este archivo en el mismo commit. Alcance en `docs/JUEGO.md`.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
@@ -16,7 +16,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Proyecto Godot 4.7 configurado (640x360, escalado entero, filtro nearest, acciones de entrada)
 - [x] `CLAUDE.md`, `docs/JUEGO.md`, `docs/TAREAS.md`, `README.md`
 - [x] CI de GitHub Actions (`godot-check`) y plantilla de PR
-- [ ] Protección de la rama `main` (PR obligatorio y CI en verde)
+- [x] CI en cada push; `main` sin protección estricta (push directo, como los demás repos)
 - [ ] Compañero invitado como colaborador y con Godot 4.7.2 instalado
 - [ ] Probar el flujo de arte completo con un cuadro de prueba: dibujar en Pixelorama, exportar PNG, importar a Godot y animar con `AnimatedSprite2D`
 - [ ] Definir y guardar la paleta única (16–24 colores) en `assets/palette/`

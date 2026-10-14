@@ -21,14 +21,15 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
 4. Never break what already works. If a change could affect another system, run the project and check that system before committing.
 
 ## Git and collaboration
-5. `main` is protected: **no direct pushes**. Work in a branch `feature/<short-name>` (or `fix/<short-name>`) and open a pull request. CI (`godot-check`) must pass before merging.
-6. One commit per task or fix. Tick the task checkbox (`[x]`) in `docs/TAREAS.md` in the same commit/PR.
+5. Work directly on `main` and push to it (no pull requests needed). Before every push: `git pull --rebase`, run the project, and run `godot --headless --path . --script res://tests/run_checks.gd` (must exit 0). Never push something that does not open or breaks what already worked. CI (`godot-check`) runs on every push; if it fails, fix it first.
+   - Optional: use a short-lived branch `feature/<short-name>` for a big or risky change, then merge it into `main`.
+6. One commit per task or fix. Tick the task checkbox (`[x]`) in `docs/TAREAS.md` in the same commit.
 7. Commit format: [Conventional Commits](https://www.conventionalcommits.org/) in English: `type(scope): imperative summary`.
    - Types: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `chore`, `style`.
    - Scopes: `player`, `combat`, `skills`, `enemies`, `bosses`, `world`, `ai`, `npc`, `dialogue`, `ui`, `audio`, `art`, `save`, `ci`.
    - Summary ≤ 72 chars, imperative, no trailing period. Example: `feat(player): add dash with cooldown`.
 8. Each person commits with **their own name and email**. **Never** add `Co-Authored-By` trailers or any AI/tool attribution to commits, PRs or files.
-9. Avoid merge conflicts in Godot: do not edit a `.tscn` scene that another person is changing in their branch. Shared files (`project.godot`, autoloads, `data/`) are changed in small PRs, announced first. Prefer many small scenes over one big scene.
+9. Avoid merge conflicts in Godot: do not edit a `.tscn` scene that the other person is currently working on, and `git pull --rebase` often. Shared files (`project.godot`, autoloads, `data/`) are changed in small commits, announced first. Prefer many small scenes over one big scene.
 10. Never commit: `.godot/`, builds, secrets, personal files, or huge unused assets. Never force-push to shared branches.
 
 ## Code
