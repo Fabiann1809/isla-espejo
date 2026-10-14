@@ -1,0 +1,29 @@
+# Godot
+.godot/
+.import/
+*.translation
+export.cfg
+export_credentials.cfg
+export_presets.cfg.local
+
+# Builds
+builds/
+export/
+*.exe
+*.pck
+*.zip
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Pixelorama / art working files are kept; temporary exports are not
+*.tmp
+*.bak
+
+# Secrets and local config
+.env
+*.key
+*.pem
