@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
+
+
+[node name="CombatC" instance=ExtResource("1")]
+
+[node name="EnemySpawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(60, 60)
+
+[node name="P2" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(420, 60)
+
+[node name="P3" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(60, 230)
+
+[node name="P4" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(420, 230)
+
+[node name="P5" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(150, 144)
+
+[node name="P6" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(330, 144)

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/special.tscn" id="1_5uj0j"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_wsxp3"]
+
+[resource]
+script = ExtResource("2_wsxp3")
+id = &"test_special"
+type = 4
+scene = ExtResource("1_5uj0j")
+min_enemies = 0
+max_enemies = 0

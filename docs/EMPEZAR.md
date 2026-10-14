@@ -15,7 +15,7 @@ Lee esto primero. En 15 minutos deberías tener el juego abierto y saber por dó
    git config user.email "tu-correo@ejemplo.com"
    ```
 4. Abre Godot → **Importar** → selecciona `project.godot` → **Importar y editar**.
-5. Pulsa **F5**. Verás una sala de prueba: Nico (cuadro amarillo), cuadros rojos para golpear, trampas de pinchos y dos soldados enemigos.
+5. Pulsa **F5**. Verás un mapa generado: Nico (cuadro amarillo) empieza en la sala verde (inicio) y los soldados rojos están repartidos por las salas. Con `R` se genera otro mapa. La sala morada es la del jefe (arriba).
 
 Controles: `WASD` mover · `Espacio` esquivar · `J` atacar. (Habilidades `1 2 3` e interactuar `E` aún no hacen nada.)
 
@@ -32,6 +32,8 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar. (Habilidades `1 2 3
   godot --headless --path . --script res://tests/test_player.gd
   godot --headless --path . --script res://tests/test_combat.gd
   godot --headless --path . --script res://tests/test_enemy.gd
+  godot --headless --path . --script res://tests/test_map_generator.gd
+  godot --headless --path . --script res://tests/test_level_build.gd
   ```
   Todas deben terminar con código 0. GitHub las repite en cada push (pestaña Actions); si salen en rojo, se arregla antes de seguir.
 - Un commit por tarea, en inglés y con formato `tipo(ámbito): resumen`, por ejemplo `feat(enemies): add fog beast`. Sin atribución de IA.
@@ -48,7 +50,9 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar. (Habilidades `1 2 3
 | Enemigo base | `scripts/enemies/enemy.gd`, `enemy_data.gd`, `scenes/enemies/enemy.tscn` | Estados, detección, persecución, ataque con aviso |
 | Plantilla de enemigo | `scenes/enemies/grunt.tscn`, `data/enemies/grunt.tres` | Ejemplo a copiar |
 | HUD | `scenes/ui/hud.tscn` | Corazones de vida |
-| Sala de pruebas | `scenes/levels/test_room.tscn` | Banco de pruebas (no es parte del juego final) |
+| Generador de mapas | `scripts/world/map_generator.gd`, `level.gd`, `room.gd` | Mapas distintos en cada partida con salas hechas a mano (ver `CLAUDE.md`) |
+| Nivel de prueba | `scenes/levels/test_level.tscn` | Genera un mapa; `R` crea otro. Es la escena que abre F5 |
+| Sala de pruebas | `scenes/levels/test_room.tscn` | Banco de pruebas del combate (lo usan los tests) |
 
 Capas de colisión: 1 mundo · 2 jugador · 3 enemigo · 4 ataque del jugador · 5 ataque enemigo.
 

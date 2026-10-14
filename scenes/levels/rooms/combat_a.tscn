@@ -1,0 +1,89 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="s1"]
+size = Vector2(24, 24)
+
+[sub_resource type="RectangleShape2D" id="s2"]
+size = Vector2(24, 24)
+
+[sub_resource type="RectangleShape2D" id="s3"]
+size = Vector2(24, 24)
+
+[sub_resource type="RectangleShape2D" id="s4"]
+size = Vector2(24, 24)
+
+[node name="CombatA" instance=ExtResource("1")]
+
+[node name="Pillar1" type="StaticBody2D" parent="."]
+position = Vector2(120.0, 70.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar1"]
+shape = SubResource("s1")
+
+[node name="Visual" type="ColorRect" parent="Pillar1"]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Pillar2" type="StaticBody2D" parent="."]
+position = Vector2(360.0, 70.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar2"]
+shape = SubResource("s2")
+
+[node name="Visual" type="ColorRect" parent="Pillar2"]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Pillar3" type="StaticBody2D" parent="."]
+position = Vector2(120.0, 218.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar3"]
+shape = SubResource("s3")
+
+[node name="Visual" type="ColorRect" parent="Pillar3"]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Pillar4" type="StaticBody2D" parent="."]
+position = Vector2(360.0, 218.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar4"]
+shape = SubResource("s4")
+
+[node name="Visual" type="ColorRect" parent="Pillar4"]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="EnemySpawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(90, 100)
+
+[node name="P2" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(390, 100)
+
+[node name="P3" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(90, 190)
+
+[node name="P4" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(390, 190)
+
+[node name="P5" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(240, 60)
+
+[node name="P6" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(240, 230)

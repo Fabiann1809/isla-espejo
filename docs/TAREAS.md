@@ -8,8 +8,8 @@ Cada tarea grande tiene su checklist, un criterio **Hecho cuando** y un responsa
 Reglas: una tarea a la vez, en orden (salvo las que son independientes), push directo a `main` con el juego funcionando y el chequeo en verde, y marcar `[x]` en este archivo en el mismo commit. Alcance en `docs/JUEGO.md`.
 
 ## Estado actual
-- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
-- **Persona A, siguiente:** 5 (habilidades) y 6 (generador de mapas).
+- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 6 (generador de mapas) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **Persona A, siguiente:** 5 (habilidades) y luego el escenario 1 (tarea 7).
 - **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido), el sistema de diálogo de la 12, y el arranque de la 8. Ver `docs/EMPEZAR.md`.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
@@ -76,14 +76,14 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** las 3 habilidades se pueden usar desde una sala de prueba, cada una con efecto visible y recarga, y se desbloquean por código.
 
 ## 6. Generador de salas y mapas — A  ← 2
-- [ ] Definir el formato de sala (tamaño, puertas/salidas, tipo, enemigos posibles) en `data/rooms/`
-- [ ] Crear 3 salas de prueba a mano
-- [ ] Algoritmo que coloca salas y las conecta con pasillos desde el inicio hasta el jefe
-- [ ] Sala de inicio y arena del jefe fijas
-- [ ] Semilla (seed) para reproducir y depurar un mapa
-- [ ] Verificación: todas las salas son alcanzables y no se superponen
-- [ ] Carga de salas y transición entre ellas con la cámara siguiendo a Nico
-- [ ] Parámetros por escenario (número de salas, tipos permitidos)
+- [x] Definir el formato de sala (tamaño, puertas/salidas, tipo, enemigos posibles) en `data/rooms/`
+- [x] Crear 3 salas de prueba a mano
+- [x] Algoritmo que coloca salas y las conecta con pasillos desde el inicio hasta el jefe
+- [x] Sala de inicio y arena del jefe fijas
+- [x] Semilla (seed) para reproducir y depurar un mapa
+- [x] Verificación: todas las salas son alcanzables y no se superponen
+- [x] Carga de salas y transición entre ellas con la cámara siguiendo a Nico
+- [x] Parámetros por escenario (número de salas, tipos permitidos)
 
 **Hecho cuando:** cada ejecución genera un escenario distinto, siempre completable de inicio a jefe, y se puede reproducir con la misma semilla.
 

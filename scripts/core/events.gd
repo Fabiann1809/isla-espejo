@@ -15,3 +15,9 @@ signal enemy_damaged(enemy: Node, amount: int)
 signal enemy_killed(enemy: Node)
 ## An enemy noticed the player (once per detection, not every frame).
 signal enemy_detected_player(enemy: Node)
+
+# Map rooms (emitted by Room). `room` is the Room node; read room.data for its RoomData.
+signal room_entered(room: Node)
+signal room_exited(room: Node)
+## Every enemy of the room is dead.
+signal room_cleared(room: Node)

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/combat_a.tscn" id="1_ikrfc"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_vku2o"]
+
+[resource]
+script = ExtResource("2_vku2o")
+id = &"test_combat_a"
+scene = ExtResource("1_ikrfc")
+tags = Array[StringName]([&"standard"])

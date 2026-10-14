@@ -1,0 +1,54 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="s1"]
+size = Vector2(96, 16)
+
+[sub_resource type="RectangleShape2D" id="s2"]
+size = Vector2(96, 16)
+
+[node name="CombatB" instance=ExtResource("1")]
+
+[node name="Bar1" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 88.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bar1"]
+shape = SubResource("s1")
+
+[node name="Visual" type="ColorRect" parent="Bar1"]
+offset_left = -48.0
+offset_top = -8.0
+offset_right = 48.0
+offset_bottom = 8.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Bar2" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 200.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bar2"]
+shape = SubResource("s2")
+
+[node name="Visual" type="ColorRect" parent="Bar2"]
+offset_left = -48.0
+offset_top = -8.0
+offset_right = 48.0
+offset_bottom = 8.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="EnemySpawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(70, 70)
+
+[node name="P2" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(410, 70)
+
+[node name="P3" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(70, 220)
+
+[node name="P4" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(410, 220)
+
+[node name="P5" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(330, 100)

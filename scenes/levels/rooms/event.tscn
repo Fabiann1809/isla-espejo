@@ -1,0 +1,74 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="s1"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="s2"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="s3"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="s4"]
+size = Vector2(20, 20)
+
+[node name="Event" instance=ExtResource("1")]
+
+[node name="Pillar1" type="StaticBody2D" parent="."]
+position = Vector2(110.0, 90.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar1"]
+shape = SubResource("s1")
+
+[node name="Visual" type="ColorRect" parent="Pillar1"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Pillar2" type="StaticBody2D" parent="."]
+position = Vector2(370.0, 90.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar2"]
+shape = SubResource("s2")
+
+[node name="Visual" type="ColorRect" parent="Pillar2"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Pillar3" type="StaticBody2D" parent="."]
+position = Vector2(110.0, 200.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar3"]
+shape = SubResource("s3")
+
+[node name="Visual" type="ColorRect" parent="Pillar3"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="Pillar4" type="StaticBody2D" parent="."]
+position = Vector2(370.0, 200.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar4"]
+shape = SubResource("s4")
+
+[node name="Visual" type="ColorRect" parent="Pillar4"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(0.1, 0.12, 0.12, 1)
+
+[node name="NpcSpawn" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="NpcSpawn"]
+position = Vector2(240, 100)

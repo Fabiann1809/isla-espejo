@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/event.tscn" id="1_7orga"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_mbvhv"]
+
+[resource]
+script = ExtResource("2_mbvhv")
+id = &"test_event"
+type = 2
+scene = ExtResource("1_7orga")
+min_enemies = 0
+max_enemies = 0
