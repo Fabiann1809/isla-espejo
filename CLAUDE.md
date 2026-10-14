@@ -30,7 +30,7 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
    - Summary ≤ 72 chars, imperative, no trailing period. Example: `feat(player): add dash with cooldown`.
 8. Each person commits with **their own name and email**. **Never** add `Co-Authored-By` trailers or any AI/tool attribution to commits, PRs or files.
 9. Avoid merge conflicts in Godot: do not edit a `.tscn` scene that the other person is currently working on, and `git pull --rebase` often. Shared files (`project.godot`, autoloads, `data/`) are changed in small commits, announced first. Prefer many small scenes over one big scene.
-10. Never commit: `.godot/`, builds, secrets, personal files, or huge unused assets. Never force-push to shared branches.
+10. Releases: pushing a tag `v*` publishes a public GitHub Release (CD). Never create or push tags unless the user explicitly asks. Never commit: `.godot/`, builds, secrets, personal files, or huge unused assets. Never force-push to shared branches.
 
 ## Code
 11. Everything in **English** (identifiers, comments, commits, filenames) **except player-facing text** (dialogues, UI, item names), which is **Spanish** and lives in `data/` files, never hardcoded in scripts.

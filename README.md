@@ -28,6 +28,17 @@ godot --headless --path . --script res://tests/run_checks.gd
 ```
 Debe terminar con código 0. Es la misma comprobación que ejecuta CI en cada pull request.
 
+## Descargar una versión jugable
+Las versiones publicadas están en la pestaña **Releases** del repositorio (zip para Windows, sin instalar nada).
+
+### Publicar una versión (CD)
+Al subir una etiqueta `v*`, GitHub Actions ejecuta las pruebas, exporta el juego para Windows y crea la Release automáticamente:
+```
+git tag v0.1.0
+git push origin v0.1.0
+```
+También se puede lanzar a mano desde **Actions → Build and release → Run workflow**; en ese caso solo deja el zip como artefacto descargable, sin publicar una Release.
+
 ## Equipo
 Proyecto de portafolio desarrollado por dos personas en unos 2 meses.
 

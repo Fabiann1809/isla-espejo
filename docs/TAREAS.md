@@ -174,7 +174,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [ ] Jugar completo varias veces con estilos distintos y ajustar la IA
 - [ ] Corregir errores y revisar la consola de Godot sin errores ni avisos importantes
 - [ ] Rendimiento estable en un equipo normal
-- [ ] Preset de exportación para Windows y build jugable
+- [x] Preset de exportación para Windows y build jugable (`export_presets.cfg` y `.github/workflows/release.yml`, probado)
 - [ ] Publicar la build como *release* en GitHub
 - [ ] Capturas, GIFs y vídeo corto para el portafolio
 - [ ] Revisar `CREDITS.md` y el `README.md` finales
