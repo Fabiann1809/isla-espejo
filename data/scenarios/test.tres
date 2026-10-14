@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="ScenarioData" format=3]
 
-[ext_resource type="Resource" path="res://data/rooms/test_boss.tres" id="1_eo6va"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="2_gp6og"]
-[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="3_jlaka"]
-[ext_resource type="Resource" path="res://data/rooms/test_combat_a.tres" id="4_50dwj"]
-[ext_resource type="Resource" path="res://data/rooms/test_combat_b.tres" id="5_esmj4"]
-[ext_resource type="Resource" path="res://data/rooms/test_combat_c.tres" id="6_1cll2"]
-[ext_resource type="Resource" path="res://data/rooms/test_event.tres" id="7_o6ghi"]
-[ext_resource type="Resource" path="res://data/rooms/test_reward.tres" id="8_o34fb"]
-[ext_resource type="Resource" path="res://data/rooms/test_special.tres" id="9_gmjs5"]
-[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="10_bvp4l"]
-[ext_resource type="Resource" path="res://data/rooms/test_start.tres" id="11_afxjd"]
+[ext_resource type="Resource" path="res://data/rooms/test_boss.tres" id="1_gp6og"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="2_jlaka"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="3_50dwj"]
+[ext_resource type="Resource" path="res://data/rooms/test_combat_a.tres" id="4_esmj4"]
+[ext_resource type="Resource" path="res://data/rooms/test_combat_b.tres" id="5_1cll2"]
+[ext_resource type="Resource" path="res://data/rooms/test_combat_c.tres" id="6_o6ghi"]
+[ext_resource type="Resource" path="res://data/rooms/test_combat_d.tres" id="7_o34fb"]
+[ext_resource type="Resource" path="res://data/rooms/test_event.tres" id="8_gmjs5"]
+[ext_resource type="Resource" path="res://data/rooms/test_reward.tres" id="9_bvp4l"]
+[ext_resource type="Resource" path="res://data/rooms/test_special.tres" id="10_afxjd"]
+[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="11_awkle"]
+[ext_resource type="Resource" path="res://data/rooms/test_start.tres" id="12_c44gv"]
 
 [resource]
-script = ExtResource("10_bvp4l")
+script = ExtResource("11_awkle")
 id = &"test"
 display_name = "Escenario de prueba"
-start_room = ExtResource("11_afxjd")
-boss_room = ExtResource("1_eo6va")
-rooms = Array[ExtResource("3_jlaka")]([ExtResource("4_50dwj"), ExtResource("5_esmj4"), ExtResource("6_1cll2"), ExtResource("7_o6ghi"), ExtResource("8_o34fb"), ExtResource("9_gmjs5")])
-enemy_pool = Array[PackedScene]([ExtResource("2_gp6og")])
+start_room = ExtResource("12_c44gv")
+boss_room = ExtResource("1_gp6og")
+rooms = Array[ExtResource("3_50dwj")]([ExtResource("4_esmj4"), ExtResource("5_1cll2"), ExtResource("6_o6ghi"), ExtResource("7_o34fb"), ExtResource("8_gmjs5"), ExtResource("9_bvp4l"), ExtResource("10_afxjd")])
+enemy_pool = Array[PackedScene]([ExtResource("2_jlaka")])

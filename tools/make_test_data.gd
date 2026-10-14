@@ -10,6 +10,7 @@ const ROOMS := [
 	[&"test_combat_a", RoomData.RoomType.COMBAT, "combat_a", 1.0, [&"standard"], 2, 4],
 	[&"test_combat_b", RoomData.RoomType.COMBAT, "combat_b", 1.0, [&"standard"], 2, 4],
 	[&"test_combat_c", RoomData.RoomType.COMBAT, "combat_c", 0.8, [&"ambush"], 4, 6],
+	[&"test_combat_d", RoomData.RoomType.COMBAT, "combat_d", 0.8, [&"watch"], 3, 5],
 	[&"test_event", RoomData.RoomType.EVENT, "event", 1.0, [], 0, 0],
 	[&"test_reward", RoomData.RoomType.REWARD, "reward", 1.0, [], 0, 0],
 	[&"test_special", RoomData.RoomType.SPECIAL, "special", 1.0, [], 0, 0],
@@ -50,7 +51,7 @@ func _initialize() -> void:
 	scenario.start_room = saved[&"test_start"]
 	scenario.boss_room = saved[&"test_boss"]
 	var rooms: Array[RoomData] = []
-	for id in [&"test_combat_a", &"test_combat_b", &"test_combat_c", &"test_event", &"test_reward", &"test_special"]:
+	for id in [&"test_combat_a", &"test_combat_b", &"test_combat_c", &"test_combat_d", &"test_event", &"test_reward", &"test_special"]:
 		rooms.append(saved[id])
 	scenario.rooms = rooms
 	var pool: Array[PackedScene] = [load("res://scenes/enemies/grunt.tscn")]

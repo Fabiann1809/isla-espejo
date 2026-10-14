@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="DirectorConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/director_rule.gd" id="1_2ylg8"]
+[ext_resource type="Script" path="res://scripts/ai/director_config.gd" id="2_3b1o4"]
+
+[sub_resource type="Resource" id="Resource_jc7r0"]
+script = ExtResource("1_2ylg8")
+health_multiplier = 1.4
+speed_multiplier = 1.1
+count_multiplier = 1.3
+room_weights = {
+&"ambush": 3.0,
+&"standard": 0.8
+}
+island_line = "La isla endurece a sus criaturas."
+hints = Array[String](["Criaturas más resistentes y rápidas", "Más enemigos por sala", "Más emboscadas"])
+
+[sub_resource type="Resource" id="Resource_idjta"]
+script = ExtResource("1_2ylg8")
+vision_multiplier = 1.6
+patrol_multiplier = 2.0
+room_weights = {
+&"ambush": 0.4,
+&"watch": 5.0
+}
+island_line = "La isla afina sus sentidos."
+hints = Array[String](["Enemigos que ven desde más lejos", "Patrullas más amplias", "Más salas vigiladas"])
+
+[sub_resource type="Resource" id="Resource_didp4"]
+script = ExtResource("1_2ylg8")
+health_multiplier = 1.15
+vision_multiplier = 1.2
+patrol_multiplier = 1.3
+count_multiplier = 1.1
+hints = Array[String](["La isla aún te estudia: un poco más dura en todo"])
+
+[resource]
+script = ExtResource("2_3b1o4")
+rules = {
+&"aggressive": SubResource("Resource_jc7r0"),
+&"balanced": SubResource("Resource_didp4"),
+&"stealth": SubResource("Resource_idjta")
+}
+texts = {
+"prepare_title": "La isla se prepara:"
+}

@@ -22,6 +22,8 @@ func _initialize() -> void:
 	var scene: PackedScene = load("res://scenes/levels/test_level.tscn")
 	_level = scene.instantiate()
 	_level.seed_value = SEED
+	# These checks are about the map itself; the director has its own test (test_director.gd).
+	_level.use_director = false
 	root.add_child(_level)
 	await _frames(5)
 

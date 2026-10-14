@@ -49,6 +49,8 @@ func _initialize() -> void:
 	_check(mgr.get_skill(0).id == &"roots" and mgr.get_skill(1).id == &"current" and mgr.get_skill(2).id == &"shadow",
 			"each skill sits in its own slot")
 	await _frames(3)
+	await process_frame
+	await process_frame
 	_check(bar.slot_state(0).unlocked, "HUD shows the slot as unlocked")
 
 	# --- Cooldown
@@ -57,6 +59,8 @@ func _initialize() -> void:
 	_check(not mgr.try_use(0), "a skill on cooldown cannot be cast again")
 	_check(mgr.cooldown_ratio(0) > 0.9, "cooldown ratio starts near 1 (%.2f)" % mgr.cooldown_ratio(0))
 	await _frames(3)
+	await process_frame
+	await process_frame
 	_check(bar.slot_state(0).cooldown_ratio > 0.5, "HUD shows the cooldown filling the slot (%.2f)" % bar.slot_state(0).cooldown_ratio)
 	await _frames(35)
 	_check(mgr.cooldown_ratio(0) == 0.0 and mgr.try_use(0), "skill is ready again after its cooldown")
@@ -78,6 +82,7 @@ func _initialize() -> void:
 	_used.clear()
 	var inside_start: Vector2 = inside.global_position
 	var outside_start: Vector2 = outside.global_position
+	await _settle()
 	mgr.try_use(0)
 	_check(_used.size() == 1 and _used[0][1] == 1, "Raíces reports exactly 1 enemy affected (%s)" % [_used])
 	_check(inside.is_rooted() and not outside.is_rooted(), "only the enemy inside the zone is rooted")
@@ -101,6 +106,7 @@ func _initialize() -> void:
 	_used.clear()
 	var front_start: float = front.global_position.x
 	var front_health: int = front.health.current
+	await _settle()
 	mgr.try_use(1)
 	_check(_used.size() == 1 and _used[0][1] == 1, "Corriente reports exactly 1 enemy affected (%s)" % [_used])
 	_check(front.is_slowed(), "the enemy in front is slowed")
@@ -119,6 +125,7 @@ func _initialize() -> void:
 	await _frames(2)
 	_used.clear()
 	_stealth.clear()
+	await _settle()
 	mgr.try_use(2)
 	_check(absf(_player.global_position.x - (ARENA.x + 110.0)) < 2.0, "Sombra teleports the full distance in open space (%.0f)" % _player.global_position.x)
 	_check(_player.is_stealthed() and _player.visibility < 0.5, "the player becomes harder to detect (visibility %.2f)" % _player.visibility)
@@ -138,6 +145,7 @@ func _initialize() -> void:
 	_player.global_position = Vector2(440, 180)
 	_player.facing = Vector2.RIGHT
 	await _frames(15)
+	await _settle()
 	mgr.try_use(2)
 	_check(_player.global_position.x > 440.0 and _player.global_position.x < 480.0 - 5.0,
 			"Sombra stops before the wall (x = %.1f, wall at 480)" % _player.global_position.x)
@@ -151,6 +159,7 @@ func _initialize() -> void:
 	await _frames(15)
 	_check(hunter.target == _player, "the hunter is chasing the player")
 	_used.clear()
+	await _settle()
 	mgr.try_use(2)
 	await _frames(10)
 	_check(_used.size() == 1 and _used[0][1] == 1, "Sombra reports the hunter it escaped from (%s)" % [_used])
@@ -162,6 +171,7 @@ func _initialize() -> void:
 	_equip(2, 0.0, {"stealth_time": 0.3})
 	_player.global_position = ARENA
 	await _frames(15)
+	await _settle()
 	mgr.try_use(2)
 	_check(_player.is_stealthed(), "stealth is active right after the cast")
 	await _frames(30)
@@ -175,6 +185,16 @@ func _initialize() -> void:
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
+
+
+## Skills cannot be cast while the player is hurt, attacking or dashing. Enemies of the previous
+## section may have hit the player, so wait until the player can act again (and refill health).
+func _settle() -> void:
+	for i in 90:
+		if _player.can_cast():
+			break
+		await physics_frame
+	_player.health.heal(5)
 
 
 ## Loads a skill into its slot as a private copy with the given cooldown and optional effect

@@ -8,9 +8,10 @@ Cada tarea grande tiene su checklist, un criterio **Hecho cuando** y un responsa
 Reglas: una tarea a la vez, en orden (salvo las que son independientes), push directo a `main` con el juego funcionando y el chequeo en verde, y marcar `[x]` en este archivo en el mismo commit. Alcance en `docs/JUEGO.md`.
 
 ## Estado actual
-- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas), 8 (perfil del jugador, IA capa 1) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas), 8 (perfil del jugador, IA capa 1), 9 (la isla reacciona, IA capa 2) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **La IA ya está completa** (capas 1 y 2). Quien haga los enemigos y escenarios solo debe respetar las convenciones de `docs/EMPEZAR.md` (sección 5) para que el director los controle.
 - **Persona A, siguiente:** el escenario 1 (tarea 7). Necesita los enemigos y el jefe de la tarea 4 (persona B).
-- **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido), el sistema de diálogo de la 12 y la **9 (la isla reacciona)**, que ya tiene el perfil que necesita. La 8 la adelantó la persona A. Ver `docs/EMPEZAR.md`.
+- **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido) y el sistema de diálogo de la 12. Las tareas 8 y 9 ya las adelantó la persona A: **no hay que rehacerlas**. Ver `docs/EMPEZAR.md`.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
@@ -110,14 +111,14 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 **Hecho cuando:** tras jugar, el perfil refleja el estilo (probado con una partida agresiva y otra sigilosa), se guarda y se recupera al reiniciar el juego.
 
-## 9. La isla reacciona (IA capa 2) — B  ← 6, 8
-- [ ] Director (`scripts/ai/`) que lee el perfil y produce ajustes
-- [ ] Ajustar composición y cantidad de enemigos por sala según el perfil
-- [ ] Ajustar parámetros de enemigos (visión, velocidad, vida) según el perfil
-- [ ] Influir en la selección de salas del generador
-- [ ] Reacciones visibles para el jugador (diálogo de la isla, resumen al morir)
-- [ ] Tabla de reglas en `data/ai/` para ajustar sin tocar código
-- [ ] Registro de depuración que muestre qué decidió el director y por qué
+## 9. La isla reacciona (IA capa 2) — B (adelantada por A)  ← 6, 8
+- [x] Director (`scripts/ai/`) que lee el perfil y produce ajustes
+- [x] Ajustar composición y cantidad de enemigos por sala según el perfil
+- [x] Ajustar parámetros de enemigos (visión, velocidad, vida) según el perfil
+- [x] Influir en la selección de salas del generador
+- [x] Reacciones visibles para el jugador (diálogo de la isla, resumen al morir)
+- [x] Tabla de reglas en `data/ai/` para ajustar sin tocar código
+- [x] Registro de depuración que muestre qué decidió el director y por qué
 
 **Hecho cuando:** jugando de forma agresiva y luego sigilosa se ven diferencias claras en las salas y enemigos, y el cambio se puede explicar con el registro de depuración.
 

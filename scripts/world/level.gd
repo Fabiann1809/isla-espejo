@@ -15,9 +15,13 @@ const CORRIDOR_COLOR := Color(0.15, 0.22, 0.17)
 @export var player_scene: PackedScene
 ## 0 picks a random seed.
 @export var seed_value := 0
+## Lets the island's director adapt the map to the player's profile.
+@export var use_director := true
 
-## Room tag -> weight multiplier, set by the AI director before `generate`.
+## Extra room tag -> weight multiplier, applied on top of the director's plan (debugging).
 var weight_modifiers := {}
+## What the director decided for the current map.
+var plan: DirectorPlan = DirectorPlan.neutral()
 var layout: MapLayout
 var current_seed := 0
 ## Grid coordinate -> Room node.
@@ -39,7 +43,10 @@ func _ready() -> void:
 ## Builds (or rebuilds) the map. Pass 0 for a random seed.
 func generate(new_seed := 0) -> void:
 	current_seed = new_seed if new_seed != 0 else randi_range(1, 2147483646)
-	layout = MapGenerator.generate(scenario, current_seed, weight_modifiers)
+	# First close the previous run (the profile learns from it), then let the director read the result.
+	Events.level_started.emit(scenario.id, current_seed)
+	plan = Director.make_plan() if use_director else DirectorPlan.neutral()
+	layout = MapGenerator.generate(scenario, current_seed, _room_weights())
 	var problems := layout.validate()
 	if not problems.is_empty():
 		push_error("Invalid map (seed %d): %s" % [current_seed, ", ".join(problems)])
@@ -57,7 +64,14 @@ func generate(new_seed := 0) -> void:
 	_compute_bounds()
 	_place_player()
 	generated.emit(layout)
-	Events.level_started.emit(scenario.id, current_seed)
+
+
+## The director's room weights combined with any manual ones.
+func _room_weights() -> Dictionary:
+	var weights := plan.room_weights.duplicate()
+	for tag in weight_modifiers:
+		weights[tag] = weights.get(tag, 1.0) * weight_modifiers[tag]
+	return weights
 
 
 func room_at(coord: Vector2i) -> Room:
@@ -92,7 +106,7 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 		RoomData.RoomType.COMBAT:
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
-			room.spawn_enemies(scenario.enemy_pool, count, rng)
+			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan)
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 		RoomData.RoomType.EVENT:

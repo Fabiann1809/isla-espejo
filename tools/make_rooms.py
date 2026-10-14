@@ -72,6 +72,8 @@ room("combat_b", "CombatB", bars=[(96, 80, 96, 16), (288, 192, 96, 16)],
      markers={"EnemySpawns": [(70, 70), (410, 70), (70, 220), (410, 220), (330, 100)]})
 room("combat_c", "CombatC",
      markers={"EnemySpawns": [(60, 60), (420, 60), (60, 230), (420, 230), (150, 144), (330, 144)]})
+room("combat_d", "CombatD", bars=[(140, 96, 200, 16), (140, 176, 200, 16)],
+     markers={"EnemySpawns": [(60, 80), (60, 210), (420, 80), (420, 210), (240, 50), (240, 240), (120, 144), (360, 144)]})
 room("event", "Event", pillars=[(110, 90, 20), (370, 90, 20), (110, 200, 20), (370, 200, 20)],
      markers={"NpcSpawn": [(240, 100)]})
 room("reward", "Reward", markers={"ChestSpawn": [(240, 144)]})

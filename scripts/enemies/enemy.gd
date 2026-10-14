@@ -26,6 +26,7 @@ const ARRIVE_DISTANCE := 4.0
 @export var speed_multiplier := 1.0
 @export var damage_multiplier := 1.0
 @export var vision_multiplier := 1.0
+@export var patrol_multiplier := 1.0
 
 var state: State = State.IDLE
 var target: Node2D = null
@@ -154,7 +155,7 @@ func is_slowed() -> bool:
 
 func _process_idle(delta: float) -> void:
 	velocity = Vector2.ZERO
-	if data.patrol_radius <= 0.0:
+	if data.patrol_radius * patrol_multiplier <= 0.0:
 		return
 	_wait_left -= delta
 	if _wait_left <= 0.0:
@@ -313,7 +314,7 @@ func _enter_chase_or_idle() -> void:
 
 func _choose_patrol_point() -> void:
 	var angle := randf() * TAU
-	_patrol_point = _home + Vector2.from_angle(angle) * randf_range(0.3, 1.0) * data.patrol_radius
+	_patrol_point = _home + Vector2.from_angle(angle) * randf_range(0.3, 1.0) * data.patrol_radius * patrol_multiplier
 
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:

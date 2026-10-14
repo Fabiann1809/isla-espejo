@@ -26,3 +26,14 @@ offset_top = 8.0
 offset_right = -8.0
 offset_bottom = 28.0
 horizontal_alignment = 2
+
+[node name="PlanInfo" type="Label" parent="Debug"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -630.0
+offset_top = 30.0
+offset_right = -8.0
+offset_bottom = 50.0
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 10

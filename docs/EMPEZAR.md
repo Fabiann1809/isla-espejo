@@ -50,6 +50,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | Enemigo base | `scripts/enemies/enemy.gd`, `enemy_data.gd`, `scenes/enemies/enemy.tscn` | Estados, detección, persecución, ataque con aviso |
 | Plantilla de enemigo | `scenes/enemies/grunt.tscn`, `data/enemies/grunt.tres` | Ejemplo a copiar |
 | HUD | `scenes/ui/hud.tscn` | Corazones de vida |
+| El director (IA capa 2) | `scripts/ai/director*.gd`, `data/ai/director_rules.tres` | Lee el perfil y adapta enemigos y salas del siguiente mapa. Reglas editables en el `.tres`. El HUD muestra la frase de la isla y la pantalla de muerte lista lo que cambiará |
 | Perfil del jugador (IA capa 1) | `scripts/ai/`, `data/ai/profile_config.tres` | Aprende si juegas agresivo o sigiloso y lo guarda entre partidas. El director leerá `PlayerProfile.live_scores()` |
 | Habilidades | `scripts/skills/`, `data/skills/` | Raíces, Corriente y Sombra. Teclas `1 2 3`; se desbloquean con `player.skills.unlock(...)` |
 | Generador de mapas | `scripts/world/map_generator.gd`, `level.gd`, `room.gd` | Mapas distintos en cada partida con salas hechas a mano (ver `CLAUDE.md`) |
@@ -65,13 +66,19 @@ Capas de colisión: 1 mundo · 2 jugador · 3 enemigo · 4 ataque del jugador ·
 4. Añade una comprobación en `tests/test_enemy.gd` (o un test nuevo `tests/test_<nombre>.gd`).
 5. Pruébalo en la sala de pruebas (puedes instanciarlo ahí temporalmente, sin subir ese cambio).
 
+### Para que el director controle tus enemigos
+- El **nombre del archivo de la escena** es el id del enemigo (`bestia_de_la_niebla.tscn` → `bestia_de_la_niebla`). El director usa ese id en `enemy_weights` para decidir cuáles aparecen más.
+- Hereda de `enemy.tscn` y **no sobrescribas** los multiplicadores `health_multiplier`, `speed_multiplier`, `damage_multiplier`, `vision_multiplier` y `patrol_multiplier`: el director los fija antes de colocar al enemigo. Si tu enemigo tiene movimiento propio, escálalo con `_speed_scale()`.
+- Para que un enemigo **vea más lejos o menos**, usa `can_see()` (ya aplica `vision_multiplier` y la visibilidad del jugador, que baja con Sombra). No hagas detecciones propias.
+- Añade el enemigo al `enemy_pool` del escenario (`data/scenarios/*.tres`) y, si quieres que la IA lo favorezca para un estilo, a `enemy_weights` en `data/ai/director_rules.tres`.
+
 ## 6. Qué puede empezar ya la persona B
 Las tareas de B cuyas dependencias están listas:
 1. **Tarea 4: los 6 enemigos.** La base ya existe. Empezar por **Bestia de la niebla** (embiste) y **Murciélago** (picado rápido), que son los más simples. Se entregan en tandas de 2 o 3.
 2. **Tarea 13: menús, pausa, guardado y créditos.** Depende solo del combate, que ya está.
 3. **Tarea 14: sonido y música.** Elegir packs gratuitos y registrarlos en `CREDITS.md`.
 4. **Tarea 12 (parte del sistema de diálogo).** La caja de texto se puede hacer ya, leyendo de `data/dialogues/`.
-5. **Tarea 8 (perfil del jugador)** puede arrancar con los eventos que ya existen (ataque, esquiva, daño, detección). Las habilidades se añaden cuando exista la tarea 5.
+5. Las tareas **8 (perfil del jugador)** y **9 (la isla reacciona)** ya están hechas: no las rehagas. Si quieres cambiar cómo reacciona la isla, edita `data/ai/director_rules.tres` (o `tools/make_director_data.gd` y regenera).
 
 Mientras tanto la persona A avanza con las tareas 5 (habilidades) y 6 (generador de mapas).
 

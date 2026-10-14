@@ -23,6 +23,19 @@ offset_right = 140.0
 offset_bottom = 348.0
 script = ExtResource("2")
 
+[node name="Toast" type="Label" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -250.0
+offset_top = 62.0
+offset_right = 250.0
+offset_bottom = 86.0
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.8, 0.7, 1, 1)
+
 [node name="Message" type="Label" parent="."]
 anchors_preset = 8
 anchor_left = 0.5

@@ -49,17 +49,44 @@ func _on_run_finished(summary: Dictionary) -> void:
 	_add_label(texts.get("style_label", "") + ": " + summary.style_name, 16)
 	_add_bar(texts.get("aggression", ""), summary.aggression, AGGRESSION_COLOR)
 	_add_bar(texts.get("stealth", ""), summary.stealth, STEALTH_COLOR)
-	_add_label(texts.get("stat_time", "%s") % _format_time(stats.play_seconds), 12)
-	_add_label(texts.get("stat_attacks", "%d") % stats.melee_attacks, 12)
-	_add_label(texts.get("stat_skills", "%d") % stats.skill_uses, 12)
-	_add_label(texts.get("stat_rooms", "%d") % stats.rooms_visited, 12)
-	_add_label(texts.get("stat_evaded", "%d") % stats.rooms_evaded, 12)
-	_add_label(texts.get("stat_detections", "%d") % stats.detections, 12)
+	_add_stats([
+		texts.get("stat_time", "%s") % _format_time(stats.play_seconds),
+		texts.get("stat_attacks", "%d") % stats.melee_attacks,
+		texts.get("stat_skills", "%d") % stats.skill_uses,
+		texts.get("stat_rooms", "%d") % stats.rooms_visited,
+		texts.get("stat_evaded", "%d") % stats.rooms_evaded,
+		texts.get("stat_detections", "%d") % stats.detections,
+	])
 	_add_label(summary.message, 14, true)
+	_add_prepare_lines()
 	_add_label(texts.get("continue", ""), 12)
 
 	_visible_time = 0.0
 	_panel.show()
+
+
+## The stats in two columns, so the whole screen fits in the game's 640x360 view.
+func _add_stats(lines: Array[String]) -> void:
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 24)
+	grid.add_theme_constant_override("v_separation", 1)
+	for line in lines:
+		var label := Label.new()
+		label.text = line
+		label.add_theme_font_size_override("font_size", 12)
+		grid.add_child(label)
+	_content.add_child(grid)
+
+
+## What the island will do next, according to the director's rules for the updated profile.
+func _add_prepare_lines() -> void:
+	var plan: DirectorPlan = Director.make_plan(false)
+	if plan.hints.is_empty():
+		return
+	_add_label(Director.config.texts.get("prepare_title", ""), 13)
+	for hint in plan.hints:
+		_add_label("- " + hint, 12)
 
 
 func _add_label(text: String, font_size: int, wrap := false) -> void:
@@ -68,7 +95,7 @@ func _add_label(text: String, font_size: int, wrap := false) -> void:
 	label.add_theme_font_size_override("font_size", font_size)
 	if wrap:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.custom_minimum_size.x = 300
+		label.custom_minimum_size.x = 310
 	_content.add_child(label)
 
 

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/combat_d.tscn" id="1_8xhe0"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_8b2tr"]
+
+[resource]
+script = ExtResource("2_8b2tr")
+id = &"test_combat_d"
+scene = ExtResource("1_8xhe0")
+weight = 0.8
+tags = Array[StringName]([&"watch"])
+min_enemies = 3
+max_enemies = 5

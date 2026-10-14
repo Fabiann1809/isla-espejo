@@ -12,6 +12,7 @@ const SKILLS := [
 
 @onready var _summary: Node = $ProfileSummary
 @onready var _info: Label = $Debug/Info
+@onready var _plan_info: Label = $Debug/PlanInfo
 
 
 func _ready() -> void:
@@ -29,4 +30,5 @@ func _on_generated(map_layout: MapLayout) -> void:
 	for path in SKILLS:
 		player.skills.unlock(load(path))
 	_info.text = "Seed %d  |  %d salas  |  R: nuevo mapa  |  1 2 3: habilidades" % [map_layout.map_seed, map_layout.cells.size()]
+	_plan_info.text = "IA: " + plan.summary_line()
 	print("Map seed %d\n%s" % [map_layout.map_seed, map_layout.to_ascii()])
