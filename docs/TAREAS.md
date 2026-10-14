@@ -16,7 +16,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Proyecto Godot 4.7 configurado (640x360, escalado entero, filtro nearest, acciones de entrada)
 - [x] `CLAUDE.md`, `docs/JUEGO.md`, `docs/TAREAS.md`, `README.md`
 - [x] CI de GitHub Actions (`godot-check`) y plantilla de PR
-- [ ] Protección de la rama `main` (PR obligatorio y CI en verde)
+- [x] Protección de la rama `main` (PR obligatorio y CI en verde)
 - [ ] Compañero invitado como colaborador y con Godot 4.7.2 instalado
 - [ ] Probar el flujo de arte completo con un cuadro de prueba: dibujar en Pixelorama, exportar PNG, importar a Godot y animar con `AnimatedSprite2D`
 - [ ] Definir y guardar la paleta única (16–24 colores) en `assets/palette/`
