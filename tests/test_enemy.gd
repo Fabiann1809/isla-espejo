@@ -49,7 +49,7 @@ func _initialize() -> void:
 	# --- Director modifiers
 	var strong = _spawn(ARENA + Vector2(0, 100), {"health_multiplier": 2.0})
 	_check(strong.health.max_health == 6, "health_multiplier doubles health (%d)" % strong.health.max_health)
-	strong.queue_free()
+	strong.free()  # immediately: it is inside vision range and must not get a physics tick
 	var blind = _spawn(ARENA + Vector2(90, 0), {"vision_multiplier": 0.5})
 	await _frames(30)
 	_check(blind.target == null, "vision_multiplier 0.5 shrinks detection (90px > 60px)")
