@@ -7,6 +7,11 @@ Cada tarea grande tiene su checklist, un criterio **Hecho cuando** y un responsa
 
 Reglas: una tarea a la vez, en orden (salvo las que son independientes), push directo a `main` con el juego funcionando y el chequeo en verde, y marcar `[x]` en este archivo en el mismo commit. Alcance en `docs/JUEGO.md`.
 
+## Estado actual
+- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **Persona A, siguiente:** 5 (habilidades) y 6 (generador de mapas).
+- **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido), el sistema de diálogo de la 12, y el arranque de la 8. Ver `docs/EMPEZAR.md`.
+
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ---

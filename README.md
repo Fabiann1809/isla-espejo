@@ -10,6 +10,7 @@ Nico queda atrapado en una isla que lo refleja y aprende de él. Para volver a c
 - La isla aprende: una IA adaptativa observa cómo juegas (agresivo o sigiloso) y reacciona.
 
 ## Documentación
+- [`docs/EMPEZAR.md`](docs/EMPEZAR.md): **guía de arranque** (instalación, flujo de trabajo y por dónde empezar).
 - [`docs/JUEGO.md`](docs/JUEGO.md): de qué trata el juego, alcance, personajes, historia y diálogos.
 - [`docs/TAREAS.md`](docs/TAREAS.md): lista de tareas con checklist.
 - [`CLAUDE.md`](CLAUDE.md): reglas de trabajo del proyecto (para el equipo y para Claude Code).
@@ -26,7 +27,7 @@ Controles provisionales: `WASD` mover, `Espacio` esquivar, `J` atacar, `1 2 3` h
 ```
 godot --headless --path . --script res://tests/run_checks.gd
 ```
-Debe terminar con código 0. Es la misma comprobación que ejecuta CI en cada pull request.
+Debe terminar con código 0. Es la misma comprobación que ejecuta CI en cada push. También hay pruebas de juego en `tests/test_*.gd`.
 
 ## Descargar una versión jugable
 Las versiones publicadas están en la pestaña **Releases** del repositorio (zip para Windows, sin instalar nada).
