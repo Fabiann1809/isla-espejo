@@ -53,5 +53,8 @@ jobs:
       - name: Level build test
         run: ~/godot/godot --headless --path . --script res://tests/test_level_build.gd
 
+      - name: Skills test
+        run: ~/godot/godot --headless --path . --script res://tests/test_skills.gd
+
       - name: Run the main scene for a few frames
         run: ~/godot/godot --headless --path . --quit-after 60

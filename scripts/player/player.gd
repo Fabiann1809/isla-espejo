@@ -31,15 +31,19 @@ enum State { IDLE, MOVE, DASH, ATTACK, HURT, DEAD }
 
 var state: State = State.IDLE
 var facing := Vector2.DOWN
+## How visible the player is to enemies (1 = normal). The Sombra skill lowers it for a while.
+var visibility := 1.0
 
 var _state_time_left := 0.0
 var _dash_cooldown_left := 0.0
 var _attack_cooldown_left := 0.0
 var _invulnerable_left := 0.0
+var _stealth_left := 0.0
 var _move_dir := Vector2.ZERO
 var _action_dir := Vector2.ZERO
 
 @onready var health: HealthComponent = $HealthComponent
+@onready var skills: SkillManager = $SkillManager
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _body: ColorRect = $Placeholder
 @onready var _attack_pivot: Node2D = $AttackPivot
@@ -64,6 +68,10 @@ func _physics_process(delta: float) -> void:
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
 	_attack_cooldown_left = maxf(_attack_cooldown_left - delta, 0.0)
 	_invulnerable_left = maxf(_invulnerable_left - delta, 0.0)
+	if _stealth_left > 0.0:
+		_stealth_left -= delta
+		if _stealth_left <= 0.0:
+			end_stealth()
 
 	_move_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if _move_dir != Vector2.ZERO and state in [State.IDLE, State.MOVE]:
@@ -92,6 +100,32 @@ func is_invulnerable() -> bool:
 
 func is_dead() -> bool:
 	return state == State.DEAD
+
+
+## Skills can only be cast while moving freely, not while attacking, dashing, hurt or dead.
+func can_cast() -> bool:
+	return state == State.IDLE or state == State.MOVE
+
+
+func is_stealthed() -> bool:
+	return _stealth_left > 0.0
+
+
+## Makes enemies notice the player only from `new_visibility` of their normal range.
+func start_stealth(duration: float, new_visibility: float) -> void:
+	var was_stealthed := is_stealthed()
+	_stealth_left = duration
+	visibility = new_visibility
+	if not was_stealthed:
+		Events.player_stealth_changed.emit(true)
+
+
+func end_stealth() -> void:
+	if _stealth_left <= 0.0 and visibility == 1.0:
+		return
+	_stealth_left = 0.0
+	visibility = 1.0
+	Events.player_stealth_changed.emit(false)
 
 
 ## Limits the camera to a rectangle in world coordinates (usually the level bounds).
@@ -159,6 +193,7 @@ func _process_dash(delta: float) -> void:
 
 
 func _start_attack() -> void:
+	end_stealth()
 	_action_dir = facing
 	_attack_cooldown_left = attack_cooldown
 	_attack_pivot.rotation = _action_dir.angle()
@@ -207,4 +242,9 @@ func _update_visuals() -> void:
 			_body.modulate = Color(0.3, 0.3, 0.3, 1)
 		_:
 			var blink := _invulnerable_left > 0.0 and int(_invulnerable_left * 20.0) % 2 == 0
-			_body.modulate = Color(1, 1, 1, 0.4) if blink else Color.WHITE
+			if blink:
+				_body.modulate = Color(1, 1, 1, 0.4)
+			elif is_stealthed():
+				_body.modulate = Color(0.7, 0.5, 1.0, 0.5)
+			else:
+				_body.modulate = Color.WHITE

@@ -9,6 +9,13 @@ signal player_hit_enemy(enemy: Node, damage: int)
 signal player_damaged(amount: int, source_position: Vector2)
 signal player_health_changed(current: int, maximum: int)
 signal player_died
+## Sombra and similar: true when the player becomes harder to detect, false when it ends.
+signal player_stealth_changed(active: bool)
+
+# Skills
+signal skill_unlocked(skill_id: StringName)
+## `affected` = how many enemies the skill touched (the AI uses it to read the play style).
+signal skill_used(skill_id: StringName, direction: Vector2, affected: int)
 
 # Enemies
 signal enemy_damaged(enemy: Node, amount: int)

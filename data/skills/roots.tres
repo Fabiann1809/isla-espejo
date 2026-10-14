@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/roots_effect.gd" id="1_74jov"]
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="2_nbvvt"]
+
+[sub_resource type="Resource" id="Resource_ki708"]
+script = ExtResource("1_74jov")
+
+[resource]
+script = ExtResource("2_nbvvt")
+id = &"roots"
+display_name = "Raíces"
+description = "Hace brotar raíces que traban a los enemigos en una zona."
+cooldown = 6.0
+range = 56.0
+color = Color(0.3, 0.75, 0.3, 1)
+effect = SubResource("Resource_ki708")

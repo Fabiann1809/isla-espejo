@@ -39,6 +39,9 @@ var _attack_phase := AttackPhase.WINDUP
 var _attack_time_left := 0.0
 var _attack_cooldown_left := 0.0
 var _hurt_time_left := 0.0
+var _root_left := 0.0
+var _slow_left := 0.0
+var _slow_factor := 1.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var _hurtbox: Hurtbox = $Hurtbox
@@ -51,6 +54,7 @@ var _hurt_time_left := 0.0
 
 
 func _ready() -> void:
+	add_to_group("enemies")
 	if data == null:
 		push_error("Enemy '%s' has no EnemyData assigned." % name)
 		data = EnemyData.new()
@@ -67,6 +71,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_attack_cooldown_left = maxf(_attack_cooldown_left - delta, 0.0)
+	_root_left = maxf(_root_left - delta, 0.0)
+	_slow_left = maxf(_slow_left - delta, 0.0)
 	_update_awareness(delta)
 
 	match state:
@@ -83,7 +89,11 @@ func _physics_process(delta: float) -> void:
 		State.DEAD:
 			velocity = Vector2.ZERO
 
+	# Rooted enemies cannot walk but can still attack and be pushed.
+	if _root_left > 0.0 and state in [State.IDLE, State.PATROL, State.CHASE]:
+		velocity = Vector2.ZERO
 	move_and_slide()
+	_update_status_visual()
 	if debug_state:
 		_label.text = State.keys()[state]
 
@@ -92,7 +102,7 @@ func _physics_process(delta: float) -> void:
 ## and not blocked by the world.
 func can_see(other: Node2D) -> bool:
 	var to_other := other.global_position - global_position
-	if to_other.length() > data.detection_range * vision_multiplier:
+	if to_other.length() > data.detection_range * vision_multiplier * _visibility_of(other):
 		return false
 	if data.vision_angle < 360.0:
 		if absf(facing.angle_to(to_other)) > deg_to_rad(data.vision_angle) / 2.0:
@@ -105,6 +115,39 @@ func can_see(other: Node2D) -> bool:
 
 func is_dead() -> bool:
 	return state == State.DEAD
+
+
+## Status effects used by player skills.
+func apply_root(duration: float) -> void:
+	if state != State.DEAD:
+		_root_left = maxf(_root_left, duration)
+
+
+## `factor` multiplies movement speed (0.4 = 60% slower) for `duration` seconds.
+func apply_slow(factor: float, duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_slow_factor = factor if _slow_left <= 0.0 else minf(_slow_factor, factor)
+	_slow_left = maxf(_slow_left, duration)
+
+
+## Pushes the enemy and interrupts what it was doing (like a hit without damage).
+func apply_knockback(push: Vector2) -> void:
+	if state == State.DEAD:
+		return
+	_hitbox.deactivate()
+	_telegraph.hide()
+	state = State.HURT
+	_hurt_time_left = data.hurt_time
+	velocity = push * (1.0 - data.knockback_resistance)
+
+
+func is_rooted() -> bool:
+	return _root_left > 0.0
+
+
+func is_slowed() -> bool:
+	return _slow_left > 0.0
 
 
 # --- Overridable behaviour ---------------------------------------------------
@@ -125,7 +168,7 @@ func _process_patrol(_delta: float) -> void:
 		_enter_idle()
 		return
 	facing = to_point.normalized()
-	velocity = facing * data.move_speed * speed_multiplier
+	velocity = facing * data.move_speed * _speed_scale()
 
 
 func _process_chase(_delta: float) -> void:
@@ -138,7 +181,7 @@ func _process_chase(_delta: float) -> void:
 		return
 	# Keep a little distance once in range instead of pushing into the player.
 	if to_target.length() > data.attack_range * 0.8:
-		velocity = facing * data.chase_speed * speed_multiplier
+		velocity = facing * data.chase_speed * _speed_scale()
 	else:
 		velocity = Vector2.ZERO
 
@@ -190,7 +233,7 @@ func _update_awareness(delta: float) -> void:
 	if target != null:
 		if not _target_is_valid():
 			return
-		var lose := data.lose_range * vision_multiplier
+		var lose := data.lose_range * vision_multiplier * _visibility_of(target)
 		if global_position.distance_to(target.global_position) > lose:
 			_lose_target()
 		return
@@ -228,6 +271,27 @@ func _target_is_valid() -> bool:
 			_enter_idle()
 		return false
 	return true
+
+
+func _speed_scale() -> float:
+	return speed_multiplier * (_slow_factor if _slow_left > 0.0 else 1.0)
+
+
+## How visible a node is (1 = normal). The player lowers it with the Sombra skill.
+func _visibility_of(node: Node) -> float:
+	var value = node.get("visibility")
+	return float(value) if value != null else 1.0
+
+
+func _update_status_visual() -> void:
+	if state == State.DEAD:
+		return
+	if _root_left > 0.0:
+		_body.modulate = Color(0.6, 1.0, 0.6)
+	elif _slow_left > 0.0:
+		_body.modulate = Color(0.6, 0.75, 1.0)
+	else:
+		_body.modulate = Color.WHITE
 
 
 func _is_dead_node(node: Node) -> bool:

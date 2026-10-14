@@ -8,8 +8,8 @@ Cada tarea grande tiene su checklist, un criterio **Hecho cuando** y un responsa
 Reglas: una tarea a la vez, en orden (salvo las que son independientes), push directo a `main` con el juego funcionando y el chequeo en verde, y marcar `[x]` en este archivo en el mismo commit. Alcance en `docs/JUEGO.md`.
 
 ## Estado actual
-- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 6 (generador de mapas) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
-- **Persona A, siguiente:** 5 (habilidades) y luego el escenario 1 (tarea 7).
+- **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
+- **Persona A, siguiente:** el escenario 1 (tarea 7). Necesita los enemigos y el jefe de la tarea 4 (persona B).
 - **Persona B puede empezar ya:** 4 (los 6 enemigos), 13 (interfaz y guardado), 14 (sonido), el sistema de diálogo de la 12, y el arranque de la 8. Ver `docs/EMPEZAR.md`.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
@@ -64,14 +64,14 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** los 6 enemigos funcionan en una sala de prueba con comportamiento claramente distinto entre sí. *(Puede entregarse en tandas de 2–3 enemigos.)*
 
 ## 5. Sistema de habilidades (3 fijas, modular) — A  ← 3
-- [ ] Recurso `SkillData` en `data/skills/` (nombre, recarga, daño, alcance, efecto)
-- [ ] Gestor de habilidades del jugador (desbloqueo, recarga, teclas `1`, `2`, `3`)
-- [ ] **Raíces**: traba enemigos en una zona
-- [ ] **Corriente**: empuja y ralentiza
-- [ ] **Sombra**: teletransporte corto y menor detección
-- [ ] HUD de habilidades con indicador de recarga
-- [ ] Cada habilidad emite eventos al bus (la IA los usa)
-- [ ] Diseñar el sistema para que añadir una habilidad nueva sea solo agregar datos y un efecto
+- [x] Recurso `SkillData` en `data/skills/` (nombre, recarga, daño, alcance, efecto)
+- [x] Gestor de habilidades del jugador (desbloqueo, recarga, teclas `1`, `2`, `3`)
+- [x] **Raíces**: traba enemigos en una zona
+- [x] **Corriente**: empuja y ralentiza
+- [x] **Sombra**: teletransporte corto y menor detección
+- [x] HUD de habilidades con indicador de recarga
+- [x] Cada habilidad emite eventos al bus (la IA los usa)
+- [x] Diseñar el sistema para que añadir una habilidad nueva sea solo agregar datos y un efecto
 
 **Hecho cuando:** las 3 habilidades se pueden usar desde una sala de prueba, cada una con efecto visible y recarga, y se desbloquean por código.
 

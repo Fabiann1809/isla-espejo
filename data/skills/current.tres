@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/current_effect.gd" id="1_c0hoh"]
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="2_dt5cq"]
+
+[sub_resource type="Resource" id="Resource_s56qv"]
+script = ExtResource("1_c0hoh")
+
+[resource]
+script = ExtResource("2_dt5cq")
+id = &"current"
+display_name = "Corriente"
+description = "Una ola empuja a los enemigos de frente y los ralentiza."
+slot = 1
+range = 90.0
+color = Color(0.3, 0.55, 0.95, 1)
+effect = SubResource("Resource_s56qv")

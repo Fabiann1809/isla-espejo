@@ -3,6 +3,12 @@ extends Level
 ## R builds a new map; dying also starts a new one (new seed), like a roguelike run.
 
 const RESTART_DELAY := 1.5
+## All three skills are unlocked here so they can be tried without beating the bosses.
+const SKILLS := [
+	"res://data/skills/roots.tres",
+	"res://data/skills/current.tres",
+	"res://data/skills/shadow.tres",
+]
 
 @onready var _hud: Node = $Hud
 @onready var _info: Label = $Debug/Info
@@ -20,7 +26,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_generated(map_layout: MapLayout) -> void:
-	_info.text = "Seed %d  |  %d salas  |  R: nuevo mapa" % [map_layout.map_seed, map_layout.cells.size()]
+	for path in SKILLS:
+		player.skills.unlock(load(path))
+	_info.text = "Seed %d  |  %d salas  |  R: nuevo mapa  |  1 2 3: habilidades" % [map_layout.map_seed, map_layout.cells.size()]
 	print("Map seed %d\n%s" % [map_layout.map_seed, map_layout.to_ascii()])
 
 
