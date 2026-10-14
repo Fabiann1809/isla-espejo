@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/boss.gd" id="2"]
+[ext_resource type="Resource" path="res://data/enemies/forest_guardian.tres" id="3"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(26, 20)
+
+[sub_resource type="RectangleShape2D" id="2"]
+size = Vector2(34, 46)
+
+[node name="ForestGuardian" instance=ExtResource("1")]
+script = ExtResource("2")
+data = ExtResource("3")
+
+[node name="CollisionShape2D" parent="." index="2"]
+position = Vector2(0, 8)
+shape = SubResource("1")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -8)
+shape = SubResource("2")
+
+[node name="StateLabel" parent="." index="5"]
+offset_top = -76.0
+offset_bottom = -60.0

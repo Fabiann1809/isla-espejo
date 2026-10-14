@@ -63,6 +63,9 @@ func _initialize() -> void:
 	scenario.npc_scene = load("res://scenes/npcs/elder.tscn")
 	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
 	scenario.chest_scenes = chests
+	scenario.boss_scene = load("res://scenes/enemies/forest_guardian.tscn")
+	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
+	scenario.completion_text = "Capítulo 1 completado. Las ruinas de la montaña te esperan."
 	ResourceSaver.save(scenario, "res://data/scenarios/forest.tres")
 	print("forest data written")
 	quit()

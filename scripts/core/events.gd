@@ -10,6 +10,8 @@ signal interaction_prompt_changed(prompt: String)
 ## A line to show the player (rewards, chapter titles...).
 signal message_requested(text: String)
 signal chest_opened(chest: Node)
+## Boss health, so the HUD can show its bar. Emitted when the fight starts and on every hit.
+signal boss_health_changed(boss_id: StringName, current: int, maximum: int, boss_name: String)
 signal boss_defeated(boss_id: StringName)
 signal fragment_collected(fragment_id: StringName)
 signal scenario_completed(scenario_id: StringName)

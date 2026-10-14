@@ -53,6 +53,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | El director (IA capa 2) | `scripts/ai/director*.gd`, `data/ai/director_rules.tres` | Lee el perfil y adapta enemigos y salas del siguiente mapa. Reglas editables en el `.tres`. El HUD muestra la frase de la isla y la pantalla de muerte lista lo que cambiará |
 | Perfil del jugador (IA capa 1) | `scripts/ai/`, `data/ai/profile_config.tres` | Aprende si juegas agresivo o sigiloso y lo guarda entre partidas. El director leerá `PlayerProfile.live_scores()` |
 | Habilidades | `scripts/skills/`, `data/skills/` | Raíces, Corriente y Sombra. Teclas `1 2 3`; se desbloquean con `player.skills.unlock(...)` |
+| Jefe y recompensas | `scripts/enemies/boss.gd`, `boss_data.gd`, `scripts/world/fragment_pickup.gd`, `exit_portal.gd` | El Guardián del bosque (dos ataques con aviso, segunda fase). Al vencerlo suelta el fragmento, que enseña la habilidad y abre la salida |
 | Interacción y diálogos | `scripts/world/interactable.gd`, `npc.gd`, `chest.gd`, `scripts/core/dialogue.gd`, `game_state.gd`, `data/dialogues/` | `E` interactúa con cofres y NPC. Los diálogos son archivos JSON (formato abajo). El progreso de la historia vive en `GameState` |
 | Escenario 1: Bosque de la Aurora | `data/scenarios/forest.tres`, `scenes/levels/forest_level.tscn`, `scenes/levels/rooms/forest/` | Es la escena que abre F5. 10 salas con tileset de Kenney (CC0). Se editan con `python tools/make_forest_rooms.py` |
 | Generador de mapas | `scripts/world/map_generator.gd`, `level.gd`, `room.gd` | Mapas distintos en cada partida con salas hechas a mano (ver `CLAUDE.md`) |
@@ -75,6 +76,17 @@ Capas de colisión: 1 mundo · 2 jugador · 3 enemigo · 4 ataque del jugador ·
 4. `on_finish` pone banderas al terminar un estado (por ejemplo `first` marca `met_elder`, y así la próxima vez sale `again`).
 5. Crea la escena del NPC heredando de `scenes/npcs/npc.tscn` (como `elder.tscn`), con su `dialogue_id`, y asígnala a `npc_scene` del escenario (`data/scenarios/*.tres`).
 6. Las banderas de jefes derrotados se llaman `<escenario>_boss_defeated` (por ejemplo `forest_boss_defeated`); la prueba `tests/test_dialogues.gd` valida el formato de todos los archivos.
+
+### Cómo construir los escenarios 2 y 3 (siguiendo el bosque)
+Todo el escenario 1 es el molde. Para las Ruinas de la Montaña y el Templo del Eclipse:
+1. **Arte:** elige/descarga un pack (CC0), cópialo a `assets/tilesets/<pack>/` **con su `License.txt`** y añádelo a `CREDITS.md`. Rotula la hoja con `tools/atlas_preview.gd` (necesita ventana) y añade los tiles nombrados a `scripts/world/tile_art.gd` (o crea un catálogo propio). Genera el `TileSet` y el tema copiando `tools/make_forest_tileset.gd`.
+2. **Salas:** copia `tools/make_forest_rooms.py` (10 salas: inicio, jefe, 5 de combate con etiquetas `standard`/`ambush`/`watch`, evento, recompensa y especial). El script valida que ningún objeto bloquee las puertas. Comprueba con `./tools/run_tests.sh test_room_designs`.
+3. **Datos:** copia `tools/make_forest_data.gd` → `data/scenarios/<id>.tres` y `data/rooms/*.tres`. Pon el tema, el `enemy_pool` (los enemigos del escenario), `npc_scene`, `chest_scenes`, `boss_scene`, `exit_scene`, `chapter_title` y `completion_text`.
+4. **Jefe:** crea un `BossData` (copia `tools/make_forest_boss.gd`), una escena que herede de `enemy.tscn` con el script `boss.gd` (copia `forest_guardian.tscn`) y un fragmento (`fragment_green.tscn` con otro `fragment_id`/`skill_id`/color). La bandera de derrota es `<escenario>_boss_defeated`, y el portal (`exit_portal.tscn`) necesita esa bandera en `required_flag`. Si quieres otros patrones de ataque, extiende `Boss` y sobrescribe `_start_attack`, `_process_attack` y `_strike`.
+5. **Cadena de capítulos:** en el `.tres` del escenario anterior pon `next_scenario` apuntando al nuevo. Al cruzar el portal el nivel pasa al siguiente.
+6. **Diálogo:** el NPC del capítulo (`data/dialogues/<id>.json`, ver arriba).
+7. **Habilidad:** crea el `SkillData` del jefe (`tools/make_skill_data.gd`) si aún no existe (Corriente y Sombra ya existen) y ponlo en `skill_id` del fragmento.
+8. **Escena jugable:** copia `scenes/levels/forest_level.tscn` cambiando el `scenario`. Añade pruebas copiando `tests/test_forest.gd` y `tests/test_boss.gd`.
 
 ### Para que el director controle tus enemigos
 - El **nombre del archivo de la escena** es el id del enemigo (`bestia_de_la_niebla.tscn` → `bestia_de_la_niebla`). El director usa ese id en `enemy_weights` para decidir cuáles aparecen más.

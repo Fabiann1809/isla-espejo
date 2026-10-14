@@ -118,3 +118,8 @@ position = Vector2(240, 232)
 
 [node name="P1" type="Marker2D" parent="BossSpawn"]
 position = Vector2(240, 88)
+
+[node name="ExitSpawn" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="ExitSpawn"]
+position = Vector2(240, 40)

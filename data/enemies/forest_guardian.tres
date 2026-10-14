@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="BossData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/fragment_green.tscn" id="1_d5drv"]
+[ext_resource type="Script" path="res://scripts/enemies/boss_data.gd" id="2_ntnyw"]
+
+[resource]
+script = ExtResource("2_ntnyw")
+slam_radius = 46.0
+slam_trigger_range = 58.0
+roots_spread = 64.0
+defeated_flag = &"forest_boss_defeated"
+pickup_scene = ExtResource("1_d5drv")
+intro_lines = Array[String](["Nico: Así que tú eres quien guarda el fragmento…", "Guardián: Nadie abandona la isla."])
+id = &"forest_guardian"
+display_name = "Guardián del bosque"
+max_health = 30
+move_speed = 20.0
+chase_speed = 42.0
+detection_range = 230.0
+lose_range = 420.0
+attack_range = 40.0
+attack_cooldown = 1.2
+hurt_time = 0.0
+knockback_speed = 0.0
+knockback_resistance = 1.0
+patrol_radius = 0.0

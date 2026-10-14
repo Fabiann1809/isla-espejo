@@ -17,6 +17,8 @@ const CORRIDOR_COLOR := Color(0.15, 0.22, 0.17)
 @export var seed_value := 0
 ## Lets the island's director adapt the map to the player's profile.
 @export var use_director := true
+## Pause between taking the exit and the next map, so the closing text can be read.
+@export var completion_delay := 3.5
 
 ## Extra room tag -> weight multiplier, applied on top of the director's plan (debugging).
 var weight_modifiers := {}
@@ -37,6 +39,7 @@ func _ready() -> void:
 	if scenario == null:
 		push_error("Level has no ScenarioData assigned.")
 		return
+	Events.scenario_completed.connect(_on_scenario_completed)
 	generate(seed_value)
 
 
@@ -76,6 +79,16 @@ func _room_weights() -> Dictionary:
 	return weights
 
 
+## The player left through the exit: tell the story and start the next chapter (or a new map).
+func _on_scenario_completed(_scenario_id: StringName) -> void:
+	if scenario.completion_text != "":
+		Events.message_requested.emit(scenario.completion_text)
+	await get_tree().create_timer(completion_delay).timeout
+	if scenario.next_scenario != null:
+		scenario = scenario.next_scenario
+	generate(0)
+
+
 func room_at(coord: Vector2i) -> Room:
 	return rooms.get(coord)
 
@@ -112,6 +125,9 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan)
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
+			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")
+			if portal != null:
+				portal.scenario_id = scenario.id
 		RoomData.RoomType.EVENT:
 			_spawn_single(room, scenario.npc_scene, "NpcSpawn")
 		RoomData.RoomType.REWARD:
@@ -119,15 +135,16 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
 
 
-func _spawn_single(room: Room, scene: PackedScene, container: String) -> void:
+func _spawn_single(room: Room, scene: PackedScene, container: String) -> Node2D:
 	var points := room.spawn_points(container)
 	if scene == null or points.is_empty():
-		return
+		return null
 	var node: Node2D = scene.instantiate()
 	node.position = points[0]
 	room.add_child(node)
 	if node.has_signal("died"):
 		room.register_enemy(node)
+	return node
 
 
 func _build_corridors() -> void:
@@ -200,7 +217,8 @@ func _place_player() -> void:
 	if player == null:
 		player = player_scene.instantiate()
 		add_child(player)
-		GameState.apply_to_player(player)
+	# Idempotent: whatever the player has earned (skills) is on the player for every map.
+	GameState.apply_to_player(player)
 	var start_room: Room = rooms[layout.start_cell]
 	player.global_position = start_room.global_position + start_room.player_spawn()
 	if player.has_method("set_camera_limits"):

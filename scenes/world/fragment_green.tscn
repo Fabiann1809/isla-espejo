@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/fragment_pickup.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/world/interactable.gd" id="2"]
+
+[sub_resource type="CircleShape2D" id="1"]
+radius = 26.0
+
+[node name="FragmentGreen" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Gem" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -9, 6, 0, 0, 9, -6, 0)
+color = Color(0.35, 0.85, 0.4, 1)
+
+[node name="Take" type="Area2D" parent="."]
+script = ExtResource("2")
+prompt = "Recoger"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Take"]
+shape = SubResource("1")

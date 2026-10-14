@@ -138,6 +138,7 @@ func _connect_events() -> void:
 	Events.room_exited.connect(func(_room: Node) -> void: _record(stats.on_room_exited))
 	Events.room_cleared.connect(func(_room: Node) -> void: _record(stats.on_room_cleared))
 	Events.player_died.connect(func() -> void: finish_run("death"))
+	Events.scenario_completed.connect(func(_scenario_id: StringName) -> void: finish_run("victory"))
 	Events.level_started.connect(_on_level_started)
 
 

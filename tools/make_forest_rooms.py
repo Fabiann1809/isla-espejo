@@ -140,7 +140,7 @@ build("boss", "ForestBoss",
              (TALL_PINE, 3, 2), (TALL_PINE, 26, 2), (TALL_PINE, 3, 13), (TALL_PINE, 26, 13),
              (PINE, 6, 2), (PINE, 23, 2), (PINE, 6, 15), (PINE, 23, 15), (BUSH, 2, 5), (BUSH, 27, 5),
              (BUSH, 2, 12), (BUSH, 27, 12)],
-      spawns={"BossSpawn": [(240, 88)]}, player_spawn=(240, 232), scatter=[(PINE, 6), (BUSH, 4)])
+      spawns={"BossSpawn": [(240, 88)], "ExitSpawn": [(240, 40)]}, player_spawn=(240, 232), scatter=[(PINE, 6), (BUSH, 4)])
 
 # --- Combat: clearing with groves in the four corners ---------------------------------------------------
 build("clearing_a", "ForestClearingA",

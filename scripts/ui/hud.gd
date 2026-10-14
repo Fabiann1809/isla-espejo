@@ -12,6 +12,9 @@ const TOAST_FADE := 0.8
 @onready var _message: Label = $Message
 @onready var _toast: Label = $Toast
 @onready var _prompt: Label = $Prompt
+@onready var _boss_bar: Control = $BossBar
+@onready var _boss_name: Label = $BossBar/Name
+@onready var _boss_fill: ColorRect = $BossBar/Track/Fill
 
 var _toast_queue: Array[String] = []
 var _toast_busy := false
@@ -22,6 +25,10 @@ func _ready() -> void:
 	Director.plan_made.connect(_on_plan_made)
 	Events.message_requested.connect(show_toast)
 	Events.interaction_prompt_changed.connect(_on_prompt_changed)
+	Events.boss_health_changed.connect(_on_boss_health_changed)
+	Events.boss_defeated.connect(func(_id: StringName) -> void: _boss_bar.hide())
+	Events.player_died.connect(func() -> void: _boss_bar.hide())
+	_boss_bar.hide()
 	_message.hide()
 	_toast.hide()
 	_prompt.hide()
@@ -55,6 +62,12 @@ func _show_next_toast() -> void:
 	tween.tween_callback(func() -> void:
 		_toast.hide()
 		_show_next_toast())
+
+
+func _on_boss_health_changed(_boss_id: StringName, current: int, maximum: int, boss_name: String) -> void:
+	_boss_name.text = boss_name
+	_boss_fill.anchor_right = float(current) / maxf(maximum, 1)
+	_boss_bar.show()
 
 
 func _on_prompt_changed(prompt: String) -> void:

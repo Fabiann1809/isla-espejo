@@ -24,6 +24,12 @@ extends Resource
 @export var reward_rooms := 1
 @export var special_rooms := 1
 
+@export_group("Flow")
+## The chapter that follows. Without one the same scenario starts over (new map).
+@export var next_scenario: ScenarioData
+## Shown when the player leaves through the exit (Spanish).
+@export var completion_text := ""
+
 @export_group("Look")
 ## Tiles that dress the rooms and corridors. Without a theme the rooms are flat-colored placeholders.
 @export var theme: RoomTheme
@@ -36,6 +42,8 @@ extends Resource
 @export_group("Population")
 @export var enemy_pool: Array[PackedScene] = []
 @export var boss_scene: PackedScene
+## The doorway to the next chapter, placed in the boss room (marker ExitSpawn).
+@export var exit_scene: PackedScene
 @export var npc_scene: PackedScene
 ## Chests that fill the reward rooms (one is picked for each).
 @export var chest_scenes: Array[PackedScene] = []
