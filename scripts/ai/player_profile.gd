@@ -15,7 +15,9 @@ var config: ProfileConfig
 var model: ProfileModel
 var stats: RunStats
 var save_path := "user://profile.json"
-## Saving is off in headless mode (automated tests and CI must not touch the player's profile).
+## Saving is off in headless mode (automated tests and CI must not touch the player's profile) and
+## when the game is started with the user argument `--no-save` (screenshot or demo scripts):
+##   godot --path . -- --no-save
 var persistence_enabled := true
 ## Tests turn this off and call `advance()` themselves.
 var auto_tick := true
@@ -29,7 +31,7 @@ func _ready() -> void:
 		push_error("Missing %s; using default profile settings." % CONFIG_PATH)
 		config = ProfileConfig.new()
 	model = ProfileModel.new(config)
-	persistence_enabled = DisplayServer.get_name() != "headless"
+	persistence_enabled = not OS.get_cmdline_user_args().has("--no-save") and DisplayServer.get_name() != "headless"
 	if persistence_enabled:
 		load_profile()
 	_connect_events()

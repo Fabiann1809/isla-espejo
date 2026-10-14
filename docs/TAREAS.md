@@ -89,9 +89,9 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** cada ejecución genera un escenario distinto, siempre completable de inicio a jefe, y se puede reproducir con la misma semilla.
 
 ## 7. Escenario 1: Bosque de la Aurora — A+B  ← 4, 5, 6
-- [ ] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado
-- [ ] 6–10 salas del bosque (claros, río con puente, cofre, evento)
-- [ ] Enemigos del bosque colocados en las salas
+- [x] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado (Kenney Roguelike/RPG, CC0)
+- [x] 6–10 salas del bosque (claros, río con puente, cofre, evento): 10 salas en `scenes/levels/rooms/forest/`
+- [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; cambiar el `enemy_pool` de `data/scenarios/forest.tres` por la Bestia de la niebla y la Sombra errante cuando existan)
 - [ ] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces)
 - [ ] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [ ] NPC **Anciano** con 3 estados de diálogo

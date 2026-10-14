@@ -12,7 +12,7 @@ signal cleared
 
 const TILE := 16
 const WALL := 16
-const DOOR_WIDTH := 48
+const DOOR_WIDTH := 64
 const FLOOR_COLORS := {
 	RoomData.RoomType.START: Color(0.2, 0.42, 0.28),
 	RoomData.RoomType.COMBAT: Color(0.18, 0.3, 0.2),
@@ -27,6 +27,8 @@ const FLOOR_COLORS := {
 @export var debug_label := true
 
 var data: RoomData
+## Set by the Level before the room enters the tree; null draws flat-colored placeholders.
+var theme: RoomTheme
 var open_doors: Array[Vector2i] = []
 var visited := false
 var player_inside := false
@@ -42,8 +44,11 @@ func setup(room_data: RoomData, doors: Array[Vector2i]) -> void:
 
 
 func _ready() -> void:
-	_build_floor()
-	WallBuilder.add_walls(self, _wall_rects())
+	if theme != null:
+		_build_themed_floor()
+	else:
+		_build_floor()
+	WallBuilder.add_walls(self, _wall_rects(), WallBuilder.WALL_COLOR, theme == null)
 	_build_trigger()
 
 
@@ -140,6 +145,77 @@ func _build_floor() -> void:
 		label.position = Vector2(WALL + 4, WALL + 2)
 		label.modulate = Color(1, 1, 1, 0.5)
 		add_child(label)
+
+
+## Floor, decoration, border and paths drawn with the theme's tiles. Nothing here affects collision.
+func _build_themed_floor() -> void:
+	var ground := theme.new_layer(self, "Ground")
+	var decor := theme.new_layer(self, "Decor")
+	var border := theme.new_layer(self, "Border")
+	# Below the props the room scene places by hand.
+	move_child(ground, 0)
+	move_child(decor, 1)
+	move_child(border, 2)
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(position))
+	for y in size_tiles.y:
+		for x in size_tiles.x:
+			var tile := theme.floor_tile
+			if not theme.floor_variants.is_empty() and rng.randf() < theme.floor_variant_chance:
+				tile = theme.floor_variants[rng.randi_range(0, theme.floor_variants.size() - 1)]
+			ground.set_cell(Vector2i(x, y), 0, tile)
+			if not theme.decor_tiles.is_empty() and rng.randf() < theme.decor_chance and not _is_border(x, y):
+				decor.set_cell(Vector2i(x, y), 0, theme.decor_tiles[rng.randi_range(0, theme.decor_tiles.size() - 1)])
+
+	for y in size_tiles.y:
+		for x in size_tiles.x:
+			if not _is_border(x, y):
+				continue
+			var cell := Vector2i(x, y)
+			if _is_door_cell(cell):
+				ground.set_cell(cell, 0, theme.path_tile)
+				decor.erase_cell(cell)
+			else:
+				border.set_cell(cell, 0, theme.border_tile)
+	_paint_door_paths(ground, decor)
+
+
+func _is_border(x: int, y: int) -> bool:
+	return x == 0 or y == 0 or x == size_tiles.x - 1 or y == size_tiles.y - 1
+
+
+## True for the border cells that are the gap of an open door.
+func _is_door_cell(cell: Vector2i) -> bool:
+	var half := DOOR_WIDTH / TILE / 2
+	var in_columns := cell.x >= size_tiles.x / 2 - half and cell.x < size_tiles.x / 2 + half
+	var in_rows := cell.y >= size_tiles.y / 2 - half and cell.y < size_tiles.y / 2 + half
+	if cell.y == 0:
+		return open_doors.has(Vector2i.UP) and in_columns
+	if cell.y == size_tiles.y - 1:
+		return open_doors.has(Vector2i.DOWN) and in_columns
+	if cell.x == 0:
+		return open_doors.has(Vector2i.LEFT) and in_rows
+	if cell.x == size_tiles.x - 1:
+		return open_doors.has(Vector2i.RIGHT) and in_rows
+	return false
+
+
+## A two-tile-wide dirt path from every open door to the middle of the room.
+func _paint_door_paths(ground: TileMapLayer, decor: TileMapLayer) -> void:
+	var middle := size_tiles / 2
+	for door in open_doors:
+		var cells: Rect2i
+		if door.y != 0:
+			var rows := Vector2i(1, middle.y) if door == Vector2i.UP else Vector2i(middle.y, size_tiles.y - 1)
+			cells = Rect2i(middle.x - 1, rows.x, 2, rows.y - rows.x)
+		else:
+			var columns := Vector2i(1, middle.x) if door == Vector2i.LEFT else Vector2i(middle.x, size_tiles.x - 1)
+			cells = Rect2i(columns.x, middle.y - 1, columns.y - columns.x, 2)
+		theme.fill(ground, cells, theme.path_tile)
+		for y in range(cells.position.y, cells.end.y):
+			for x in range(cells.position.x, cells.end.x):
+				decor.erase_cell(Vector2i(x, y))
 
 
 ## Wall rectangles around the room, with a gap of DOOR_WIDTH on every open side.

@@ -6,7 +6,8 @@ extends RefCounted
 const WALL_COLOR := Color(0.12, 0.12, 0.16)
 
 
-static func add_walls(parent: Node, rects: Array[Rect2], color := WALL_COLOR) -> StaticBody2D:
+## `visible` = false builds only the collision (the theme draws the walls with tiles instead).
+static func add_walls(parent: Node, rects: Array[Rect2], color := WALL_COLOR, visible := true) -> StaticBody2D:
 	var body := StaticBody2D.new()
 	body.name = "Walls"
 	body.collision_layer = 1
@@ -19,6 +20,8 @@ static func add_walls(parent: Node, rects: Array[Rect2], color := WALL_COLOR) ->
 		shape.shape = rectangle
 		shape.position = rect.get_center()
 		body.add_child(shape)
+		if not visible:
+			continue
 		var visual := ColorRect.new()
 		visual.color = color
 		visual.position = rect.position

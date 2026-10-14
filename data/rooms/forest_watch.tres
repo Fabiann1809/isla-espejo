@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/forest/watch.tscn" id="1_cq5kr"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_ufpj6"]
+
+[resource]
+script = ExtResource("2_ufpj6")
+id = &"forest_watch"
+scene = ExtResource("1_cq5kr")
+weight = 0.8
+tags = Array[StringName]([&"watch"])
+min_enemies = 3
+max_enemies = 5

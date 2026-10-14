@@ -1,7 +1,7 @@
 """Generates the test room scenes in scenes/levels/rooms/.
 Run from the repo root: python tools/make_rooms.py
 The generated .tscn files are normal scenes: after generating them you can edit them by hand in Godot.
-Cell is 480x288 px (30x18 tiles). Keep the center cross (x 216..264 and y 120..168) free of obstacles.
+Cell is 480x288 px (30x18 tiles). Keep the center cross (x 208..272 and y 112..176) free of obstacles (tests/test_room_designs.gd checks it).
 """
 import os
 
@@ -72,10 +72,10 @@ room("combat_b", "CombatB", bars=[(96, 80, 96, 16), (288, 192, 96, 16)],
      markers={"EnemySpawns": [(70, 70), (410, 70), (70, 220), (410, 220), (330, 100)]})
 room("combat_c", "CombatC",
      markers={"EnemySpawns": [(60, 60), (420, 60), (60, 230), (420, 230), (150, 144), (330, 144)]})
-room("combat_d", "CombatD", bars=[(140, 96, 200, 16), (140, 176, 200, 16)],
+room("combat_d", "CombatD", bars=[(140, 96, 64, 16), (276, 96, 64, 16), (140, 176, 64, 16), (276, 176, 64, 16)],
      markers={"EnemySpawns": [(60, 80), (60, 210), (420, 80), (420, 210), (240, 50), (240, 240), (120, 144), (360, 144)]})
 room("event", "Event", pillars=[(110, 90, 20), (370, 90, 20), (110, 200, 20), (370, 200, 20)],
      markers={"NpcSpawn": [(240, 100)]})
 room("reward", "Reward", markers={"ChestSpawn": [(240, 144)]})
-room("special", "Special", pillars=[(130, 144, 28), (350, 144, 28)], markers={"SpecialSpawn": [(240, 144)]})
+room("special", "Special", pillars=[(130, 96, 28), (350, 96, 28), (130, 192, 28), (350, 192, 28)], markers={"SpecialSpawn": [(240, 144)]})
 print("rooms written")

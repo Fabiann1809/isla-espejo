@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/forest/reward.tscn" id="1_sy4ab"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_rbbsv"]
+
+[resource]
+script = ExtResource("2_rbbsv")
+id = &"forest_reward"
+type = 3
+scene = ExtResource("1_sy4ab")
+min_enemies = 0
+max_enemies = 0

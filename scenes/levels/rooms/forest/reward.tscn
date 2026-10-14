@@ -1,0 +1,127 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/world/room_prop.gd" id="2"]
+
+[node name="ForestReward" instance=ExtResource("1")]
+
+[node name="Prop1" type="Node2D" parent="."]
+position = Vector2(208, 112)
+script = ExtResource("2")
+kind = 7
+size_tiles = Vector2i(4, 4)
+
+[node name="Prop2" type="Node2D" parent="."]
+position = Vector2(64, 32)
+script = ExtResource("2")
+kind = 3
+
+[node name="Prop3" type="Node2D" parent="."]
+position = Vector2(384, 32)
+script = ExtResource("2")
+kind = 3
+
+[node name="Prop4" type="Node2D" parent="."]
+position = Vector2(64, 208)
+script = ExtResource("2")
+kind = 3
+
+[node name="Prop5" type="Node2D" parent="."]
+position = Vector2(384, 208)
+script = ExtResource("2")
+kind = 3
+
+[node name="Prop6" type="Node2D" parent="."]
+position = Vector2(128, 64)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop7" type="Node2D" parent="."]
+position = Vector2(320, 64)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop8" type="Node2D" parent="."]
+position = Vector2(128, 208)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop9" type="Node2D" parent="."]
+position = Vector2(320, 208)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop10" type="Node2D" parent="."]
+position = Vector2(176, 32)
+script = ExtResource("2")
+
+[node name="Prop11" type="Node2D" parent="."]
+position = Vector2(288, 240)
+script = ExtResource("2")
+
+[node name="Prop12" type="Node2D" parent="."]
+position = Vector2(448, 32)
+script = ExtResource("2")
+
+[node name="Prop13" type="Node2D" parent="."]
+position = Vector2(416, 80)
+script = ExtResource("2")
+
+[node name="Prop14" type="Node2D" parent="."]
+position = Vector2(80, 256)
+script = ExtResource("2")
+
+[node name="Prop15" type="Node2D" parent="."]
+position = Vector2(352, 80)
+script = ExtResource("2")
+
+[node name="Prop16" type="Node2D" parent="."]
+position = Vector2(80, 80)
+script = ExtResource("2")
+
+[node name="Prop17" type="Node2D" parent="."]
+position = Vector2(176, 256)
+script = ExtResource("2")
+
+[node name="Prop18" type="Node2D" parent="."]
+position = Vector2(112, 16)
+script = ExtResource("2")
+
+[node name="Prop19" type="Node2D" parent="."]
+position = Vector2(192, 64)
+script = ExtResource("2")
+
+[node name="Prop20" type="Node2D" parent="."]
+position = Vector2(416, 16)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop21" type="Node2D" parent="."]
+position = Vector2(32, 192)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop22" type="Node2D" parent="."]
+position = Vector2(448, 64)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop23" type="Node2D" parent="."]
+position = Vector2(416, 176)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop24" type="Node2D" parent="."]
+position = Vector2(448, 240)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop25" type="Node2D" parent="."]
+position = Vector2(16, 16)
+script = ExtResource("2")
+kind = 4
+
+[node name="ChestSpawn" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="ChestSpawn"]
+position = Vector2(248, 152)

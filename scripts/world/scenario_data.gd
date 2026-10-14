@@ -22,6 +22,10 @@ extends Resource
 @export var reward_rooms := 1
 @export var special_rooms := 1
 
+@export_group("Look")
+## Tiles that dress the rooms and corridors. Without a theme the rooms are flat-colored placeholders.
+@export var theme: RoomTheme
+
 @export_group("Rooms")
 @export var start_room: RoomData
 @export var boss_room: RoomData

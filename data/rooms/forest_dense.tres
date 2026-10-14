@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/forest/dense.tscn" id="1_hngm6"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_wqc6e"]
+
+[resource]
+script = ExtResource("2_wqc6e")
+id = &"forest_dense"
+scene = ExtResource("1_hngm6")
+weight = 0.8
+tags = Array[StringName]([&"ambush"])
+min_enemies = 4
+max_enemies = 6

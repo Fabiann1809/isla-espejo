@@ -94,6 +94,7 @@ func _build_rooms(rng: RandomNumberGenerator) -> void:
 	for coord: Vector2i in layout.cells:
 		var cell := layout.get_cell(coord)
 		var room: Room = cell.room_data.scene.instantiate()
+		room.theme = scenario.theme
 		room.setup(cell.room_data, cell.doors)
 		room.position = cell_origin(coord)
 		_map.add_child(room)
@@ -153,6 +154,9 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 		walls.append(Rect2(x - half_door - Room.WALL, y, Room.WALL, CORRIDOR_LENGTH))
 		walls.append(Rect2(x + half_door, y, Room.WALL, CORRIDOR_LENGTH))
 
+	if scenario.theme != null:
+		_paint_corridor(parent, floor_rect, walls)
+		return
 	var floor_visual := ColorRect.new()
 	floor_visual.color = CORRIDOR_COLOR
 	floor_visual.position = floor_rect.position
@@ -160,6 +164,20 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 	floor_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(floor_visual)
 	WallBuilder.add_walls(parent, walls)
+
+
+## A themed corridor: path tiles on the floor and the border tile (trees) along its walls.
+## Only collision comes from the wall rectangles.
+func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> void:
+	var layer := scenario.theme.new_layer(parent, "Corridor")
+	scenario.theme.fill(layer, _cells(floor_rect), scenario.theme.path_tile)
+	for wall in walls:
+		scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
+	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+
+
+func _cells(rect: Rect2) -> Rect2i:
+	return Rect2i(Vector2i(rect.position / TileArt.TILE), Vector2i(rect.size / TileArt.TILE))
 
 
 func _compute_bounds() -> void:

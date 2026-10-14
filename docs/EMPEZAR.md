@@ -15,7 +15,7 @@ Lee esto primero. En 15 minutos deberías tener el juego abierto y saber por dó
    git config user.email "tu-correo@ejemplo.com"
    ```
 4. Abre Godot → **Importar** → selecciona `project.godot` → **Importar y editar**.
-5. Pulsa **F5**. Verás un mapa generado: Nico (cuadro amarillo) empieza en la sala verde (inicio) y los soldados rojos están repartidos por las salas. Con `R` se genera otro mapa. La sala morada es la del jefe (arriba).
+5. Pulsa **F5**. Verás el Bosque de la Aurora generado (pasto, pinos, estanques, caminos de tierra): Nico (cuadro amarillo) empieza en la sala verde (inicio) y los soldados rojos están repartidos por las salas. Con `R` se genera otro mapa. La sala morada es la del jefe (arriba).
 
 Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `1 2 3` habilidades (en el nivel de prueba ya vienen desbloqueadas). `E` interactuar aún no hace nada.
 
@@ -53,6 +53,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | El director (IA capa 2) | `scripts/ai/director*.gd`, `data/ai/director_rules.tres` | Lee el perfil y adapta enemigos y salas del siguiente mapa. Reglas editables en el `.tres`. El HUD muestra la frase de la isla y la pantalla de muerte lista lo que cambiará |
 | Perfil del jugador (IA capa 1) | `scripts/ai/`, `data/ai/profile_config.tres` | Aprende si juegas agresivo o sigiloso y lo guarda entre partidas. El director leerá `PlayerProfile.live_scores()` |
 | Habilidades | `scripts/skills/`, `data/skills/` | Raíces, Corriente y Sombra. Teclas `1 2 3`; se desbloquean con `player.skills.unlock(...)` |
+| Escenario 1: Bosque de la Aurora | `data/scenarios/forest.tres`, `scenes/levels/forest_level.tscn`, `scenes/levels/rooms/forest/` | Es la escena que abre F5. 10 salas con tileset de Kenney (CC0). Se editan con `python tools/make_forest_rooms.py` |
 | Generador de mapas | `scripts/world/map_generator.gd`, `level.gd`, `room.gd` | Mapas distintos en cada partida con salas hechas a mano (ver `CLAUDE.md`) |
 | Nivel de prueba | `scenes/levels/test_level.tscn` | Genera un mapa; `R` crea otro. Es la escena que abre F5 |
 | Sala de pruebas | `scenes/levels/test_room.tscn` | Banco de pruebas del combate (lo usan los tests) |

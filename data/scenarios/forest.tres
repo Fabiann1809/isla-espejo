@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Resource" path="res://data/rooms/forest_boss.tres" id="1_skptb"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="2_s1e0w"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="3_wvcyj"]
+[ext_resource type="Resource" path="res://data/rooms/forest_clearing_a.tres" id="4_mqtxf"]
+[ext_resource type="Resource" path="res://data/rooms/forest_clearing_b.tres" id="5_mugix"]
+[ext_resource type="Resource" path="res://data/rooms/forest_river.tres" id="6_k8rcn"]
+[ext_resource type="Resource" path="res://data/rooms/forest_dense.tres" id="7_rxlfs"]
+[ext_resource type="Resource" path="res://data/rooms/forest_watch.tres" id="8_5vu37"]
+[ext_resource type="Resource" path="res://data/rooms/forest_event.tres" id="9_dqrix"]
+[ext_resource type="Resource" path="res://data/rooms/forest_reward.tres" id="10_k7olh"]
+[ext_resource type="Resource" path="res://data/rooms/forest_special.tres" id="11_mxaao"]
+[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="12_iy2ip"]
+[ext_resource type="Resource" path="res://data/rooms/forest_start.tres" id="13_7iwbh"]
+[ext_resource type="Resource" path="res://data/themes/forest.tres" id="14_nwdx8"]
+
+[resource]
+script = ExtResource("12_iy2ip")
+id = &"forest"
+display_name = "Bosque de la Aurora"
+grid_size = Vector2i(5, 6)
+min_main_path = 7
+max_main_path = 12
+side_rooms = 4
+reward_rooms = 2
+theme = ExtResource("14_nwdx8")
+start_room = ExtResource("13_7iwbh")
+boss_room = ExtResource("1_skptb")
+rooms = Array[ExtResource("3_wvcyj")]([ExtResource("4_mqtxf"), ExtResource("5_mugix"), ExtResource("6_k8rcn"), ExtResource("7_rxlfs"), ExtResource("8_5vu37"), ExtResource("9_dqrix"), ExtResource("10_k7olh"), ExtResource("11_mxaao")])
+enemy_pool = Array[PackedScene]([ExtResource("2_s1e0w")])

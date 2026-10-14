@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RoomTheme" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_theme.gd" id="1_0c3iq"]
+[ext_resource type="TileSet" path="res://assets/tilesets/forest_tileset.tres" id="2_10j4l"]
+
+[resource]
+script = ExtResource("1_0c3iq")
+tile_set = ExtResource("2_10j4l")
+floor_variants = Array[Vector2i]([Vector2i(0, 6), Vector2i(0, 9), Vector2i(0, 12)])
+floor_variant_chance = 0.03
+decor_tiles = Array[Vector2i]([Vector2i(22, 10), Vector2i(22, 11)])

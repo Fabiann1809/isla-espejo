@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/forest/boss.tscn" id="1_3px7m"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_dfi00"]
+
+[resource]
+script = ExtResource("2_dfi00")
+id = &"forest_boss"
+type = 5
+scene = ExtResource("1_3px7m")
+min_enemies = 0
+max_enemies = 0
