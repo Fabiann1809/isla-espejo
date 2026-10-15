@@ -59,6 +59,13 @@ var _action_dir := Vector2.ZERO
 @onready var _interact_area: Area2D = $InteractArea
 
 
+## Sword swing (radians, for a Nico facing right; 0 = pointing right, positive = down).
+const SWORD_HAND_X := 5.0
+const SWORD_REST := 0.85
+const SWORD_RAISED := -0.7
+const SWORD_SWUNG := 1.45
+
+
 func _ready() -> void:
 	add_to_group("player")
 	_hurtbox.invulnerability_check = is_invulnerable
@@ -280,15 +287,22 @@ func _set_attack_active(active: bool) -> void:
 		_hitbox.deactivate()
 	_sword_pivot.visible = active
 	if active:
-		_sword_pivot.position.x = 5.0 if _action_dir.x >= 0.0 else -5.0
 		_update_sword()
 
 
-## The sword sweeps an arc around the attack direction over the attack's duration.
+## The sword stays in Nico's hand, on the side he faces: it is raised and then swung down in a
+## short arc, like the sword he carries while walking (rest pose ~50 degrees). Left is the mirror.
 func _update_sword() -> void:
-	var progress := 1.0 - _state_time_left / attack_time
-	var swing := lerpf(-1.3, 1.3, 1.0 - pow(1.0 - clampf(progress, 0.0, 1.0), 2.0))
-	_sword_pivot.rotation = _action_dir.angle() + swing * (1.0 if _action_dir.x >= 0.0 else -1.0)
+	var side := 1.0 if _action_dir.x >= 0.0 else -1.0
+	var progress := clampf(1.0 - _state_time_left / attack_time, 0.0, 1.0)
+	var angle: float
+	if progress < 0.3:
+		angle = lerpf(SWORD_REST, SWORD_RAISED, smoothstep(0.0, 0.3, progress))
+	else:
+		angle = lerpf(SWORD_RAISED, SWORD_SWUNG, smoothstep(0.3, 1.0, progress))
+	_sword_pivot.scale.x = side
+	_sword_pivot.position.x = SWORD_HAND_X * side
+	_sword_pivot.rotation = angle
 
 
 func _update_visuals() -> void:
