@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/bestia_de_la_niebla_frames.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"bestia_de_la_niebla"
+display_name = "Bestia de la niebla"
+placeholder_color = Color(0.28, 0.35, 0.42, 1)
+sprite_frames = ExtResource("2")
+sprite_scale = 0.25
+sprite_offset = Vector2(0, -5)
+max_health = 4
+move_speed = 34.0
+chase_speed = 62.0
+detection_range = 145.0
+lose_range = 240.0
+vision_angle = 360.0
+attack_range = 24.0
+attack_damage = 1
+attack_windup = 0.45
+attack_time = 0.6
+attack_cooldown = 1.15
+hurt_time = 0.25
+knockback_speed = 100.0
+knockback_resistance = 0.15
+patrol_radius = 72.0
+patrol_wait = 0.8
