@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/skills/skill_manager.gd" id="5"]
+[ext_resource type="SpriteFrames" path="res://data/player/nico_frames.tres" id="6"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(12, 12)
@@ -30,7 +31,14 @@ max_health = 5
 [node name="SkillManager" type="Node" parent="."]
 script = ExtResource("5")
 
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -8)
+scale = Vector2(0.5, 0.5)
+sprite_frames = ExtResource("6")
+animation = &"idle"
+
 [node name="Placeholder" type="ColorRect" parent="."]
+visible = false
 offset_left = -6.0
 offset_top = -6.0
 offset_right = 6.0

@@ -49,7 +49,8 @@ var _action_dir := Vector2.ZERO
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
 @onready var _hurtbox: Hurtbox = $Hurtbox
-@onready var _body: ColorRect = $Placeholder
+## Nico's art (the old colored square `Placeholder` stays hidden as a fallback).
+@onready var _body: AnimatedSprite2D = $Sprite
 @onready var _attack_pivot: Node2D = $AttackPivot
 @onready var _hitbox: Hitbox = $AttackPivot/Hitbox
 @onready var _slash: ColorRect = $AttackPivot/Slash
@@ -280,6 +281,12 @@ func _set_attack_active(active: bool) -> void:
 
 
 func _update_visuals() -> void:
+	# The art faces right: flip it when moving left. Walks while moving, rests otherwise.
+	if absf(facing.x) > 0.1:
+		_body.flip_h = facing.x < 0.0
+	var wanted: StringName = &"walk" if velocity.length() > 5.0 and state != State.DEAD else &"idle"
+	if _body.animation != wanted:
+		_body.play(wanted)
 	match state:
 		State.DASH:
 			_body.modulate = Color(1, 1, 1, 0.5)
