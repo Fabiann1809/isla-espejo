@@ -8,6 +8,10 @@ func _initialize() -> void:
 	var boss := BossData.new()
 	boss.id = &"forest_guardian"
 	boss.display_name = "Guardián del bosque"
+	# Art: the stone golem (shared with the Guardián antiguo until each has its own).
+	boss.sprite_frames = load("res://data/enemies/ancient_guardian_frames.tres")
+	boss.sprite_scale = 1.1
+	boss.sprite_offset = Vector2(0, -8)
 	boss.max_health = 30
 	boss.move_speed = 20.0
 	boss.chase_speed = 42.0
