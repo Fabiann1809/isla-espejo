@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="BossData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/boss_data.gd" id="1_le7ws"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/ancient_guardian_frames.tres" id="2_231bp"]
+
+[resource]
+script = ExtResource("1_le7ws")
+slam_radius = 50.0
+slam_windup = 0.8
+slam_trigger_range = 62.0
+roots_count = 4
+roots_windup = 1.0
+roots_spread = 70.0
+recover_time = 0.7
+arena_radius = 160.0
+defeated_flag = &"temple_boss_defeated"
+intro_lines = Array[String](["Guardián: Los fragmentos no se llevan. Se quedan."])
+id = &"ancient_guardian"
+display_name = "Guardián antiguo"
+sprite_frames = ExtResource("2_231bp")
+sprite_scale = 1.1
+sprite_offset = Vector2(0, -8)
+max_health = 45
+move_speed = 20.0
+chase_speed = 46.0
+detection_range = 230.0
+lose_range = 420.0
+attack_range = 40.0
+attack_cooldown = 1.0
+hurt_time = 0.0
+knockback_speed = 0.0
+knockback_resistance = 1.0
+patrol_radius = 0.0

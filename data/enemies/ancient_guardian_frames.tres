@@ -1,0 +1,14 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/guardian_antiguo/guardian_antiguo.png" id="1_m7wnf"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_m7wnf")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}]

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_g4po1"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/murcielago_frames.tres" id="2_wosco"]
+
+[resource]
+script = ExtResource("1_g4po1")
+id = &"murcielago"
+display_name = "Murciélago"
+sprite_frames = ExtResource("2_wosco")
+sprite_scale = 0.4
+sprite_offset = Vector2(0, 3)
+max_health = 2
+move_speed = 55.0
+chase_speed = 105.0
+detection_range = 140.0
+lose_range = 240.0
+attack_range = 18.0
+attack_windup = 0.3
+attack_cooldown = 0.7
+knockback_speed = 160.0
+patrol_radius = 80.0

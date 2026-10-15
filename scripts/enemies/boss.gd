@@ -213,8 +213,12 @@ func _enforce_territory() -> void:
 		global_position = _home + offset.normalized() * _boss.arena_radius
 
 
-## A giant tree made of two scaled tiles (placeholder art).
+## Without art: a giant tree made of two scaled tiles (placeholder).
 func _build_visual() -> void:
+	if _sprite != null:
+		# Real art (EnemyData.sprite_frames) replaces the placeholder tiles.
+		_visual = _sprite
+		return
 	_body.color = Color(0, 0, 0, 0)
 	_visual = Node2D.new()
 	_visual.name = "Visual"

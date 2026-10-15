@@ -56,7 +56,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Detección del jugador (rango de visión, cono, línea de visión y señal `player_detected`)
 - [ ] **Bestia de la niebla** (embiste)
 - [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`)
-- [ ] **Murciélago** (picado rápido)
+- [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Aparece en el bosque mientras tanto
 - [ ] **Gólem menor** (ataque lento y fuerte)
 - [ ] **Elemental de fuego** (proyectil y zona de fuego)
 - [ ] **Esqueleto guardián** (cuerpo a cuerpo con bloqueo)
@@ -138,7 +138,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [ ] Tileset del templo y lava (caminos de piedra sobre lava, sin plataformas flotantes)
 - [ ] Salas con trampas
 - [ ] Enemigos del escenario colocados
-- [ ] **Jefe: Guardián antiguo** (proyectiles, golpes, escudo / invocación)
+- [ ] **Jefe: Guardián antiguo** (proyectiles, golpes, escudo / invocación): ya existe con su arte (golem de piedra) y los ataques del jefe base (`scenes/enemies/ancient_guardian.tscn`); faltan sus ataques propios y el escenario 3
 - [ ] Al derrotarlo: fragmento violeta y habilidad **Sombra**
 - [ ] NPC **Mercader** con 3 estados de diálogo (solo diálogo, sin tienda)
 - [ ] Cierre de la historia
