@@ -1,0 +1,21 @@
+{
+	"menu_title": "Isla Espejo",
+	"menu_subtitle": "Un camino de vuelta a casa",
+	"menu_start": "Comenzar viaje",
+	"menu_start_confirm": "¿Borrar el progreso? Pulsa de nuevo",
+	"menu_continue": "Retomar el camino",
+	"menu_options": "Configuración",
+	"menu_credits": "Créditos",
+	"menu_quit": "Abandonar la isla",
+	"menu_controls": "Mover: WASD  ·  Atacar: J  ·  Esquivar: Espacio  ·  Habilidades: 1 2 3  ·  Interactuar: E  ·  Pausa: Esc",
+	"pause_title": "Pausa",
+	"pause_resume": "Continuar",
+	"pause_menu": "Volver al menú",
+	"options_title": "Configuración",
+	"options_volume": "Volumen",
+	"options_fullscreen": "Pantalla completa",
+	"options_back": "Volver",
+	"credits_title": "Créditos",
+	"credits_back": "Volver",
+	"credits_missing": "No se encontró la lista de créditos."
+}

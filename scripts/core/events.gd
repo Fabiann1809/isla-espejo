@@ -15,6 +15,8 @@ signal boss_health_changed(boss_id: StringName, current: int, maximum: int, boss
 signal boss_defeated(boss_id: StringName)
 signal fragment_collected(fragment_id: StringName)
 signal scenario_completed(scenario_id: StringName)
+## What the player should do now (Spanish, from the scenario's data), for the HUD.
+signal objective_changed(text: String)
 
 # Run flow
 ## A map has been built and the player placed in it: a new run starts.

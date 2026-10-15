@@ -65,6 +65,9 @@ func _initialize() -> void:
 	scenario.chest_scenes = chests
 	scenario.boss_scene = load("res://scenes/enemies/forest_guardian.tscn")
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
+	scenario.objective = "Encuentra al Guardián del bosque"
+	scenario.objective_done = "Cruza el portal"
+	scenario.objective_flag = &"forest_boss_defeated"
 	scenario.completion_text = "Capítulo 1 completado. Las ruinas de la montaña te esperan."
 	ResourceSaver.save(scenario, "res://data/scenarios/forest.tres")
 	print("forest data written")

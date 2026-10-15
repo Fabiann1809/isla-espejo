@@ -30,6 +30,13 @@ extends Resource
 ## Shown when the player leaves through the exit (Spanish).
 @export var completion_text := ""
 
+@export_group("Objective")
+## What the HUD asks of the player (Spanish) until `objective_flag` is set, and afterwards.
+@export var objective := ""
+@export var objective_done := ""
+## Story flag that marks the objective as done (the boss's `defeated_flag`).
+@export var objective_flag: StringName = &""
+
 @export_group("Look")
 ## Tiles that dress the rooms and corridors. Without a theme the rooms are flat-colored placeholders.
 @export var theme: RoomTheme

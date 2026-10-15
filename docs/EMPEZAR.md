@@ -48,6 +48,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | Vida / daño | `scripts/components/` | `HealthComponent`, `Hitbox`, `Hurtbox`: **toda la lógica de daño pasa por aquí** |
 | Bus de eventos | `scripts/core/events.gd` (autoload `Events`) | Aquí se publica lo que pasa; la IA y el HUD lo escuchan |
 | Enemigo base | `scripts/enemies/enemy.gd`, `enemy_data.gd`, `scenes/enemies/enemy.tscn` | Estados, detección, persecución, ataque con aviso |
+| Menús, pausa, guardado y opciones | `scenes/ui/main_menu.tscn`, `pause_menu.tscn`, autoloads `SaveGame` y `Settings`, textos en `data/ui/texts.json` | Hechos (tarea 13). Textos de menús: se editan en el JSON |
 | Plantilla de enemigo | `scenes/enemies/grunt.tscn`, `data/enemies/grunt.tres` | Ejemplo a copiar |
 | Enemigo con arte animado | `scenes/enemies/sombra_errante.tscn`, `data/enemies/sombra_errante*.tres`, `tools/make_sombra_errante.gd` | Ejemplo de sprites: la hoja PNG (celdas 48x48, una fila por animación idle/walk/run/attack/hurt/death, mirando a la derecha) se vuelve `SpriteFrames` y se asigna en `EnemyData.sprite_frames`; `enemy.gd` anima solo según el estado |
 | HUD | `scenes/ui/hud.tscn` | Corazones de vida |
@@ -96,12 +97,12 @@ Todo el escenario 1 es el molde. Para las Ruinas de la Montaña y el Templo del 
 - Añade el enemigo al `enemy_pool` del escenario (`data/scenarios/*.tres`) y, si quieres que la IA lo favorezca para un estilo, a `enemy_weights` en `data/ai/director_rules.tres`.
 
 ## 6. Reparto actual: qué hace cada persona
-**Ya está hecho (no lo rehagas):** Nico, combate, vida y daño, habilidades (Raíces, Corriente, Sombra), generador de mapas, **la IA completa** (perfil del jugador y director), sistema de diálogo, interacción (cofres, NPC), jefe base, **y el escenario 1 jugable de principio a fin** (Bosque de la Aurora). Detalle en la tabla de la sección 4 y en `docs/TAREAS.md` (sección "Estado actual").
+**Ya está hecho (no lo rehagas):** Nico, combate, menús, pausa y guardado, vida y daño, habilidades (Raíces, Corriente, Sombra), generador de mapas, **la IA completa** (perfil del jugador y director), sistema de diálogo, interacción (cofres, NPC), jefe base, **y el escenario 1 jugable de principio a fin** (Bosque de la Aurora). Detalle en la tabla de la sección 4 y en `docs/TAREAS.md` (sección "Estado actual").
 
 ### Persona B, por dónde empezar
 1. **Tarea 4: los 6 enemigos.** Empezar por **Bestia de la niebla** (embiste) y **Murciélago** (picado rápido), que son los más simples; entregar en tandas de 2 o 3. Sigue las convenciones de abajo ("Para que el director controle tus enemigos") y copia `scenes/enemies/grunt.tscn` + `data/enemies/grunt.tres`. Cuando existan los del bosque (Bestia de la niebla y Sombra errante), cámbialos en el `enemy_pool` de `data/scenarios/forest.tres` (hoy usa el soldado de plantilla). Añade una prueba por enemigo (copia `tests/test_enemy.gd`).
 2. **Tarea 12: los textos.** El sistema de diálogo ya existe; falta escribir `data/dialogues/viajera.json` y `mercader.json` (copia `elder.json`; mira el formato arriba) y los textos de la historia (prólogo, final).
-3. **Tarea 13: menús, pausa, guardado y créditos.** El progreso a guardar vive en `GameState` (ya tiene `to_dict()`/`from_dict()`) y el perfil en `PlayerProfile`.
+3. **Tarea 13: ya está hecha** (menú principal, pausa, guardado, opciones y créditos; ver la tabla de la sección 4). Si quieres mejorar algo de los menús, los textos están en `data/ui/texts.json` y el aspecto en `scripts/ui/ui_kit.gd`.
 4. **Tarea 14: sonido y música.** Elegir packs gratuitos y registrarlos en `CREDITS.md` (con su licencia).
 
 ### Persona A, lo que sigue

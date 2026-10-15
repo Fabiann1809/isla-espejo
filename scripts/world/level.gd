@@ -40,6 +40,11 @@ func _ready() -> void:
 		push_error("Level has no ScenarioData assigned.")
 		return
 	Events.scenario_completed.connect(_on_scenario_completed)
+	Events.boss_defeated.connect(func(_id: StringName) -> void: _announce_objective())
+	# "Continue" in the main menu resumes the chapter that was saved.
+	var saved := SaveGame.take_pending_scenario()
+	if saved != null:
+		scenario = saved
 	generate(seed_value)
 
 
@@ -69,6 +74,13 @@ func generate(new_seed := 0) -> void:
 	generated.emit(layout)
 	if scenario.chapter_title != "":
 		Events.message_requested.emit(scenario.chapter_title)
+	_announce_objective()
+
+
+## Tells the HUD what to do now: the objective, or the follow-up once the boss is down.
+func _announce_objective() -> void:
+	var done := scenario.objective_flag != &"" and GameState.has_flag(scenario.objective_flag)
+	Events.objective_changed.emit(scenario.objective_done if done else scenario.objective)
 
 
 ## The director's room weights combined with any manual ones.

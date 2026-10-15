@@ -12,7 +12,7 @@ Reglas: una tarea a la vez, en orden (salvo las que son independientes), push di
 - **Escenario 1 (tarea 7): jugable de principio a fin** con soldados de plantilla: bosque, 10 salas, Anciano, cofres, jefe, fragmento verde, habilidad Raíces y salida. Solo falta cambiar los soldados por los enemigos del bosque de la tarea 4 (de B). Hecho también el sistema de diálogo; B solo escribe los textos de la Viajera y el Mercader.
 - **La IA ya está completa** (capas 1 y 2). Quien haga los enemigos y escenarios solo debe respetar las convenciones de `docs/EMPEZAR.md` (sección 5) para que el director los controle.
 - **Persona A, siguiente:** los escenarios 2 y 3 (tareas 10 y 11), siguiendo la guía de `docs/EMPEZAR.md`.
-- **Persona B puede empezar ya:** 4 (los 6 enemigos), 12 (solo los textos de la Viajera y el Mercader), 13 (menús y guardado) y 14 (sonido). Las tareas 5, 6, 8 y 9, el sistema de diálogo y el escenario 1 ya los hizo la persona A: **no hay que rehacerlos**. Ver `docs/EMPEZAR.md`, sección 6.
+- **Persona B puede empezar ya:** 4 (los 6 enemigos), 12 (solo los textos de la Viajera y el Mercader) y 14 (sonido). La tarea 13 (menús, pausa, guardado, opciones y créditos) ya la hizo A. Las tareas 5, 6, 8 y 9, el sistema de diálogo y el escenario 1 ya los hizo la persona A: **no hay que rehacerlos**. Ver `docs/EMPEZAR.md`, sección 6.
 
 Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
@@ -157,14 +157,14 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 **Hecho cuando:** la historia se puede seguir de principio a fin con todos los textos en `data/` y ninguno escrito en los scripts.
 
-## 13. Interfaz, menús, guardado y créditos — B  ← 3
-- [ ] Menú principal ("Comenzar viaje", "Retomar el camino", "Configuración", "Abandonar la isla")
-- [ ] HUD completo (vida, habilidades, objetivo, fragmentos)
-- [ ] Menú de pausa
-- [ ] Pantalla de muerte con resumen del perfil
-- [ ] Guardado y carga de progreso (fragmentos, habilidades, escenario) junto al perfil
-- [ ] Opciones básicas (volumen, pantalla completa)
-- [ ] Pantalla de créditos alimentada desde `CREDITS.md`
+## 13. Interfaz, menús, guardado y créditos — B (hecha por A a petición del dueño)  ← 3
+- [x] Menú principal ("Comenzar viaje", "Retomar el camino", "Configuración", "Créditos", "Abandonar la isla"; `scenes/ui/main_menu.tscn`; empezar de nuevo pide confirmar si hay partida guardada)
+- [x] HUD completo (vida, habilidades, objetivo del capítulo, fragmentos de la brújula, jefe, avisos)
+- [x] Menú de pausa (Esc; continuar, configuración, volver al menú, salir; no se abre en una conversación)
+- [x] Pantalla de muerte con resumen del perfil (`profile_summary.tscn`)
+- [x] Guardado y carga de progreso (fragmentos, habilidades, banderas y capítulo en `user://save.json`, aparte del perfil `user://profile.json`; autoload `SaveGame`)
+- [x] Opciones básicas (volumen y pantalla completa en `user://settings.json`; autoload `Settings`)
+- [x] Pantalla de créditos alimentada desde `CREDITS.md` (el archivo viaja con el juego exportado)
 
 **Hecho cuando:** se puede iniciar, pausar, morir, continuar y salir del juego sin errores, y el progreso se conserva al cerrarlo.
 
