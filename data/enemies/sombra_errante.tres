@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_jd74a"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/sombra_errante_frames.tres" id="2_w0tet"]
+
+[resource]
+script = ExtResource("1_jd74a")
+id = &"sombra_errante"
+display_name = "Sombra errante"
+sprite_frames = ExtResource("2_w0tet")
+sprite_scale = 0.5
+sprite_offset = Vector2(0, -3)
+move_speed = 38.0
+chase_speed = 78.0
+detection_range = 130.0
+lose_range = 230.0
+attack_windup = 0.5
+attack_cooldown = 0.9
+patrol_radius = 70.0

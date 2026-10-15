@@ -53,6 +53,9 @@ var _slow_factor := 1.0
 @onready var _collision: CollisionShape2D = $CollisionShape2D
 @onready var _label: Label = $StateLabel
 
+var _sprite: AnimatedSprite2D
+var _status_tinted := false
+
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -62,6 +65,7 @@ func _ready() -> void:
 	_home = global_position
 	_vision_timer = randf() * VISION_CHECK_INTERVAL
 	_body.color = data.placeholder_color
+	_build_sprite()
 	health.set_max_health(ceili(data.max_health * health_multiplier))
 	health.died.connect(_on_died)
 	_hurtbox.hit.connect(_on_hurtbox_hit)
@@ -94,7 +98,8 @@ func _physics_process(delta: float) -> void:
 	if _root_left > 0.0 and state in [State.IDLE, State.PATROL, State.CHASE]:
 		velocity = Vector2.ZERO
 	move_and_slide()
-	_update_status_visual()
+	_update_status_tint_target()
+	_update_animation()
 	if debug_state:
 		_label.text = State.keys()[state]
 
@@ -284,15 +289,19 @@ func _visibility_of(node: Node) -> float:
 	return float(value) if value != null else 1.0
 
 
-func _update_status_visual() -> void:
+func _update_status_tint_target() -> void:
 	if state == State.DEAD:
 		return
 	if _root_left > 0.0:
-		_body.modulate = Color(0.6, 1.0, 0.6)
+		_tint_target().modulate = Color(0.6, 1.0, 0.6)
+		_status_tinted = true
 	elif _slow_left > 0.0:
-		_body.modulate = Color(0.6, 0.75, 1.0)
-	else:
-		_body.modulate = Color.WHITE
+		_tint_target().modulate = Color(0.6, 0.75, 1.0)
+		_status_tinted = true
+	elif _status_tinted or _sprite == null:
+		# A sprite is only reset after a status tint, so the hit flash is not cut short.
+		_tint_target().modulate = Color.WHITE
+		_status_tinted = false
 
 
 func _is_dead_node(node: Node) -> bool:
@@ -335,8 +344,12 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 	_hurt_time_left = data.hurt_time
 	velocity = (global_position - from_position).normalized() \
 			* data.knockback_speed * (1.0 - data.knockback_resistance)
-	_body.color = Color.WHITE
-	create_tween().tween_property(_body, "color", data.placeholder_color, 0.12)
+	if _sprite != null:
+		_sprite.modulate = Color(2.5, 2.5, 2.5)
+		create_tween().tween_property(_sprite, "modulate", Color.WHITE, 0.12)
+	else:
+		_body.color = Color.WHITE
+		create_tween().tween_property(_body, "color", data.placeholder_color, 0.12)
 
 
 func _on_died() -> void:
@@ -347,6 +360,64 @@ func _on_died() -> void:
 	_collision.set_deferred("disabled", true)
 	Events.enemy_killed.emit(self)
 	died.emit()
+	var fade_delay := 0.0
+	if _sprite != null and _sprite.sprite_frames.has_animation(&"death"):
+		_sprite.play(&"death")
+		fade_delay = _animation_length(&"death")
 	var tween := create_tween()
+	tween.tween_interval(fade_delay)
 	tween.tween_property(self, "modulate:a", 0.0, 0.25)
 	tween.tween_callback(queue_free)
+
+
+# --- Sprite (optional art from EnemyData.sprite_frames) ----------------------------------------
+
+func _build_sprite() -> void:
+	if data.sprite_frames == null:
+		return
+	_body.visible = false
+	_sprite = AnimatedSprite2D.new()
+	_sprite.name = "Sprite"
+	_sprite.sprite_frames = data.sprite_frames
+	_sprite.scale = Vector2.ONE * data.sprite_scale
+	_sprite.position = data.sprite_offset
+	add_child(_sprite)
+	move_child(_sprite, 1)
+	_sprite.play(&"idle")
+
+
+## What is tinted by statuses: the sprite if there is one, else the colored square.
+func _tint_target() -> CanvasItem:
+	return _sprite if _sprite != null else _body
+
+
+func _animation_length(anim: StringName) -> float:
+	var frames := _sprite.sprite_frames
+	return frames.get_frame_count(anim) / frames.get_animation_speed(anim)
+
+
+func _update_animation() -> void:
+	if _sprite == null or state == State.DEAD:
+		return
+	if absf(facing.x) > 0.1:
+		_sprite.flip_h = facing.x < 0.0
+	var wanted: StringName = &"idle"
+	match state:
+		State.PATROL:
+			wanted = &"walk"
+		State.CHASE:
+			wanted = &"run" if velocity.length() > 1.0 else &"idle"
+		State.ATTACK:
+			wanted = &"attack"
+		State.HURT:
+			wanted = &"hurt"
+	if not _sprite.sprite_frames.has_animation(wanted):
+		wanted = &"idle"
+	if _sprite.animation != wanted:
+		_sprite.play(wanted)
+		if wanted == &"attack":
+			# One swing spans the whole windup + strike.
+			var span := data.attack_windup + data.attack_time
+			_sprite.speed_scale = _animation_length(wanted) / maxf(span, 0.05)
+		else:
+			_sprite.speed_scale = 1.0

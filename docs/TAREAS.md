@@ -55,7 +55,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Clase base de enemigo con vida, daño, estados (idle, patrulla, persecución, ataque, muerte) y datos en `data/enemies/` (`scripts/enemies/enemy.gd`, plantilla `scenes/enemies/grunt.tscn`)
 - [x] Detección del jugador (rango de visión, cono, línea de visión y señal `player_detected`)
 - [ ] **Bestia de la niebla** (embiste)
-- [ ] **Sombra errante** (teletransporte)
+- [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`)
 - [ ] **Murciélago** (picado rápido)
 - [ ] **Gólem menor** (ataque lento y fuerte)
 - [ ] **Elemental de fuego** (proyectil y zona de fuego)

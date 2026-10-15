@@ -8,6 +8,13 @@ extends Resource
 @export var display_name := "Enemigo"
 @export var placeholder_color := Color(0.8, 0.25, 0.25)
 
+@export_group("Sprite")
+## Optional art. Animations used if present: idle, walk, run, attack, hurt, death. Sprites face
+## right; the enemy flips them when it faces left. Without it the colored square is shown.
+@export var sprite_frames: SpriteFrames
+@export var sprite_scale := 1.0
+@export var sprite_offset := Vector2.ZERO
+
 @export_group("Stats")
 @export var max_health := 3
 @export var move_speed := 40.0

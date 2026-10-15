@@ -49,6 +49,7 @@ Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `
 | Bus de eventos | `scripts/core/events.gd` (autoload `Events`) | Aquí se publica lo que pasa; la IA y el HUD lo escuchan |
 | Enemigo base | `scripts/enemies/enemy.gd`, `enemy_data.gd`, `scenes/enemies/enemy.tscn` | Estados, detección, persecución, ataque con aviso |
 | Plantilla de enemigo | `scenes/enemies/grunt.tscn`, `data/enemies/grunt.tres` | Ejemplo a copiar |
+| Enemigo con arte animado | `scenes/enemies/sombra_errante.tscn`, `data/enemies/sombra_errante*.tres`, `tools/make_sombra_errante.gd` | Ejemplo de sprites: la hoja PNG (celdas 48x48, una fila por animación idle/walk/run/attack/hurt/death, mirando a la derecha) se vuelve `SpriteFrames` y se asigna en `EnemyData.sprite_frames`; `enemy.gd` anima solo según el estado |
 | HUD | `scenes/ui/hud.tscn` | Corazones de vida |
 | El director (IA capa 2) | `scripts/ai/director*.gd`, `data/ai/director_rules.tres` | Lee el perfil y adapta enemigos y salas del siguiente mapa. Reglas editables en el `.tres`. El HUD muestra la frase de la isla y la pantalla de muerte lista lo que cambiará |
 | Perfil del jugador (IA capa 1) | `scripts/ai/`, `data/ai/profile_config.tres` | Aprende si juegas agresivo o sigiloso y lo guarda entre partidas. El director leerá `PlayerProfile.live_scores()` |

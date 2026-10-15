@@ -1,27 +1,28 @@
 [gd_resource type="Resource" script_class="ScenarioData" format=3]
 
-[ext_resource type="Resource" path="res://data/rooms/forest_boss.tres" id="1_k8rcn"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/forest_guardian.tscn" id="2_rxlfs"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="3_5vu37"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="4_dqrix"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="5_k7olh"]
-[ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="6_mxaao"]
-[ext_resource type="PackedScene" path="res://scenes/npcs/elder.tscn" id="7_iy2ip"]
-[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="8_7iwbh"]
-[ext_resource type="Resource" path="res://data/rooms/forest_clearing_a.tres" id="9_nwdx8"]
-[ext_resource type="Resource" path="res://data/rooms/forest_clearing_b.tres" id="10_cxxwv"]
-[ext_resource type="Resource" path="res://data/rooms/forest_river.tres" id="11_q2d2u"]
-[ext_resource type="Resource" path="res://data/rooms/forest_dense.tres" id="12_kw76a"]
-[ext_resource type="Resource" path="res://data/rooms/forest_watch.tres" id="13_n0i0u"]
-[ext_resource type="Resource" path="res://data/rooms/forest_event.tres" id="14_8bqs7"]
-[ext_resource type="Resource" path="res://data/rooms/forest_reward.tres" id="15_6rtq2"]
-[ext_resource type="Resource" path="res://data/rooms/forest_special.tres" id="16_ytje3"]
-[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="17_rnyrg"]
-[ext_resource type="Resource" path="res://data/rooms/forest_start.tres" id="18_sxhet"]
-[ext_resource type="Resource" path="res://data/themes/forest.tres" id="19_iuoy7"]
+[ext_resource type="Resource" path="res://data/rooms/forest_boss.tres" id="1_rxlfs"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/forest_guardian.tscn" id="2_5vu37"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="3_dqrix"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="4_k7olh"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/sombra_errante.tscn" id="5_mxaao"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="6_iy2ip"]
+[ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="7_7iwbh"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/elder.tscn" id="8_nwdx8"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="9_cxxwv"]
+[ext_resource type="Resource" path="res://data/rooms/forest_clearing_a.tres" id="10_q2d2u"]
+[ext_resource type="Resource" path="res://data/rooms/forest_clearing_b.tres" id="11_kw76a"]
+[ext_resource type="Resource" path="res://data/rooms/forest_river.tres" id="12_n0i0u"]
+[ext_resource type="Resource" path="res://data/rooms/forest_dense.tres" id="13_8bqs7"]
+[ext_resource type="Resource" path="res://data/rooms/forest_watch.tres" id="14_6rtq2"]
+[ext_resource type="Resource" path="res://data/rooms/forest_event.tres" id="15_ytje3"]
+[ext_resource type="Resource" path="res://data/rooms/forest_reward.tres" id="16_rnyrg"]
+[ext_resource type="Resource" path="res://data/rooms/forest_special.tres" id="17_sxhet"]
+[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="18_iuoy7"]
+[ext_resource type="Resource" path="res://data/rooms/forest_start.tres" id="19_s1buj"]
+[ext_resource type="Resource" path="res://data/themes/forest.tres" id="20_8s5kk"]
 
 [resource]
-script = ExtResource("17_rnyrg")
+script = ExtResource("18_iuoy7")
 id = &"forest"
 display_name = "Bosque de la Aurora"
 chapter_title = "El bosque despierta."
@@ -31,12 +32,12 @@ max_main_path = 12
 side_rooms = 4
 reward_rooms = 2
 completion_text = "Capítulo 1 completado. Las ruinas de la montaña te esperan."
-theme = ExtResource("19_iuoy7")
-start_room = ExtResource("18_sxhet")
-boss_room = ExtResource("1_k8rcn")
-rooms = Array[ExtResource("8_7iwbh")]([ExtResource("9_nwdx8"), ExtResource("10_cxxwv"), ExtResource("11_q2d2u"), ExtResource("12_kw76a"), ExtResource("13_n0i0u"), ExtResource("14_8bqs7"), ExtResource("15_6rtq2"), ExtResource("16_ytje3")])
-enemy_pool = Array[PackedScene]([ExtResource("5_k7olh")])
-boss_scene = ExtResource("2_rxlfs")
-exit_scene = ExtResource("6_mxaao")
-npc_scene = ExtResource("7_iy2ip")
-chest_scenes = Array[PackedScene]([ExtResource("3_5vu37"), ExtResource("4_dqrix")])
+theme = ExtResource("20_8s5kk")
+start_room = ExtResource("19_s1buj")
+boss_room = ExtResource("1_rxlfs")
+rooms = Array[ExtResource("9_cxxwv")]([ExtResource("10_q2d2u"), ExtResource("11_kw76a"), ExtResource("12_n0i0u"), ExtResource("13_8bqs7"), ExtResource("14_6rtq2"), ExtResource("15_ytje3"), ExtResource("16_rnyrg"), ExtResource("17_sxhet")])
+enemy_pool = Array[PackedScene]([ExtResource("5_mxaao"), ExtResource("6_iy2ip")])
+boss_scene = ExtResource("2_5vu37")
+exit_scene = ExtResource("7_7iwbh")
+npc_scene = ExtResource("8_nwdx8")
+chest_scenes = Array[PackedScene]([ExtResource("3_dqrix"), ExtResource("4_k7olh")])
