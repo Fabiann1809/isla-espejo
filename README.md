@@ -9,6 +9,10 @@ Nico queda atrapado en una isla que lo refleja y aprende de él. Para volver a c
 - Una habilidad por jefe: cada fragmento de la brújula otorga un poder.
 - La isla aprende: una IA adaptativa observa cómo juegas (agresivo o sigiloso) y reacciona.
 
+![Sombra errante: reposo, caminar, correr, ataque, daño y muerte](docs/sombra_errante.gif)
+
+*La Sombra errante, un enemigo del bosque (reposo, caminar, correr, ataque, daño y muerte).*
+
 ## Documentación
 - [`docs/EMPEZAR.md`](docs/EMPEZAR.md): **guía de arranque** (instalación, flujo de trabajo y por dónde empezar).
 - [`docs/JUEGO.md`](docs/JUEGO.md): de qué trata el juego, alcance, personajes, historia y diálogos.
