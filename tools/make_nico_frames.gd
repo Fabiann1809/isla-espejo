@@ -25,6 +25,13 @@ func _initialize() -> void:
 		frames.add_frame(&"walk", atlas)
 		if i == 0:
 			frames.add_frame(&"idle", atlas)
+	# The sword-less pose used while the sword is swung as its own sprite (see Player).
+	frames.add_animation(&"attack")
+	frames.set_animation_speed(&"attack", 1.0)
+	var pose := AtlasTexture.new()
+	pose.atlas = sheet
+	pose.region = Rect2((FRAMES % COLS) * CELL, (FRAMES / COLS) * CELL, CELL, CELL)
+	frames.add_frame(&"attack", pose)
 	DirAccess.make_dir_recursive_absolute("res://data/player")
 	ResourceSaver.save(frames, "res://data/player/nico_frames.tres")
 	print("nico frames written")

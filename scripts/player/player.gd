@@ -54,6 +54,7 @@ var _action_dir := Vector2.ZERO
 @onready var _attack_pivot: Node2D = $AttackPivot
 @onready var _hitbox: Hitbox = $AttackPivot/Hitbox
 @onready var _slash: ColorRect = $AttackPivot/Slash
+@onready var _sword_pivot: Node2D = $SwordPivot
 @onready var _camera: Camera2D = $Camera2D
 @onready var _interact_area: Area2D = $InteractArea
 
@@ -277,14 +278,28 @@ func _set_attack_active(active: bool) -> void:
 		_hitbox.activate()
 	else:
 		_hitbox.deactivate()
-	_slash.visible = active
+	_sword_pivot.visible = active
+	if active:
+		_sword_pivot.position.x = 5.0 if _action_dir.x >= 0.0 else -5.0
+		_update_sword()
+
+
+## The sword sweeps an arc around the attack direction over the attack's duration.
+func _update_sword() -> void:
+	var progress := 1.0 - _state_time_left / attack_time
+	var swing := lerpf(-1.3, 1.3, 1.0 - pow(1.0 - clampf(progress, 0.0, 1.0), 2.0))
+	_sword_pivot.rotation = _action_dir.angle() + swing * (1.0 if _action_dir.x >= 0.0 else -1.0)
 
 
 func _update_visuals() -> void:
+	if state == State.ATTACK:
+		_update_sword()
 	# The art faces right: flip it when moving left. Walks while moving, rests otherwise.
 	if absf(facing.x) > 0.1:
 		_body.flip_h = facing.x < 0.0
 	var wanted: StringName = &"walk" if velocity.length() > 5.0 and state != State.DEAD else &"idle"
+	if state == State.ATTACK:
+		wanted = &"attack"
 	if _body.animation != wanted:
 		_body.play(wanted)
 	match state:
