@@ -87,6 +87,18 @@ func _initialize() -> void:
 	root.add_child(elder)
 	await process_frame
 	_check(elder.get_node("Sprite").visible and not elder.get_node("Body").visible, "the elder shows its sprite instead of the colored figure")
+	_check(elder.sprite_scale == 0.5, "the elder is drawn at half size")
+	var height := _visible_height(elder.get_node("Sprite"))
+	_check(height >= 24.0 and height <= 34.0, "the elder is about as tall as Nico (%.1f px)" % height)
+	# A new NPC with 64x64 art gets the same size without setting anything.
+	for id: String in ["traveler", "merchant"]:
+		var npc = load("res://scenes/npcs/npc.tscn").instantiate()
+		npc.sprite_frames = load("res://data/npcs/%s_frames.tres" % id)
+		root.add_child(npc)
+		await process_frame
+		var npc_height := _visible_height(npc.get_node("Sprite"))
+		_check(npc_height >= 24.0 and npc_height <= 34.0, "%s is about as tall as Nico by default (%.1f px)" % [id, npc_height])
+		npc.queue_free()
 	var plain = load("res://scenes/npcs/npc.tscn").instantiate()
 	root.add_child(plain)
 	await process_frame
@@ -108,3 +120,13 @@ func _cells(frames: SpriteFrames, anim: StringName) -> Array:
 	for i in frames.get_frame_count(anim):
 		cells.append(str((frames.get_frame_texture(anim, i) as AtlasTexture).region.position))
 	return cells
+
+
+## The tallest the visible pixels of any idle cell get on screen (cell art times the node's scale).
+func _visible_height(sprite: AnimatedSprite2D) -> float:
+	var tallest := 0.0
+	for i in sprite.sprite_frames.get_frame_count(&"idle"):
+		var atlas := sprite.sprite_frames.get_frame_texture(&"idle", i) as AtlasTexture
+		var cell := atlas.atlas.get_image().get_region(Rect2i(atlas.region))
+		tallest = maxf(tallest, cell.get_used_rect().size.y * sprite.scale.y)
+	return tallest
