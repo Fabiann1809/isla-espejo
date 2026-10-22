@@ -1,0 +1,30 @@
+{
+	"speaker": "El Mercader",
+	"states": {
+		"first": [
+			"Vaya, un cliente. Pocos llegan hasta aquí con las dos piernas enteras.",
+			{"speaker": "Nico", "text": "Busco la forma de volver a casa. ¿Sabes cómo se sale de la isla?"},
+			"¿Quieres seguir avanzando? Todo tiene un precio, viajero.",
+			"Tranquilo, hoy no te cobro nada. Pero la isla lleva la cuenta... y yo también."
+		],
+		"again": [
+			"Sigues en pie. Eso ya vale algo.",
+			"Sé cosas del camino, del bosque y de lo que hay más allá. Pero lo que se sabe se paga, y hoy no hago rebajas.",
+			"Vuelve cuando tengas algo que ofrecerme. Siempre hay algo que ofrecer."
+		],
+		"final": [
+			{"speaker": "Nico", "text": "Vencí al Guardián. El fragmento verde ya brilla en mi brújula."},
+			"Un fragmento... Barato, comparado con lo que viene.",
+			"Dime, viajero: ¿nunca te preguntaste por qué la isla deja marchar a tan poca gente?",
+			"No me mires así. Yo solo vendo precios. Las respuestas se pagan aparte."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["forest_boss_defeated"]},
+		{"state": "again", "requires": ["met_merchant"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_merchant"]
+	}
+}

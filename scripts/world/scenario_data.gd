@@ -52,5 +52,7 @@ extends Resource
 ## The doorway to the next chapter, placed in the boss room (marker ExitSpawn).
 @export var exit_scene: PackedScene
 @export var npc_scene: PackedScene
+## Optional character waiting in the special room (marker SpecialSpawn), e.g. the Mercader.
+@export var special_npc_scene: PackedScene
 ## Chests that fill the reward rooms (one is picked for each).
 @export var chest_scenes: Array[PackedScene] = []

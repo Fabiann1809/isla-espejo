@@ -20,7 +20,7 @@ const ENTRIES := [
 	{"label": "Nico", "scene": "res://scenes/player/player.tscn", "node": "Sprite"},
 	{"label": "Anciano", "npc": "res://scenes/npcs/elder.tscn"},
 	{"label": "Viajera", "npc_frames": "res://data/npcs/traveler_frames.tres"},
-	{"label": "Mercader", "npc_frames": "res://data/npcs/merchant_frames.tres"},
+	{"label": "Mercader", "npc": "res://scenes/npcs/merchant.tscn"},
 	{"label": "Murciélago", "data": "res://data/enemies/murcielago.tres"},
 	{"label": "Sombra errante", "data": "res://data/enemies/sombra_errante.tres"},
 	{"label": "Bestia de la niebla", "data": "res://data/enemies/bestia_de_la_niebla.tres"},

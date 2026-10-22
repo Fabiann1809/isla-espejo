@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/bestia_de_la_niebla.tscn" id="22_fogbeast"]
 [ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="8_cxxwv"]
 [ext_resource type="PackedScene" path="res://scenes/npcs/elder.tscn" id="9_q2d2u"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/merchant.tscn" id="23_merchant"]
 [ext_resource type="Script" path="res://scripts/world/room_data.gd" id="10_kw76a"]
 [ext_resource type="Resource" path="res://data/rooms/forest_clearing_a.tres" id="11_n0i0u"]
 [ext_resource type="Resource" path="res://data/rooms/forest_clearing_b.tres" id="12_8bqs7"]
@@ -44,4 +45,5 @@ enemy_pool = Array[PackedScene]([ExtResource("5_iy2ip"), ExtResource("6_7iwbh"),
 boss_scene = ExtResource("2_dqrix")
 exit_scene = ExtResource("8_cxxwv")
 npc_scene = ExtResource("9_q2d2u")
+special_npc_scene = ExtResource("23_merchant")
 chest_scenes = Array[PackedScene]([ExtResource("3_k7olh"), ExtResource("4_mxaao")])

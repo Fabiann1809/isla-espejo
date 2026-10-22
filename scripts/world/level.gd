@@ -142,6 +142,8 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 				portal.scenario_id = scenario.id
 		RoomData.RoomType.EVENT:
 			_spawn_single(room, scenario.npc_scene, "NpcSpawn")
+		RoomData.RoomType.SPECIAL:
+			_spawn_single(room, scenario.special_npc_scene, "SpecialSpawn")
 		RoomData.RoomType.REWARD:
 			if not scenario.chest_scenes.is_empty():
 				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
