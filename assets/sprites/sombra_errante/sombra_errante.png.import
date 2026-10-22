@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://r0l662xl2x0l"
-path="res://.godot/imported/guardian_antiguo_source.png-63ebcdc1ded94256bc0ab1a17d071d03.ctex"
+uid="uid://mry5hylhmtal"
+path="res://.godot/imported/sombra_errante.png-8bd0735216e0e00e555602dce18fa9d1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/guardian_antiguo/guardian_antiguo_source.png"
-dest_files=["res://.godot/imported/guardian_antiguo_source.png-63ebcdc1ded94256bc0ab1a17d071d03.ctex"]
+source_file="res://assets/sprites/sombra_errante/sombra_errante.png"
+dest_files=["res://.godot/imported/sombra_errante.png-8bd0735216e0e00e555602dce18fa9d1.ctex"]
 
 [params]
 
