@@ -42,6 +42,9 @@ func _test_data(scenario: ScenarioData) -> void:
 	_check(tags.has(&"standard") and tags.has(&"ambush") and tags.has(&"watch"),
 			"it has rooms for every AI reaction (standard, ambush, watch)")
 	_check(scenario.enemy_pool.size() > 0 and scenario.start_room != null and scenario.boss_room != null, "it has enemies, a start room and a boss room")
+	var pool_ids: Array = scenario.enemy_pool.map(func(scene: PackedScene) -> String: return scene.resource_path.get_file().get_basename())
+	pool_ids.sort()
+	_check(pool_ids == ["bestia_de_la_niebla", "murcielago", "sombra_errante"], "the forest pool only has enemies with their own art (%s)" % [pool_ids])
 	var credits := FileAccess.get_file_as_string("res://CREDITS.md")
 	_check("Kenney" in credits and "CC0" in credits, "the tileset is credited in CREDITS.md")
 	_check(FileAccess.file_exists("res://assets/tilesets/kenney_roguelike_rpg/License.txt"), "the pack's license file is kept next to the art")

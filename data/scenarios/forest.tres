@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="4_mxaao"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/sombra_errante.tscn" id="5_iy2ip"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/murcielago.tscn" id="6_7iwbh"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/grunt.tscn" id="7_nwdx8"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/bestia_de_la_niebla.tscn" id="22_fogbeast"]
 [ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="8_cxxwv"]
 [ext_resource type="PackedScene" path="res://scenes/npcs/elder.tscn" id="9_q2d2u"]
@@ -41,7 +40,7 @@ theme = ExtResource("21_m2acy")
 start_room = ExtResource("20_366gm")
 boss_room = ExtResource("1_5vu37")
 rooms = Array[ExtResource("10_kw76a")]([ExtResource("11_n0i0u"), ExtResource("12_8bqs7"), ExtResource("13_6rtq2"), ExtResource("14_ytje3"), ExtResource("15_rnyrg"), ExtResource("16_sxhet"), ExtResource("17_iuoy7"), ExtResource("18_s1buj")])
-enemy_pool = Array[PackedScene]([ExtResource("5_iy2ip"), ExtResource("6_7iwbh"), ExtResource("7_nwdx8"), ExtResource("22_fogbeast")])
+enemy_pool = Array[PackedScene]([ExtResource("5_iy2ip"), ExtResource("6_7iwbh"), ExtResource("22_fogbeast")])
 boss_scene = ExtResource("2_dqrix")
 exit_scene = ExtResource("8_cxxwv")
 npc_scene = ExtResource("9_q2d2u")
