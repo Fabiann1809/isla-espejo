@@ -1,0 +1,170 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/npcs/traveler/traveler.png" id="1_xks1b"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2ky38"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mwcsg"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_noskx"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ak4ph"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_be1p1"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_47dko"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6tu1q"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qqrow"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gb8vb"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h4b0s"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lrjlq"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ykvge"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(192, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pe6pc"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(256, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kh6ta"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(320, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ynhi1"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(384, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lhfrr"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(448, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_js6pv"]
+atlas = ExtResource("1_xks1b")
+region = Rect2(0, 128, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2ky38")
+}],
+"loop": 0,
+"name": &"face_east",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mwcsg")
+}],
+"loop": 0,
+"name": &"face_north",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_noskx")
+}],
+"loop": 0,
+"name": &"face_north-east",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ak4ph")
+}],
+"loop": 0,
+"name": &"face_north-west",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_be1p1")
+}],
+"loop": 0,
+"name": &"face_south",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_47dko")
+}],
+"loop": 0,
+"name": &"face_south-east",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6tu1q")
+}],
+"loop": 0,
+"name": &"face_south-west",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qqrow")
+}],
+"loop": 0,
+"name": &"face_west",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gb8vb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h4b0s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lrjlq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ykvge")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pe6pc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kh6ta")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ynhi1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lhfrr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_js6pv")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}]

@@ -1,7 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="1"]
+[ext_resource type="SpriteFrames" path="res://data/npcs/elder_frames.tres" id="2"]
 
 [node name="Elder" instance=ExtResource("1")]
 dialogue_id = &"elder"
+sprite_frames = ExtResource("2")
 body_color = Color(0.8, 0.8, 0.85, 1)
