@@ -32,7 +32,35 @@ NPCS = {
     "personajesMapas/La_Viajera_Complet": "traveler",
     "personajesMapas/3._El_Mercader_NPC": "merchant",
 }
+# Their cells vary a lot in size (a bat's wings up or down), so each cell is shifted to put the
+# body on the cell center: the sprite then does not jump between frames.
+ANCHORED = {"murcielago"}
 ROTATIONS = ["east", "north-east", "north-west", "north", "south-east", "south-west", "south", "west"]
+
+
+def anchor(frame: Image.Image) -> Image.Image:
+    """Centers the cell on the sprite's horizontal middle and on its body (the central columns:
+    the wings swing up and down and would drag a plain center of mass with them)."""
+    alpha = frame.getchannel("A")
+    left, top, right, bottom = alpha.getbbox()
+    middle = (left + right) // 2
+    total = body_rows = body_pixels = 0
+    for y in range(frame.height):
+        for x in range(frame.width):
+            if alpha.getpixel((x, y)) > 0:
+                total += 1
+                if abs(x - middle) <= 8:
+                    body_rows += y
+                    body_pixels += 1
+    dx, dy = frame.width // 2 - middle, round(frame.height / 2 - body_rows / body_pixels)
+    # Never push pixels out of the cell (a full-wing frame may not reach the exact center).
+    dx = max(-left, min(frame.width - right, dx))
+    dy = max(-top, min(frame.height - bottom, dy))
+    moved = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+    moved.paste(frame, (dx, dy))
+    kept = sum(1 for v in moved.getchannel("A").getdata() if v > 0)
+    assert kept == total, "anchoring clipped pixels"
+    return moved
 
 
 def save_sheet(frames: list, cell: int, path: str) -> None:
@@ -51,6 +79,8 @@ for gif_name, folder in ENEMIES.items():
     for i in range(gif.n_frames):
         gif.seek(i)
         frames.append(gif.convert("RGBA"))
+    if folder in ANCHORED:
+        frames = [anchor(f) for f in frames]
     save_sheet(frames, frames[0].width, f"{out}/{folder}.png")
     print(folder, len(frames), "frames of", frames[0].size)
 

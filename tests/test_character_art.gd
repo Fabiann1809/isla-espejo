@@ -51,6 +51,22 @@ func _initialize() -> void:
 				others[cell] = true
 		var clash := idle.filter(func(cell: String) -> bool: return others.has(cell))
 		_check(clash.is_empty(), "%s: idle does not use cells of other animations %s" % [name, clash])
+	# Speeds that read well: rest 4-6, walk and run 8-12, attack 10-12 (one swing is stretched over the
+	# real windup + strike anyway, see Enemy._update_animation).
+	var fps_ok := true
+	for name: String in ENEMY_FRAMES + ["nico_frames"]:
+		var frames: SpriteFrames = load(("res://data/player/%s.tres" if name == "nico_frames" else "res://data/enemies/%s.tres") % name)
+		for anim: StringName in [&"idle", &"walk", &"run", &"attack"]:
+			if not frames.has_animation(anim):
+				continue
+			var fps := frames.get_animation_speed(anim)
+			var range: Vector2 = {&"idle": Vector2(4, 6), &"walk": Vector2(8, 12), &"run": Vector2(8, 12), &"attack": Vector2(10, 12)}[anim]
+			if name == "nico_frames" and anim == &"attack":
+				continue
+			if fps < range.x or fps > range.y:
+				fps_ok = false
+				print("  out of range: %s %s %.1f fps" % [name, anim, fps])
+	_check(fps_ok, "idle runs at 4-6 fps, walk and run at 8-12, attack at 10-12")
 	var boss_idle: SpriteFrames = load("res://data/enemies/guardian_del_bosque_frames.tres")
 	_check(boss_idle.get_frame_count(&"idle") == 1, "the forest guardian rests on one still cell")
 
