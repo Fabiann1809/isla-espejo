@@ -10,10 +10,10 @@ const COLS := 8
 
 ## name -> [first cell, last cell, frames per second, loops]
 const ANIMATIONS := {
-	&"idle": [8, 15, 6.0, true],         # side view, standing
+	&"idle": [8, 8, 5.0, true],          # side view, one still cell (8-15 is a turning sequence)
 	&"walk": [23, 31, 12.0, true],       # side view
 	&"run": [32, 39, 14.0, true],        # side view
-	&"idle_down": [0, 4, 5.0, true],
+	&"idle_down": [0, 0, 5.0, true],
 	&"walk_down": [16, 19, 8.0, true],
 	&"walk_up": [20, 22, 8.0, true],
 	&"hurt": [57, 58, 8.0, false],
