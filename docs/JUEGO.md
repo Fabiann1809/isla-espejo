@@ -187,7 +187,7 @@ Nombre · Rol · Concepto visual · Personalidad · Arma / ataque · Habilidad e
 
 ## 8. Reglas de arte
 - Pixel art con formas simples y siluetas reconocibles a tamaño pequeño.
-- Personajes en **32x32**, una **paleta única** de 16 a 24 colores, tilesets en **16x16**.
+- Personajes en **32x32** (Nico y enemigos pequeños); jefes, enemigos grandes y NPCs pueden ser **64x64**. Una **paleta única** de 16 a 24 colores, tilesets en **16x16**.
 - Herramienta: **Pixelorama**. Se guarda el archivo fuente (`.pxo`) junto al PNG exportado.
 - Animaciones mínimas de enemigos y Nico: idle, caminar, ataque, daño y muerte. Para NPC: idle e interacción.
 - 8 direcciones para Nico y jefes; 4 direcciones para NPCs y enemigos.

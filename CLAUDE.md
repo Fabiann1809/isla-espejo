@@ -60,7 +60,7 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
 20. Placeholders: until real sprites exist, use `ColorRect`/simple shapes. Never block a task waiting for art.
 
 ## Art and assets
-21. Characters are made by the team in **Pixelorama**: 32x32 sprites, one shared palette of 16–24 colors, minimum animations idle / walk / attack / hurt / die (8 directions for Nico and bosses, 4 for the rest).
+21. Characters are made by the team in **Pixelorama**: 32x32 sprites for Nico and small enemies (bosses, big enemies and NPCs may be 64x64), one shared palette of 16–24 colors, minimum animations idle / walk / attack / hurt / die (8 directions for Nico and bosses, 4 for the rest).
 22. Tilesets are 16x16 (a free pack may be used; record it in `CREDITS.md`). Every third-party asset must be listed in `CREDITS.md` **in the same commit** that adds it, with its license.
 23. Keep source art (`.pxo`) next to exported PNGs under `assets/sprites/<name>/`.
 
