@@ -36,13 +36,19 @@ func _initialize() -> void:
 	_check(layout.validate().is_empty(), "generated layout is valid")
 	_check(_level.rooms.size() == cell_count, "one room node per cell (%d)" % cell_count)
 	_check(_level.get_node("Map").get_child_count() == cell_count + 1, "map holds the rooms plus one corridors node")
-	# Enemies are children of their room: a room drawn before the corridors would hide an enemy that
-	# chases the player into one (reproduced with a screenshot before this check existed).
-	var corridors: Node = _level.get_node("Map/Corridors")
-	var drawn_after := true
+	# Enemies are children of their own room, so a floor on the same z layer would be painted over
+	# an enemy that walks into a room (or corridor) built later. Reproduced with a screenshot.
+	var floors_low := true
+	var floor_nodes := 0
+	for layer in _level.get_node("Map").find_children("*", "TileMapLayer", true, false):
+		floor_nodes += 1
+		floors_low = floors_low and layer.z_index < 0
 	for coord: Vector2i in layout.cells:
-		drawn_after = drawn_after and _level.rooms[coord].get_index() > corridors.get_index()
-	_check(drawn_after, "every room (and so its enemies) is drawn in front of the corridors")
+		var floor_rect = _level.rooms[coord].get_node_or_null("Floor")
+		if floor_rect != null:
+			floor_nodes += 1
+			floors_low = floors_low and floor_rect.z_index < 0
+	_check(floor_nodes > 0 and floors_low, "every floor and corridor (%d) is drawn below the actors" % floor_nodes)
 	_check(_level.player != null, "player is created")
 
 	var start_room = _level.rooms[layout.start_cell]

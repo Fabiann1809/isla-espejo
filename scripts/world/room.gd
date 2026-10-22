@@ -135,6 +135,7 @@ func _build_floor() -> void:
 	var floor_rect := ColorRect.new()
 	floor_rect.name = "Floor"
 	floor_rect.color = FLOOR_COLORS[type]
+	floor_rect.z_index = RoomTheme.FLOOR_Z
 	floor_rect.size = pixel_size()
 	floor_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(floor_rect)

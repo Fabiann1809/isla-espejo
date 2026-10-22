@@ -103,6 +103,13 @@ func _test_built_level() -> void:
 		if ground == null or ground.get_used_cells().size() != 30 * 18:
 			themed = false
 	_check(themed, "every room has its Ground, Decor and Border tile layers and a fully painted floor")
+	# Enemies are children of their own room: floors on the actors' z layer would be painted over an
+	# enemy that wandered in from an earlier room or into a corridor.
+	var floors_low := true
+	var layers := level.get_node("Map").find_children("*", "TileMapLayer", true, false)
+	for layer in layers:
+		floors_low = floors_low and layer.z_index < 0
+	_check(not layers.is_empty() and floors_low, "every floor, border and corridor layer (%d) is drawn below the actors" % layers.size())
 	var npcs := level.get_tree().get_nodes_in_group("npcs")
 	var chests := level.get_tree().get_nodes_in_group("chests")
 	_check(npcs.size() == 1 and npcs[0].get_parent().data.type == RoomData.RoomType.EVENT,
