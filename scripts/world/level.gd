@@ -163,6 +163,8 @@ func _build_corridors() -> void:
 	var corridors := Node2D.new()
 	corridors.name = "Corridors"
 	_map.add_child(corridors)
+	# Drawn before the rooms: enemies chasing the player into a corridor must stay in front of its floor.
+	_map.move_child(corridors, 0)
 	for coord: Vector2i in layout.cells:
 		# Each connection is built once, from its top/left cell.
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
