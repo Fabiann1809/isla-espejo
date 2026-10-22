@@ -9,18 +9,21 @@ const COLS := 8
 
 ## id -> { sheet, cell, anims: name -> [fps, loops, [cells...]] }
 const ENEMIES := {
+	# The Sombra floats (no feet), so walking and running reuse the hover cells (0-9) at other speeds.
+	# Cells 48-57 are a full turn-around, not a walk cycle. 33-47 are side views facing left.
 	"sombra_errante": {
 		"sheet": "res://assets/sprites/sombra_errante/sombra_errante.png", "cell": 32,
 		"anims": {
 			"idle": [6.0, true, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
-			"walk": [8.0, true, [48, 49, 50, 51, 52, 55]],
-			"run": [12.0, true, [48, 49, 50, 51, 52, 55]],
+			"walk": [8.0, true, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
+			"run": [12.0, true, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
 			"attack": [10.0, false, [14, 15, 16, 17, 18, 19]],
 			"hurt": [10.0, false, [21, 22, 23]],
 			"death": [10.0, false, [58, 59, 60, 61, 62, 63]],
 			"teleport": [10.0, false, [24, 25, 26, 27, 28]],
 		},
 	},
+	# The bat flies all the time: idle is the hover flap (0-3), walk and run the side flight (4, 5, 7).
 	"murcielago": {
 		"sheet": "res://assets/sprites/murcielago/murcielago.png", "cell": 64,
 		"anims": {
@@ -45,10 +48,11 @@ const ENEMIES := {
 			"death": [5.0, false, [14, 15]],
 		},
 	},
+	# The source has no real idle (cells 0-2 and 4 are poses of a turn-around), so it rests on one still cell.
 	"guardian_del_bosque": {
 		"sheet": "res://assets/sprites/guardian_del_bosque/guardian_del_bosque.png", "cell": 64,
 		"anims": {
-			"idle": [3.0, true, [0, 1, 2, 4]],
+			"idle": [3.0, true, [0]],
 			"walk": [5.0, true, [4, 5, 6, 5]],
 			"run": [5.0, true, [4, 5, 6, 5]],
 			"attack": [6.0, false, [8, 9]],

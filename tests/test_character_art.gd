@@ -19,6 +19,10 @@ const PLAYED := {
 ## Cell size of every sheet: 32x32 for Nico and the Sombra errante, 64x64 for the rest.
 const SMALL := ["nico_frames", "sombra_errante_frames"]
 
+## The Sombra floats without feet, so walking reuses its hover cells on purpose.
+const IDLE_MAY_SHARE_WITH_WALK := ["sombra_errante_frames"]
+const ENEMY_FRAMES := ["sombra_errante_frames", "murcielago_frames", "ancient_guardian_frames", "guardian_del_bosque_frames"]
+
 var _ok := true
 
 
@@ -37,6 +41,18 @@ func _initialize() -> void:
 		var expected := 32.0 if path.get_file().get_basename() in SMALL else 64.0
 		var size: Vector2 = frames.get_frame_texture(&"idle", 0).get_size()
 		_check(size == Vector2(expected, expected), "%s cells are %dx%d" % [path.get_file(), expected, expected])
+
+	for name: String in ENEMY_FRAMES:
+		var frames: SpriteFrames = load("res://data/enemies/%s.tres" % name)
+		var idle := _cells(frames, &"idle")
+		var others := {}
+		for anim: StringName in [&"attack", &"hurt", &"death"] + ([] if name in IDLE_MAY_SHARE_WITH_WALK else [&"walk", &"run"]):
+			for cell in _cells(frames, anim):
+				others[cell] = true
+		var clash := idle.filter(func(cell: String) -> bool: return others.has(cell))
+		_check(clash.is_empty(), "%s: idle does not use cells of other animations %s" % [name, clash])
+	var boss_idle: SpriteFrames = load("res://data/enemies/guardian_del_bosque_frames.tres")
+	_check(boss_idle.get_frame_count(&"idle") == 1, "the forest guardian rests on one still cell")
 
 	var player = load("res://scenes/player/player.tscn").instantiate()
 	root.add_child(player)
@@ -68,3 +84,11 @@ func _check(condition: bool, message: String) -> void:
 	print(("PASS " if condition else "FAIL ") + message)
 	if not condition:
 		_ok = false
+
+
+## The sheet position of every cell an animation shows.
+func _cells(frames: SpriteFrames, anim: StringName) -> Array:
+	var cells := []
+	for i in frames.get_frame_count(anim):
+		cells.append(str((frames.get_frame_texture(anim, i) as AtlasTexture).region.position))
+	return cells
