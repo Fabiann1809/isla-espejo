@@ -39,6 +39,44 @@ func _physics_process(delta: float) -> void:
 	_enforce_territory()
 
 
+## A boss attack lasts its own windup + strike + recover (about 2 s), far longer than the generic
+## enemy swing, so each step shows its own pose instead of one stretched animation:
+## windup = first frame of `attack` (the warning pose), strike = `slam` for the slam (or the last
+## frame of `attack`), recover = `idle`. Missing animations fall back to `idle`.
+func _update_animation() -> void:
+	if _sprite == null or state != State.ATTACK:
+		super()
+		return
+	if absf(facing.x) > 0.1:
+		_sprite.flip_h = facing.x < 0.0
+	_sprite.speed_scale = 1.0
+	match step:
+		Step.WINDUP:
+			_hold_pose(&"attack", 0)
+		Step.STRIKE:
+			if pattern == Pattern.SLAM and _sprite.sprite_frames.has_animation(&"slam"):
+				_hold_pose(&"slam", 0)
+			else:
+				_hold_pose(&"attack", -1)
+		Step.RECOVER:
+			if _sprite.animation != &"idle" or not _sprite.is_playing():
+				_sprite.play(&"idle")
+
+
+## Shows one frame of an animation and keeps it (-1 = its last frame).
+func _hold_pose(anim: StringName, frame: int) -> void:
+	if not _sprite.sprite_frames.has_animation(anim):
+		anim = &"idle"
+		frame = 0
+	if frame < 0:
+		frame = _sprite.sprite_frames.get_frame_count(anim) - 1
+	if _sprite.animation == anim and _sprite.frame == frame and not _sprite.is_playing():
+		return
+	_sprite.play(anim)
+	_sprite.pause()
+	_sprite.frame = frame
+
+
 ## Removed in the middle of a roots attack (not only by dying): its roots must not stay behind.
 func _exit_tree() -> void:
 	_retract_roots_art()
