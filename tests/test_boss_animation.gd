@@ -45,12 +45,18 @@ func _check_attack(scene: String, pattern_name: String, offset: Vector2, strike_
 	_room.add_child(boss)
 	_player.global_position = ARENA + offset
 	var wanted: int = boss.Pattern[pattern_name]
-	for i in 240:
-		await physics_frame
-		_player.global_position = ARENA + offset
-		boss._last_pattern = boss.Pattern.SLAM
-		if boss.state == boss.State.ATTACK:
+	await physics_frame
+	# Not left to chance or to detection timing: last attack "slam" (so out of slam range it uses
+	# roots), engaged at once, and the player kept at the chosen distance until it attacks.
+	boss._last_pattern = boss.Pattern.SLAM
+	boss._acquire_target(_player)
+	for i in 400:
+		if boss.state == boss.State.ATTACK and boss.pattern == wanted:
 			break
+		boss._last_pattern = boss.Pattern.SLAM
+		if boss.state != boss.State.ATTACK:
+			_player.global_position = boss.global_position + offset
+		await physics_frame
 	var sprite: AnimatedSprite2D = boss.get_node("Sprite")
 	var label := "%s %s" % [scene, pattern_name]
 	_check(boss.pattern == wanted, "%s: the boss starts that attack" % label)
