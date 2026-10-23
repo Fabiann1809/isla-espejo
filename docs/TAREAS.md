@@ -93,7 +93,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado (Kenney Roguelike/RPG, CC0)
 - [x] 6–10 salas del bosque (claros, río con puente, cofre, evento): 10 salas en `scenes/levels/rooms/forest/`
 - [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; cambiar el `enemy_pool` de `data/scenarios/forest.tres` por la Bestia de la niebla y la Sombra errante cuando existan)
-- [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura; ya con su sprite nuevo)
+- [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura; ya con su sprite nuevo y arte animado de raíces sobre el círculo de aviso)
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)
 - [x] Cofres y recompensas básicas (corazón extra y curación)
