@@ -53,6 +53,8 @@ func _test_sequence() -> void:
 	var art := _arts()
 	_check(art.size() == boss._roots_spots.size() and art.size() == boss._boss.roots_count,
 			"one piece of art per eruption (%d)" % art.size())
+	if art.is_empty():
+		return
 	var placed := true
 	for i in art.size():
 		placed = placed and art[i].position == boss._roots_spots[i] and art[i].get_node("Sprite").offset == Vector2(0, -12)
@@ -148,7 +150,14 @@ func _test_in_generated_level() -> void:
 	level.use_director = false
 	root.add_child(level)
 	await _frames(3)
-	var boss = get_nodes_in_group("enemies").filter(func(n: Node) -> bool: return n.name == "ForestGuardian")[0]
+	# Only the boss of this level (a dead boss of an earlier check may still be fading out).
+	var bosses := get_nodes_in_group("enemies").filter(func(n: Node) -> bool:
+		return n.name == "ForestGuardian" and level.is_ancestor_of(n))
+	_check(bosses.size() == 1, "the generated level has its forest boss")
+	if bosses.is_empty():
+		level.free()
+		return
+	var boss = bosses[0]
 	var room: Node2D = boss.get_parent()
 	_check(room.global_position.length() > 100.0, "the boss room of this map is away from the origin (%s)" % room.global_position)
 	var player = level.player
@@ -156,14 +165,15 @@ func _test_in_generated_level() -> void:
 	player.health.heal(999)
 	player.global_position = boss.global_position + Vector2(100, 40)
 	await physics_frame
+	boss._last_pattern = boss.Pattern.SLAM
 	boss._acquire_target(player)
-	for i in 240:
-		await physics_frame
+	for i in 400:
+		if boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS:
+			break
 		boss._last_pattern = boss.Pattern.SLAM
 		if boss.state != boss.State.ATTACK:
 			player.global_position = boss.global_position + Vector2(100, 40)
-		elif boss.pattern == boss.Pattern.ROOTS:
-			break
+		await physics_frame
 	await physics_frame
 	var placed: bool = boss.pattern == boss.Pattern.ROOTS and not boss._roots_spots.is_empty()
 	for spot: Vector2 in boss._roots_spots:
@@ -202,11 +212,20 @@ func _roots_attack(scene: String, phase := 1) -> Node2D:
 	if phase == 2:
 		boss._enter_phase_two()
 	_player.global_position = ARENA + Vector2(100, 0)
-	for i in 120:
-		await physics_frame
-		boss._last_pattern = boss.Pattern.SLAM
-		if boss.state == boss.State.ATTACK:
+	await physics_frame
+	# A boss whose last attack was a slam always answers a player out of slam range with roots;
+	# set it before engaging so the very first attack is not left to chance. Engage it right away:
+	# waiting for it to notice the player depends on timing (slow on CI).
+	boss._last_pattern = boss.Pattern.SLAM
+	boss._acquire_target(_player)
+	for i in 400:
+		if boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS:
 			break
+		boss._last_pattern = boss.Pattern.SLAM
+		# Out of slam range until the roots start (a knockback from an earlier check may push him).
+		if boss.state != boss.State.ATTACK:
+			_player.global_position = boss.global_position + Vector2(100, 0)
+		await physics_frame
 	_check(boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS, "%s starts a roots attack" % scene)
 	await physics_frame
 	return boss
