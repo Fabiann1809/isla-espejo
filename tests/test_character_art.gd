@@ -60,13 +60,20 @@ func _initialize() -> void:
 			if not frames.has_animation(anim):
 				continue
 			var fps := frames.get_animation_speed(anim)
-			var range: Vector2 = {&"idle": Vector2(4, 6), &"walk": Vector2(8, 12), &"run": Vector2(8, 12), &"attack": Vector2(10, 12)}[anim]
+			var idle_range := Vector2(8, 8) if name == "murcielago_frames" else Vector2(4, 6)
+			var range: Vector2 = {&"idle": idle_range, &"walk": Vector2(8, 12), &"run": Vector2(8, 12), &"attack": Vector2(10, 12)}[anim]
 			if name == "nico_frames" and anim == &"attack":
 				continue
 			if fps < range.x or fps > range.y:
 				fps_ok = false
 				print("  out of range: %s %s %.1f fps" % [name, anim, fps])
-	_check(fps_ok, "idle runs at 4-6 fps, walk and run at 8-12, attack at 10-12")
+	_check(fps_ok, "idle runs at 4-6 fps (bat 8), walk and run at 8-12, attack at 10-12")
+	# New bat art: one 64x64 strip per animation.
+	var bat: SpriteFrames = load("res://data/enemies/murcielago_frames.tres")
+	var bat_spec := {&"idle": [4, 8.0, true], &"walk": [6, 12.0, true], &"run": [6, 12.0, true], &"attack": [4, 10.0, false], &"hurt": [2, 8.0, false], &"death": [4, 8.0, false]}
+	for anim: StringName in bat_spec:
+		var want: Array = bat_spec[anim]
+		_check(bat.get_frame_count(anim) == want[0] and bat.get_animation_speed(anim) == want[1] and bat.get_animation_loop(anim) == want[2], "bat %s: %d frames, %.0f fps, loop %s" % [anim, want[0], want[1], want[2]])
 	var boss_idle: SpriteFrames = load("res://data/enemies/guardian_del_bosque_frames.tres")
 	_check(boss_idle.get_frame_count(&"idle") == 1, "the forest guardian rests on one still cell")
 
@@ -118,7 +125,8 @@ func _check(condition: bool, message: String) -> void:
 func _cells(frames: SpriteFrames, anim: StringName) -> Array:
 	var cells := []
 	for i in frames.get_frame_count(anim):
-		cells.append(str((frames.get_frame_texture(anim, i) as AtlasTexture).region.position))
+		var atlas := frames.get_frame_texture(anim, i) as AtlasTexture
+		cells.append("%s %s" % [atlas.atlas.resource_path, atlas.region.position])
 	return cells
 
 

@@ -23,16 +23,16 @@ const ENEMIES := {
 			"teleport": [10.0, false, [24, 25, 26, 27, 28]],
 		},
 	},
-	# The bat flies all the time: idle is the hover flap (0-3), walk and run the side flight (4, 5, 7).
+	# The bat uses one 64x64 strip per animation (new art), so "strips" replaces "sheet"/"cell".
+	# strips: name -> [fps, loops, strip path, frame count]. The old murcielago.png sheet is kept unused.
 	"murcielago": {
-		"sheet": "res://assets/sprites/murcielago/murcielago.png", "cell": 64,
-		"anims": {
-			"idle": [6.0, true, [0, 1, 2, 3]],
-			"walk": [8.0, true, [4, 5]],
-			"run": [12.0, true, [4, 5, 7]],
-			"attack": [12.0, false, [9, 10, 11]],
-			"hurt": [10.0, false, [13]],
-			"death": [8.0, false, [14, 15]],
+		"strips": {
+			"idle": [8.0, true, "res://assets/sprites/murcielago/murcielago_idle.png", 4],
+			"walk": [12.0, true, "res://assets/sprites/murcielago/murcielago_walk.png", 6],
+			"run": [12.0, true, "res://assets/sprites/murcielago/murcielago_run.png", 6],
+			"attack": [10.0, false, "res://assets/sprites/murcielago/murcielago_attack.png", 4],
+			"hurt": [8.0, false, "res://assets/sprites/murcielago/murcielago_hurt.png", 2],
+			"death": [8.0, false, "res://assets/sprites/murcielago/murcielago_death.png", 4],
 		},
 	},
 	"ancient_guardian": {
@@ -100,10 +100,16 @@ func _initialize() -> void:
 	for id: String in ENEMIES:
 		var spec: Dictionary = ENEMIES[id]
 		var frames := _new_frames()
-		var sheet: Texture2D = load(spec.sheet)
-		for anim: String in spec.anims:
-			var a: Array = spec.anims[anim]
-			_add(frames, sheet, spec.cell, anim, a[0], a[1], a[2])
+		if spec.has("strips"):
+			for anim: String in spec.strips:
+				var s: Array = spec.strips[anim]
+				var strip: Texture2D = load(s[2])
+				_add(frames, strip, 64, anim, s[0], s[1], range(s[3]))
+		else:
+			var sheet: Texture2D = load(spec.sheet)
+			for anim: String in spec.anims:
+				var a: Array = spec.anims[anim]
+				_add(frames, sheet, spec.cell, anim, a[0], a[1], a[2])
 		ResourceSaver.save(frames, "res://data/enemies/%s_frames.tres" % id)
 	for id: String in NPCS:
 		var frames := _new_frames()
