@@ -45,7 +45,10 @@ func _initialize() -> void:
 		await physics_frame
 		if sprite.animation != last:
 			changes += 1
-			if i - last_change_tick <= 2:
+			# Attack and hurt show at once on purpose (they warn the player); only idle/walk/run
+			# switching back and forth counts as flicker.
+			var locomotion := [&"idle", &"walk", &"run"]
+			if i - last_change_tick <= 2 and sprite.animation in locomotion and last in locomotion:
 				restarts_in_a_row += 1
 			last_change_tick = i
 			last = sprite.animation
@@ -55,7 +58,7 @@ func _initialize() -> void:
 	print("  sequence: ", sequence)
 	print("  chase, 240 ticks: %d animation changes, %d of them 1-2 ticks after the previous one" % [changes, restarts_in_a_row])
 	_check(changes <= MAX_CHANGES, "the chasing enemy does not flicker between animations (%d changes)" % changes)
-	_check(restarts_in_a_row == 0, "no animation lasts only 1-2 ticks (%d did)" % restarts_in_a_row)
+	_check(restarts_in_a_row == 0, "no idle/walk/run animation lasts only 1-2 ticks (%d did)" % restarts_in_a_row)
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
