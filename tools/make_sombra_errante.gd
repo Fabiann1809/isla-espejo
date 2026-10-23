@@ -7,8 +7,8 @@ func _initialize() -> void:
 	data.id = &"sombra_errante"
 	data.display_name = "Sombra errante"
 	data.sprite_frames = load("res://data/enemies/sombra_errante_frames.tres")
-	data.sprite_scale = 1.0
-	data.sprite_offset = Vector2(0, -7)
+	data.sprite_scale = 0.5
+	data.sprite_offset = Vector2(0, 1)
 	data.max_health = 3
 	data.move_speed = 38.0
 	data.chase_speed = 78.0
