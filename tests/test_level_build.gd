@@ -50,6 +50,13 @@ func _initialize() -> void:
 			floors_low = floors_low and floor_rect.z_index < 0
 	_check(floor_nodes > 0 and floors_low, "every floor and corridor (%d) is drawn below the actors" % floor_nodes)
 	_check(_level.player != null, "player is created")
+	# Pixel art moves in whole viewport pixels; the screen stays 640x360 with integer scaling.
+	_check(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel") == true
+			and ProjectSettings.get_setting("display/window/size/viewport_width") == 640
+			and ProjectSettings.get_setting("display/window/size/viewport_height") == 360
+			and ProjectSettings.get_setting("display/window/stretch/scale_mode") == "integer",
+			"2D transforms snap to pixels at 640x360 with integer scaling")
+	_check(_level.player.get_node("Camera2D").zoom == Vector2(2, 2), "the camera keeps its zoom of 2")
 
 	var start_room = _level.rooms[layout.start_cell]
 	var spawn: Vector2 = start_room.global_position + start_room.player_spawn()
