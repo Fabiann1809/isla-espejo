@@ -156,6 +156,7 @@ func _spawn_single(room: Room, scene: PackedScene, container: String) -> Node2D:
 	var node: Node2D = scene.instantiate()
 	node.position = points[0]
 	room.add_child(node)
+	Placement.reset(node)
 	if node.has_signal("died"):
 		room.register_enemy(node)
 	return node
@@ -235,6 +236,9 @@ func _place_player() -> void:
 	# Idempotent: whatever the player has earned (skills) is on the player for every map.
 	GameState.apply_to_player(player)
 	var start_room: Room = rooms[layout.start_cell]
-	player.global_position = start_room.global_position + start_room.player_spawn()
+	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
 	if player.has_method("set_camera_limits"):
 		player.set_camera_limits(bounds)
+	# A new map starts somewhere else: the camera jumps there instead of gliding across the world.
+	if player.has_method("snap_camera"):
+		player.snap_camera()

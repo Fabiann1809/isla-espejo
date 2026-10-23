@@ -165,6 +165,12 @@ func set_camera_limits(bounds: Rect2) -> void:
 	_camera.limit_bottom = int(bounds.end.y)
 
 
+## Moves the camera straight to the player (after a jump to another map) instead of gliding.
+func snap_camera() -> void:
+	_camera.reset_smoothing()
+	Placement.reset(_camera)
+
+
 ## Puts the player in the hurt state and pushes it away from `from_position`.
 func hurt(from_position: Vector2) -> void:
 	if is_invulnerable():

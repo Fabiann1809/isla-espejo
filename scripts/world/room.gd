@@ -97,6 +97,7 @@ func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenera
 		if plan != null:
 			plan.apply_to_enemy(enemy)
 		add_child(enemy)
+		Placement.reset(enemy)
 		register_enemy(enemy)
 
 
