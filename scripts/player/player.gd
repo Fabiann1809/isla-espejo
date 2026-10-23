@@ -1,5 +1,5 @@
 extends CharacterBody2D
-## Nico: 8-direction movement, dash with i-frames, sword attack, health and death.
+## Nico: 8-direction movement (drawn in 3 views: side, front, back), dash with i-frames, sword attack, health and death.
 ## Behaviour is a small state machine (see State). Damage arrives through the Hurtbox;
 ## combat events are published on the Events bus for the adaptive AI.
 
@@ -10,7 +10,8 @@ signal attack_hit(target: Node)
 enum State { IDLE, MOVE, DASH, ATTACK, HURT, DEAD }
 
 @export_group("Movement")
-@export var speed := 110.0
+## 120 px/s = exactly 2 px per physics tick at 60 Hz (whole-pixel steps); the dash, 300 px/s, is 5.
+@export var speed := 120.0
 
 @export_group("Dash")
 @export var dash_speed := 300.0
@@ -45,6 +46,10 @@ var _interact_block_left := 0.0
 var _nearby: Interactable = null
 var _move_dir := Vector2.ZERO
 var _action_dir := Vector2.ZERO
+## Which drawn view (side, front, back) the art shows; see FacingView.
+var _view := FacingView.new()
+## Whether the side art is mirrored (Nico last faced left), kept while he shows the front or back.
+var _side_flip := false
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
@@ -64,6 +69,17 @@ const SWORD_HAND_X := 5.0
 const SWORD_REST := 0.85
 const SWORD_RAISED := -0.7
 const SWORD_SWUNG := 1.45
+## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
+## death animations.
+const TINT_DASH := Color(1, 1, 1, 0.5)
+const TINT_HURT := Color(1, 0.4, 0.4, 1)
+const TINT_DEAD := Color(0.3, 0.3, 0.3, 1)
+const TINT_DASH_SOFT := Color(1, 1, 1, 0.8)
+const TINT_HURT_SOFT := Color(1, 0.75, 0.75, 1)
+const TINT_DEAD_SOFT := Color(0.75, 0.75, 0.75, 1)
+## Limits of the walk/run playback speed, relative to the walking speed.
+const ANIM_SPEED_MIN := 0.5
+const ANIM_SPEED_MAX := 2.0
 
 
 func _ready() -> void:
@@ -108,7 +124,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_interaction()
-	_update_visuals()
+	_update_visuals(delta)
 
 
 ## True while the player cannot be damaged (dash i-frames, after a hit, or dead).
@@ -157,6 +173,12 @@ func set_camera_limits(bounds: Rect2) -> void:
 	_camera.limit_top = int(bounds.position.y)
 	_camera.limit_right = int(bounds.end.x)
 	_camera.limit_bottom = int(bounds.end.y)
+
+
+## Moves the camera straight to the player (after a jump to another map) instead of gliding.
+func snap_camera() -> void:
+	_camera.reset_smoothing()
+	Placement.reset(_camera)
 
 
 ## Puts the player in the hurt state and pushes it away from `from_position`.
@@ -305,24 +327,72 @@ func _update_sword() -> void:
 	_sword_pivot.rotation = angle
 
 
-func _update_visuals() -> void:
+## `<base>_side` if Nico's art has it, else nothing (the state keeps its old look).
+func _side_art(base: StringName) -> StringName:
+	var name := StringName(String(base) + "_side")
+	return name if _body.sprite_frames.has_animation(name) else StringName()
+
+
+## Playback speed that makes a one-shot animation last exactly `duration` seconds.
+func _fit_to(anim: StringName, duration: float) -> float:
+	var frames := _body.sprite_frames
+	return frames.get_frame_count(anim) / (frames.get_animation_speed(anim) * maxf(duration, 0.01))
+
+
+func _update_visuals(delta: float) -> void:
 	if state == State.ATTACK:
 		_update_sword()
-	# The art faces right: flip it when moving left. Walks while moving, rests otherwise.
+	# Walking picks a view (side, front or back); attack, dash, hurt and death use the side view.
+	var free := state in [State.IDLE, State.MOVE]
+	var view := _view.update(_move_dir if free else Vector2.ZERO, delta)
+	if not free:
+		view = FacingView.View.SIDE
+	# The side art faces right: flip it to go left. Front and back are never flipped.
 	if absf(facing.x) > 0.1:
-		_body.flip_h = facing.x < 0.0
-	var wanted: StringName = &"walk" if velocity.length() > 5.0 and state != State.DEAD else &"idle"
+		_side_flip = facing.x < 0.0
+	_body.flip_h = _side_flip if view == FacingView.View.SIDE else false
 	if state == State.ATTACK:
-		wanted = &"attack"
+		# Same rule as the sword (see _update_sword), so body and blade always face the same side.
+		_body.flip_h = _action_dir.x < 0.0
+	var moving := velocity.length() > 5.0 and state != State.DEAD
+	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
+	# One-shot states play their own side art when it exists (dash, hurt, death); without it the
+	# old look stays (walk/idle with a tint).
+	var one_shot := StringName()
+	var one_shot_time := 0.0
+	match state:
+		State.ATTACK:
+			one_shot = FacingView.animation_for(&"attack", view, _body.sprite_frames)
+			one_shot_time = attack_time
+		State.DASH:
+			one_shot = _side_art(&"dash")
+			one_shot_time = dash_time
+		State.HURT:
+			one_shot = _side_art(&"hurt")
+			one_shot_time = hurt_time
+		State.DEAD:
+			one_shot = _side_art(&"death")
+	if one_shot != StringName():
+		wanted = one_shot
 	if _body.animation != wanted:
 		_body.play(wanted)
+	# The swing, the dash and the hurt fit exactly in their state's time; death plays at its own
+	# pace and stays on its last frame; walk follows the real speed so the feet slide less.
+	if one_shot_time > 0.0:
+		_body.speed_scale = _fit_to(wanted, one_shot_time)
+	elif one_shot != StringName() or not moving:
+		_body.speed_scale = 1.0
+	else:
+		_body.speed_scale = clampf(velocity.length() / speed, ANIM_SPEED_MIN, ANIM_SPEED_MAX)
 	match state:
+		# With their own art these states only need a light tint; without it the strong tint is
+		# what tells them apart. The invulnerability blink below is unchanged.
 		State.DASH:
-			_body.modulate = Color(1, 1, 1, 0.5)
+			_body.modulate = TINT_DASH_SOFT if one_shot != StringName() else TINT_DASH
 		State.HURT:
-			_body.modulate = Color(1, 0.4, 0.4, 1)
+			_body.modulate = TINT_HURT_SOFT if one_shot != StringName() else TINT_HURT
 		State.DEAD:
-			_body.modulate = Color(0.3, 0.3, 0.3, 1)
+			_body.modulate = TINT_DEAD_SOFT if one_shot != StringName() else TINT_DEAD
 		_:
 			var blink := _invulnerable_left > 0.0 and int(_invulnerable_left * 20.0) % 2 == 0
 			if blink:

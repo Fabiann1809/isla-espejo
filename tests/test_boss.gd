@@ -304,7 +304,7 @@ func _test_forest_level() -> void:
 	for room in level.rooms.values():
 		if room.data.type == RoomData.RoomType.BOSS:
 			boss_room = room
-	var bosses := get_nodes_in_group("enemies").filter(func(n: Node) -> bool: return n.name == "ForestGuardian")
+	var bosses := get_nodes_in_group("enemies").filter(func(n: Node) -> bool: return n.name == "ForestGuardian" and n.health.current > 0)
 	var portals := get_nodes_in_group("exit_portals")
 	_check(bosses.size() == 1 and bosses[0].get_parent() == boss_room, "the forest level puts the Guardián in the boss room")
 	_check(portals.size() == 1 and portals[0].get_parent() == boss_room and portals[0].scenario_id == &"forest", "and the exit next to it, closed")

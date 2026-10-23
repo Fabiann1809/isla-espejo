@@ -21,7 +21,7 @@ func activate(caster: Node2D, skill: SkillData, direction: Vector2) -> int:
 		if node.get("target") == caster:
 			hunters += 1
 
-	caster.global_position = destination
+	Placement.teleport(caster, destination)
 	if caster.has_method("start_stealth"):
 		caster.start_stealth(stealth_time, visibility)
 

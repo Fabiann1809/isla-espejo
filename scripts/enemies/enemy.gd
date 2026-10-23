@@ -16,6 +16,14 @@ enum AttackPhase { WINDUP, STRIKE, RECOVER }
 const WORLD_LAYER := 1
 const VISION_CHECK_INTERVAL := 0.1
 const ARRIVE_DISTANCE := 4.0
+## Animation hysteresis: an idle/walk/run animation shows at least this long, and chasing switches
+## to run above RUN_ENTER_SPEED but only back to idle below RUN_EXIT_SPEED (px/s).
+const ANIM_MIN_HOLD := 0.15
+const RUN_ENTER_SPEED := 8.0
+const RUN_EXIT_SPEED := 2.0
+## Limits of the walk/run playback speed relative to the speed the cycle was drawn for.
+const ANIM_SPEED_MIN := 0.5
+const ANIM_SPEED_MAX := 2.0
 
 @export var data: EnemyData
 ## Shows the current state above the enemy (debugging aid).
@@ -54,6 +62,8 @@ var _slow_factor := 1.0
 @onready var _label: Label = $StateLabel
 
 var _sprite: AnimatedSprite2D
+## Seconds the current locomotion animation (idle, walk, run) has been showing.
+var _anim_held := 0.0
 var _status_tinted := false
 
 
@@ -401,23 +411,38 @@ func _update_animation() -> void:
 		return
 	if absf(facing.x) > 0.1:
 		_sprite.flip_h = facing.x < 0.0
+	_anim_held += get_physics_process_delta_time()
 	var wanted: StringName = &"idle"
 	match state:
 		State.PATROL:
 			wanted = &"walk"
 		State.CHASE:
-			wanted = &"run" if velocity.length() > 1.0 else &"idle"
+			# Two thresholds: once running it takes a real stop to go back to idle.
+			var running := _sprite.animation == &"run"
+			var speed := velocity.length()
+			wanted = &"run" if speed > (RUN_EXIT_SPEED if running else RUN_ENTER_SPEED) else &"idle"
 		State.ATTACK:
 			wanted = &"attack"
 		State.HURT:
 			wanted = &"hurt"
 	if not _sprite.sprite_frames.has_animation(wanted):
 		wanted = &"idle"
+	# Idle/walk/run hold a moment before changing (each play() restarts the cycle); attack and hurt
+	# show at once because they warn the player.
+	var locomotion := [&"idle", &"walk", &"run"]
+	if wanted in locomotion and _sprite.animation in locomotion and _anim_held < ANIM_MIN_HOLD:
+		wanted = _sprite.animation
 	if _sprite.animation != wanted:
 		_sprite.play(wanted)
+		_anim_held = 0.0
 		if wanted == &"attack":
 			# One swing spans the whole windup + strike.
 			var span := data.attack_windup + data.attack_time
 			_sprite.speed_scale = _animation_length(wanted) / maxf(span, 0.05)
-		else:
-			_sprite.speed_scale = 1.0
+	if wanted in [&"walk", &"run"]:
+		# The cycle follows the real speed (director multipliers, slows, boss boosts) so the feet
+		# slide less; walk is drawn for move_speed and run for chase_speed.
+		var reference := data.move_speed if wanted == &"walk" else data.chase_speed
+		_sprite.speed_scale = clampf(velocity.length() / maxf(reference, 1.0), ANIM_SPEED_MIN, ANIM_SPEED_MAX)
+	elif wanted != &"attack":
+		_sprite.speed_scale = 1.0

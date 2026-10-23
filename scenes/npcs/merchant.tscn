@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="1"]
+[ext_resource type="SpriteFrames" path="res://data/npcs/merchant_frames.tres" id="2"]
+
+[node name="Merchant" instance=ExtResource("1")]
+dialogue_id = &"merchant"
+sprite_frames = ExtResource("2")
+sprite_scale = 0.5
+body_color = Color(0.55, 0.4, 0.25, 1)

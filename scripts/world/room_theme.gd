@@ -3,6 +3,10 @@ extends Resource
 ## Visual theme of a scenario: which tiles dress the floor, the border and the paths.
 ## One `.tres` per scenario in `data/themes/`. Collision does not depend on the theme.
 
+## Floors are drawn below every actor. Enemies are children of their own room, so without this a
+## room built later would paint its floor over an enemy that wandered in from an earlier room.
+const FLOOR_Z := -1
+
 @export var tile_set: TileSet
 @export var floor_tile := TileArt.GRASS
 ## Occasional floor variants (flowers) mixed into the floor.
@@ -20,6 +24,7 @@ extends Resource
 ## Adds an empty TileMapLayer that uses this theme's TileSet.
 func new_layer(parent: Node, layer_name: String) -> TileMapLayer:
 	var layer := TileMapLayer.new()
+	layer.z_index = FLOOR_Z
 	layer.name = layer_name
 	layer.tile_set = tile_set
 	layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

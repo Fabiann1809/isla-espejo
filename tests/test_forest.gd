@@ -42,6 +42,9 @@ func _test_data(scenario: ScenarioData) -> void:
 	_check(tags.has(&"standard") and tags.has(&"ambush") and tags.has(&"watch"),
 			"it has rooms for every AI reaction (standard, ambush, watch)")
 	_check(scenario.enemy_pool.size() > 0 and scenario.start_room != null and scenario.boss_room != null, "it has enemies, a start room and a boss room")
+	var pool_ids: Array = scenario.enemy_pool.map(func(scene: PackedScene) -> String: return scene.resource_path.get_file().get_basename())
+	pool_ids.sort()
+	_check(pool_ids == ["bestia_de_la_niebla", "murcielago", "sombra_errante"], "the forest pool only has enemies with their own art (%s)" % [pool_ids])
 	var credits := FileAccess.get_file_as_string("res://CREDITS.md")
 	_check("Kenney" in credits and "CC0" in credits, "the tileset is credited in CREDITS.md")
 	_check(FileAccess.file_exists("res://assets/tilesets/kenney_roguelike_rpg/License.txt"), "the pack's license file is kept next to the art")
@@ -103,10 +106,30 @@ func _test_built_level() -> void:
 		if ground == null or ground.get_used_cells().size() != 30 * 18:
 			themed = false
 	_check(themed, "every room has its Ground, Decor and Border tile layers and a fully painted floor")
+	# Enemies are children of their own room: floors on the actors' z layer would be painted over an
+	# enemy that wandered in from an earlier room or into a corridor.
+	var floors_low := true
+	var layers := level.get_node("Map").find_children("*", "TileMapLayer", true, false)
+	for layer in layers:
+		floors_low = floors_low and layer.z_index < 0
+	_check(not layers.is_empty() and floors_low, "every floor, border and corridor layer (%d) is drawn below the actors" % layers.size())
 	var npcs := level.get_tree().get_nodes_in_group("npcs")
 	var chests := level.get_tree().get_nodes_in_group("chests")
-	_check(npcs.size() == 1 and npcs[0].get_parent().data.type == RoomData.RoomType.EVENT,
+	var elders := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"elder")
+	var merchants := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"merchant")
+	_check(npcs.size() == 2 and elders.size() == 1 and elders[0].get_parent().data.type == RoomData.RoomType.EVENT,
 			"the Anciano waits in the event room")
+	_check(merchants.size() == 1 and merchants[0].get_parent().data.type == RoomData.RoomType.SPECIAL,
+			"the Mercader waits in the special room")
+	if merchants.size() == 1:
+		var dialogue: Node = root.get_node("Dialogue")
+		var talked := []
+		var listener := func(id: StringName) -> void: talked.append(id)
+		dialogue.started.connect(listener)
+		merchants[0].get_node("Talk").interact(level.player)
+		_check(dialogue.active and talked == [&"merchant"], "talking to the Mercader starts his dialogue")
+		dialogue.started.disconnect(listener)
+		dialogue._finish()
 	var chests_ok := chests.size() == 2
 	for chest in chests:
 		chests_ok = chests_ok and chest.get_parent().data.type == RoomData.RoomType.REWARD

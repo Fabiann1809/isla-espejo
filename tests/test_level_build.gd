@@ -36,7 +36,27 @@ func _initialize() -> void:
 	_check(layout.validate().is_empty(), "generated layout is valid")
 	_check(_level.rooms.size() == cell_count, "one room node per cell (%d)" % cell_count)
 	_check(_level.get_node("Map").get_child_count() == cell_count + 1, "map holds the rooms plus one corridors node")
+	# Enemies are children of their own room, so a floor on the same z layer would be painted over
+	# an enemy that walks into a room (or corridor) built later. Reproduced with a screenshot.
+	var floors_low := true
+	var floor_nodes := 0
+	for layer in _level.get_node("Map").find_children("*", "TileMapLayer", true, false):
+		floor_nodes += 1
+		floors_low = floors_low and layer.z_index < 0
+	for coord: Vector2i in layout.cells:
+		var floor_rect = _level.rooms[coord].get_node_or_null("Floor")
+		if floor_rect != null:
+			floor_nodes += 1
+			floors_low = floors_low and floor_rect.z_index < 0
+	_check(floor_nodes > 0 and floors_low, "every floor and corridor (%d) is drawn below the actors" % floor_nodes)
 	_check(_level.player != null, "player is created")
+	# Pixel art moves in whole viewport pixels; the screen stays 640x360 with integer scaling.
+	_check(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel") == true
+			and ProjectSettings.get_setting("display/window/size/viewport_width") == 640
+			and ProjectSettings.get_setting("display/window/size/viewport_height") == 360
+			and ProjectSettings.get_setting("display/window/stretch/scale_mode") == "integer",
+			"2D transforms snap to pixels at 640x360 with integer scaling")
+	_check(_level.player.get_node("Camera2D").zoom == Vector2(2, 2), "the camera keeps its zoom of 2")
 
 	var start_room = _level.rooms[layout.start_cell]
 	var spawn: Vector2 = start_room.global_position + start_room.player_spawn()

@@ -17,6 +17,9 @@ var step: Step = Step.WINDUP
 var _boss: BossData
 var _step_left := 0.0
 var _roots_spots: Array[Vector2] = []
+## The art of each eruption of the current roots attack (BossRoots), if the data has one.
+var _roots_art: Array[Node2D] = []
+var _roots_sprouted := false
 var _engaged := false
 var _last_pattern: Pattern = Pattern.ROOTS
 var _visual: Node2D
@@ -34,6 +37,49 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	super(delta)
 	_enforce_territory()
+
+
+## A boss attack lasts its own windup + strike + recover (about 2 s), far longer than the generic
+## enemy swing, so each step shows its own pose instead of one stretched animation:
+## windup = first frame of `attack` (the warning pose), strike = `slam` for the slam (or the last
+## frame of `attack`), recover = `idle`. Missing animations fall back to `idle`.
+func _update_animation() -> void:
+	if _sprite == null or state != State.ATTACK:
+		super()
+		return
+	if absf(facing.x) > 0.1:
+		_sprite.flip_h = facing.x < 0.0
+	_sprite.speed_scale = 1.0
+	match step:
+		Step.WINDUP:
+			_hold_pose(&"attack", 0)
+		Step.STRIKE:
+			if pattern == Pattern.SLAM and _sprite.sprite_frames.has_animation(&"slam"):
+				_hold_pose(&"slam", 0)
+			else:
+				_hold_pose(&"attack", -1)
+		Step.RECOVER:
+			if _sprite.animation != &"idle" or not _sprite.is_playing():
+				_sprite.play(&"idle")
+
+
+## Shows one frame of an animation and keeps it (-1 = its last frame).
+func _hold_pose(anim: StringName, frame: int) -> void:
+	if not _sprite.sprite_frames.has_animation(anim):
+		anim = &"idle"
+		frame = 0
+	if frame < 0:
+		frame = _sprite.sprite_frames.get_frame_count(anim) - 1
+	if _sprite.animation == anim and _sprite.frame == frame and not _sprite.is_playing():
+		return
+	_sprite.play(anim)
+	_sprite.pause()
+	_sprite.frame = frame
+
+
+## Removed in the middle of a roots attack (not only by dying): its roots must not stay behind.
+func _exit_tree() -> void:
+	_retract_roots_art()
 
 
 ## The boss ignores being pushed and rooted, and is slowed only half as much.
@@ -87,11 +133,14 @@ func _start_attack() -> void:
 		_roots_spots = _choose_roots_spots()
 		for spot in _roots_spots:
 			_warn(spot, _boss.roots_radius)
+		_spawn_roots_art()
 
 
 func _process_attack(delta: float) -> void:
 	velocity = Vector2.ZERO
 	_step_left -= delta
+	if step == Step.WINDUP and _step_left > 0.0:
+		_sprout_roots_art()
 	if _step_left > 0.0:
 		return
 	match step:
@@ -102,6 +151,7 @@ func _process_attack(delta: float) -> void:
 		Step.STRIKE:
 			step = Step.RECOVER
 			_step_left = _boss.recover_time / (_boss.phase_two_speed if phase == 2 else 1.0)
+			_retract_roots_art()
 		Step.RECOVER:
 			_attack_cooldown_left = data.attack_cooldown
 			_enter_chase_or_idle()
@@ -116,6 +166,11 @@ func _strike() -> void:
 		for spot in _roots_spots:
 			_flash_zone(spot, _boss.roots_radius)
 			_hurt_player_within(spot, _boss.roots_radius, _boss.roots_damage)
+		for art in _roots_art:
+			if is_instance_valid(art):
+				art.strike()
+				# The hit flash was just added after it: keep the art on top of every circle.
+				art.get_parent().move_child(art, -1)
 
 
 func _hurt_player_within(center: Vector2, radius: float, damage: int) -> void:
@@ -157,11 +212,13 @@ func _acquire_target(player: Node2D) -> void:
 
 func _on_died() -> void:
 	super()
+	# Dying in the middle of a roots attack: the roots go back into the ground instead of staying.
+	_retract_roots_art()
 	GameState.set_flag(_boss.defeated_flag)
 	Events.boss_defeated.emit(_boss.id)
 	if _boss.pickup_scene != null:
 		var pickup: Node2D = _boss.pickup_scene.instantiate()
-		pickup.position = global_position
+		pickup.position = _local_to_room(global_position)
 		get_parent().add_child.call_deferred(pickup)
 
 
@@ -188,12 +245,52 @@ func _choose_roots_spots() -> Array[Vector2]:
 	return spots
 
 
+## One piece of art per eruption, over its warning circle (added after it, so drawn on top).
+func _spawn_roots_art() -> void:
+	_retract_roots_art()
+	_roots_sprouted = false
+	if _boss.roots_effect == null:
+		return
+	for spot in _roots_spots:
+		var art: Node2D = _boss.roots_effect.instantiate()
+		art.position = _local_to_room(spot)
+		get_parent().add_child(art)
+		Placement.reset(art)
+		_roots_art.append(art)
+	_sprout_roots_art()
+
+
+## In the last moments of the windup (or all of it if shorter) the roots sprout, timed so the
+## sprout ends exactly when the hit lands.
+func _sprout_roots_art() -> void:
+	if _roots_sprouted or _roots_art.is_empty() or _step_left > BossRoots.SPROUT_TIME:
+		return
+	_roots_sprouted = true
+	for art in _roots_art:
+		if is_instance_valid(art):
+			art.sprout(_step_left)
+
+
+func _retract_roots_art() -> void:
+	for art in _roots_art:
+		if is_instance_valid(art):
+			art.retract()
+	_roots_art.clear()
+
+
+## Attacks are aimed in world coordinates, but circles, roots art and the fragment are children of
+## the boss's room: in a generated map the room is not at the origin, so the point must be converted.
+func _local_to_room(world_point: Vector2) -> Vector2:
+	var parent := get_parent() as Node2D
+	return parent.to_local(world_point) if parent != null else world_point
+
+
 func _warn(center: Vector2, radius: float) -> void:
-	get_parent().add_child(SkillZone.circle(center, radius, WARNING_COLOR, _step_left))
+	get_parent().add_child(SkillZone.circle(_local_to_room(center), radius, WARNING_COLOR, _step_left))
 
 
 func _flash_zone(center: Vector2, radius: float) -> void:
-	get_parent().add_child(SkillZone.circle(center, radius, ERUPTION_COLOR, 0.3))
+	get_parent().add_child(SkillZone.circle(_local_to_room(center), radius, ERUPTION_COLOR, 0.3))
 
 
 func _flash_hit() -> void:

@@ -1,13 +1,9 @@
 extends SceneTree
-## Builds the Murciélago (enemy) and the Guardián antiguo (final boss) from their art.
-## Run after tools/make_monster_sheets.py:
+## Builds the EnemyData of the Murciélago and the BossData of the Guardián antiguo. Their art
+## (SpriteFrames) comes from tools/make_character_sheets.py and make_character_frames.gd. Run:
 ##   godot --headless --path . --script res://tools/make_monsters.gd
 ## The scenes (scenes/enemies/murcielago.tscn, ancient_guardian.tscn) are hand-written and inherit
 ## enemy.tscn; only the numbers (here) and the art live in the .tres files.
-
-const BAT_FRAMES := 47
-const BAT_CELL := 62
-const BAT_COLS := 8
 
 
 func _initialize() -> void:
@@ -18,23 +14,11 @@ func _initialize() -> void:
 
 
 func _bat() -> void:
-	var sheet: Texture2D = load("res://assets/sprites/murcielago/murcielago.png")
-	var frames := SpriteFrames.new()
-	frames.remove_animation(&"default")
-	frames.add_animation(&"idle")
-	frames.set_animation_speed(&"idle", 16.0)
-	for i in BAT_FRAMES:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = sheet
-		atlas.region = Rect2((i % BAT_COLS) * BAT_CELL, (i / BAT_COLS) * BAT_CELL, BAT_CELL, BAT_CELL)
-		frames.add_frame(&"idle", atlas)
-	ResourceSaver.save(frames, "res://data/enemies/murcielago_frames.tres")
-
 	var data := EnemyData.new()
 	data.id = &"murcielago"
 	data.display_name = "Murciélago"
 	data.sprite_frames = load("res://data/enemies/murcielago_frames.tres")
-	data.sprite_scale = 0.4
+	data.sprite_scale = 0.5
 	data.sprite_offset = Vector2(0, 3)
 	data.max_health = 2
 	data.move_speed = 55.0
@@ -50,18 +34,12 @@ func _bat() -> void:
 
 
 func _guardian() -> void:
-	var frames := SpriteFrames.new()
-	frames.remove_animation(&"default")
-	frames.add_animation(&"idle")
-	frames.add_frame(&"idle", load("res://assets/sprites/guardian_antiguo/guardian_antiguo.png"))
-	ResourceSaver.save(frames, "res://data/enemies/ancient_guardian_frames.tres")
-
 	var boss := BossData.new()
 	boss.id = &"ancient_guardian"
 	boss.display_name = "Guardián antiguo"
 	boss.sprite_frames = load("res://data/enemies/ancient_guardian_frames.tres")
-	boss.sprite_scale = 1.1
-	boss.sprite_offset = Vector2(0, -8)
+	boss.sprite_scale = 1.0
+	boss.sprite_offset = Vector2(0, -18)
 	# Stats start from the forest boss and are meant to be harder (chapter 3); tune them here.
 	boss.max_health = 45
 	boss.move_speed = 20.0

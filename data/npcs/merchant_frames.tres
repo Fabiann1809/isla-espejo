@@ -1,0 +1,170 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/npcs/merchant/merchant.png" id="1_xnkqx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_74hy4"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0ud1"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w1exj"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wphfi"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ugvj8"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_owy4u"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ufyk"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_msm0t"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8gcp7"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ty8s2"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s4ss7"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fcyu1"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(192, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ymvv6"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(256, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4c5py"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(320, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ip8nc"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(384, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i37yf"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(448, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_njpas"]
+atlas = ExtResource("1_xnkqx")
+region = Rect2(0, 128, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_74hy4")
+}],
+"loop": 0,
+"name": &"face_east",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p0ud1")
+}],
+"loop": 0,
+"name": &"face_north",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w1exj")
+}],
+"loop": 0,
+"name": &"face_north-east",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wphfi")
+}],
+"loop": 0,
+"name": &"face_north-west",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ugvj8")
+}],
+"loop": 0,
+"name": &"face_south",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_owy4u")
+}],
+"loop": 0,
+"name": &"face_south-east",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ufyk")
+}],
+"loop": 0,
+"name": &"face_south-west",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_msm0t")
+}],
+"loop": 0,
+"name": &"face_west",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8gcp7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ty8s2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s4ss7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fcyu1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ymvv6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4c5py")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ip8nc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i37yf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_njpas")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}]

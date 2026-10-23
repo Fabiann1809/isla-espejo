@@ -18,6 +18,9 @@ extends EnemyData
 @export var roots_windup := 1.1
 ## Spots after the first are placed within this distance of the player.
 @export var roots_spread := 60.0
+## Optional art drawn over each roots circle (e.g. scenes/effects/boss_roots.tscn, a BossRoots).
+## Only visual: the circle still shows the real zone and decides the damage.
+@export var roots_effect: PackedScene
 
 @export_group("Rhythm")
 @export var strike_time := 0.25

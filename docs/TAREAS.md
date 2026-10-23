@@ -38,6 +38,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Invulnerabilidad breve durante la esquiva
 - [x] Valores ajustables desde el inspector (`@export`)
 - [x] Cámara que sigue a Nico con suavizado y límites por escenario
+- [x] Arte de Nico en 3 vistas (frente, espalda y lado + volteo): reposo y caminar en las 3, ataque de lado sincronizado con `attack_time` (`assets/sprites/nico/nico_<animación>_<vista>.png`). esquiva, daño y muerte de lado conectados a sus estados (esquiva y daño ajustados a `dash_time` y `hurt_time`)
 
 **Hecho cuando:** Nico se mueve, esquiva y ataca con fluidez en una sala de prueba y la cámara lo sigue sin saltos.
 
@@ -93,7 +94,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado (Kenney Roguelike/RPG, CC0)
 - [x] 6–10 salas del bosque (claros, río con puente, cofre, evento): 10 salas en `scenes/levels/rooms/forest/`
 - [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; cambiar el `enemy_pool` de `data/scenarios/forest.tres` por la Bestia de la niebla y la Sombra errante cuando existan)
-- [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura)
+- [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura; ya con su sprite nuevo y arte animado de raíces sobre el círculo de aviso)
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)
 - [x] Cofres y recompensas básicas (corazón extra y curación)
