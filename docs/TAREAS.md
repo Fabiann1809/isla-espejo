@@ -38,6 +38,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Invulnerabilidad breve durante la esquiva
 - [x] Valores ajustables desde el inspector (`@export`)
 - [x] Cámara que sigue a Nico con suavizado y límites por escenario
+- [x] Arte de Nico en 3 vistas (frente, espalda y lado + volteo): reposo y caminar en las 3, ataque de lado sincronizado con `attack_time` (`assets/sprites/nico/nico_<animación>_<vista>.png`). Daño, muerte y esquiva de lado ya están en el SpriteFrames, falta conectarlos a sus estados
 
 **Hecho cuando:** Nico se mueve, esquiva y ataca con fluidez en una sala de prueba y la cámara lo sigue sin saltos.
 

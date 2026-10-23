@@ -59,8 +59,9 @@ func _pure_logic() -> void:
 	_check(picker_changes <= 1 and naive_changes > 10, "a wobbling diagonal does not flicker between views (%d vs %d)" % [picker_changes, naive_changes])
 
 	var frames := SpriteFrames.new()
-	frames.add_animation(&"walk")
-	_check(script.animation_for(&"walk", up, frames) == &"walk", "a view without art falls back to the side animation")
+	frames.add_animation(&"walk_side")
+	_check(script.animation_for(&"walk", up, frames) == &"walk_side", "a view without art falls back to the side animation")
+	_check(script.animation_for(&"walk", side, frames) == &"walk_side", "the side view uses <base>_side")
 	frames.add_animation(&"walk_up")
 	_check(script.animation_for(&"walk", up, frames) == &"walk_up", "a view with art uses its own animation (by name)")
 
@@ -77,12 +78,12 @@ func _real_player() -> void:
 	var has_idle_up: bool = sprite.sprite_frames.has_animation(&"idle_up")
 
 	var cases := [
-		["move_right", [], &"walk", false],
-		["move_left", [], &"walk", true],
+		["move_right", [], &"walk_side", false],
+		["move_left", [], &"walk_side", true],
 		["move_down", [], &"walk_down", false],
 		["move_up", [], &"walk_up", false],
-		["move_right", ["move_down"], &"walk", false],
-		["move_left", ["move_up"], &"walk", true],
+		["move_right", ["move_down"], &"walk_side", false],
+		["move_left", ["move_up"], &"walk_side", true],
 	]
 	for case in cases:
 		_press([case[0]] + case[1])
@@ -96,7 +97,7 @@ func _real_player() -> void:
 	await _frames(15)
 	_release()
 	await _frames(5)
-	var expected_rest: StringName = &"idle_up" if has_idle_up else &"idle"
+	var expected_rest: StringName = &"idle_up" if has_idle_up else &"idle_side"
 	_check(sprite.animation == expected_rest and not sprite.flip_h,
 			"stopping after walking up rests in that view (%s, falls back to the side if there is no idle_up)" % sprite.animation)
 	_press(["move_down"])

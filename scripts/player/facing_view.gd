@@ -46,14 +46,16 @@ func update(direction: Vector2, delta: float) -> View:
 	return view
 
 
-## Animation name for a base animation (`idle`, `walk`) in a view: `walk`, `walk_down`, `walk_up`.
-## Falls back to the side animation when the SpriteFrames has no art for that view yet.
+## Animation name for a base animation (`idle`, `walk`, `attack`) in a view: `walk_side`,
+## `walk_down`, `walk_up`. A view without art falls back to `<base>_side`, then to the bare `<base>`.
 static func animation_for(base: StringName, current_view: View, frames: SpriteFrames) -> StringName:
-	var suffix := ""
+	var suffix := "_side"
 	match current_view:
 		View.DOWN:
 			suffix = "_down"
 		View.UP:
 			suffix = "_up"
-	var name := StringName(String(base) + suffix)
-	return name if frames != null and frames.has_animation(name) else base
+	for name: StringName in [StringName(String(base) + suffix), StringName(String(base) + "_side")]:
+		if frames != null and frames.has_animation(name):
+			return name
+	return base

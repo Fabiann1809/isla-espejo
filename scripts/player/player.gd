@@ -317,6 +317,12 @@ func _update_sword() -> void:
 	_sword_pivot.rotation = angle
 
 
+## Playback speed that makes a one-shot animation last exactly `duration` seconds.
+func _fit_to(anim: StringName, duration: float) -> float:
+	var frames := _body.sprite_frames
+	return frames.get_frame_count(anim) / (frames.get_animation_speed(anim) * maxf(duration, 0.01))
+
+
 func _update_visuals(delta: float) -> void:
 	if state == State.ATTACK:
 		_update_sword()
@@ -333,13 +339,15 @@ func _update_visuals(delta: float) -> void:
 	var moving := velocity.length() > 5.0 and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
 	if state == State.ATTACK:
-		wanted = &"attack"
+		wanted = FacingView.animation_for(&"attack", view, _body.sprite_frames)
 	elif state == State.DASH and _body.sprite_frames.has_animation(&"run"):
 		wanted = &"run"
 	if _body.animation != wanted:
 		_body.play(wanted)
-	# Walk and run play faster or slower with the real speed, so the feet slide less.
-	if wanted == &"attack" or not moving:
+	# The swing fits exactly in attack_time; walk and run follow the real speed so the feet slide less.
+	if state == State.ATTACK:
+		_body.speed_scale = _fit_to(wanted, attack_time)
+	elif not moving:
 		_body.speed_scale = 1.0
 	else:
 		_body.speed_scale = clampf(velocity.length() / speed, ANIM_SPEED_MIN, ANIM_SPEED_MAX)
