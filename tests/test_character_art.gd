@@ -90,7 +90,7 @@ func _initialize() -> void:
 		_check(enemy.get_node_or_null("Sprite") != null, "%s shows its sprite" % scene)
 		enemy.queue_free()
 
-	# The Sombra errante is drawn at half size: about half Nico's height, feet on the same ground line.
+	# The Sombra errante is as tall as Nico (27 px), feet on the same ground line.
 	var shadow = load("res://scenes/enemies/sombra_errante.tscn").instantiate()
 	root.add_child(shadow)
 	await process_frame
@@ -99,7 +99,7 @@ func _initialize() -> void:
 	var atlas := shadow_sprite.sprite_frames.get_frame_texture(&"idle", 0) as AtlasTexture
 	var used := atlas.atlas.get_image().get_region(Rect2i(atlas.region)).get_used_rect()
 	var feet := shadow_sprite.position.y + (used.end.y - atlas.region.size.y / 2.0) * shadow_sprite.scale.y
-	_check(shadow_height >= 12.0 and shadow_height <= 16.0 and absf(feet - 8.0) <= 1.0,
+	_check(shadow_height >= 25.0 and shadow_height <= 29.0 and absf(feet - 8.0) <= 1.0,
 			"the Sombra errante is %.1f px tall with its feet at y %.1f" % [shadow_height, feet])
 	shadow.queue_free()
 
