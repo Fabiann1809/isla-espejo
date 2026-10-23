@@ -66,6 +66,9 @@ const SWORD_HAND_X := 5.0
 const SWORD_REST := 0.85
 const SWORD_RAISED := -0.7
 const SWORD_SWUNG := 1.45
+## Limits of the walk/run playback speed, relative to the walking speed.
+const ANIM_SPEED_MIN := 0.5
+const ANIM_SPEED_MAX := 2.0
 
 
 func _ready() -> void:
@@ -324,8 +327,15 @@ func _update_visuals(delta: float) -> void:
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
 	if state == State.ATTACK:
 		wanted = &"attack"
+	elif state == State.DASH and _body.sprite_frames.has_animation(&"run"):
+		wanted = &"run"
 	if _body.animation != wanted:
 		_body.play(wanted)
+	# Walk and run play faster or slower with the real speed, so the feet slide less.
+	if wanted == &"attack" or not moving:
+		_body.speed_scale = 1.0
+	else:
+		_body.speed_scale = clampf(velocity.length() / speed, ANIM_SPEED_MIN, ANIM_SPEED_MAX)
 	match state:
 		State.DASH:
 			_body.modulate = Color(1, 1, 1, 0.5)

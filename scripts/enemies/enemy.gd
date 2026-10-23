@@ -21,6 +21,9 @@ const ARRIVE_DISTANCE := 4.0
 const ANIM_MIN_HOLD := 0.15
 const RUN_ENTER_SPEED := 8.0
 const RUN_EXIT_SPEED := 2.0
+## Limits of the walk/run playback speed relative to the speed the cycle was drawn for.
+const ANIM_SPEED_MIN := 0.5
+const ANIM_SPEED_MAX := 2.0
 
 @export var data: EnemyData
 ## Shows the current state above the enemy (debugging aid).
@@ -428,7 +431,7 @@ func _update_animation() -> void:
 	# show at once because they warn the player.
 	var locomotion := [&"idle", &"walk", &"run"]
 	if wanted in locomotion and _sprite.animation in locomotion and _anim_held < ANIM_MIN_HOLD:
-		return
+		wanted = _sprite.animation
 	if _sprite.animation != wanted:
 		_sprite.play(wanted)
 		_anim_held = 0.0
@@ -436,5 +439,10 @@ func _update_animation() -> void:
 			# One swing spans the whole windup + strike.
 			var span := data.attack_windup + data.attack_time
 			_sprite.speed_scale = _animation_length(wanted) / maxf(span, 0.05)
-		else:
-			_sprite.speed_scale = 1.0
+	if wanted in [&"walk", &"run"]:
+		# The cycle follows the real speed (director multipliers, slows, boss boosts) so the feet
+		# slide less; walk is drawn for move_speed and run for chase_speed.
+		var reference := data.move_speed if wanted == &"walk" else data.chase_speed
+		_sprite.speed_scale = clampf(velocity.length() / maxf(reference, 1.0), ANIM_SPEED_MIN, ANIM_SPEED_MAX)
+	elif wanted != &"attack":
+		_sprite.speed_scale = 1.0
