@@ -48,6 +48,8 @@ var _move_dir := Vector2.ZERO
 var _action_dir := Vector2.ZERO
 ## Which drawn view (side, front, back) the art shows; see FacingView.
 var _view := FacingView.new()
+## Whether the side art is mirrored (Nico last faced left), kept while he shows the front or back.
+var _side_flip := false
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
@@ -317,6 +319,12 @@ func _update_sword() -> void:
 	_sword_pivot.rotation = angle
 
 
+## `<base>_side` if Nico's art has it, else nothing (the state keeps its old look).
+func _side_art(base: StringName) -> StringName:
+	var name := StringName(String(base) + "_side")
+	return name if _body.sprite_frames.has_animation(name) else StringName()
+
+
 ## Playback speed that makes a one-shot animation last exactly `duration` seconds.
 func _fit_to(anim: StringName, duration: float) -> float:
 	var frames := _body.sprite_frames
@@ -332,22 +340,39 @@ func _update_visuals(delta: float) -> void:
 	if not free:
 		view = FacingView.View.SIDE
 	# The side art faces right: flip it to go left. Front and back are never flipped.
-	if view != FacingView.View.SIDE:
-		_body.flip_h = false
-	elif absf(facing.x) > 0.1:
-		_body.flip_h = facing.x < 0.0
+	if absf(facing.x) > 0.1:
+		_side_flip = facing.x < 0.0
+	_body.flip_h = _side_flip if view == FacingView.View.SIDE else false
+	if state == State.ATTACK:
+		# Same rule as the sword (see _update_sword), so body and blade always face the same side.
+		_body.flip_h = _action_dir.x < 0.0
 	var moving := velocity.length() > 5.0 and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
-	if state == State.ATTACK:
-		wanted = FacingView.animation_for(&"attack", view, _body.sprite_frames)
-	elif state == State.DASH and _body.sprite_frames.has_animation(&"run"):
-		wanted = &"run"
+	# One-shot states play their own side art when it exists (dash, hurt, death); without it the
+	# old look stays (walk/idle with a tint).
+	var one_shot := StringName()
+	var one_shot_time := 0.0
+	match state:
+		State.ATTACK:
+			one_shot = FacingView.animation_for(&"attack", view, _body.sprite_frames)
+			one_shot_time = attack_time
+		State.DASH:
+			one_shot = _side_art(&"dash")
+			one_shot_time = dash_time
+		State.HURT:
+			one_shot = _side_art(&"hurt")
+			one_shot_time = hurt_time
+		State.DEAD:
+			one_shot = _side_art(&"death")
+	if one_shot != StringName():
+		wanted = one_shot
 	if _body.animation != wanted:
 		_body.play(wanted)
-	# The swing fits exactly in attack_time; walk and run follow the real speed so the feet slide less.
-	if state == State.ATTACK:
-		_body.speed_scale = _fit_to(wanted, attack_time)
-	elif not moving:
+	# The swing, the dash and the hurt fit exactly in their state's time; death plays at its own
+	# pace and stays on its last frame; walk follows the real speed so the feet slide less.
+	if one_shot_time > 0.0:
+		_body.speed_scale = _fit_to(wanted, one_shot_time)
+	elif one_shot != StringName() or not moving:
 		_body.speed_scale = 1.0
 	else:
 		_body.speed_scale = clampf(velocity.length() / speed, ANIM_SPEED_MIN, ANIM_SPEED_MAX)

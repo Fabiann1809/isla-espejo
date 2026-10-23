@@ -1,6 +1,6 @@
 extends SceneTree
 ## Walk/run playback follows the real speed (speed_scale = speed / reference, 0.5..2.0) for Nico and
-## enemies, Nico's dash plays the side walk and his swing fits in attack_time. Run:
+## enemies; Nico's swing, dash and hurt fit in their state's time and death plays once. Run:
 ## godot --headless --path . --script res://tests/test_animation_speed.gd
 
 const ARENA := Vector2(300, 180)
@@ -36,9 +36,9 @@ func _initialize() -> void:
 	await _frames(1)
 	_check(is_equal_approx(player.global_position.x - dash_x, 5.0), "the dash moves exactly 5 px per tick (%.3f)" % (player.global_position.x - dash_x))
 	Input.action_release("dash")
-	# No dash art is connected yet: the dash shows the side walk, capped at 2x.
-	_check(sprite.animation == &"walk_side" and is_equal_approx(sprite.speed_scale, 2.0),
-			"the dash plays the side walk cycle, capped at 2x (%s, %.2f)" % [sprite.animation, sprite.speed_scale])
+	var dash_scale := 3.0 / (12.0 * float(player.dash_time))
+	_check(sprite.animation == &"dash_side" and is_equal_approx(sprite.speed_scale, dash_scale) and not sprite.flip_h,
+			"the dash plays dash_side fit to dash_time (%.2fx; got %s, %.2f)" % [dash_scale, sprite.animation, sprite.speed_scale])
 	Input.action_release("move_right")
 	await _frames(20)
 	_check(sprite.animation == &"idle_side" and is_equal_approx(sprite.speed_scale, 1.0), "resting plays idle at 1.0x")
@@ -53,9 +53,31 @@ func _initialize() -> void:
 		Input.action_release("attack")
 		var expected_scale := 5.0 / (12.0 * float(player.attack_time))
 		_check(sprite.animation == &"attack_side" and is_equal_approx(sprite.speed_scale, expected_scale)
-				and sprite.flip_h == (side == "move_left"),
-				"attacking after %s plays attack_side at %.2fx (got %s, %.2f, flip %s)" % [side, expected_scale, sprite.animation, sprite.speed_scale, sprite.flip_h])
+				and sprite.flip_h == (side == "move_left")
+				and sprite.flip_h == (player.get_node("SwordPivot").scale.x < 0.0),
+				"attacking after %s plays attack_side at %.2fx, body and sword on the same side (got %s, %.2f, flip %s)" % [side, expected_scale, sprite.animation, sprite.speed_scale, sprite.flip_h])
 		await _frames(30)
+
+	# Dash to the left: flipped. A dash straight up keeps the side pose and the side Nico last faced.
+	await _frames(40)
+	for case in [["move_left", true], ["move_up", true]]:
+		Input.action_press(case[0])
+		await _frames(2)
+		Input.action_press("dash")
+		await _frames(3)
+		Input.action_release("dash")
+		Input.action_release(case[0])
+		_check(sprite.animation == &"dash_side" and sprite.flip_h == case[1],
+				"dashing with %s plays dash_side, flip %s (got %s, %s)" % [case[0], case[1], sprite.animation, sprite.flip_h])
+		await _frames(40)
+
+	# Hurt: 2 frames at 8 fps last exactly hurt_time (0.25 s).
+	player.hurt(player.global_position + Vector2(20, 0))
+	await _frames(1)
+	var hurt_scale := 2.0 / (8.0 * float(player.hurt_time))
+	_check(sprite.animation == &"hurt_side" and is_equal_approx(sprite.speed_scale, hurt_scale),
+			"getting hurt plays hurt_side fit to hurt_time (%.2fx; got %s, %.2f)" % [hurt_scale, sprite.animation, sprite.speed_scale])
+	await _frames(60)
 
 	for multiplier in [1.0, 0.6, 3.0]:
 		var enemy = load("res://scenes/enemies/murcielago.tscn").instantiate()
@@ -77,6 +99,20 @@ func _initialize() -> void:
 		_check(is_equal_approx(seen, expected), "a patrolling bat at %.1fx speed plays walk at %.2fx (got %.2f)" % [multiplier, expected, seen])
 		enemy.queue_free()
 		await physics_frame
+
+	# Death: plays once and stays on its last frame (a lone Nico: the test room reloads on death).
+	room.queue_free()
+	await _frames(2)
+	player = load("res://scenes/player/player.tscn").instantiate()
+	root.add_child(player)
+	await _frames(2)
+	sprite = player.get_node("Sprite")
+	player.die()
+	await _frames(1)
+	_check(sprite.animation == &"death_side" and not sprite.sprite_frames.get_animation_loop(&"death_side"), "dying plays death_side once")
+	await _frames(90)
+	_check(sprite.animation == &"death_side" and sprite.frame == sprite.sprite_frames.get_frame_count(&"death_side") - 1,
+			"and stays on its last frame (frame %d)" % sprite.frame)
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
