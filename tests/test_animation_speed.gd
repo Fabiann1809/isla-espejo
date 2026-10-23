@@ -26,8 +26,15 @@ func _initialize() -> void:
 	await _frames(10)
 	_check(sprite.animation == &"walk" and is_equal_approx(sprite.speed_scale, 1.0),
 			"Nico walking at full speed plays walk at 1.0x (%.2f)" % sprite.speed_scale)
+	var before_x: float = player.global_position.x
+	await _frames(1)
+	var step: float = player.global_position.x - before_x
+	_check(is_equal_approx(step, 2.0), "Nico walks exactly 2 px per physics tick (%.3f)" % step)
 	Input.action_press("dash")
-	await _frames(4)
+	await _frames(3)
+	var dash_x: float = player.global_position.x
+	await _frames(1)
+	_check(is_equal_approx(player.global_position.x - dash_x, 5.0), "the dash moves exactly 5 px per tick (%.3f)" % (player.global_position.x - dash_x))
 	Input.action_release("dash")
 	_check(sprite.animation == &"run" and is_equal_approx(sprite.speed_scale, 2.0),
 			"the dash plays the run cycle, capped at 2x (%s, %.2f)" % [sprite.animation, sprite.speed_scale])

@@ -10,7 +10,8 @@ signal attack_hit(target: Node)
 enum State { IDLE, MOVE, DASH, ATTACK, HURT, DEAD }
 
 @export_group("Movement")
-@export var speed := 110.0
+## 120 px/s = exactly 2 px per physics tick at 60 Hz (whole-pixel steps); the dash, 300 px/s, is 5.
+@export var speed := 120.0
 
 @export_group("Dash")
 @export var dash_speed := 300.0
