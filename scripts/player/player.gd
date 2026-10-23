@@ -1,5 +1,5 @@
 extends CharacterBody2D
-## Nico: 8-direction movement, dash with i-frames, sword attack, health and death.
+## Nico: 8-direction movement (drawn in 3 views: side, front, back), dash with i-frames, sword attack, health and death.
 ## Behaviour is a small state machine (see State). Damage arrives through the Hurtbox;
 ## combat events are published on the Events bus for the adaptive AI.
 
@@ -45,6 +45,8 @@ var _interact_block_left := 0.0
 var _nearby: Interactable = null
 var _move_dir := Vector2.ZERO
 var _action_dir := Vector2.ZERO
+## Which drawn view (side, front, back) the art shows; see FacingView.
+var _view := FacingView.new()
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
@@ -108,7 +110,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_interaction()
-	_update_visuals()
+	_update_visuals(delta)
 
 
 ## True while the player cannot be damaged (dash i-frames, after a hit, or dead).
@@ -305,13 +307,21 @@ func _update_sword() -> void:
 	_sword_pivot.rotation = angle
 
 
-func _update_visuals() -> void:
+func _update_visuals(delta: float) -> void:
 	if state == State.ATTACK:
 		_update_sword()
-	# The art faces right: flip it when moving left. Walks while moving, rests otherwise.
-	if absf(facing.x) > 0.1:
+	# Walking picks a view (side, front or back); attack, dash, hurt and death use the side view.
+	var free := state in [State.IDLE, State.MOVE]
+	var view := _view.update(_move_dir if free else Vector2.ZERO, delta)
+	if not free:
+		view = FacingView.View.SIDE
+	# The side art faces right: flip it to go left. Front and back are never flipped.
+	if view != FacingView.View.SIDE:
+		_body.flip_h = false
+	elif absf(facing.x) > 0.1:
 		_body.flip_h = facing.x < 0.0
-	var wanted: StringName = &"walk" if velocity.length() > 5.0 and state != State.DEAD else &"idle"
+	var moving := velocity.length() > 5.0 and state != State.DEAD
+	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
 	if state == State.ATTACK:
 		wanted = &"attack"
 	if _body.animation != wanted:

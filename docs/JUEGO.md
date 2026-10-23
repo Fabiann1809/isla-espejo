@@ -148,7 +148,7 @@ Qué se modifica: composición y cantidad de enemigos por sala, parámetros de l
 ### Protagonista
 | | |
 |---|---|
-| **Nico** | Viajero perdido. Determinado, curioso, resistente. Espada corta y brújula rota. Mochila y bufanda roja. Es el personaje con más animaciones (8 direcciones; idle, caminar, ataque, daño, muerte). |
+| **Nico** | Viajero perdido. Determinado, curioso, resistente. Espada corta y brújula rota. Mochila y bufanda roja. Es el personaje con más animaciones (3 vistas + volteo; idle, caminar, ataque, daño, muerte). |
 
 ### NPCs (solo diálogo)
 | Personaje | Concepto | Personalidad | Función |
@@ -190,7 +190,7 @@ Nombre · Rol · Concepto visual · Personalidad · Arma / ataque · Habilidad e
 - Personajes en **32x32** (Nico y enemigos pequeños); jefes, enemigos grandes y NPCs pueden ser **64x64**. Una **paleta única** de 16 a 24 colores, tilesets en **16x16**.
 - Herramienta: **Pixelorama**. Se guarda el archivo fuente (`.pxo`) junto al PNG exportado.
 - Animaciones mínimas de enemigos y Nico: idle, caminar, ataque, daño y muerte. Para NPC: idle e interacción.
-- 8 direcciones para Nico y jefes; 4 direcciones para NPCs y enemigos.
+- Nico: 3 vistas (frente, espalda, lado) + volteo; enemigos y jefes: un lado + volteo; NPC: frente. (Nico se sigue moviendo en 8 direcciones; solo el arte se reduce a 3 vistas.)
 - Los personajes deben contrastar con el escenario donde aparecen.
 - Mientras no existan sprites, se usan cuadros de color como provisional.
 - Los diseños de las imágenes de referencia son una **guía**, no sprites finales; hay que simplificarlos.
