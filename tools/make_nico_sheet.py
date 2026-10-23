@@ -1,29 +1,10 @@
-"""Turns the artist's Nico.gif (64 frames, 32x32) into a sprite sheet PNG (8 columns, 1:1).
-Run from the repo root: python tools/make_nico_sheet.py  (needs Pillow)
-Then: godot --headless --path . --script res://tools/make_nico_frames.gd
+"""Draws Nico's sword, assets/sprites/nico/sword.png (24x7, points right, grip at its left end,
+pivot at x=3, y=3). Nico's body art no longer comes from here: it is the strips
+assets/sprites/nico/nico_<animation>_<view>.png, read by tools/make_nico_frames.gd.
+The old Nico.gif sheet and its sources are kept in assets/sprites/nico/_old/.
+Run from the repo root only to redraw the sword: python tools/make_nico_sheet.py  (needs Pillow)"""
+from PIL import Image
 
-The GIF is a pack of different animations (see tools/make_nico_frames.gd for the frame map).
-The game flips the art when Nico faces left, so every cell that is used for movement must face
-right: the side idle (8-15) and side walk (23-31) are drawn facing left in the GIF and are
-mirrored here."""
-from PIL import Image, ImageOps
-
-SRC = "assets/sprites/nico/nico_source.gif"
-CELL, COLS = 32, 8
-MIRROR = list(range(8, 16)) + list(range(23, 32))
-gif = Image.open(SRC)
-n = gif.n_frames
-sheet = Image.new("RGBA", (COLS * CELL, ((n + COLS - 1) // COLS) * CELL), (0, 0, 0, 0))
-for i in range(n):
-    gif.seek(i)
-    frame = gif.convert("RGBA")
-    if i in MIRROR:
-        frame = ImageOps.mirror(frame)
-    sheet.paste(frame, ((i % COLS) * CELL, (i // COLS) * CELL))
-sheet.save("assets/sprites/nico/nico.png")
-print(n, "frames")
-
-# The sword that swings: 24x7, points right, grip at its left end (pivot at x=3, y=3).
 K, HI, MID, LO, GUARD, GRIP = (8, 6, 14), (218, 225, 230), (176, 176, 189), (106, 127, 144), (131, 131, 180), (110, 62, 40)
 sword = Image.new("RGBA", (24, 7), (0, 0, 0, 0))
 sp = sword.load()
