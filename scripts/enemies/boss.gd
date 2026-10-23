@@ -218,7 +218,7 @@ func _on_died() -> void:
 	Events.boss_defeated.emit(_boss.id)
 	if _boss.pickup_scene != null:
 		var pickup: Node2D = _boss.pickup_scene.instantiate()
-		pickup.position = global_position
+		pickup.position = _local_to_room(global_position)
 		get_parent().add_child.call_deferred(pickup)
 
 
@@ -253,7 +253,7 @@ func _spawn_roots_art() -> void:
 		return
 	for spot in _roots_spots:
 		var art: Node2D = _boss.roots_effect.instantiate()
-		art.position = spot
+		art.position = _local_to_room(spot)
 		get_parent().add_child(art)
 		Placement.reset(art)
 		_roots_art.append(art)
@@ -278,12 +278,19 @@ func _retract_roots_art() -> void:
 	_roots_art.clear()
 
 
+## Attacks are aimed in world coordinates, but circles, roots art and the fragment are children of
+## the boss's room: in a generated map the room is not at the origin, so the point must be converted.
+func _local_to_room(world_point: Vector2) -> Vector2:
+	var parent := get_parent() as Node2D
+	return parent.to_local(world_point) if parent != null else world_point
+
+
 func _warn(center: Vector2, radius: float) -> void:
-	get_parent().add_child(SkillZone.circle(center, radius, WARNING_COLOR, _step_left))
+	get_parent().add_child(SkillZone.circle(_local_to_room(center), radius, WARNING_COLOR, _step_left))
 
 
 func _flash_zone(center: Vector2, radius: float) -> void:
-	get_parent().add_child(SkillZone.circle(center, radius, ERUPTION_COLOR, 0.3))
+	get_parent().add_child(SkillZone.circle(_local_to_room(center), radius, ERUPTION_COLOR, 0.3))
 
 
 func _flash_hit() -> void:

@@ -41,6 +41,7 @@ func _initialize() -> void:
 	await _test_death_mid_attack()
 	await _test_boss_without_art()
 	await _test_player_drawn_over_roots()
+	await _test_in_generated_level()
 
 	root.get_node("GameState").reset()
 	print("RESULT: ", "OK" if _ok else "FAILED")
@@ -136,6 +137,57 @@ func _test_player_drawn_over_roots() -> void:
 	_check(level.player.get_parent() == level and level.player.get_index() > map.get_index()
 			and level.player.z_index >= 0, "in a level Nico is drawn after every room, so roots never cover him")
 	level.free()
+
+
+## In a generated map the boss room is far from the origin. The circles, the roots art and the
+## fragment are children of the room but are aimed in world coordinates: they must still land on
+## the boss / the player (they used to appear 1500+ px away, off screen and out of the room).
+func _test_in_generated_level() -> void:
+	var level = load("res://scenes/levels/forest_level.tscn").instantiate()
+	level.seed_value = 4242
+	level.use_director = false
+	root.add_child(level)
+	await _frames(3)
+	var boss = get_nodes_in_group("enemies").filter(func(n: Node) -> bool: return n.name == "ForestGuardian")[0]
+	var room: Node2D = boss.get_parent()
+	_check(room.global_position.length() > 100.0, "the boss room of this map is away from the origin (%s)" % room.global_position)
+	var player = level.player
+	player.health.max_health = 999
+	player.health.heal(999)
+	player.global_position = boss.global_position + Vector2(100, 40)
+	await physics_frame
+	boss._acquire_target(player)
+	for i in 240:
+		await physics_frame
+		boss._last_pattern = boss.Pattern.SLAM
+		if boss.state != boss.State.ATTACK:
+			player.global_position = boss.global_position + Vector2(100, 40)
+		elif boss.pattern == boss.Pattern.ROOTS:
+			break
+	await physics_frame
+	var placed: bool = boss.pattern == boss.Pattern.ROOTS and not boss._roots_spots.is_empty()
+	for spot: Vector2 in boss._roots_spots:
+		var circle_here := false
+		var art_here := false
+		for child in room.get_children():
+			if child is SkillZone and child.global_position.distance_to(spot) < 1.0:
+				circle_here = true
+			var script: Script = child.get_script()
+			if script != null and script.resource_path == ROOTS_SCRIPT and child.global_position.distance_to(spot) < 1.0:
+				art_here = true
+		placed = placed and circle_here and art_here
+	_check(placed, "in a real map each warning circle and its roots art sit on their spot")
+	var boss_at: Vector2 = boss.global_position
+	boss.health.take_damage(9999, boss_at)
+	await _frames(3)
+	var fragment_ok := false
+	for child in room.get_children():
+		var script: Script = child.get_script()
+		if script != null and "fragment" in script.resource_path:
+			fragment_ok = child.global_position.distance_to(boss_at) < 1.0
+	_check(fragment_ok, "the fragment drops where the boss died, inside its room")
+	level.free()
+	root.get_node("GameState").reset()
 
 
 ## Spawns a boss, makes it engage and start a roots attack (as if its last attack was a slam and
