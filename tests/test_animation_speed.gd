@@ -39,6 +39,8 @@ func _initialize() -> void:
 	var dash_scale := 3.0 / (12.0 * float(player.dash_time))
 	_check(sprite.animation == &"dash_side" and is_equal_approx(sprite.speed_scale, dash_scale) and not sprite.flip_h,
 			"the dash plays dash_side fit to dash_time (%.2fx; got %s, %.2f)" % [dash_scale, sprite.animation, sprite.speed_scale])
+	_check(sprite.modulate == player.TINT_DASH_SOFT and player.is_invulnerable(),
+			"over its own art the dash tint is soft (%s) and the dash still has its i-frames" % sprite.modulate)
 	Input.action_release("move_right")
 	await _frames(20)
 	_check(sprite.animation == &"idle_side" and is_equal_approx(sprite.speed_scale, 1.0), "resting plays idle at 1.0x")
@@ -77,6 +79,8 @@ func _initialize() -> void:
 	var hurt_scale := 2.0 / (8.0 * float(player.hurt_time))
 	_check(sprite.animation == &"hurt_side" and is_equal_approx(sprite.speed_scale, hurt_scale),
 			"getting hurt plays hurt_side fit to hurt_time (%.2fx; got %s, %.2f)" % [hurt_scale, sprite.animation, sprite.speed_scale])
+	_check(sprite.modulate == player.TINT_HURT_SOFT and player.is_invulnerable(),
+			"the hurt tint is soft (%s) and the hit invulnerability is unchanged" % sprite.modulate)
 	await _frames(60)
 
 	for multiplier in [1.0, 0.6, 3.0]:
@@ -110,6 +114,7 @@ func _initialize() -> void:
 	player.die()
 	await _frames(1)
 	_check(sprite.animation == &"death_side" and not sprite.sprite_frames.get_animation_loop(&"death_side"), "dying plays death_side once")
+	_check(sprite.modulate == player.TINT_DEAD_SOFT, "the death tint is soft (%s)" % sprite.modulate)
 	await _frames(90)
 	_check(sprite.animation == &"death_side" and sprite.frame == sprite.sprite_frames.get_frame_count(&"death_side") - 1,
 			"and stays on its last frame (frame %d)" % sprite.frame)

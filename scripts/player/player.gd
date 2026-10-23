@@ -69,6 +69,14 @@ const SWORD_HAND_X := 5.0
 const SWORD_REST := 0.85
 const SWORD_RAISED := -0.7
 const SWORD_SWUNG := 1.45
+## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
+## death animations.
+const TINT_DASH := Color(1, 1, 1, 0.5)
+const TINT_HURT := Color(1, 0.4, 0.4, 1)
+const TINT_DEAD := Color(0.3, 0.3, 0.3, 1)
+const TINT_DASH_SOFT := Color(1, 1, 1, 0.8)
+const TINT_HURT_SOFT := Color(1, 0.75, 0.75, 1)
+const TINT_DEAD_SOFT := Color(0.75, 0.75, 0.75, 1)
 ## Limits of the walk/run playback speed, relative to the walking speed.
 const ANIM_SPEED_MIN := 0.5
 const ANIM_SPEED_MAX := 2.0
@@ -377,12 +385,14 @@ func _update_visuals(delta: float) -> void:
 	else:
 		_body.speed_scale = clampf(velocity.length() / speed, ANIM_SPEED_MIN, ANIM_SPEED_MAX)
 	match state:
+		# With their own art these states only need a light tint; without it the strong tint is
+		# what tells them apart. The invulnerability blink below is unchanged.
 		State.DASH:
-			_body.modulate = Color(1, 1, 1, 0.5)
+			_body.modulate = TINT_DASH_SOFT if one_shot != StringName() else TINT_DASH
 		State.HURT:
-			_body.modulate = Color(1, 0.4, 0.4, 1)
+			_body.modulate = TINT_HURT_SOFT if one_shot != StringName() else TINT_HURT
 		State.DEAD:
-			_body.modulate = Color(0.3, 0.3, 0.3, 1)
+			_body.modulate = TINT_DEAD_SOFT if one_shot != StringName() else TINT_DEAD
 		_:
 			var blink := _invulnerable_left > 0.0 and int(_invulnerable_left * 20.0) % 2 == 0
 			if blink:
