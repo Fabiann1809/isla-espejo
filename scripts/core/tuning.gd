@@ -12,6 +12,17 @@ const PATROL_MARGIN := 24.0
 const PATROL_TIMEOUT_FACTOR := 2.0
 ## A patrol that barely moves for this long (s) is blocked: the enemy rests and picks another point.
 const PATROL_STALL_TIME := 0.4
+## Enemies keep to their room: they hunt Nico while he is inside it or this far past its edge (px;
+## a corridor is 48 px long) and walk back home when he leaves.
+const TERRITORY_MARGIN := 40.0
+## At most this many enemies hunt Nico at once, and at most this many of one kind (a bat group);
+## the others keep patrolling until a place frees up. Bosses do not count.
+const MAX_HUNTERS := 4
+const MAX_HUNTERS_OF_A_KIND := 3
+## Hand-placed spawn markers of a room are at least this far apart (checked by tests/test_enemy_pack.gd).
+const MIN_SPAWN_DISTANCE := 48.0
+## Prints what each enemy decides (starts or stops hunting, goes back home), for debugging.
+const ENEMY_DEBUG_LOG := false
 ## Boss eruptions (roots) stay this far inside the arena's outer edge (px): the wall is 16 px thick.
 const ARENA_MARGIN := 24.0
 
@@ -48,3 +59,4 @@ const SHADOWS_ENABLED := true
 const SHADOW_ALPHA := 0.28
 const SHADOW_WIDTH_FACTOR := 0.7
 const SHADOW_HEIGHT_FACTOR := 0.35
+

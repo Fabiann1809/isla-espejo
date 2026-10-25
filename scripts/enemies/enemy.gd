@@ -40,8 +40,13 @@ var state: State = State.IDLE
 var target: Node2D = null
 var facing := Vector2.DOWN
 ## The enemy's own room, in world coordinates (set by the room that spawns it; empty = no limit).
-## Patrols stay inside it.
+## Patrols stay inside it, it only hunts Nico while he is in it (or at its doors) and goes back
+## when he leaves, and it shares the hunt with the other enemies (see Tuning). Bosses and enemies
+## placed by hand have no home and keep the old free behaviour.
 var home_area := Rect2()
+
+## Enemies hunting Nico right now, shared by every enemy, to cap how many chase him at once.
+static var _hunters: Array = []
 
 var _home := Vector2.ZERO
 var _patrol_point := Vector2.ZERO
@@ -261,17 +266,24 @@ func _update_awareness(delta: float) -> void:
 		var lose := data.lose_range * vision_multiplier * _visibility_of(target)
 		if global_position.distance_to(target.global_position) > lose:
 			_lose_target()
+		elif not _in_territory(target.global_position):
+			_debug_log("Nico left my room: going back")
+			_lose_target()
+			_return_home()
 		return
 	_vision_timer -= delta
 	if _vision_timer > 0.0:
 		return
 	_vision_timer = VISION_CHECK_INTERVAL
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player != null and not _is_dead_node(player) and can_see(player):
+	if player != null and not _is_dead_node(player) and _in_territory(player.global_position) 			and can_see(player) and _may_join_hunt():
 		_acquire_target(player)
 
 
 func _acquire_target(player: Node2D) -> void:
+	if home_area.has_area() and not _hunters.has(self):
+		_hunters.append(self)
+		_debug_log("hunting (%d hunters)" % _hunters.size())
 	target = player
 	player_detected.emit(player)
 	Events.enemy_detected_player.emit(self)
@@ -280,6 +292,7 @@ func _acquire_target(player: Node2D) -> void:
 
 
 func _lose_target() -> void:
+	_hunters.erase(self)
 	target = null
 	if state in [State.CHASE, State.ATTACK]:
 		_hitbox.deactivate()
@@ -289,6 +302,7 @@ func _lose_target() -> void:
 
 func _target_is_valid() -> bool:
 	if target == null or not is_instance_valid(target) or _is_dead_node(target):
+		_hunters.erase(self)
 		target = null
 		if state in [State.CHASE, State.ATTACK]:
 			_hitbox.deactivate()
@@ -296,6 +310,38 @@ func _target_is_valid() -> bool:
 			_enter_idle()
 		return false
 	return true
+
+
+## Nico counts as inside the enemy's room up to a little past its doors.
+func _in_territory(point: Vector2) -> bool:
+	return not home_area.has_area() or home_area.grow(Tuning.TERRITORY_MARGIN).has_point(point)
+
+
+## Room for one more hunter: under the total cap and under the cap for this kind of enemy.
+func _may_join_hunt() -> bool:
+	if not home_area.has_area():
+		return true
+	var same_kind := 0
+	for hunter in _hunters.duplicate():
+		if not is_instance_valid(hunter) or hunter.is_dead() or hunter.target == null:
+			_hunters.erase(hunter)
+		elif hunter.scene_file_path == scene_file_path:
+			same_kind += 1
+	return _hunters.size() < Tuning.MAX_HUNTERS and same_kind < Tuning.MAX_HUNTERS_OF_A_KIND
+
+
+## Walks back to where it was spawned (a patrol leg to its home point).
+func _return_home() -> void:
+	state = State.PATROL
+	_patrol_point = _home
+	var walk_time := _home.distance_to(global_position) / maxf(data.move_speed * _speed_scale(), 1.0)
+	_patrol_left = walk_time * Tuning.PATROL_TIMEOUT_FACTOR + 0.5
+	_patrol_stall = 0.0
+
+
+func _debug_log(message: String) -> void:
+	if Tuning.ENEMY_DEBUG_LOG:
+		print("[enemy %s] %s" % [name, message])
 
 
 func _speed_scale() -> float:
@@ -378,6 +424,7 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 
 
 func _on_died() -> void:
+	_hunters.erase(self)
 	state = State.DEAD
 	_hitbox.deactivate()
 	_telegraph.hide()
