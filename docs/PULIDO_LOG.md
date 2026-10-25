@@ -4,7 +4,16 @@ Rama `auto/pulido-nivel1-noche`. Trabajo autónomo del 25-10-2026 (hora de Bogot
 
 ## Resumen
 
-(se completa al cierre)
+1. Las 4 fases están hechas, cada una con pruebas que fallaban antes y pasan ahora. Suite final: **31 de 31 en verde** (smoke check y 30 pruebas; al empezar eran 24 y 24).
+2. **Enemigos invisibles:** los tapaban los props de salas construidas después (no los pasillos). Ahora hay orden por Y y los props planos van con el suelo: de 5043 posiciones tapadas a 0.
+3. **Enemigos repetidos:** reparto por peso sin repetir por azar. Las salas por encima de su parte justa bajan de 1763 de 3000 a 0, y el director conserva sus pesos.
+4. **Otros fallos:** había patrullas atascadas contra muros (80 → 0), raíces del jefe fuera de la arena (191 → 0) y la cámara no iba en el proceso de física.
+5. **Enemigos que se juntaban:** se quedan en su sala y cazan como máximo 4 a la vez (3 de un tipo). En el peor caso medido, los perseguidores bajan de 17 (27 con el director) a 4, y los que salen de su sala del 77 % (97 %) al 4 % (3 %).
+6. **Sin negro:** bosque denso con semilla alrededor y entre salas, pasto bajo pasillos y fondo verde oscuro. En 30 mapas no queda ningún tile visible sin suelo.
+7. **Ambientación:** manchas de pasto, grupos de hongos, piedras y flores, caminos con bordes suaves, sombras, viñeta y desaturación suaves. F3 muestra el texto de depuración, que arranca oculto.
+8. **Sensación de juego:** parón de golpe de 3 cuadros, sacudida de 2 px, partículas al morir, y contorno en los avisos del jefe y en los textos del HUD.
+9. Todo valor nuevo está en `scripts/core/tuning.gd` y se puede apagar ahí. No toqué controles, diálogos, habilidades, guardado ni arte. El único dato cambiado son las flores del tema del bosque.
+10. **La rama está solo en local:** el push falló por falta de credenciales de GitHub. Revisa las decisiones al final de este archivo y prueba jugando lo que no pude ver.
 
 ## Punto de partida
 
@@ -138,3 +147,55 @@ Herramienta nueva para mirar sin jugar: `tools/screenshot_map.gd` (necesita vent
 - **Consola:** el bosque ejecutado con ventana durante 900 cuadros no muestra ningún error ni aviso. Solo aparece la línea del director.
 - **Rendimiento** (con ventana, semilla 4242): **60 FPS** (vsync), cuadro medio de 16,7 ms y peor de 20,9 ms, 18 draw calls, unos 2340 nodos. Generar un mapa nuevo tarda unos 0,33 s con ventana y unos 0,15 s en headless: un pequeño tirón al cambiar de mapa, que coincide con la pausa del texto de salida.
 - **Simulación de combate** (script temporal, 8 mapas): Nico recorre cada sala, persigue al enemigo más cercano y lo golpea cada 0,3 s. **Resultado: 220 de 220 enemigos derrotados**, las 65 salas de combate emiten `room_cleared`, ninguno queda dentro de un muro ni fuera del mapa. No encontró fallos nuevos.
+
+### Revisión independiente del código — 15:40–16:00
+Un revisor independiente, que no conocía mis conclusiones, leyó todos los scripts cambiados. No encontró fallos graves. Confirmó que:
+- `Engine.time_scale` no puede quedarse en 0.
+- La lista de cazadores siempre libera sus sitios.
+- Los espacios de coordenadas son coherentes.
+- El muestreo de enemigos es correcto.
+- Las sombras no se duplican.
+
+Corregí sus tres hallazgos con fundamento, cada uno reproducido antes con una prueba:
+1. **Un golpe desde fuera del territorio cancelaba el estado de daño:** el enemigo volvía a casa sin retroceder. Ahora primero termina el daño y luego vuelve. Check nuevo en `test_enemy_pack`: fallaba antes, pasa ahora.
+2. **Avisos tapados por props planos o por el suelo de la sala de abajo.** Ocurría con un círculo centrado justo encima del parche de tierra del centro de la arena del jefe. Los suelos pasan a `FLOOR_Z = -2` y los efectos de suelo a `GROUND_FX_Z = -1`. Check nuevo en `test_draw_order`: fallaba antes, pasa ahora.
+3. **Copas de árboles altos del bosque de fondo montadas sobre árboles de otra franja:** 40 tiles por mapa. Ahora hay un único registro de tiles ocupados. Check nuevo en `test_forest_look`: 40 → 0.
+
+Anotados sin cambiar (diseño o caso que no ocurre hoy):
+- Un cazador bloqueado detrás de una roca conserva su sitio mientras Nico siga en la sala.
+- `Ambience` solo se añade según el tema del primer escenario que carga. Hoy solo existe el bosque; habrá que revisarlo cuando haya escenarios sin tema.
+
+
+## Cierre
+
+### LO QUE ESTÁ VERIFICADO POR PRUEBAS
+- Ningún prop ni capa decorativa se dibuja sobre un actor que pasa por encima o delante. Los avisos, zonas y raíces van sobre todo suelo y bajo Nico (`test_draw_order`).
+- El reparto de enemigos por sala respeta los pesos y no repite por azar. El pool del bosque tiene arte completo (`test_enemy_mix`).
+- Las patrullas no salen de su sala ni se atascan (`test_enemy_patrol`).
+- Como máximo 4 cazadores a la vez y 3 de un tipo. Nadie persigue a Nico fuera de su sala. Un golpe desde fuera aún produce daño y retroceso. Los spawns están separados al menos 48 px (`test_enemy_pack`).
+- Las raíces del jefe caen dentro de la arena (`test_boss_roots`).
+- La cámara va en el proceso de física y la interpolación se reinicia en cada salto (`test_interpolation`).
+- En 30 mapas: todo tile visible tiene suelo, la decoración no tiene colisión, el bosque depende de la semilla, no hay árboles apilados, hay sombras, tinte y pasada de pantalla bajo el HUD, y F3 alterna la depuración, oculta al inicio (`test_forest_look`).
+- Parón de golpe (~50 ms y se reanuda), sacudida de cámara breve y de 2 px como máximo, partículas que se liberan solas y contorno en los textos del HUD (`test_game_feel`).
+- En 30 mapas: 409 de 409 conexiones transitables, 247 salas de combate pobladas y 1038 objetos dentro de su sala (`test_forest_maps`).
+- Fuera de la suite: 220 de 220 enemigos derrotables en 8 mapas (simulación), la consola sin errores con ventana, y 60 FPS.
+
+### LO QUE NO SE PUDO VERIFICAR SIN VERLO EN PANTALLA (para que lo revises tú)
+- La sensación en movimiento: viñeta y desaturación en vivo, la cámara en el proceso de física con su suavizado, y el parón de 3 cuadros con golpes seguidos.
+- Que el orden por Y se vea natural al rodear árboles altos y arbustos, y al cruzar el puente del río.
+- La legibilidad de enemigos oscuros (sombra errante, bestia) junto al borde de bosque oscuro.
+- Que el regreso a casa de los enemigos no se vea raro, por ejemplo un enemigo que se da la vuelta en la puerta, y que 4 cazadores sean una dificultad adecuada.
+- Los bordes redondeados del camino en los cruces en T y las esquinas cóncavas, que usan la pieza central y quedan en ángulo recto.
+- El tirón de unos 0,3 s al generar un mapa nuevo (al salir por el portal o al morir).
+- Las capturas que sí revisé: mapa entero, inicio, pasillo, esquinas, hueco entre salas y ataque de raíces del jefe (semillas 4242 y 31337, con `tools/screenshot_map.gd`).
+
+### RIESGOS Y DECISIONES PENDIENTES
+- **Base de la rama:** la creé desde `feature/nico-arte-nuevo` (36 commits por delante de `main`) porque no existía. Confirma que es la base correcta antes de fusionar.
+- **Push:** no se hizo (sin credenciales). Comando: `git push -u origin auto/pulido-nivel1-noche`.
+- **Cambio de diseño, enemigos:** ya no te siguen entre salas y como máximo 4 cazan a la vez. Los que te ven sin sitio en la caza no emiten `enemy_detected_player`, así que el perfil cuenta algo menos de detecciones. Se ajusta en `Tuning` (`TERRITORY_MARGIN`, `MAX_HUNTERS`, `MAX_HUNTERS_OF_A_KIND`).
+- **Director:** no hizo falta limitar sus multiplicadores, y `director_rules.tres` no cambió.
+- **Datos:** quité las variantes de flores con esquina gris de `data/themes/forest.tres`.
+- **Velocidades de enemigos** no enteras por tick: no las toqué (balance). Decide si quieres redondearlas.
+- **`CLAUDE.md` no está actualizado** con las nuevas convenciones: `Tuning`, el orden por Y de nivel y salas, `FLOOR_Z = -2` / `GROUND_FX_Z = -1`, y los nombres numerados de capas de pasillo. Conviene añadirlas si fusionas.
+- **Riesgos menores anotados:** un cazador bloqueado conserva su sitio, y `Ambience` depende del tema del primer escenario cargado.
+- El parón de golpe se desactiva en headless (pruebas). Si alguna herramienta futura cuenta cuadros con ventana, tenlo en cuenta.
