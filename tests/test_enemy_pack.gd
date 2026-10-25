@@ -76,6 +76,20 @@ func _initialize() -> void:
 	_check(outside.is_empty(), "no enemy follows Nico out of its room (%d did)" % outside.size())
 	_check(still_hunting == 0, "enemies of the rooms he left stop hunting him (%d still do)" % still_hunting)
 
+	# Hit from outside its room (a skill from the corridor): it still takes the hit and the push
+	# before walking back.
+	var victim: Node2D = null
+	for enemy in enemies:
+		if is_instance_valid(enemy) and not enemy.is_dead() and busiest.is_ancestor_of(enemy):
+			victim = enemy
+	if victim != null:
+		player.global_position = busiest.global_position + Vector2(240, -120)
+		victim.get_node("Hurtbox").receive_hit(1, victim.global_position + Vector2(0, -10))
+		var hurt_held := true
+		for i in 3:
+			await physics_frame
+			hurt_held = hurt_held and victim.state == 4
+		_check(hurt_held, "an enemy hit from outside its room still plays its hurt and push first")
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 

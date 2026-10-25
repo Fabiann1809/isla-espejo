@@ -266,7 +266,8 @@ func _update_awareness(delta: float) -> void:
 		var lose := data.lose_range * vision_multiplier * _visibility_of(target)
 		if global_position.distance_to(target.global_position) > lose:
 			_lose_target()
-		elif not _in_territory(target.global_position):
+		# Hurt first (a hit from outside its room still pushes it), then back home.
+		elif not _in_territory(target.global_position) and state != State.HURT:
 			_debug_log("Nico left my room: going back")
 			_lose_target()
 			_return_home()
@@ -276,7 +277,8 @@ func _update_awareness(delta: float) -> void:
 		return
 	_vision_timer = VISION_CHECK_INTERVAL
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player != null and not _is_dead_node(player) and _in_territory(player.global_position) 			and can_see(player) and _may_join_hunt():
+	if player != null and not _is_dead_node(player) and _in_territory(player.global_position) \
+			and can_see(player) and _may_join_hunt():
 		_acquire_target(player)
 
 
