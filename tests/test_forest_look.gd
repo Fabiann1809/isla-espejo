@@ -60,6 +60,16 @@ func _initialize() -> void:
 	level.generate(7)
 	await _frames(1)
 	_check(first == _backdrop_signature(level) and first != other, "the forest is fixed by the map's seed")
+	# A tall tree's crown never lands on a tree of the next band (they are on separate layers).
+	var used := {}
+	var stacked := 0
+	for layer in level.get_node("Map/Backdrop").get_children():
+		if String(layer.name).begins_with("Canopy"):
+			for cell in layer.get_used_cells():
+				if used.has(cell):
+					stacked += 1
+				used[cell] = true
+	_check(stacked == 0, "no two backdrop trees on the same tile (%d stacked)" % stacked)
 
 	# --- Shadows and the overall look.
 	map = level.get_node("Map")

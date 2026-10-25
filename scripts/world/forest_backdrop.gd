@@ -31,7 +31,8 @@ static func build(parent: Node, tile_set: TileSet, area: Rect2i, walkable: Dicti
 	var distance := _distances(area, walkable)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(["backdrop", map_seed])
-	var crowns := {}
+	# Every tile with a tree, bush or rock, on any band's layer (a crown reaches into the row above).
+	var planted := {}
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var cell := Vector2i(x, y)
@@ -39,24 +40,24 @@ static func build(parent: Node, tile_set: TileSet, area: Rect2i, walkable: Dicti
 				continue
 			var band := _band(distance.get(cell, 999))
 			grounds[band].set_cell(cell, 0, TileArt.GRASS_TEXTURED)
-			if taken.has(cell) or crowns.has(cell) or rng.randf() >= Tuning.BACKDROP_BAND_DENSITY[band]:
+			if taken.has(cell) or planted.has(cell) or rng.randf() >= Tuning.BACKDROP_BAND_DENSITY[band]:
 				continue
-			_plant(canopies[band], cell, rng, walkable, taken, crowns)
+			_plant(canopies[band], cell, rng, walkable, taken, planted)
 	return root
 
 
 ## One tree, bush or rock on `cell`. A tall tree also takes the tile above it for its crown.
 static func _plant(layer: TileMapLayer, cell: Vector2i, rng: RandomNumberGenerator,
-		walkable: Dictionary, taken: Dictionary, crowns: Dictionary) -> void:
+		walkable: Dictionary, taken: Dictionary, planted: Dictionary) -> void:
 	var roll := rng.randf()
 	var above := cell + Vector2i.UP
-	var room_above := walkable.has(above) or taken.has(above) or crowns.has(above) \
-			or layer.get_cell_source_id(above) != -1
+	var room_above := walkable.has(above) or taken.has(above) or planted.has(above)
+	planted[cell] = true
 	if roll < 0.22 and not room_above:
 		var pine := rng.randf() < 0.5
 		layer.set_cell(above, 0, TileArt.PINE_DARK_TALL_TOP if pine else TileArt.TREE_DARK_TALL_TOP)
 		layer.set_cell(cell, 0, TileArt.PINE_DARK_TALL_BASE if pine else TileArt.TREE_DARK_TALL_BASE)
-		crowns[above] = true
+		planted[above] = true
 	elif roll < 0.82:
 		layer.set_cell(cell, 0, DEEP_TREES[rng.randi_range(0, DEEP_TREES.size() - 1)])
 	else:
