@@ -98,6 +98,7 @@ func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenera
 	for i in picks.size():
 		var enemy: Node2D = picks[i].instantiate()
 		enemy.position = points[i]
+		enemy.set("home_area", Rect2(global_position, pixel_size()))
 		if plan != null:
 			plan.apply_to_enemy(enemy)
 		add_child(enemy)

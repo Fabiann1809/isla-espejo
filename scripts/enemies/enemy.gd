@@ -39,10 +39,15 @@ const ANIM_SPEED_MAX := 2.0
 var state: State = State.IDLE
 var target: Node2D = null
 var facing := Vector2.DOWN
+## The enemy's own room, in world coordinates (set by the room that spawns it; empty = no limit).
+## Patrols stay inside it.
+var home_area := Rect2()
 
 var _home := Vector2.ZERO
 var _patrol_point := Vector2.ZERO
 var _wait_left := 0.0
+var _patrol_left := 0.0
+var _patrol_stall := 0.0
 var _vision_timer := 0.0
 var _attack_phase := AttackPhase.WINDUP
 var _attack_time_left := 0.0
@@ -178,9 +183,13 @@ func _process_idle(delta: float) -> void:
 		state = State.PATROL
 
 
-func _process_patrol(_delta: float) -> void:
+func _process_patrol(delta: float) -> void:
 	var to_point := _patrol_point - global_position
-	if to_point.length() <= ARRIVE_DISTANCE:
+	_patrol_left -= delta
+	var wanted_speed := data.move_speed * _speed_scale()
+	_patrol_stall = _patrol_stall + delta if get_real_velocity().length() < wanted_speed * 0.25 else 0.0
+	# Blocked by a tree or a rock: rest and pick another point instead of walking into it forever.
+	if to_point.length() <= ARRIVE_DISTANCE or _patrol_left <= 0.0 or _patrol_stall >= Tuning.PATROL_STALL_TIME:
 		_enter_idle()
 		return
 	facing = to_point.normalized()
@@ -334,6 +343,12 @@ func _enter_chase_or_idle() -> void:
 func _choose_patrol_point() -> void:
 	var angle := randf() * TAU
 	_patrol_point = _home + Vector2.from_angle(angle) * randf_range(0.3, 1.0) * data.patrol_radius * patrol_multiplier
+	var inside := home_area.grow(-Tuning.PATROL_MARGIN)
+	if inside.has_area():
+		_patrol_point = _patrol_point.clamp(inside.position, inside.end)
+	var walk_time := _patrol_point.distance_to(global_position) / maxf(data.move_speed * _speed_scale(), 1.0)
+	_patrol_left = walk_time * Tuning.PATROL_TIMEOUT_FACTOR + 0.5
+	_patrol_stall = 0.0
 
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
