@@ -15,7 +15,7 @@ Rama `auto/pulido-nivel1-noche`. Trabajo autónomo del 25-10-2026 (hora de Bogot
 
 ## Tareas
 
-### 1a. Enemigos que desaparecen en pasillos y en la sala de recompensa — 13:30–14:05
+### 1a. Enemigos que desaparecen en pasillos y en la sala de recompensa — 13:20–13:40
 - **Reproducción** (`tests/test_draw_order.gd`, nuevo): emula el orden de dibujo 2D de Godot (z, luego orden por Y, luego orden del árbol) y pasea un enemigo de la primera sala, uno de la última y a Nico por encima de cada prop y de cada celda de pasillo en 5 mapas. **Antes: 5043 de 26760 posiciones con el actor tapado.**
 - **Causa real:** la hipótesis del pasillo era solo en parte cierta. Los suelos y pasillos ya estaban en `z_index = -1`. Lo que tapaba a los enemigos eran los **props de las salas construidas después**: cada enemigo es hijo de su sala, y los props (estanque, puente, parche de tierra, árboles, arbustos) estaban en z 0. Un enemigo que entraba en una sala posterior quedaba debajo. La sala de recompensa tiene un parche de tierra de 4x4 justo en el centro, por eso ahí se notaba tanto.
 - **Corrección:** los props planos (estanque, tablones, tierra, matas) se dibujan con el suelo (`z_index = -1`). `Level`, `Map`, cada `Room` y `Corridors` tienen `y_sort_enabled`, así que actores y props verticales de todas las salas se ordenan juntos por Y. El origen de cada prop vertical se baja a la base de su huella (`SORT_ABOVE_BOTTOM = 4`) sin mover su dibujo ni su colisión: quien camina delante de un árbol se ve delante, y quien pasa detrás, detrás.
@@ -23,7 +23,7 @@ Rama `auto/pulido-nivel1-noche`. Trabajo autónomo del 25-10-2026 (hora de Bogot
 - Archivos: `scripts/world/room_prop.gd`, `room.gd`, `level.gd`, `tests/test_draw_order.gd`.
 - **Sin verificar en pantalla:** que el orden por Y se vea bien al rodear árboles altos, y que los círculos de aviso del jefe, ahora ordenados por Y, no tapen a Nico de forma rara. Los tests del jefe pasan.
 
-### 1b. Enemigos repetidos en una sala — 14:05–14:40
+### 1b. Enemigos repetidos en una sala — 13:40–13:48
 - **Medición** (3000 salas de 2 a 6 enemigos, un solo generador): con el sorteo antiguo, con reemplazo, **1763 salas (59 %)** tenían más de un tipo de enemigo que su parte justa, y **112 salas de 3 o más eran de un solo tipo**. Con los pesos 3:1:1 del director: 1320 y 297.
 - **Corrección:** `Room.pick_enemies()` usa muestreo sistemático. Cada tipo recibe su parte de los huecos según su peso, redondeada al azar hacia arriba o hacia abajo, de modo que su número esperado es exactamente esa parte. Luego se baraja el orden. No cambian los pesos ni el director.
 - **Después:** 0 salas por encima de su parte y 0 salas de un solo tipo. Las proporciones globales se mantienen (error máximo 0,001 con pesos iguales y 0,004 con 3:1:1).

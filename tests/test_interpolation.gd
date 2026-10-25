@@ -25,6 +25,10 @@ func _initialize() -> void:
 	await _frames(3)
 	var player = level.player
 	_check(player.get_meta(META, -1) >= 0, "Nico is placed on the map with a reset")
+	# Nico moves on physics ticks: the camera follows on the same ticks, so both are interpolated
+	# together instead of the camera stepping on frames between them.
+	_check(player.get_node("Camera2D").process_callback == Camera2D.CAMERA2D_PROCESS_PHYSICS,
+			"the camera follows Nico in the physics process")
 	var spawned := get_nodes_in_group("enemies") + get_nodes_in_group("npcs")
 	var all_reset := not spawned.is_empty()
 	for node in spawned:
