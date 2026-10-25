@@ -60,3 +60,18 @@ const SHADOW_ALPHA := 0.28
 const SHADOW_WIDTH_FACTOR := 0.7
 const SHADOW_HEIGHT_FACTOR := 0.35
 
+# --- Game feel -------------------------------------------------------------------------------------
+## Frames the game freezes when Nico lands a hit (0 = off).
+const HITSTOP_FRAMES := 3
+## Camera shake when Nico is hurt: strength in px and duration in s (strength 0 = off).
+const SHAKE_STRENGTH := 2.0
+const SHAKE_DURATION := 0.15
+## Particles when an enemy dies (0 = off), how long they last and their base color.
+const DEATH_PARTICLES := 10
+const DEATH_PARTICLE_LIFETIME := 0.45
+const DEATH_PARTICLE_COLOR := Color(0.18, 0.14, 0.24)
+## A dark ring around warning circles and skill areas, so they read on the bright grass (0 = off).
+const ZONE_OUTLINE_ALPHA := 0.55
+## Dark outline around the HUD's text, so it reads over the bright forest floor (0 = off).
+const HUD_TEXT_OUTLINE := 3
+const HUD_TEXT_OUTLINE_COLOR := Color(0.05, 0.07, 0.05, 0.85)

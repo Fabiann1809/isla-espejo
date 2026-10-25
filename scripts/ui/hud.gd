@@ -42,6 +42,16 @@ func _ready() -> void:
 	_message.hide()
 	_toast.hide()
 	_prompt.hide()
+	_outline_texts()
+
+
+## A dark outline around every text of the HUD, so it reads over the bright forest floor.
+func _outline_texts() -> void:
+	if Tuning.HUD_TEXT_OUTLINE <= 0:
+		return
+	for label in find_children("*", "Label", true, false):
+		label.add_theme_constant_override("outline_size", Tuning.HUD_TEXT_OUTLINE)
+		label.add_theme_color_override("font_outline_color", Tuning.HUD_TEXT_OUTLINE_COLOR)
 
 
 ## Three compass fragment icons (dim until collected) and the objective line under the hearts.

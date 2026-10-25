@@ -71,6 +71,10 @@ func _draw() -> void:
 			var fill := color
 			fill.a = 0.22 * (1.0 - progress * 0.6)
 			draw_circle(Vector2.ZERO, radius, fill)
+			# A dark ring under the colored edge so the warning reads on bright grass too.
+			if Tuning.ZONE_OUTLINE_ALPHA > 0.0:
+				var shade := Color(0, 0, 0, Tuning.ZONE_OUTLINE_ALPHA * (1.0 - progress))
+				draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, shade, 4.0)
 			var edge := color
 			edge.a = 0.8 * (1.0 - progress)
 			draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, edge, 2.0)

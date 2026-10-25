@@ -52,6 +52,7 @@ func _ready() -> void:
 		scenario = saved
 	if scenario.theme != null:
 		Ambience.add_to(self)
+	GameFeel.attach(self)
 	generate(seed_value)
 
 
