@@ -44,6 +44,9 @@ func setup(room_data: RoomData, doors: Array[Vector2i]) -> void:
 
 
 func _ready() -> void:
+	# Merged into the map's y-sort: actors and upright props of every room are ordered together, so
+	# an enemy that walks into a room built later is not hidden by its trees.
+	y_sort_enabled = true
 	if theme != null:
 		_build_themed_floor()
 	else:

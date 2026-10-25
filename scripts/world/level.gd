@@ -39,6 +39,8 @@ func _ready() -> void:
 	if scenario == null:
 		push_error("Level has no ScenarioData assigned.")
 		return
+	# Nico (a child of the level) is y-sorted with the rooms' enemies and props (see Room).
+	y_sort_enabled = true
 	Events.scenario_completed.connect(_on_scenario_completed)
 	Events.boss_defeated.connect(func(_id: StringName) -> void: _announce_objective())
 	# "Continue" in the main menu resumes the chapter that was saved.
@@ -62,6 +64,7 @@ func generate(new_seed := 0) -> void:
 	_clear()
 	_map = Node2D.new()
 	_map.name = "Map"
+	_map.y_sort_enabled = true
 	add_child(_map)
 	move_child(_map, 0)
 
@@ -165,6 +168,7 @@ func _spawn_single(room: Room, scene: PackedScene, container: String) -> Node2D:
 func _build_corridors() -> void:
 	var corridors := Node2D.new()
 	corridors.name = "Corridors"
+	corridors.y_sort_enabled = true
 	_map.add_child(corridors)
 	for coord: Vector2i in layout.cells:
 		# Each connection is built once, from its top/left cell.

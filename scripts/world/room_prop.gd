@@ -18,9 +18,26 @@ enum Kind {
 
 const TRUNK := Vector2(10, 8)
 const WATER_INSET := 4.0
+## Props that are part of the ground: drawn with the floor, never over an actor.
+const FLAT_KINDS: Array[Kind] = [Kind.POND, Kind.PLANKS, Kind.DIRT_PATCH, Kind.TUFT]
+## Upright props are y-sorted with the actors by the bottom of their footprint (a little above it,
+## where the trunk stands), so whoever walks in front of a tree is drawn in front of it.
+const SORT_ABOVE_BOTTOM := 4.0
+
+
+func is_flat() -> bool:
+	return kind in FLAT_KINDS
 
 
 func _ready() -> void:
+	_build()
+	if is_flat():
+		z_index = RoomTheme.FLOOR_Z
+	else:
+		_sort_at(_footprint_height() - SORT_ABOVE_BOTTOM)
+
+
+func _build() -> void:
 	match kind:
 		Kind.PINE:
 			_tree(TileArt.PINE)
@@ -48,6 +65,19 @@ func _ready() -> void:
 			_collide(Rect2(1, 4, 14, 10))
 		Kind.TUFT:
 			add_child(TileArt.sprite(TileArt.TUFT_A))
+
+
+func _footprint_height() -> float:
+	var tall := kind in [Kind.TALL_PINE, Kind.TALL_ROUND_TREE]
+	return TileArt.TILE * (2.0 if tall else 1.0)
+
+
+## Moves the node's origin (its y-sort key) down by `offset` without moving what it draws or its collision.
+func _sort_at(offset: float) -> void:
+	position.y += offset
+	for child in get_children():
+		if child is Node2D:
+			child.position.y -= offset
 
 
 func _tree(coords: Vector2i) -> void:
