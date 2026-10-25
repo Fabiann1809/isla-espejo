@@ -39,6 +39,16 @@ func _initialize() -> void:
 		if prop.get_script() != null and prop.has_method("is_flat") and prop.is_flat():
 			flat_low = flat_low and prop.z_index < 0
 	_check(flat_low, "flat props (ponds, bridges, dirt, tufts) are drawn with the floor")
+	# Boss warnings, roots and skill areas lie on the ground, under Nico wherever he stands.
+	var zone := SkillZone.circle(level.player.global_position + Vector2(0, 20), 40.0, Color.RED, 5.0)
+	level.add_child(zone)
+	var roots: Node2D = load("res://scenes/effects/boss_roots.tscn").instantiate()
+	roots.position = level.player.global_position + Vector2(0, 10)
+	level.add_child(roots)
+	await _frames(1)
+	var nico := _visual_of(level.player)
+	_check(not _draws_above(zone, nico) and not _draws_above(roots.get_node("Sprite"), nico),
+			"warning circles and roots are drawn under Nico even when he stands above their center")
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 

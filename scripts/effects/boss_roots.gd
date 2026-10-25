@@ -15,6 +15,8 @@ var variant := "A"
 
 
 func _ready() -> void:
+	# On the ground with the warning circle: in the y-sorted level Nico is always drawn over it.
+	z_index = RoomTheme.FLOOR_Z
 	variant = "A" if randi() % 2 == 0 else "B"
 	_sprite.animation_finished.connect(_on_animation_finished)
 	warn()
