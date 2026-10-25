@@ -49,7 +49,7 @@ static func wave(origin: Vector2, facing: Vector2, reach: float, arc_degrees: fl
 func _ready() -> void:
 	# Warnings and skill areas lie on the ground: the level is y-sorted, so at z 0 a circle would be
 	# drawn over whoever stands above its center.
-	z_index = RoomTheme.FLOOR_Z
+	z_index = RoomTheme.GROUND_FX_Z
 
 
 func _physics_process(delta: float) -> void:

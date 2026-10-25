@@ -5,7 +5,10 @@ extends Resource
 
 ## Floors are drawn below every actor. Enemies are children of their own room, so without this a
 ## room built later would paint its floor over an enemy that wandered in from an earlier room.
-const FLOOR_Z := -1
+const FLOOR_Z := -2
+## Things lying on the ground (warning circles, skill areas, roots): over every floor, flat prop
+## and neighbouring room, and under every actor.
+const GROUND_FX_Z := -1
 
 @export var tile_set: TileSet
 @export var floor_tile := TileArt.GRASS

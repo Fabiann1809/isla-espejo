@@ -49,6 +49,29 @@ func _initialize() -> void:
 	var nico := _visual_of(level.player)
 	_check(not _draws_above(zone, nico) and not _draws_above(roots.get_node("Sprite"), nico),
 			"warning circles and roots are drawn under Nico even when he stands above their center")
+	# A warning reaching onto a flat prop (the dirt patch in the middle of the boss arena) from above
+	# its top edge, or onto the floor of the room below, is still drawn over them.
+	var flat_props: Array = level.get_node("Map").find_children("*", "Node2D", true, false).filter(
+			func(n: Node) -> bool: return n.has_method("is_flat") and n.is_flat())
+	var covered_zone := false
+	if not flat_props.is_empty():
+		var patch: Node2D = flat_props[0]
+		var edge_zone := SkillZone.circle(patch.global_position + Vector2(24, -10), 40.0, Color.RED, 5.0)
+		level.add_child(edge_zone)
+		await _frames(1)
+		for sprite in patch.get_children():
+			if sprite is Sprite2D and _draws_above(sprite, edge_zone):
+				covered_zone = true
+	var lower_floor := false
+	for coord in level.rooms:
+		var ground: Node = level.rooms[coord].get_node("Ground")
+		var zone_above := SkillZone.circle(ground.global_position + Vector2(240, -20), 40.0, Color.RED, 5.0)
+		level.add_child(zone_above)
+		await _frames(1)
+		lower_floor = _draws_above(ground, zone_above)
+		break
+	_check(not flat_props.is_empty() and not covered_zone and not lower_floor,
+			"warnings are drawn over flat props and over the floor of the next room")
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
