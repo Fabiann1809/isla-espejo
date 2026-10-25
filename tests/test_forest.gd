@@ -111,7 +111,9 @@ func _test_built_level() -> void:
 	var floors_low := true
 	var layers := level.get_node("Map").find_children("*", "TileMapLayer", true, false)
 	for layer in layers:
-		floors_low = floors_low and layer.z_index < 0
+		# Effective z: the backdrop's layers sit in a parent drawn below the floors.
+		var z: int = layer.z_index + (layer.get_parent().z_index if layer.get_parent() is Node2D else 0)
+		floors_low = floors_low and z < 0
 	_check(not layers.is_empty() and floors_low, "every floor, border and corridor layer (%d) is drawn below the actors" % layers.size())
 	var npcs := level.get_tree().get_nodes_in_group("npcs")
 	var chests := level.get_tree().get_nodes_in_group("chests")
@@ -144,7 +146,8 @@ func _test_built_level() -> void:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if layout.are_connected(coord, coord + dir):
 				connections += 1
-	_check(corridor_layers == connections * 2, "every corridor has its tile layer and its walls (%d connections)" % connections)
+	# Per corridor: its grass, its path and trees, and its walls.
+	_check(corridor_layers == connections * 3, "every corridor has its tile layers and its walls (%d connections)" % connections)
 
 	var total := 0
 	var walkable := 0

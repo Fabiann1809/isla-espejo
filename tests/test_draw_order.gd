@@ -64,14 +64,21 @@ func _probe_map(level: Node) -> Dictionary:
 		actors.append(enemies.front())
 		actors.append(enemies.back())
 	actors.append(level.player)
+	# Rects and bases computed once (a tile layer's used rect is slow to get).
+	var rects := {}
+	var bases := {}
+	for item in decorations:
+		rects[item] = _rect_of(item)
+		bases[item] = _base_y(item)
 	var spots: Array[Vector2] = []
 	for item in decorations:
-		var rect := _rect_of(item)
-		spots.append(rect.get_center())
+		if item is TileMapLayer:
+			continue
+		spots.append(rects[item].get_center())
 		# Just in front of (below) an upright prop.
-		spots.append(Vector2(rect.get_center().x, _base_y(item) + 4.0))
+		spots.append(Vector2(rects[item].get_center().x, bases[item] + 4.0))
 	for corridor_layer in map.get_node("Corridors").get_children():
-		if corridor_layer is TileMapLayer:
+		if corridor_layer is TileMapLayer and not String(corridor_layer.name).begins_with("CorridorGround"):
 			for cell in corridor_layer.get_used_cells():
 				spots.append(corridor_layer.to_global(corridor_layer.map_to_local(cell)))
 	var covered := 0
@@ -84,10 +91,10 @@ func _probe_map(level: Node) -> Dictionary:
 			var visual := _visual_of(actor)
 			var actor_rect := _rect_of(visual)
 			for item in decorations:
-				var item_rect := _rect_of(item)
+				var item_rect: Rect2 = rects[item]
 				# Behind an upright prop (above its base) the actor may be hidden; never in front of it
 				# and never under the ground.
-				var in_front: bool = _is_flat(item) or actor.global_position.y >= _base_y(item)
+				var in_front: bool = _is_flat(item) or actor.global_position.y >= bases[item]
 				if in_front and item_rect.intersects(actor_rect) and _draws_above(item, visual):
 					covered += 1
 					if covered <= 5:

@@ -46,3 +46,37 @@ Rama `auto/pulido-nivel1-noche`. Trabajo autónomo del 25-10-2026 (hora de Bogot
 3. **Avisos del jefe y zonas de habilidades por encima de Nico** (efecto secundario de 1a): con el orden por Y, un círculo se dibujaba sobre Nico si él estaba por encima de su centro. Ahora círculos, ondas y raíces del jefe van a nivel del suelo (`z_index = -1`), siempre debajo de los actores, como antes. Check nuevo en `test_draw_order`.
 - Valores nuevos en `scripts/core/tuning.gd` (nuevo), que es el único lugar de constantes del pulido.
 - **Sin verificar en pantalla:** que los círculos de aviso se sigan leyendo bien ahora que están debajo del jefe y de los enemigos (antes quedaban por encima de los enemigos de la sala).
+
+**Push de la fase 1:** el `git push` quedó esperando credenciales (no hay sesión de GitHub en esta terminal). Como pediste, seguí en local; la rama queda lista para que hagas `git push -u origin auto/pulido-nivel1-noche`.
+
+### Fase 2. Ambientación — 14:30–15:15
+Herramienta nueva para mirar sin jugar: `tools/screenshot_map.gd` (necesita ventana). Guarda el mapa entero y vistas a zoom real (inicio, jefe, pasillo, esquinas, hueco entre salas). Lo usé en cada paso con las semillas 4242 y 31337.
+
+**2a. De dónde venía el negro:**
+1. El color de fondo del proyecto (`default_clear_color` casi negro).
+2. Los límites de cámara son el rectángulo de **todas** las celdas del mapa, así que se veían las celdas vacías de la cuadrícula y las franjas de 48 px entre salas.
+3. Los muros de los pasillos eran pinos con fondo transparente sin pasto debajo: negro a lo largo de los pasillos.
+4. Encontrado al mirar las capturas: las piezas redondeadas del camino y los pinos de borde también tienen esquinas transparentes.
+
+**2b. Bosque denso** (`scripts/world/forest_backdrop.gd`, nuevo): capas de tiles debajo de todos los suelos (`z = -2`) que cubren el mapa más 12 tiles de margen, excepto salas y suelos de pasillo. Pasto oscuro de base y árboles, pinos (también altos de 2 tiles), arbustos, rocas y tocones. Densidad 70 % / 50 % / 38 % y brillo en 3 franjas según la distancia al camino (más denso cerca, más oscuro lejos). Semilla = semilla del mapa. Fondo del proyecto: verde muy oscuro `Color(0.05, 0.09, 0.06)`. Cada pasillo tiene su capa de pasto debajo (`CorridorGround`). Tarda unos 150 ms por mapa.
+
+**2c. Variedad de suelo:** manchas irregulares de un segundo pasto (ruido continuo entre salas) con bordes redondeados (nine-slice del pack). Hay 5 grupos pequeños por sala de hongos, piedras, flores o un tocón con hongos, en la capa de decoración, sin colisión. Los caminos de puertas y pasillos ahora tienen bordes suaves (nine-slice de tierra), calculados sobre todo el mapa para que empalmen sala y pasillo.
+- **Cambio de datos (decisión tuya):** quité de `data/themes/forest.tres` las variantes de flores `(0,6)`, `(0,9)` y `(0,12)`. Son esquinas de un macizo con una piedra gris y se veían como cuadros. En su lugar hay flores sueltas en grupos.
+- No toqué las transiciones de agua: los estanques ya usan su nine-slice.
+
+**2d. Aspecto unificado** (`scripts/effects/ambience.gd`, `actor_shadow.gd`, nuevos):
+- `CanvasModulate` muy suave `(0.95, 0.97, 0.95)`.
+- Una pasada de pantalla sobre el mundo, no sobre el HUD: −12 % de saturación y viñeta 0,32 desde el 60 % del radio. Lo comprobé forzándola al máximo: el mundo cambia y el HUD no.
+- Sombra elíptica bajo Nico, enemigos, jefe y NPC. Se calcula con la fila opaca más baja del primer cuadro de `idle`.
+- El orden por Y ya estaba hecho en 1a.
+- Todo se apaga en `Tuning` (`WORLD_TINT_ENABLED`, `SCREEN_GRADE_ENABLED`, `SHADOWS_ENABLED`, `BACKDROP_ENABLED`, `SOFT_PATH_EDGES`).
+
+**2e.** Nueva acción `debug_toggle_info` (**F3**, solo depuración; no cambia ningún control del juego). El texto de semilla y director arranca **oculto**.
+
+**2f.** `tests/test_forest_look.gd` (nuevo), con 30 semillas:
+- Todo tile dentro de los límites de cámara tiene suelo: **0 de 484 128 sin suelo**. La primera versión encontró 4548 en pasillos por un fallo mío de nombres de capas, ya corregido.
+- Los tiles no tienen colisión y la decoración no añade cuerpos.
+- La misma semilla da el mismo bosque.
+- Hay sombras, y tinte y pasada de pantalla por debajo del HUD.
+- F3 alterna el texto de depuración.
+- **Sin verificar en pantalla, jugando:** la sensación general con movimiento (viñeta y desaturación en vivo, legibilidad de enemigos oscuros sobre el bosque oscuro cuando se acercan al borde). Las capturas estáticas se ven bien.
