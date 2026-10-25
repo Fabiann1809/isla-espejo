@@ -64,7 +64,34 @@ func _initialize() -> void:
 		camera.reset_smoothing()
 		await _frames(4)
 		await _save(viewport, "%s/map_%d_%s.png" % [out, map_seed, spot_name])
+	await _boss_attack(level, camera, viewport, "%s/map_%d_boss_attack.png" % [out, map_seed])
 	quit(0)
+
+
+## The boss winding up its roots attack next to Nico: are the warnings easy to read?
+func _boss_attack(level: Node, camera: Camera2D, viewport: SubViewport, path: String) -> void:
+	var boss: Node2D = null
+	for node in get_nodes_in_group("enemies"):
+		if node.get("phase") != null and level.is_ancestor_of(node):
+			boss = node
+	if boss == null:
+		return
+	var player: Node2D = level.player
+	player.set("_invulnerable_left", 99.0)
+	player.global_position = boss.global_position + Vector2(90, 30)
+	camera.global_position = boss.global_position + Vector2(45, 20)
+	camera.reset_smoothing()
+	boss._last_pattern = boss.Pattern.SLAM
+	boss._acquire_target(player)
+	for i in 300:
+		await physics_frame
+		player.set("_invulnerable_left", 99.0)
+		if boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS and boss._step_left < 0.6:
+			break
+		if boss.state != boss.State.ATTACK:
+			boss._last_pattern = boss.Pattern.SLAM
+			player.global_position = boss.global_position + Vector2(90, 30)
+	await _save(viewport, path)
 
 
 func _save(viewport: SubViewport, path: String) -> void:

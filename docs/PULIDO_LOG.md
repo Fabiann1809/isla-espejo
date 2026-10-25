@@ -80,3 +80,56 @@ Herramienta nueva para mirar sin jugar: `tools/screenshot_map.gd` (necesita vent
 - Hay sombras, y tinte y pasada de pantalla por debajo del HUD.
 - F3 alterna el texto de depuración.
 - **Sin verificar en pantalla, jugando:** la sensación general con movimiento (viñeta y desaturación en vivo, legibilidad de enemigos oscuros sobre el bosque oscuro cuando se acercan al borde). Las capturas estáticas se ven bien.
+
+### Fase 3. Enemigos que se juntan — 14:45–15:10
+**Medición** con `tools/measure_enemies.gd`: 20 mapas. Nico, invulnerable y sin atacar, recorre todas las salas en profundidad (centro → puerta → siguiente sala, pausa de 2 s en cada una). Se mide con enemigos neutros y con la reacción sigilosa del director tal como se observó (visión x1,43, patrulla x1,72). El registro por enemigo se activa con `Tuning.ENEMY_DEBUG_LOG`. Es el peor caso: como Nico no mata a nadie, los perseguidores se acumulan.
+
+| 20 mapas | Antes, neutro | Antes, sigilo x1,43/x1,72 | Después, neutro | Después, sigilo |
+|---|---|---|---|---|
+| Perseguidores a la vez (máx.) | 17 | 27 | **4** | **4** |
+| Media del máximo por mapa | 12,9 | 20,8 | 4,0 | 4,0 |
+| Tiempo con 4 o más persiguiendo | 86,5 % | 91,8 % | 8,0 % | 18,6 % |
+| Enemigos que salen de su sala | 430/560 (77 %) | 541/560 (97 %) | 22/560 (4 %)* | 18/560 (3 %)* |
+| Grupo más grande junto a Nico (64 px) | 16 | 24 | 4 | 4 |
+| Murciélagos persiguiendo juntos | 11 | 13 | 3 | 3 |
+| Patrullas atascadas | 0 (ya corregido en 1e) | 0 | 0 | 0 |
+
+\* Solo pisan la puerta o el arranque del pasillo, dentro del margen permitido de 40 px.
+
+**Hipótesis confirmada en parte:** el director amplía visión y patrulla, y eso empeora (97 % frente a 77 %). Pero la causa de fondo estaba en el enemigo base: perseguía sin límite de sala (solo dejaba de hacerlo a `lose_range`, 220–240 px) y no había tope de perseguidores. Las patrullas también salían de la sala (corregido en 1e).
+
+**Soluciones aplicadas** (en `scripts/enemies/enemy.gd`, valores en `Tuning`):
+1. **Territorio:** un enemigo solo empieza a cazar si Nico está en su sala o a menos de 40 px de su borde (`TERRITORY_MARGIN`), y si Nico sale vuelve caminando a su punto de spawn. Si Nico le pega desde fuera, reacciona igual, pero vuelve en cuanto Nico se aleja.
+2. **Tope de cazadores:** como máximo 4 a la vez (`MAX_HUNTERS`) y 3 del mismo tipo (`MAX_HUNTERS_OF_A_KIND`, un grupo de murciélagos). Los demás siguen patrullando hasta que se libera un sitio. Un golpe siempre hace reaccionar al enemigo golpeado.
+3. **Distancia entre spawns:** ya se cumplía (mínimo real 60 px). La vigila una prueba (`MIN_SPAWN_DISTANCE = 48`) en lugar de añadir código.
+4. **Tope del multiplicador del director: no hizo falta.** Con 1 y 2 el sigilo x1,43/x1,72 da los mismos topes. **No toqué `director_rules.tres`.**
+- Solo afecta a enemigos con sala (`home_area`), es decir, los de los mapas generados. Los jefes y los enemigos de las salas de prueba conservan el comportamiento libre anterior, y sus pruebas no cambian.
+- Prueba nueva: `tests/test_enemy_pack.gd`. En un mapa real, con todos los enemigos viendo a todo el mapa: como máximo 4 cazadores y 3 de un tipo, y al irse Nico nadie lo sigue y todos dejan de cazar. **Sin las reglas falla** (7 cazadores, 10 siguen cazando).
+- **Cambios de diseño para que los revises:**
+  - Los enemigos ya no te siguen de sala en sala.
+  - Un enemigo que te ve pero no tiene sitio en la caza no emite `enemy_detected_player`, así que el perfil cuenta algo menos de detecciones.
+  - Ajustables en `Tuning`.
+- **Sin verificar jugando:** que 4 cazadores se sientan bien de dificultad, y que el regreso a casa no se vea raro (por ejemplo, un enemigo que da la espalda en la puerta).
+
+### Fase 4. Sensación de juego — 15:10–15:35
+**4a.** `scripts/effects/game_feel.gd` (nuevo): un nodo `GameFeel` que cada nivel jugable añade. Escucha `Events` y se libera con el nivel.
+- **Parón de golpe:** 3 cuadros (`HITSTOP_FRAMES`) con `Engine.time_scale = 0`, reanudado por `_process` con reloj real. Los temporizadores que ignoran la escala de tiempo disparaban a los ~6 ms en vez de a los 50 ms. Si el nodo sale del árbol, devuelve el tiempo. En headless está apagado para no alterar las pruebas que cuentan cuadros; la prueba lo fuerza.
+- **Sacudida de cámara** al recibir daño: 2 px y 0,15 s, desvaneciéndose.
+- **Destello al golpear:** ya existía (los enemigos se ponen blancos 0,12 s). No lo dupliqué.
+- **Partículas al morir:** 10 cuadritos oscuros del color del enemigo, 0,45 s; el nodo se libera solo.
+- Todo se apaga en `Tuning` con valor 0.
+
+**4b. Legibilidad:**
+- Los círculos de aviso del jefe y las zonas de habilidad tienen un anillo oscuro bajo el borde de color (`ZONE_OUTLINE_ALPHA`), y desde 1e van bajo los actores.
+- Los textos del HUD tienen contorno oscuro (`HUD_TEXT_OUTLINE = 3`). Antes, el objetivo blanco y el aviso lila apenas se leían sobre el pasto claro.
+- Verificado en una captura de un ataque de raíces (`tools/screenshot_map.gd` genera `map_<semilla>_boss_attack.png`).
+- No cambié ningún texto.
+
+**4c.** `tests/test_forest_maps.gd` (nuevo), con 30 semillas construidas de verdad:
+- La disposición es válida y **409 de 409** conexiones son transitables por un cuerpo del tamaño de Nico.
+- **247 salas de combate** tienen sus enemigos dentro del rango de la sala.
+- **1038 objetos** (enemigos, jefe, NPC, cofres, portal) están dentro de su sala, sin tocar muros.
+- Todas las salas caben en los límites del mapa y Nico empieza en la sala inicial.
+- **No falló nada**, así que no hubo que corregir.
+- Prueba de 4a y 4b: `tests/test_game_feel.gd`.
+- **Sin verificar jugando:** cómo se siente el parón de 3 cuadros en combate real (puede notarse demasiado con golpes muy seguidos), y la sacudida durante el dash.
