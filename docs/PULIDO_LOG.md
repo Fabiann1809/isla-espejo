@@ -133,3 +133,8 @@ Herramienta nueva para mirar sin jugar: `tools/screenshot_map.gd` (necesita vent
 - **No falló nada**, así que no hubo que corregir.
 - Prueba de 4a y 4b: `tests/test_game_feel.gd`.
 - **Sin verificar jugando:** cómo se siente el parón de 3 cuadros en combate real (puede notarse demasiado con golpes muy seguidos), y la sacudida durante el dash.
+
+### Verificación extra — 15:20–15:40
+- **Consola:** el bosque ejecutado con ventana durante 900 cuadros no muestra ningún error ni aviso. Solo aparece la línea del director.
+- **Rendimiento** (con ventana, semilla 4242): **60 FPS** (vsync), cuadro medio de 16,7 ms y peor de 20,9 ms, 18 draw calls, unos 2340 nodos. Generar un mapa nuevo tarda unos 0,33 s con ventana y unos 0,15 s en headless: un pequeño tirón al cambiar de mapa, que coincide con la pausa del texto de salida.
+- **Simulación de combate** (script temporal, 8 mapas): Nico recorre cada sala, persigue al enemigo más cercano y lo golpea cada 0,3 s. **Resultado: 220 de 220 enemigos derrotados**, las 65 salas de combate emiten `room_cleared`, ninguno queda dentro de un muro ni fuera del mapa. No encontró fallos nuevos.
