@@ -192,6 +192,20 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ---
 
+## 16. Combate a distancia, recursos y muerte por isla — A+B  ← 2, 8, 9
+Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustituye el ataque con espada de la tarea 2.
+- [ ] `WeaponData` en `data/weapons/` y ataque del jugador leído desde datos (la espada sigue siendo la única arma, sin cambios visibles)
+- [ ] Arco: proyectil con `Hitbox`, animación de disparo y `tests/test_weapons.gd`
+- [ ] Quitar la espada (`SwordPivot`, `Slash`, hitbox de espada y arte de ataque con espada) y actualizar los tests del jugador y de jefes
+- [ ] Arte de Nico con arco: ataque de lado, proyectil y efecto de impacto (coordinar con quien hace el arte de Nico)
+- [ ] Señal de disparo en `Events` y métricas de distancia y puntería en `RunStats` (renombrar "ataques cuerpo a cuerpo")
+- [ ] Reglas del director para el estilo a distancia en `data/ai/director_rules.tres`
+- [ ] Recursos básicos: `ResourceData` en `data/`, recogible genérico y textos en español en `data/`
+- [ ] Muerte por isla: al morir se pierden los recursos y mejoras de la partida y se conserva `GameState`
+- [ ] Enemigos propios de las islas 2 y 3 (algunos pueden repetirse)
+
+**Hecho cuando:** Nico ataca solo con arco, la IA registra el estilo a distancia y el director lo usa, los recursos se recogen y se pierden al morir, y el chequeo local pasa sin errores.
+
 ## Extras opcionales (solo si todo lo anterior está completo y se pide)
 - [ ] Combinaciones de habilidades equipadas de a dos
 - [ ] IA capa 3: bandido multibrazo para elegir composiciones de enemigos

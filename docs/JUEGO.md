@@ -21,7 +21,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 ### Dentro del alcance (MVP)
 | Área | Contenido |
 |---|---|
-| Jugador | Nico: movimiento en 8 direcciones, ataque con espada, esquiva (dash), vida, 3 habilidades obtenidas de los jefes |
+| Jugador | Nico: movimiento en 8 direcciones, ataque a distancia con arco, esquiva (dash), vida, 3 habilidades obtenidas de los jefes |
 | Escenarios | 3: Bosque de la Aurora, Ruinas de la Montaña, Templo del Eclipse |
 | Cámara | Sigue a Nico (los escenarios son más grandes que la pantalla) |
 | Mapas | Procedurales: el algoritmo coloca y conecta salas diseñadas a mano. Inicio y arena del jefe son fijos |
@@ -51,7 +51,10 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 - Las habilidades son **fijas**, una por jefe. El sistema se programa de forma modular para poder añadir combos después.
 - El Guardián del bosque es el **jefe del capítulo 1**.
 - El Guardián de la isla se **fusiona con el último jefe** o queda como cinemática (extra).
-- **Muerte (provisional, a confirmar):** al morir Nico reaparece al inicio del escenario actual con un mapa nuevo. Conserva fragmentos y habilidades ya obtenidos y el perfil del jugador. La partida completa no se reinicia.
+- **Muerte (decidido):** al morir Nico reaparece al inicio del escenario actual con un mapa nuevo. Pierde vida, recursos, munición y mejoras temporales de esa partida. Conserva fragmentos y habilidades de jefes ya derrotados y el perfil del jugador. La partida completa no se reinicia.
+- **Ataque a distancia (decidido):** Nico ya no usa espada. Ataca con arco (disparo manual en 8 direcciones) y el arma es un dato (`WeaponData`), así que se pueden añadir otras después.
+- **Recursos básicos (decidido):** en las islas se recogen objetos sencillos (curación, munición, mejora temporal) que solo valen durante la partida y se pierden al morir. No hay inventario complejo ni construcción.
+- **Enemigos por isla:** cada isla tiene su propio grupo de enemigos; algunos pueden repetirse entre islas si hace falta.
 
 ## 3. Historia
 
@@ -95,7 +98,7 @@ Referencia visual: `docs/referencias/mapas_concepto.png` (concepto, no es arte f
 ## 5. Sistema de juego
 
 ### Jugador
-- Movimiento en 8 direcciones, ataque cuerpo a cuerpo con espada, esquiva (dash) con tiempo de recarga.
+- Movimiento en 8 direcciones, ataque a distancia con arco, esquiva (dash) con tiempo de recarga.
 - Vida, daño y muerte.
 - Habilidad especial de Nico: la **brújula** revela el camino / interactúa con fragmentos (se concreta en la tarea correspondiente).
 
@@ -121,7 +124,7 @@ El objetivo es que la isla **reaccione al estilo de juego** (sigilo vs. agresió
 El juego registra eventos mientras se juega:
 | Métrica | Ejemplo de evento |
 |---|---|
-| Ataques cuerpo a cuerpo | Cada golpe de espada |
+| Ataques a distancia | Cada disparo, con la distancia al enemigo más cercano y si acertó |
 | Uso de esquiva | Cada dash |
 | Uso de habilidades | Cuál y cuántas veces |
 | Daño recibido | Cantidad y origen |
@@ -148,7 +151,7 @@ Qué se modifica: composición y cantidad de enemigos por sala, parámetros de l
 ### Protagonista
 | | |
 |---|---|
-| **Nico** | Viajero perdido. Determinado, curioso, resistente. Espada corta y brújula rota. Mochila y bufanda roja. Es el personaje con más animaciones (3 vistas + volteo; idle, caminar, ataque, daño, muerte). |
+| **Nico** | Viajero perdido. Determinado, curioso, resistente. Arco corto y brújula rota. Mochila y bufanda roja. Es el personaje con más animaciones (3 vistas + volteo; idle, caminar, ataque, daño, muerte). |
 
 ### NPCs (solo diálogo)
 | Personaje | Concepto | Personalidad | Función |
@@ -267,7 +270,8 @@ Hablar — "¿Qué sabes sobre esta isla?" · Continuar — "Cuéntame más." ·
 ## 11. Decisiones abiertas
 - Título definitivo (hoy: Isla Espejo).
 - Qué pack gratuito se usa para tilesets y sonido.
-- Regla exacta de muerte (ver sección 2).
+- Mejoras al subir de nivel (3 opciones pequeñas por nivel): por decidir si entran.
+- Apuntado manual a 8 direcciones o apuntado automático, y munición limitada o recarga infinita.
 - Si el profesor exige aprendizaje automático (capa 3).
 
 ## 12. Referencias
