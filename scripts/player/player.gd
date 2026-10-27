@@ -57,6 +57,7 @@ var _side_flip := false
 var _run_ready := false
 ## How long the run survives a short interruption before it restarts with the steps.
 var _run_grace_left := 0.0
+var _move_hold_left := 0.0
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
 
@@ -69,9 +70,9 @@ var _shot_pending := false
 @onready var _interact_area: Area2D = $InteractArea
 
 
-## Distance from Nico's center to where the arrow appears.
-const MUZZLE := 8.0
 const RUN_GRACE := 0.15
+## How long the walk/run pose is kept after the movement stops for a tick (key ghosting, a graze).
+const MOVE_HOLD := 0.1
 const DEFAULT_WEAPON := "res://data/weapons/bow.tres"
 ## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
 ## death animations.
@@ -333,7 +334,8 @@ func _fire() -> void:
 	arrow.setup(_action_dir, weapon.projectile_speed, weapon.projectile_range, attack_damage)
 	arrow.hit_landed.connect(_on_arrow_hit)
 	get_parent().add_child(arrow)
-	arrow.global_position = global_position + _action_dir * MUZZLE
+	var pose := FacingView.attack_animation(_action_dir, _body.sprite_frames)
+	arrow.global_position = global_position + FacingView.attack_muzzle(pose, FacingView.attack_flips(_action_dir))
 	Placement.reset(arrow)
 	Events.player_shot.emit(_action_dir, _nearest_enemy_distance(weapon.projectile_range))
 
@@ -379,7 +381,9 @@ func _update_visuals(delta: float) -> void:
 		_body.flip_h = FacingView.attack_flips(_action_dir)
 	# A held direction counts as moving even if a collision zeroes the velocity for a tick, so a stumble
 	# does not flash the idle pose.
-	var moving := (velocity.length() > 5.0 or (free and _move_dir != Vector2.ZERO)) and state != State.DEAD
+	var moving_now := (velocity.length() > 5.0 or (free and _move_dir != Vector2.ZERO)) and state != State.DEAD
+	_move_hold_left = MOVE_HOLD if moving_now else maxf(_move_hold_left - delta, 0.0)
+	var moving := moving_now or (free and _move_hold_left > 0.0)
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
 	# Moving sideways starts with the walk steps and then breaks into a run that keeps going. A short
 	# interruption (a stumble, a tap on another key) does not send Nico back to the steps.

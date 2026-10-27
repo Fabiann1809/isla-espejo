@@ -66,6 +66,23 @@ static func attack_animation(direction: Vector2, frames: SpriteFrames) -> String
 	return name if frames != null and frames.has_animation(name) else &"attack_side"
 
 
+## Where the arrow leaves, from Nico's origin, for a pose facing right (the bow's position in that
+## art; mirrored with the art). The poses hold the bow at different places: beside him in the front
+## and three-quarter poses, on his left (the viewer's) in the back pose.
+const MUZZLES := {
+	&"attack_side": Vector2(9, 0),
+	&"attack_down": Vector2(9, -2),
+	&"attack_down_side": Vector2(9, -2),
+	&"attack_up_side": Vector2(7, -3),
+	&"attack_up": Vector2(-9, -3),
+}
+
+
+static func attack_muzzle(animation: StringName, flipped: bool) -> Vector2:
+	var offset: Vector2 = MUZZLES.get(animation, MUZZLES[&"attack_side"])
+	return Vector2(-offset.x if flipped else offset.x, offset.y)
+
+
 ## Whether the attack art is mirrored: it faces right, so any shot with a leftward part flips it.
 static func attack_flips(direction: Vector2) -> bool:
 	return direction.x < -0.1

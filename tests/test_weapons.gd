@@ -68,6 +68,27 @@ func _arrow_flight(room: Node, player: Node, bow: Resource) -> void:
 	await _frames(travel_frames)
 	_check(_arrows(room).is_empty(), "the arrow vanishes when its range is spent")
 
+	# The arrow is drawn above its Hitbox for every direction, left included (the offset must not turn).
+	for dir in [Vector2.LEFT, Vector2.UP, Vector2.DOWN, Vector2(1, 1).normalized()]:
+		player.global_position = Vector2(300, 200)
+		player.facing = dir
+		await _frames(30)
+		await _tap("attack")
+		await _frames(12)
+		var flying := _arrows(room)
+		if flying.size() == 1:
+			var art: Node2D = flying[0].get_node("Art")
+			var box: Node2D = flying[0].get_node("Hitbox")
+			_check(is_equal_approx(flying[0].global_position.y - art.global_position.y, 8.0)
+					and (box.global_position - flying[0].global_position).normalized().dot(dir) > 0.99,
+					"shooting %s: the sprite is 8 px above the arrow's body and the Hitbox sits at its tip" % [dir])
+		else:
+			_check(false, "shooting %s leaves one arrow in flight (%d)" % [dir, flying.size()])
+		await _frames(travel_frames)
+	player.facing = Vector2.RIGHT
+	player.global_position = Vector2(300, 200)
+	await _frames(30)
+
 	await _frames(30)
 	var wall := StaticBody2D.new()
 	wall.collision_layer = 1

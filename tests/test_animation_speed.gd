@@ -43,11 +43,16 @@ func _initialize() -> void:
 		run_always = run_always and sprite.animation == &"run_side"
 	_check(run_always and run_frames.size() >= 2,
 			"the run keeps going without falling back to the walk start (%d different frames)" % run_frames.size())
-	# A short interruption (four ticks without the key) does not send him back to the first steps.
+	# A short interruption (four ticks without the key) neither flashes the idle pose nor sends him
+	# back to the first steps.
 	Input.action_release("move_right")
-	await _frames(4)
+	var flashed := false
+	for i in 4:
+		await physics_frame
+		flashed = flashed or sprite.animation == &"idle_side"
 	Input.action_press("move_right")
 	await _frames(3)
+	_check(not flashed, "four ticks without the key do not flash the idle pose")
 	_check(sprite.animation == &"run_side", "after a short stumble Nico is still running (%s)" % sprite.animation)
 	# A held direction keeps the run even while a wall zeroes his velocity.
 	var wall := StaticBody2D.new()
@@ -76,7 +81,8 @@ func _initialize() -> void:
 	_check(sprite.modulate == player.TINT_DASH_SOFT and player.is_invulnerable(),
 			"over its own art the dash tint is soft (%s) and the dash still has its i-frames" % sprite.modulate)
 	Input.action_release("move_right")
-	await _frames(20)
+	# The dash may still be ending, then the pose is held 0.1 s and the run waits 0.15 s: rest longer.
+	await _frames(45)
 	_check(sprite.animation == &"idle_side" and is_equal_approx(sprite.speed_scale, 1.0), "resting plays idle at 1.0x")
 	Input.action_press("move_right")
 	await _frames(6)

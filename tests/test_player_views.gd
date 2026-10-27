@@ -54,6 +54,11 @@ func _pure_logic() -> void:
 	_check(script.attack_animation(Vector2(1, 0.3).normalized(), attack_frames) == &"attack_side"
 			and script.attack_animation(Vector2(0.3, 1).normalized(), attack_frames) == &"attack_down",
 			"near an axis the shot snaps to that axis")
+	_check(script.attack_muzzle(&"attack_side", false) == Vector2(9, 0) and script.attack_muzzle(&"attack_side", true) == Vector2(-9, 0),
+			"the arrow leaves from the bow, mirrored with the art")
+	_check(script.attack_muzzle(&"attack_up", false).x < 0.0 and script.attack_muzzle(&"attack_down", false).x > 0.0,
+			"in the back pose the bow is on the other side than in the front pose")
+	_check(script.attack_muzzle(&"unknown", false) == script.attack_muzzle(&"attack_side", false), "an unknown pose uses the side muzzle")
 	var side_only := SpriteFrames.new()
 	side_only.add_animation(&"attack_side")
 	_check(script.attack_animation(Vector2(1, 1).normalized(), side_only) == &"attack_side", "a south diagonal without art falls back to the side attack")
@@ -115,19 +120,20 @@ func _real_player() -> void:
 		_check(sprite.animation == case[2] and sprite.flip_h == case[3],
 				"%s %s shows %s, flip %s (got %s, %s)" % [case[0], case[1], case[2], case[3], sprite.animation, sprite.flip_h])
 		_release()
-		await _frames(2)
+		# Rest long enough for the walk pose hold (0.1 s) and the run grace (0.15 s) to end.
+		await _frames(30)
 
 	_press(["move_up"])
 	await _frames(15)
 	_release()
-	await _frames(5)
+	await _frames(12)
 	var expected_rest: StringName = &"idle_up" if has_idle_up else &"idle_side"
 	_check(sprite.animation == expected_rest and not sprite.flip_h,
 			"stopping after walking up rests in that view (%s, falls back to the side if there is no idle_up)" % sprite.animation)
 	_press(["move_down"])
 	await _frames(15)
 	_release()
-	await _frames(5)
+	await _frames(12)
 	_check(sprite.animation == &"idle_down", "stopping after walking down rests facing the front")
 
 	# Diagonal path with a wobble, counted on the real sprite (short enough not to reach a wall).
