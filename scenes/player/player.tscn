@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/skills/skill_manager.gd" id="5"]
 [ext_resource type="Texture2D" path="res://assets/sprites/nico/sword.png" id="7"]
 [ext_resource type="SpriteFrames" path="res://data/player/nico_frames.tres" id="6"]
+[ext_resource type="Resource" path="res://data/weapons/sword.tres" id="8"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(12, 12)
@@ -24,6 +25,7 @@ radius = 14.0
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1")
+weapon = ExtResource("8")
 
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("4")

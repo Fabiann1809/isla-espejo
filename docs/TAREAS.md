@@ -194,7 +194,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ## 16. Combate a distancia, recursos y muerte por isla — A+B  ← 2, 8, 9
 Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustituye el ataque con espada de la tarea 2.
-- [ ] `WeaponData` en `data/weapons/` y ataque del jugador leído desde datos (la espada sigue siendo la única arma, sin cambios visibles)
+- [x] `WeaponData` en `data/weapons/` y ataque del jugador leído desde datos (la espada sigue siendo la única arma, sin cambios visibles; `scripts/player/weapon_data.gd`, `data/weapons/sword.tres`, `Player.equip()`)
 - [ ] Arco: proyectil con `Hitbox`, animación de disparo y `tests/test_weapons.gd`
 - [ ] Quitar la espada (`SwordPivot`, `Slash`, hitbox de espada y arte de ataque con espada) y actualizar los tests del jugador y de jefes
 - [ ] Arte de Nico con arco: ataque de lado, proyectil y efecto de impacto (coordinar con quien hace el arte de Nico)

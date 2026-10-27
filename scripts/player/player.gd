@@ -19,10 +19,8 @@ enum State { IDLE, MOVE, DASH, ATTACK, HURT, DEAD }
 @export var dash_cooldown := 0.6
 
 @export_group("Attack")
-@export var attack_damage := 1
-@export var attack_time := 0.2
-@export var attack_cooldown := 0.35
-@export_range(0.0, 1.0) var attack_move_factor := 0.3
+## The attack numbers come from this weapon (data/weapons/); see equip().
+@export var weapon: WeaponData
 
 @export_group("Hurt")
 @export var hurt_time := 0.25
@@ -32,6 +30,11 @@ enum State { IDLE, MOVE, DASH, ATTACK, HURT, DEAD }
 
 var state: State = State.IDLE
 var facing := Vector2.DOWN
+## Attack numbers of the equipped weapon (copied by equip()).
+var attack_damage := 1
+var attack_time := 0.2
+var attack_cooldown := 0.35
+var attack_move_factor := 0.3
 ## How visible the player is to enemies (1 = normal). The Sombra skill lowers it for a while.
 var visibility := 1.0
 
@@ -92,6 +95,7 @@ func _ready() -> void:
 	health.died.connect(die)
 	Events.dialogue_started.connect(_on_dialogue_started)
 	Events.dialogue_finished.connect(_on_dialogue_finished)
+	equip(weapon if weapon != null else WeaponData.new())
 	_set_attack_active(false)
 	Events.player_health_changed.emit(health.current, health.max_health)
 
@@ -125,6 +129,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_interaction()
 	_update_visuals(delta)
+
+
+## Makes `new_weapon` the active weapon: its numbers drive the next attacks.
+func equip(new_weapon: WeaponData) -> void:
+	weapon = new_weapon
+	attack_damage = weapon.damage
+	attack_time = weapon.attack_time
+	attack_cooldown = weapon.attack_cooldown
+	attack_move_factor = weapon.move_factor
 
 
 ## True while the player cannot be damaged (dash i-frames, after a hit, or dead).
