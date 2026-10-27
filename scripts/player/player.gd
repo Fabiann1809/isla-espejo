@@ -1,5 +1,5 @@
 extends CharacterBody2D
-## Nico: 8-direction movement (drawn in 3 views: side, front, back), dash with i-frames, sword attack, health and death.
+## Nico: 8-direction movement (drawn in 3 views: side, front, back), dash with i-frames, bow attack, health and death.
 ## Behaviour is a small state machine (see State). Damage arrives through the Hurtbox;
 ## combat events are published on the Events bus for the adaptive AI.
 
@@ -61,22 +61,14 @@ var _shot_pending := false
 @onready var _hurtbox: Hurtbox = $Hurtbox
 ## Nico's art (the old colored square `Placeholder` stays hidden as a fallback).
 @onready var _body: AnimatedSprite2D = $Sprite
-@onready var _attack_pivot: Node2D = $AttackPivot
-@onready var _hitbox: Hitbox = $AttackPivot/Hitbox
-@onready var _slash: ColorRect = $AttackPivot/Slash
-@onready var _sword_pivot: Node2D = $SwordPivot
 @onready var _bow_pivot: Node2D = $BowPivot
 @onready var _camera: Camera2D = $Camera2D
 @onready var _interact_area: Area2D = $InteractArea
 
 
-## Sword swing (radians, for a Nico facing right; 0 = pointing right, positive = down).
-const SWORD_HAND_X := 5.0
 ## Distance from Nico's center to where the arrow appears.
 const MUZZLE := 8.0
-const SWORD_REST := 0.85
-const SWORD_RAISED := -0.7
-const SWORD_SWUNG := 1.45
+const DEFAULT_WEAPON := "res://data/weapons/bow.tres"
 ## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
 ## death animations.
 const TINT_DASH := Color(1, 1, 1, 0.5)
@@ -94,13 +86,12 @@ func _ready() -> void:
 	add_to_group("player")
 	_hurtbox.invulnerability_check = is_invulnerable
 	_hurtbox.hit.connect(_on_hurtbox_hit)
-	_hitbox.hit_landed.connect(_on_hitbox_hit_landed)
 	health.changed.connect(func(current: int, maximum: int) -> void:
 		Events.player_health_changed.emit(current, maximum))
 	health.died.connect(die)
 	Events.dialogue_started.connect(_on_dialogue_started)
 	Events.dialogue_finished.connect(_on_dialogue_finished)
-	equip(weapon if weapon != null else WeaponData.new())
+	equip(weapon if weapon != null else load(DEFAULT_WEAPON))
 	_set_attack_active(false)
 	Events.player_health_changed.emit(health.current, health.max_health)
 
@@ -255,7 +246,7 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 		hurt(from_position)
 
 
-func _on_hitbox_hit_landed(hurtbox: Hurtbox) -> void:
+func _on_arrow_hit(hurtbox: Hurtbox) -> void:
 	var target: Node = hurtbox.owner
 	attack_hit.emit(target)
 	Events.player_hit_enemy.emit(target, attack_damage)
@@ -292,8 +283,6 @@ func _start_attack() -> void:
 	end_stealth()
 	_action_dir = facing
 	_attack_cooldown_left = attack_cooldown
-	_attack_pivot.rotation = _action_dir.angle()
-	_hitbox.damage = attack_damage
 	_set_attack_active(true)
 	_enter_state(State.ATTACK, attack_time)
 	attacked.emit(_action_dir)
@@ -322,51 +311,28 @@ func _enter_state(new_state: State, duration: float) -> void:
 	_state_time_left = duration
 
 
-## Starts or ends the attack pose. A melee weapon swings its hitbox; a ranged one only holds the
-## shot until its release moment (see _fire).
+## Starts or ends the attack pose. The shot is held until its release moment (see _fire); ending
+## the attack early (hurt, dead) cancels it.
 func _set_attack_active(active: bool) -> void:
-	var ranged := weapon.projectile_scene != null
-	if active and not ranged:
-		_hitbox.activate()
-	else:
-		_hitbox.deactivate()
-	_sword_pivot.visible = active and not ranged
-	_bow_pivot.visible = active and ranged
-	_shot_pending = active and ranged
+	_bow_pivot.visible = active
+	_shot_pending = active and weapon.projectile_scene != null
 	if active:
-		_update_weapon_pose()
+		_update_bow()
 
 
 func _fire() -> void:
 	_shot_pending = false
 	var arrow: Arrow = weapon.projectile_scene.instantiate()
 	arrow.setup(_action_dir, weapon.projectile_speed, weapon.projectile_range, attack_damage)
-	arrow.hit_landed.connect(_on_hitbox_hit_landed)
+	arrow.hit_landed.connect(_on_arrow_hit)
 	get_parent().add_child(arrow)
 	arrow.global_position = global_position + _action_dir * MUZZLE
 	Placement.reset(arrow)
 
 
-func _update_weapon_pose() -> void:
-	if weapon.projectile_scene != null:
-		_bow_pivot.rotation = _action_dir.angle()
-	else:
-		_update_sword()
-
-
-## The sword stays in Nico's hand, on the side he faces: it is raised and then swung down in a
-## short arc, like the sword he carries while walking (rest pose ~50 degrees). Left is the mirror.
-func _update_sword() -> void:
-	var side := 1.0 if _action_dir.x >= 0.0 else -1.0
-	var progress := clampf(1.0 - _state_time_left / attack_time, 0.0, 1.0)
-	var angle: float
-	if progress < 0.3:
-		angle = lerpf(SWORD_REST, SWORD_RAISED, smoothstep(0.0, 0.3, progress))
-	else:
-		angle = lerpf(SWORD_RAISED, SWORD_SWUNG, smoothstep(0.3, 1.0, progress))
-	_sword_pivot.scale.x = side
-	_sword_pivot.position.x = SWORD_HAND_X * side
-	_sword_pivot.rotation = angle
+## The bow is held out toward the aim; its shape is a placeholder until there is art for it.
+func _update_bow() -> void:
+	_bow_pivot.rotation = _action_dir.angle()
 
 
 ## `<base>_side` if Nico's art has it, else nothing (the state keeps its old look).
@@ -383,7 +349,7 @@ func _fit_to(anim: StringName, duration: float) -> float:
 
 func _update_visuals(delta: float) -> void:
 	if state == State.ATTACK:
-		_update_weapon_pose()
+		_update_bow()
 	# Walking picks a view (side, front or back); attack, dash, hurt and death use the side view.
 	var free := state in [State.IDLE, State.MOVE]
 	var view := _view.update(_move_dir if free else Vector2.ZERO, delta)
@@ -394,7 +360,7 @@ func _update_visuals(delta: float) -> void:
 		_side_flip = facing.x < 0.0
 	_body.flip_h = _side_flip if view == FacingView.View.SIDE else false
 	if state == State.ATTACK:
-		# Same rule as the sword (see _update_sword), so body and blade always face the same side.
+		# The body faces the way the arrow goes, like the bow does.
 		_body.flip_h = _action_dir.x < 0.0
 	var moving := velocity.length() > 5.0 and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)

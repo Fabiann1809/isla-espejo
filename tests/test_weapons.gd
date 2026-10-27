@@ -12,12 +12,10 @@ func _initialize() -> void:
 		quit(1))
 	await process_frame
 
-	var sword: Resource = load("res://data/weapons/sword.tres")
 	var bow: Resource = load("res://data/weapons/bow.tres")
-	_check(sword != null and sword.id == &"sword", "the sword weapon data loads")
 	_check(bow != null and bow.id == &"bow" and bow.projectile_scene != null, "the bow weapon data loads with its projectile")
-	_check(sword.damage >= 1 and sword.attack_time > 0.0 and sword.attack_cooldown > 0.0, "the sword has usable numbers")
-	_check(bow.display_name != "" and sword.display_name != "", "weapons have a Spanish name in their data")
+	_check(bow.damage >= 1 and bow.attack_time > 0.0 and bow.attack_cooldown > 0.0, "the bow has usable numbers")
+	_check(bow.display_name != "", "the weapon has a Spanish name in its data")
 	_check(bow.projectile_speed > 0.0 and bow.projectile_range > 0.0 and bow.release_at > 0.0 and bow.release_at < 1.0,
 		"the bow's projectile numbers are usable")
 

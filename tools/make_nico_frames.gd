@@ -4,7 +4,7 @@ extends SceneTree
 ## idle/walk come in the down (front), up (back) and side views; attack, hurt, death and dash only
 ## from the side. Side art faces right; the game flips it to go left.
 ## Run: godot --headless --path . --script res://tools/make_nico_frames.gd
-## The sword is not part of these strips: it is assets/sprites/nico/sword.png, swung by Player.
+## The bow is not part of these strips: Player shows a placeholder bow while attacking.
 
 const STRIP := "res://assets/sprites/nico/nico_%s.png"
 const CELL := 32

@@ -15,7 +15,7 @@ extends Resource
 @export_range(0.0, 1.0) var move_factor := 0.3
 
 @export_group("Ranged")
-## Scene shot by the attack (see scripts/player/arrow.gd). Empty = melee: the attack hitbox swings.
+## Scene shot by the attack (see scripts/player/arrow.gd). Without one the attack only plays its pose.
 @export var projectile_scene: PackedScene
 @export var projectile_speed := 260.0
 ## Pixels the projectile flies before it vanishes.

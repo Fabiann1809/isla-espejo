@@ -8,15 +8,6 @@ extends SceneTree
 func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute("res://data/weapons")
 
-	var sword := WeaponData.new()
-	sword.id = &"sword"
-	sword.display_name = "Espada corta"
-	sword.damage = 1
-	sword.attack_time = 0.2
-	sword.attack_cooldown = 0.35
-	sword.move_factor = 0.3
-	ResourceSaver.save(sword, "res://data/weapons/sword.tres")
-
 	var bow := WeaponData.new()
 	bow.id = &"bow"
 	bow.display_name = "Arco corto"
