@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://scripts/skills/skill_manager.gd" id="5"]
 [ext_resource type="Texture2D" path="res://assets/sprites/nico/sword.png" id="7"]
 [ext_resource type="SpriteFrames" path="res://data/player/nico_frames.tres" id="6"]
-[ext_resource type="Resource" path="res://data/weapons/sword.tres" id="8"]
+[ext_resource type="Resource" path="res://data/weapons/bow.tres" id="8"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(12, 12)
@@ -49,6 +49,20 @@ scale = Vector2(0.55, 0.55)
 texture = ExtResource("7")
 centered = false
 offset = Vector2(-3, -3)
+
+[node name="BowPivot" type="Node2D" parent="."]
+visible = false
+position = Vector2(0, -8)
+
+[node name="Limb" type="Line2D" parent="BowPivot"]
+points = PackedVector2Array(7, -6, 10, -3, 11, 0, 10, 3, 7, 6)
+width = 1.5
+default_color = Color(0.45, 0.28, 0.12, 1)
+
+[node name="String" type="Line2D" parent="BowPivot"]
+points = PackedVector2Array(7, -6, 7, 6)
+width = 1.0
+default_color = Color(0.95, 0.95, 0.85, 1)
 
 [node name="Placeholder" type="ColorRect" parent="."]
 visible = false

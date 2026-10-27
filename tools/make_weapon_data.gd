@@ -17,5 +17,18 @@ func _initialize() -> void:
 	sword.move_factor = 0.3
 	ResourceSaver.save(sword, "res://data/weapons/sword.tres")
 
+	var bow := WeaponData.new()
+	bow.id = &"bow"
+	bow.display_name = "Arco corto"
+	bow.damage = 1
+	bow.attack_time = 0.25
+	bow.attack_cooldown = 0.4
+	bow.move_factor = 0.5
+	bow.projectile_scene = load("res://scenes/player/arrow.tscn")
+	bow.projectile_speed = 260.0
+	bow.projectile_range = 200.0
+	bow.release_at = 0.5
+	ResourceSaver.save(bow, "res://data/weapons/bow.tres")
+
 	print("weapon data written")
 	quit()

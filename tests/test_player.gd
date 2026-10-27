@@ -22,22 +22,22 @@ func _initialize() -> void:
 
 	await _tap("attack")
 	_check(player.state == player.State.ATTACK, "attack enters ATTACK state")
-	await _frames(6)
-	_check(dummy.hits == 1, "dummy is hit exactly once per swing (hits=%d)" % dummy.hits)
+	await _frames(20)
+	_check(dummy.hits == 1, "dummy is hit exactly once per shot (hits=%d)" % dummy.hits)
 	await _frames(30)
-	_check(player.state == player.State.IDLE, "returns to idle after the swing")
+	_check(player.state == player.State.IDLE, "returns to idle after the shot")
 
 	_reset_dummy(dummy, player)
 	await _tap("attack")
 	await _frames(30)
-	_check(dummy.hits == 2, "second swing after cooldown hits (hits=%d)" % dummy.hits)
+	_check(dummy.hits == 2, "second shot after cooldown hits (hits=%d)" % dummy.hits)
 
 	_reset_dummy(dummy, player)
 	player.facing = Vector2.LEFT
 	await _frames(30)
 	await _tap("attack")
 	await _frames(20)
-	_check(dummy.hits == 2, "swing in the wrong direction misses (hits=%d)" % dummy.hits)
+	_check(dummy.hits == 2, "shot in the wrong direction misses (hits=%d)" % dummy.hits)
 
 	await _frames(40)
 	await _tap("dash")

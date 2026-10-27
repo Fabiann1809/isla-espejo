@@ -35,7 +35,7 @@ func _initialize() -> void:
 	await _frames(2)
 	var dummy_x: float = dummy.global_position.x
 	await _tap("attack")
-	await _frames(10)
+	await _frames(20)
 	_check(_log.attacked == 1, "Events.player_attacked emitted")
 	_check(_log.hit_enemy == 1, "Events.player_hit_enemy emitted")
 	_check(_log.enemy_damaged == 1, "Events.enemy_damaged emitted")

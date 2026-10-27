@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/arrow.tscn" id="1_yqai0"]
+[ext_resource type="Script" path="res://scripts/player/weapon_data.gd" id="2_rnhwh"]
+
+[resource]
+script = ExtResource("2_rnhwh")
+id = &"bow"
+display_name = "Arco corto"
+attack_time = 0.25
+attack_cooldown = 0.4
+move_factor = 0.5
+projectile_scene = ExtResource("1_yqai0")

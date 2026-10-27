@@ -13,3 +13,12 @@ extends Resource
 @export var attack_cooldown := 0.35
 ## Share of the walking speed Nico keeps while attacking (0 = rooted, 1 = full speed).
 @export_range(0.0, 1.0) var move_factor := 0.3
+
+@export_group("Ranged")
+## Scene shot by the attack (see scripts/player/arrow.gd). Empty = melee: the attack hitbox swings.
+@export var projectile_scene: PackedScene
+@export var projectile_speed := 260.0
+## Pixels the projectile flies before it vanishes.
+@export var projectile_range := 200.0
+## Moment of the attack (0 = start, 1 = end) when the projectile leaves.
+@export_range(0.0, 1.0) var release_at := 0.5

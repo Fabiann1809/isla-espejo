@@ -56,8 +56,8 @@ func _initialize() -> void:
 		var expected_scale := 5.0 / (12.0 * float(player.attack_time))
 		_check(sprite.animation == &"attack_side" and is_equal_approx(sprite.speed_scale, expected_scale)
 				and sprite.flip_h == (side == "move_left")
-				and sprite.flip_h == (player.get_node("SwordPivot").scale.x < 0.0),
-				"attacking after %s plays attack_side at %.2fx, body and sword on the same side (got %s, %.2f, flip %s)" % [side, expected_scale, sprite.animation, sprite.speed_scale, sprite.flip_h])
+				and sprite.flip_h == (cos(player.get_node("BowPivot").rotation) < -0.01),
+				"attacking after %s plays attack_side at %.2fx, body and bow on the same side (got %s, %.2f, flip %s)" % [side, expected_scale, sprite.animation, sprite.speed_scale, sprite.flip_h])
 		await _frames(30)
 
 	# Dash to the left: flipped. A dash straight up keeps the side pose and the side Nico last faced.

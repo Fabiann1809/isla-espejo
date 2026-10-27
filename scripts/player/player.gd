@@ -53,6 +53,8 @@ var _action_dir := Vector2.ZERO
 var _view := FacingView.new()
 ## Whether the side art is mirrored (Nico last faced left), kept while he shows the front or back.
 var _side_flip := false
+## A ranged attack has started and its projectile has not left yet.
+var _shot_pending := false
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
@@ -63,12 +65,15 @@ var _side_flip := false
 @onready var _hitbox: Hitbox = $AttackPivot/Hitbox
 @onready var _slash: ColorRect = $AttackPivot/Slash
 @onready var _sword_pivot: Node2D = $SwordPivot
+@onready var _bow_pivot: Node2D = $BowPivot
 @onready var _camera: Camera2D = $Camera2D
 @onready var _interact_area: Area2D = $InteractArea
 
 
 ## Sword swing (radians, for a Nico facing right; 0 = pointing right, positive = down).
 const SWORD_HAND_X := 5.0
+## Distance from Nico's center to where the arrow appears.
+const MUZZLE := 8.0
 const SWORD_REST := 0.85
 const SWORD_RAISED := -0.7
 const SWORD_SWUNG := 1.45
@@ -297,6 +302,8 @@ func _start_attack() -> void:
 
 func _process_attack(delta: float) -> void:
 	velocity = _move_dir * speed * attack_move_factor
+	if _shot_pending and 1.0 - _state_time_left / attack_time >= weapon.release_at:
+		_fire()
 	_state_time_left -= delta
 	if _state_time_left <= 0.0:
 		_set_attack_active(false)
@@ -315,13 +322,35 @@ func _enter_state(new_state: State, duration: float) -> void:
 	_state_time_left = duration
 
 
+## Starts or ends the attack pose. A melee weapon swings its hitbox; a ranged one only holds the
+## shot until its release moment (see _fire).
 func _set_attack_active(active: bool) -> void:
-	if active:
+	var ranged := weapon.projectile_scene != null
+	if active and not ranged:
 		_hitbox.activate()
 	else:
 		_hitbox.deactivate()
-	_sword_pivot.visible = active
+	_sword_pivot.visible = active and not ranged
+	_bow_pivot.visible = active and ranged
+	_shot_pending = active and ranged
 	if active:
+		_update_weapon_pose()
+
+
+func _fire() -> void:
+	_shot_pending = false
+	var arrow: Arrow = weapon.projectile_scene.instantiate()
+	arrow.setup(_action_dir, weapon.projectile_speed, weapon.projectile_range, attack_damage)
+	arrow.hit_landed.connect(_on_hitbox_hit_landed)
+	get_parent().add_child(arrow)
+	arrow.global_position = global_position + _action_dir * MUZZLE
+	Placement.reset(arrow)
+
+
+func _update_weapon_pose() -> void:
+	if weapon.projectile_scene != null:
+		_bow_pivot.rotation = _action_dir.angle()
+	else:
 		_update_sword()
 
 
@@ -354,7 +383,7 @@ func _fit_to(anim: StringName, duration: float) -> float:
 
 func _update_visuals(delta: float) -> void:
 	if state == State.ATTACK:
-		_update_sword()
+		_update_weapon_pose()
 	# Walking picks a view (side, front or back); attack, dash, hurt and death use the side view.
 	var free := state in [State.IDLE, State.MOVE]
 	var view := _view.update(_move_dir if free else Vector2.ZERO, delta)
