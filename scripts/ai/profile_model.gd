@@ -30,7 +30,7 @@ func score_run(stats: RunStats) -> Dictionary:
 	var has_skills := stats.total_skill_uses() > 0
 
 	var aggression_parts: Array = [
-		[config.w_attack_rate, clampf(stats.attacks_per_minute() / config.attacks_per_minute_max, 0.0, 1.0), true],
+		[config.w_attack_rate, clampf(stats.shots_per_minute() / config.shots_per_minute_max, 0.0, 1.0), true],
 		[config.w_fight_ratio, stats.rooms_fought / rooms, has_rooms],
 		[config.w_aggressive_skills, float(stats.aggressive_skill_uses) / maxf(stats.total_skill_uses(), 1), has_skills],
 	]

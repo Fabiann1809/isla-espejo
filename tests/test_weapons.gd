@@ -4,6 +4,7 @@ extends SceneTree
 ## Run: godot --headless --path . --script res://tests/test_weapons.gd
 
 var _ok := true
+var _shots: Array = []
 
 
 func _initialize() -> void:
@@ -23,6 +24,7 @@ func _initialize() -> void:
 	root.add_child(room)
 	await _frames(3)
 	var player = room.get_node("Player")
+	root.get_node("Events").player_shot.connect(func(direction: Vector2, distance: float) -> void: _shots.append([direction, distance]))
 	_check(player.weapon == bow, "the player scene equips the bow")
 	_check(player.attack_damage == bow.damage and is_equal_approx(player.attack_time, bow.attack_time)
 		and is_equal_approx(player.attack_cooldown, bow.attack_cooldown)
@@ -59,6 +61,7 @@ func _arrow_flight(room: Node, player: Node, bow: Resource) -> void:
 	await _frames(10)
 	var arrows := _arrows(room)
 	_check(arrows.size() == 1, "one arrow is in flight after the release moment (%d)" % arrows.size())
+	_check(_shots.size() == 1 and _shots[0][1] == -1.0, "a shot with no enemy in reach reports distance -1")
 	if arrows.size() == 1:
 		_check(arrows[0].global_position.x > player.global_position.x, "the arrow flies the way Nico faces")
 	var travel_frames := int(ceil(bow.projectile_range / bow.projectile_speed * 60.0)) + 20
@@ -90,8 +93,13 @@ func _arrow_hits_dummy(room: Node, player: Node) -> void:
 	player.facing = Vector2.RIGHT
 	await _frames(2)
 	var hits_before: int = dummy.hits
+	dummy.add_to_group("enemies")
+	_shots.clear()
 	await _tap("attack")
 	await _frames(25)
+	_check(_shots.size() == 1 and _shots[0][0] == Vector2.RIGHT, "Events.player_shot is emitted once, with the shot direction")
+	_check(_shots.size() == 1 and absf(_shots[0][1] - 40.0) < 12.0,
+			"it carries the distance to the nearest enemy in reach (%s)" % [_shots[0][1] if _shots.size() == 1 else "none"])
 	_check(dummy.hits == hits_before + 1, "the arrow hits the dummy exactly once (%d -> %d)" % [hits_before, dummy.hits])
 	_check(_arrows(room).is_empty(), "the arrow disappears on the enemy it hit")
 

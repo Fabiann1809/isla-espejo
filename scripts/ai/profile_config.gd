@@ -21,8 +21,8 @@ extends Resource
 @export_range(0.0, 1.0) var style_threshold := 0.15
 
 @export_group("Normalization")
-## Melee attacks per minute that count as "fully aggressive".
-@export var attacks_per_minute_max := 30.0
+## Shots per minute that count as "fully aggressive".
+@export var shots_per_minute_max := 30.0
 ## Fraction of the run spent hidden that counts as "fully stealthy".
 @export_range(0.01, 1.0) var stealth_fraction_max := 0.25
 ## Detections per enemy room at or above which the player counts as "always seen".

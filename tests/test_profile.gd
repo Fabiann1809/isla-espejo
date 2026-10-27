@@ -7,7 +7,7 @@ const TEST_SAVE := "user://test_profile.json"
 
 ## A runtime error inside a check helper does not stop GDScript, so a test that silently skipped
 ## checks must still fail: the number of executed checks has to match.
-const EXPECTED_CHECKS := 47
+const EXPECTED_CHECKS := 52
 
 var _ok := true
 var _checks := 0
@@ -26,6 +26,7 @@ func _initialize() -> void:
 
 	_test_simulated_players()
 	_test_learning_across_runs()
+	_test_shot_metrics()
 	_test_run_filtering()
 	_test_live_scores()
 	_test_persistence()
@@ -91,14 +92,31 @@ func _test_learning_across_runs() -> void:
 	learned.merge_run(_stealth_run())
 	learned.merge_run(_stealth_run())
 	_check(learned.style() == ProfileModel.Style.STEALTH, "sustained stealthy play ends up classified as stealthy")
-	_check(learned.totals.melee_attacks > 0 and learned.last_run.has("rooms_evaded"), "totals and the last run are kept")
+	_check(learned.totals.shots > 0 and learned.last_run.has("rooms_evaded"), "totals and the last run are kept")
+
+
+func _test_shot_metrics() -> void:
+	var stats := RunStats.new(_config)
+	_check(stats.accuracy() == 0.0 and stats.average_shot_distance() == 0.0, "no shots: accuracy and distance are 0")
+	stats.on_shot(100.0)
+	stats.on_shot(200.0)
+	stats.on_shot()
+	stats.on_shot(60.0)
+	stats.on_hit()
+	_check(stats.shots == 4 and stats.shots_aimed == 3 and absf(stats.shot_distance_total - 360.0) < 0.01,
+			"shots and the aimed ones with their distances are counted")
+	_check(is_equal_approx(stats.average_shot_distance(), 120.0) and is_equal_approx(stats.accuracy(), 0.25),
+			"average shot distance (120 px) and accuracy (25 %%) are derived")
+	var summary := stats.to_dict()
+	_check(summary.shots == 4 and summary.shots_hit == 1 and summary.shots_aimed == 3 and not summary.has("melee_attacks"),
+			"the run summary uses the shot counters")
 
 
 func _test_run_filtering() -> void:
 	var model := ProfileModel.new(_config)
 	var short := RunStats.new(_config)
 	short.advance(5.0)
-	short.on_attack()
+	short.on_shot()
 	_check(not model.merge_run(short) and model.runs == 0 and model.aggression == 0.5, "a run shorter than the minimum is ignored")
 
 	var brief := ProfileModel.new(_config)
@@ -203,14 +221,17 @@ func _test_autoload_wiring() -> void:
 		profile.advance(30.0)
 		events.room_exited.emit(room)
 	events.player_dashed.emit(Vector2.RIGHT)
-	events.player_attacked.emit(Vector2.RIGHT)
+	events.player_shot.emit(Vector2.RIGHT, 120.0)
+	events.player_shot.emit(Vector2.RIGHT, -1.0)
 	events.player_damaged.emit(1, Vector2.ZERO)
 
 	var stats: RunStats = profile.stats
 	_check(stats.rooms_visited == 4 and stats.rooms_evaded == 4 and stats.rooms_fought == 0,
 			"room events become visited/evaded counts (%d/%d)" % [stats.rooms_visited, stats.rooms_evaded])
 	_check(stats.stealth_skill_uses == 4 and stats.detections == 1 and stats.dashes == 1
-			and stats.melee_attacks == 1 and stats.damage_taken == 1, "skill, detection, dash, attack and damage events are counted")
+			and stats.shots == 2 and stats.damage_taken == 1, "skill, detection, dash, shot and damage events are counted")
+	_check(stats.shots_aimed == 1 and is_equal_approx(stats.average_shot_distance(), 120.0),
+			"a shot with a target adds its distance; one without only counts as a shot (avg %.0f px)" % stats.average_shot_distance())
 	_check(absf(stats.stealth_time - 120.0) < 0.01 and absf(stats.room_time_total - 120.0) < 0.01,
 			"stealth time and time per room accumulate (%.0f s / %.0f s)" % [stats.stealth_time, stats.room_time_total])
 	_check(profile.live_style() == ProfileModel.Style.STEALTH, "the live style already reads as stealthy mid-run")
@@ -224,8 +245,8 @@ func _test_autoload_wiring() -> void:
 			"the summary carries the message, stats and scores")
 	_check(profile.model.runs == 1 and profile.model.stealth > 0.5, "the finished run was learned")
 
-	events.player_attacked.emit(Vector2.RIGHT)
-	_check(profile.stats.melee_attacks == 1, "events outside a run are not counted twice")
+	events.player_shot.emit(Vector2.RIGHT, 120.0)
+	_check(profile.stats.shots == 2, "events outside a run are not counted twice")
 
 	# A fighter in a fresh run: kills inside a room count as fought, clears are tracked.
 	profile.begin_run()
@@ -262,7 +283,7 @@ func _aggressive_run(total_seconds := 120.0) -> RunStats:
 	for room in 4:
 		stats.on_room_entered(3)
 		for i in 20:
-			stats.on_attack()
+			stats.on_shot()
 			stats.on_hit()
 		stats.on_kill()
 		stats.on_kill()
@@ -287,7 +308,7 @@ func _stealth_run(total_seconds := 120.0) -> RunStats:
 			stats.on_detected()
 		stats.advance(per_room)
 		stats.on_room_exited()
-	stats.on_attack()
+	stats.on_shot()
 	return stats
 
 
@@ -298,7 +319,7 @@ func _balanced_run() -> RunStats:
 		stats.on_room_entered(3)
 		if room % 2 == 0:
 			for i in 15:
-				stats.on_attack()
+				stats.on_shot()
 			stats.on_kill()
 			stats.on_skill(&"roots")
 		else:

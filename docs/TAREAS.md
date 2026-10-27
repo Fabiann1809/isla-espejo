@@ -198,7 +198,7 @@ Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustitu
 - [x] Arco: proyectil con `Hitbox`, animación de disparo y `tests/test_weapons.gd` (`scenes/player/arrow.tscn`, `data/weapons/bow.tres`; arco y flecha provisionales con formas simples, sin arte nuevo)
 - [x] Quitar la espada (`SwordPivot`, `Slash`, hitbox de espada y `sword.png`) y actualizar los tests del jugador y de jefes (el arte de ataque de Nico de lado sigue siendo el de antes hasta tener el nuevo)
 - [ ] Arte de Nico con arco: ataque de lado, proyectil y efecto de impacto (coordinar con quien hace el arte de Nico)
-- [ ] Señal de disparo en `Events` y métricas de distancia y puntería en `RunStats` (renombrar "ataques cuerpo a cuerpo")
+- [x] Señal de disparo en `Events` (`player_shot`, con la distancia al enemigo más cercano) y métricas de distancia y puntería en `RunStats` (disparos, aciertos, distancia media; "ataques cuerpo a cuerpo" renombrado a disparos)
 - [ ] Reglas del director para el estilo a distancia en `data/ai/director_rules.tres`
 - [ ] Recursos básicos: `ResourceData` en `data/`, recogible genérico y textos en español en `data/`
 - [ ] Muerte por isla: al morir se pierden los recursos y mejoras de la partida y se conserva `GameState`

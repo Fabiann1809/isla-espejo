@@ -15,7 +15,7 @@ texts = {
 "message_aggressive": "La isla te vio luchar de frente. La próxima vez estará lista para ti.",
 "message_balanced": "La isla aún no sabe cómo eres. Sigue observándote.",
 "message_stealth": "La isla te sintió moverte entre las sombras. Aprenderá a mirar mejor.",
-"stat_attacks": "Ataques: %d",
+"stat_shots": "Disparos: %d",
 "stat_detections": "Veces detectado: %d",
 "stat_evaded": "Salas evadidas: %d",
 "stat_rooms": "Salas visitadas: %d",

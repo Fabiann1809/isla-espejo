@@ -26,7 +26,7 @@ func _initialize() -> void:
 		"aggression": "Agresión",
 		"stealth": "Sigilo",
 		"stat_time": "Tiempo: %s",
-		"stat_attacks": "Ataques: %d",
+		"stat_shots": "Disparos: %d",
 		"stat_skills": "Habilidades usadas: %d",
 		"stat_rooms": "Salas visitadas: %d",
 		"stat_evaded": "Salas evadidas: %d",

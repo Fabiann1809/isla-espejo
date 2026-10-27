@@ -51,7 +51,7 @@ func _on_run_finished(summary: Dictionary) -> void:
 	_add_bar(texts.get("stealth", ""), summary.stealth, STEALTH_COLOR)
 	_add_stats([
 		texts.get("stat_time", "%s") % _format_time(stats.play_seconds),
-		texts.get("stat_attacks", "%d") % stats.melee_attacks,
+		texts.get("stat_shots", "%d") % stats.shots,
 		texts.get("stat_skills", "%d") % stats.skill_uses,
 		texts.get("stat_rooms", "%d") % stats.rooms_visited,
 		texts.get("stat_evaded", "%d") % stats.rooms_evaded,

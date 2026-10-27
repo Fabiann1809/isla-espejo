@@ -24,6 +24,9 @@ signal level_started(scenario_id: StringName, map_seed: int)
 
 # Player
 signal player_attacked(direction: Vector2)
+## The arrow left the bow. `target_distance` = pixels to the nearest enemy the shot could reach
+## (-1 when there is none), so the AI can tell close fights from sniping.
+signal player_shot(direction: Vector2, target_distance: float)
 signal player_dashed(direction: Vector2)
 signal player_hit_enemy(enemy: Node, damage: int)
 signal player_damaged(amount: int, source_position: Vector2)

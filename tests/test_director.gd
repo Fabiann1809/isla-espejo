@@ -251,7 +251,7 @@ func _test_level_integration() -> void:
 	for room_number in 4:
 		_profile.stats.on_room_entered(3)
 		for i in 15:
-			_profile.stats.on_attack()
+			_profile.stats.on_shot()
 		_profile.stats.on_kill()
 		_profile.stats.on_room_cleared()
 		_profile.advance(20.0)
@@ -318,7 +318,7 @@ func _test_visible_reactions() -> void:
 	for room_number in 4:
 		_profile.stats.on_room_entered(3)
 		for i in 20:
-			_profile.stats.on_attack()
+			_profile.stats.on_shot()
 		_profile.stats.on_kill()
 		_profile.stats.on_room_cleared()
 		_profile.advance(40.0)

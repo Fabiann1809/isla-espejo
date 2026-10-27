@@ -4,8 +4,12 @@ extends RefCounted
 ## Time only advances through `advance()`, which keeps simulations and tests deterministic.
 
 var play_time := 0.0
-var melee_attacks := 0
-var melee_hits := 0
+var shots := 0
+## Shots that damaged an enemy.
+var shots_hit := 0
+## Shots fired with an enemy within reach, and the sum of their distances (px).
+var shots_aimed := 0
+var shot_distance_total := 0.0
 var dashes := 0
 var kills := 0
 var detections := 0
@@ -46,12 +50,16 @@ func advance(delta: float) -> void:
 		room_time_total += delta
 
 
-func on_attack() -> void:
-	melee_attacks += 1
+## `target_distance` is the distance to the nearest enemy the shot could reach (-1 when none).
+func on_shot(target_distance := -1.0) -> void:
+	shots += 1
+	if target_distance >= 0.0:
+		shots_aimed += 1
+		shot_distance_total += target_distance
 
 
 func on_hit() -> void:
-	melee_hits += 1
+	shots_hit += 1
 
 
 func on_dash() -> void:
@@ -130,8 +138,18 @@ func minutes() -> float:
 	return maxf(play_time / 60.0, 0.001)
 
 
-func attacks_per_minute() -> float:
-	return melee_attacks / minutes()
+func shots_per_minute() -> float:
+	return shots / minutes()
+
+
+## Average distance (px) to the target when shooting; 0 when no shot had a target.
+func average_shot_distance() -> float:
+	return shot_distance_total / maxf(shots_aimed, 1)
+
+
+## Share of the shots that hit (0..1).
+func accuracy() -> float:
+	return shots_hit / maxf(shots, 1)
 
 
 func stealth_fraction() -> float:
@@ -145,8 +163,10 @@ func average_room_seconds() -> float:
 func to_dict() -> Dictionary:
 	return {
 		"play_seconds": snappedf(play_time, 0.1),
-		"melee_attacks": melee_attacks,
-		"melee_hits": melee_hits,
+		"shots": shots,
+		"shots_hit": shots_hit,
+		"shots_aimed": shots_aimed,
+		"shot_distance_total": snappedf(shot_distance_total, 0.1),
 		"dashes": dashes,
 		"kills": kills,
 		"detections": detections,

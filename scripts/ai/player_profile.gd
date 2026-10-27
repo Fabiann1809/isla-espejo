@@ -118,7 +118,8 @@ func load_profile() -> bool:
 
 
 func _connect_events() -> void:
-	Events.player_attacked.connect(func(_direction: Vector2) -> void: _record(stats.on_attack))
+	Events.player_shot.connect(func(_direction: Vector2, target_distance: float) -> void:
+		_record(stats.on_shot.bind(target_distance)))
 	Events.player_dashed.connect(func(_direction: Vector2) -> void: _record(stats.on_dash))
 	Events.player_hit_enemy.connect(func(_enemy: Node, _damage: int) -> void: _record(stats.on_hit))
 	Events.player_damaged.connect(func(amount: int, _from: Vector2) -> void:

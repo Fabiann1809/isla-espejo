@@ -328,6 +328,20 @@ func _fire() -> void:
 	get_parent().add_child(arrow)
 	arrow.global_position = global_position + _action_dir * MUZZLE
 	Placement.reset(arrow)
+	Events.player_shot.emit(_action_dir, _nearest_enemy_distance(weapon.projectile_range))
+
+
+## Distance to the nearest enemy within `reach` pixels (the ones the shot could reach), or -1.
+func _nearest_enemy_distance(reach: float) -> float:
+	var best := -1.0
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Node2D
+		if enemy == null or not is_instance_valid(enemy):
+			continue
+		var distance := global_position.distance_to(enemy.global_position)
+		if distance <= reach and (best < 0.0 or distance < best):
+			best = distance
+	return best
 
 
 ## The bow is held out toward the aim; its shape is a placeholder until there is art for it.
