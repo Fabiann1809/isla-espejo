@@ -1,8 +1,9 @@
 extends SceneTree
 ## Builds Nico's SpriteFrames (data/player/nico_frames.tres) from the strips in assets/sprites/nico/
 ## named nico_<animation>_<view>.png (32x32 cells side by side). Animations are found by name:
-## idle/walk/attack come in the down (front), up (back) and side views; hurt, death and dash only
-## from the side. Side art faces right; the game flips it to go left.
+## idle/walk come in the down (front), up (back) and side views; the attack in five aims (side,
+## down, up and `attack_up_side` for the north diagonals, see FacingView.attack_animation); hurt,
+## death and dash only from the side. Side art faces right; the game flips it to go left.
 ## Run: godot --headless --path . --script res://tools/make_nico_frames.gd
 ## The bow is drawn in the strips (Nico carries it); the arrow is assets/sprites/nico/arrow.png.
 
@@ -20,6 +21,7 @@ const ANIMATIONS := {
 	&"attack_side": [12.0, false],
 	&"attack_down": [12.0, false],
 	&"attack_up": [12.0, false],
+	&"attack_up_side": [12.0, false],
 	&"hurt_side": [8.0, false],
 	&"death_side": [6.0, false],
 	&"dash_side": [12.0, false],

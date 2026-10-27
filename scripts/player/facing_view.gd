@@ -46,12 +46,29 @@ func update(direction: Vector2, delta: float) -> View:
 	return view
 
 
-## The view for a shot aimed in `direction` (no hysteresis: an attack picks its view once).
-## Diagonals keep the side view, like walking does.
-static func view_for_aim(direction: Vector2) -> View:
-	if absf(direction.y) > absf(direction.x) * SWITCH_RATIO:
-		return View.DOWN if direction.y > 0.0 else View.UP
-	return View.SIDE
+## tan(67.5) and tan(22.5): the 8 aim directions are 45 degree sectors around each axis/diagonal.
+const AIM_VERTICAL_RATIO := 2.414
+const AIM_HORIZONTAL_RATIO := 0.414
+
+
+## The attack animation for a shot aimed in `direction` (8 directions). The art faces right and is
+## mirrored for left (see attack_flips): `attack_side` for east/west, `attack_down` for south and
+## the south diagonals, `attack_up_side` for the north diagonals and `attack_up` for north.
+## A missing animation falls back to `attack_side`.
+static func attack_animation(direction: Vector2, frames: SpriteFrames) -> StringName:
+	var ax := absf(direction.x)
+	var ay := absf(direction.y)
+	var name := &"attack_side"
+	if ay > ax * AIM_VERTICAL_RATIO:
+		name = &"attack_down" if direction.y > 0.0 else &"attack_up"
+	elif ay > ax * AIM_HORIZONTAL_RATIO:
+		name = &"attack_down" if direction.y > 0.0 else &"attack_up_side"
+	return name if frames != null and frames.has_animation(name) else &"attack_side"
+
+
+## Whether the attack art is mirrored: it faces right, so any shot with a leftward part flips it.
+static func attack_flips(direction: Vector2) -> bool:
+	return direction.x < -0.1
 
 
 ## Animation name for a base animation (`idle`, `walk`, `attack`) in a view: `walk_side`,

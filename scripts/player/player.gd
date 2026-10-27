@@ -357,17 +357,15 @@ func _update_visuals(delta: float) -> void:
 	# and death use the side view.
 	var free := state in [State.IDLE, State.MOVE]
 	var view := _view.update(_move_dir if free else Vector2.ZERO, delta)
-	if state == State.ATTACK:
-		view = FacingView.view_for_aim(_action_dir)
-	elif not free:
+	if not free:
 		view = FacingView.View.SIDE
 	# The side art faces right: flip it to go left. Front and back are never flipped.
 	if absf(facing.x) > 0.1:
 		_side_flip = facing.x < 0.0
 	_body.flip_h = _side_flip if view == FacingView.View.SIDE else false
-	if state == State.ATTACK and view == FacingView.View.SIDE:
-		# The body faces the way the arrow goes.
-		_body.flip_h = _action_dir.x < 0.0
+	if state == State.ATTACK:
+		# The attack art faces right in all its aims: mirrored when the shot goes left.
+		_body.flip_h = FacingView.attack_flips(_action_dir)
 	var moving := velocity.length() > 5.0 and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
 	# One-shot states play their own side art when it exists (dash, hurt, death); without it the
@@ -376,7 +374,7 @@ func _update_visuals(delta: float) -> void:
 	var one_shot_time := 0.0
 	match state:
 		State.ATTACK:
-			one_shot = FacingView.animation_for(&"attack", view, _body.sprite_frames)
+			one_shot = FacingView.attack_animation(_action_dir, _body.sprite_frames)
 			one_shot_time = attack_time
 		State.DASH:
 			one_shot = _side_art(&"dash")

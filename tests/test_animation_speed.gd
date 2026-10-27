@@ -47,13 +47,23 @@ func _initialize() -> void:
 
 	# The shot: the attack frames last exactly attack_time, in the view of the aim (side flipped to
 	# the side Nico faces; front and back never flipped).
-	for case in [["move_left", &"attack_side", true], ["move_down", &"attack_down", false], ["move_up", &"attack_up", false]]:
-		Input.action_press(case[0])
+	var diagonal_down_left := ["move_left", "move_down"]
+	for case in [["move_left", &"attack_side", true], ["move_down", &"attack_down", false], ["move_up", &"attack_up", false],
+			[diagonal_down_left, &"attack_down", true], [["move_right", "move_up"], &"attack_up_side", false]]:
+		var keys: Array = case[0] if case[0] is Array else [case[0]]
+		for key in keys:
+			Input.action_press(key)
 		await _frames(3)
-		Input.action_release(case[0])
+		for key in keys:
+			Input.action_release(key)
 		Input.action_press("attack")
-		await _frames(2)
-		Input.action_release("attack")
+		var seen := {}
+		for i in 12:
+			await physics_frame
+			seen[sprite.frame] = true
+			if i == 1:
+				Input.action_release("attack")
+		_check(seen.size() >= 2, "the %s animation advances through its frames while shooting (%d seen)" % [case[1], seen.size()])
 		var frame_count: int = sprite.sprite_frames.get_frame_count(case[1])
 		var expected_scale := float(frame_count) / (12.0 * float(player.attack_time))
 		_check(sprite.animation == case[1] and is_equal_approx(sprite.speed_scale, expected_scale) and sprite.flip_h == case[2],

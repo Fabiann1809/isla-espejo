@@ -38,10 +38,28 @@ func _pure_logic() -> void:
 	picker.update(Vector2.ZERO, 0.2)
 	_check(picker.update(Vector2(1, -1).normalized(), 0.01) == side, "a diagonal started from standing still goes to the side")
 
-	_check(script.view_for_aim(Vector2.RIGHT) == side and script.view_for_aim(Vector2.LEFT) == side, "aiming left or right shows the side view")
-	_check(script.view_for_aim(Vector2.DOWN) == down and script.view_for_aim(Vector2.UP) == up, "aiming down shows the front view, up the back view")
-	_check(script.view_for_aim(Vector2(1, 1).normalized()) == side and script.view_for_aim(Vector2(-1, -1).normalized()) == side,
-			"a diagonal shot keeps the side view")
+	var attack_frames := SpriteFrames.new()
+	for anim: StringName in [&"attack_side", &"attack_down", &"attack_up", &"attack_up_side"]:
+		attack_frames.add_animation(anim)
+	_check(script.attack_animation(Vector2.RIGHT, attack_frames) == &"attack_side" and script.attack_animation(Vector2.LEFT, attack_frames) == &"attack_side",
+			"shooting left or right plays the side attack")
+	_check(script.attack_animation(Vector2.DOWN, attack_frames) == &"attack_down" and script.attack_animation(Vector2.UP, attack_frames) == &"attack_up",
+			"shooting down plays the front attack, up the back attack")
+	_check(script.attack_animation(Vector2(1, 1).normalized(), attack_frames) == &"attack_down"
+			and script.attack_animation(Vector2(-1, 1).normalized(), attack_frames) == &"attack_down",
+			"the south diagonals play the front attack")
+	_check(script.attack_animation(Vector2(1, -1).normalized(), attack_frames) == &"attack_up_side"
+			and script.attack_animation(Vector2(-1, -1).normalized(), attack_frames) == &"attack_up_side",
+			"the north diagonals play the raised-bow attack")
+	_check(script.attack_animation(Vector2(1, 0.3).normalized(), attack_frames) == &"attack_side"
+			and script.attack_animation(Vector2(0.3, 1).normalized(), attack_frames) == &"attack_down",
+			"near an axis the shot snaps to that axis")
+	var side_only := SpriteFrames.new()
+	side_only.add_animation(&"attack_side")
+	_check(script.attack_animation(Vector2(1, -1).normalized(), side_only) == &"attack_side", "an aim without art falls back to the side attack")
+	_check(script.attack_flips(Vector2.LEFT) and script.attack_flips(Vector2(-1, 1).normalized()) and not script.attack_flips(Vector2.DOWN)
+			and not script.attack_flips(Vector2.RIGHT) and not script.attack_flips(Vector2(1, -1).normalized()),
+			"the attack art is mirrored for any shot going left, never for straight up or down")
 
 	# A wobbling diagonal walk (+-6 degrees; the 1.3x thresholds sit at about +-7.4 degrees): the naive rule (bigger axis wins) flips views often, the picker not.
 	var naive_changes := 0
