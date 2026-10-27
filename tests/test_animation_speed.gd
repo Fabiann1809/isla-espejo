@@ -19,7 +19,8 @@ func _initialize() -> void:
 	for other in get_nodes_in_group("enemies"):
 		other.queue_free()
 	var player = room.get_node("Player")
-	player.global_position = ARENA
+	# Start far from the walls: the run below needs room to go on for a while.
+	player.global_position = Vector2(-400, 200)
 	var sprite: AnimatedSprite2D = player.get_node("Sprite")
 
 	Input.action_press("move_right")
@@ -30,6 +31,18 @@ func _initialize() -> void:
 	await _frames(1)
 	var step: float = player.global_position.x - before_x
 	_check(is_equal_approx(step, 2.0), "Nico walks exactly 2 px per physics tick (%.3f)" % step)
+	# The side walk starts with a few steps and then breaks into a run that keeps going.
+	await _frames(40)
+	_check(sprite.animation == &"run_side" and is_equal_approx(sprite.speed_scale, 1.0),
+			"after the first steps Nico breaks into the run (%s at %.2fx)" % [sprite.animation, sprite.speed_scale])
+	var run_frames := {}
+	var run_always := true
+	for i in 60:
+		await physics_frame
+		run_frames[sprite.frame] = true
+		run_always = run_always and sprite.animation == &"run_side"
+	_check(run_always and run_frames.size() >= 2,
+			"the run keeps going without falling back to the walk start (%d different frames)" % run_frames.size())
 	Input.action_press("dash")
 	await _frames(3)
 	var dash_x: float = player.global_position.x
@@ -44,6 +57,11 @@ func _initialize() -> void:
 	Input.action_release("move_right")
 	await _frames(20)
 	_check(sprite.animation == &"idle_side" and is_equal_approx(sprite.speed_scale, 1.0), "resting plays idle at 1.0x")
+	Input.action_press("move_right")
+	await _frames(6)
+	_check(sprite.animation == &"walk_side", "after stopping, the next run starts with the walk steps again (%s)" % sprite.animation)
+	Input.action_release("move_right")
+	await _frames(20)
 
 	# The shot: the attack frames last exactly attack_time, in the view of the aim (side flipped to
 	# the side Nico faces; front and back never flipped).

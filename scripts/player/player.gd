@@ -53,6 +53,8 @@ var _action_dir := Vector2.ZERO
 var _view := FacingView.new()
 ## Whether the side art is mirrored (Nico last faced left), kept while he shows the front or back.
 var _side_flip := false
+## The side walk has finished its first steps: Nico keeps running until he stops (see _update_visuals).
+var _run_ready := false
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
 
@@ -88,6 +90,7 @@ func _ready() -> void:
 	health.changed.connect(func(current: int, maximum: int) -> void:
 		Events.player_health_changed.emit(current, maximum))
 	health.died.connect(die)
+	_body.animation_finished.connect(_on_body_animation_finished)
 	Events.dialogue_started.connect(_on_dialogue_started)
 	Events.dialogue_finished.connect(_on_dialogue_finished)
 	equip(weapon if weapon != null else load(DEFAULT_WEAPON))
@@ -225,6 +228,11 @@ func _update_interaction() -> void:
 		Events.interaction_prompt_changed.emit(best.prompt if best != null else "")
 	if best != null and Input.is_action_just_pressed("interact"):
 		best.interact(self)
+
+
+func _on_body_animation_finished() -> void:
+	if _body.animation == &"walk_side":
+		_run_ready = true
 
 
 func _on_dialogue_started(_dialogue_id: StringName) -> void:
@@ -368,6 +376,11 @@ func _update_visuals(delta: float) -> void:
 		_body.flip_h = FacingView.attack_flips(_action_dir)
 	var moving := velocity.length() > 5.0 and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
+	# Moving sideways starts with the walk steps and then breaks into a run that keeps going.
+	if not moving or wanted != &"walk_side":
+		_run_ready = false
+	elif _run_ready and _body.sprite_frames.has_animation(&"run_side"):
+		wanted = &"run_side"
 	# One-shot states play their own side art when it exists (dash, hurt, death); without it the
 	# old look stays (walk/idle with a tint).
 	var one_shot := StringName()
