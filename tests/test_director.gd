@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_test_rule_table()
 	_test_decision()
 	_test_scaling()
+	_test_ranged_rule()
 	_test_plan_helpers()
 	await _test_enemy_effects()
 	_test_map_generation()
@@ -110,6 +111,33 @@ func _test_scaling() -> void:
 	var faint := DirectorLogic.plan_for(0.56, 0.44, &"aggressive", _config)
 	_check(faint.intensity < 0.25 and faint.island_line == "" and faint.hints.is_empty() and faint.health_multiplier > 1.0,
 			"a very faint style still nudges the numbers but the island stays silent")
+
+
+# --- The "ranged" rule: shooting from afar adds a reaction on top of the style's ----------------------
+
+func _test_ranged_rule() -> void:
+	var rule: DirectorRule = _config.rules.get(&"ranged")
+	_check(rule != null and not rule.hints.is_empty() and rule.island_line != "",
+			"there is a 'ranged' rule with Spanish texts")
+	var near := DirectorLogic.plan_for(0.5, 0.5, &"balanced", _config, _config.ranged_threshold)
+	var plain := DirectorLogic.plan_for(0.5, 0.5, &"balanced", _config)
+	_check(near.ranged_intensity == 0.0 and near.speed_multiplier == plain.speed_multiplier,
+			"a player who does not shoot from afar gets no ranged reaction")
+	var far := DirectorLogic.plan_for(0.5, 0.5, &"balanced", _config, 1.0)
+	_check(far.ranged_intensity == 1.0 and is_equal_approx(far.speed_multiplier, rule.speed_multiplier)
+			and far.count_multiplier > plain.count_multiplier,
+			"a player who always shoots from afar gets enemies that close in (speed x%.2f, count x%.2f)" % [far.speed_multiplier, far.count_multiplier])
+	_check(far.island_line == rule.island_line and far.hints.has(rule.hints[0]),
+			"the island says it and the death screen lists it")
+	var middle := DirectorLogic.plan_for(0.5, 0.5, &"balanced", _config, (1.0 + _config.ranged_threshold) / 2.0)
+	_check(middle.speed_multiplier > 1.0 and middle.speed_multiplier < far.speed_multiplier,
+			"the reaction grows with the distance (x%.2f between x1 and x%.2f)" % [middle.speed_multiplier, far.speed_multiplier])
+	var aggressive := DirectorLogic.plan_for(0.95, 0.05, &"aggressive", _config)
+	var both := DirectorLogic.plan_for(0.95, 0.05, &"aggressive", _config, 1.0)
+	_check(both.speed_multiplier > aggressive.speed_multiplier
+			and both.room_weights.get(&"ambush", 1.0) > aggressive.room_weights.get(&"ambush", 1.0)
+			and both.island_line == aggressive.island_line,
+			"it stacks on the style's reaction and keeps the style's line")
 
 
 func _test_plan_helpers() -> void:

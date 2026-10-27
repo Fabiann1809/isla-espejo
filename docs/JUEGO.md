@@ -132,7 +132,7 @@ El juego registra eventos mientras se juega:
 | Evasión | Salas atravesadas sin combatir |
 | Detección | Veces que un enemigo detecta al jugador |
 
-Con estas métricas se calcula un **perfil** con valores entre 0 y 1 (por ejemplo `aggression` y `stealth`), suavizados con una media móvil para que cambien gradualmente. Se clasifica como **agresivo**, **sigiloso** o **equilibrado**. Se guarda en `user://profile.json` (con `"version": 1`) y persiste entre partidas.
+Con estas métricas se calcula un **perfil** con valores entre 0 y 1 (`aggression`, `stealth` y `distance`, que dice si el jugador dispara de cerca o de lejos), suavizados con una media móvil para que cambien gradualmente. Se clasifica como **agresivo**, **sigiloso** o **equilibrado**. Se guarda en `user://profile.json` (con `"version": 1`) y persiste entre partidas.
 
 ### Capa 2 — La isla reacciona
 Según el perfil, un "director" ajusta el juego:
@@ -141,6 +141,7 @@ Según el perfil, un "director" ajusta el juego:
 | Agresivo | Enemigos con más resistencia, emboscadas, menos espacio para huir, más salas de combate |
 | Sigiloso | Enemigos con mayor rango de visión y patrullas, sombras que detectan, más salas con vigilancia |
 | Equilibrado | Mezcla de ambos |
+| Dispara siempre de lejos (se suma al estilo) | Enemigos más rápidos y más numerosos que cierran la distancia, y más emboscadas |
 
 Qué se modifica: composición y cantidad de enemigos por sala, parámetros de los enemigos (visión, velocidad, vida), y la selección de salas del generador. El jugador debe **poder notar el cambio** (por ejemplo con el resumen de perfil al morir y diálogos de la isla).
 

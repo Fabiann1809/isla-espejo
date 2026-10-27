@@ -1,7 +1,7 @@
 class_name ProfileModel
 extends RefCounted
-## What the island has learned about the player: an `aggression` and a `stealth` score (0..1) that
-## move toward each run's behaviour with a moving average, so recent runs weigh more but the past
+## What the island has learned about the player: an `aggression` and a `stealth` score (0..1), plus a
+## `distance` score (0 = shoots up close, 1 = from afar), that move toward each run's behaviour with a moving average, so recent runs weigh more but the past
 ## is not forgotten. Pure logic (no nodes, no Events, no files): PlayerProfile wires it to the game.
 
 enum Style { BALANCED, AGGRESSIVE, STEALTH }
@@ -12,6 +12,8 @@ const NEUTRAL := 0.5
 var config: ProfileConfig
 var aggression := NEUTRAL
 var stealth := NEUTRAL
+## 0 = shoots from up close, 1 = shoots from afar. Only moves when a run had enough aimed shots.
+var distance := NEUTRAL
 var runs := 0
 ## Counters summed over every merged run.
 var totals := {}
@@ -43,6 +45,8 @@ func score_run(stats: RunStats) -> Dictionary:
 	return {
 		"aggression": _weighted(aggression_parts),
 		"stealth": _weighted(stealth_parts),
+		"distance": _distance_score(stats),
+		"has_distance": stats.shots_aimed >= config.min_aimed_shots,
 		"confidence": clampf(stats.play_time / config.full_confidence_seconds, 0.0, 1.0),
 	}
 
@@ -55,6 +59,8 @@ func merge_run(stats: RunStats) -> bool:
 	var rate: float = config.learning_rate * score.confidence
 	aggression = lerpf(aggression, score.aggression, rate)
 	stealth = lerpf(stealth, score.stealth, rate)
+	if score.has_distance:
+		distance = lerpf(distance, score.distance, rate)
 	runs += 1
 	var summary := stats.to_dict()
 	for key in summary:
@@ -72,6 +78,7 @@ func live_scores(stats: RunStats) -> Dictionary:
 	return {
 		"aggression": lerpf(aggression, score.aggression, weight),
 		"stealth": lerpf(stealth, score.stealth, weight),
+		"distance": lerpf(distance, score.distance, weight) if score.has_distance else distance,
 	}
 
 
@@ -101,6 +108,7 @@ static func style_key(value: Style) -> StringName:
 func reset() -> void:
 	aggression = NEUTRAL
 	stealth = NEUTRAL
+	distance = NEUTRAL
 	runs = 0
 	totals = {}
 	last_run = {}
@@ -111,6 +119,7 @@ func to_dict() -> Dictionary:
 		"version": VERSION,
 		"aggression": snappedf(aggression, 0.0001),
 		"stealth": snappedf(stealth, 0.0001),
+		"distance": snappedf(distance, 0.0001),
 		"runs": runs,
 		"totals": totals,
 		"last_run": last_run,
@@ -128,10 +137,19 @@ func load_dict(data: Dictionary) -> bool:
 		return false
 	aggression = clampf(float(saved_aggression), 0.0, 1.0)
 	stealth = clampf(float(saved_stealth), 0.0, 1.0)
+	# Added later: a profile saved before has no distance yet.
+	var saved_distance = data.get("distance")
+	distance = clampf(float(saved_distance), 0.0, 1.0) if (saved_distance is float or saved_distance is int) else NEUTRAL
 	runs = maxi(int(data.get("runs", 0)), 0)
 	totals = data.get("totals", {}) if data.get("totals") is Dictionary else {}
 	last_run = data.get("last_run", {}) if data.get("last_run") is Dictionary else {}
 	return true
+
+
+## 0 (shoots from up close) .. 1 (from afar), from the average distance to the target.
+func _distance_score(stats: RunStats) -> float:
+	var span := maxf(config.shot_distance_far - config.shot_distance_near, 1.0)
+	return clampf((stats.average_shot_distance() - config.shot_distance_near) / span, 0.0, 1.0)
 
 
 ## Weighted average of [weight, value, available] parts; neutral if nothing could be measured.

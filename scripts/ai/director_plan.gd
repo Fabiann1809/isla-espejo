@@ -8,6 +8,9 @@ var style: StringName = &"balanced"
 var intensity := 0.0
 var aggression := 0.5
 var stealth := 0.5
+## How far the player shoots from (0 = up close, 1 = afar) and how strongly the "ranged" rule applied.
+var distance := 0.5
+var ranged_intensity := 0.0
 
 var health_multiplier := 1.0
 var speed_multiplier := 1.0

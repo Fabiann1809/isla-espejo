@@ -7,7 +7,7 @@ const TEST_SAVE := "user://test_profile.json"
 
 ## A runtime error inside a check helper does not stop GDScript, so a test that silently skipped
 ## checks must still fail: the number of executed checks has to match.
-const EXPECTED_CHECKS := 52
+const EXPECTED_CHECKS := 61
 
 var _ok := true
 var _checks := 0
@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_test_simulated_players()
 	_test_learning_across_runs()
 	_test_shot_metrics()
+	_test_distance_score()
 	_test_run_filtering()
 	_test_live_scores()
 	_test_persistence()
@@ -110,6 +111,44 @@ func _test_shot_metrics() -> void:
 	var summary := stats.to_dict()
 	_check(summary.shots == 4 and summary.shots_hit == 1 and summary.shots_aimed == 3 and not summary.has("melee_attacks"),
 			"the run summary uses the shot counters")
+
+
+func _test_distance_score() -> void:
+	var sniper := _shooter_run(150.0, 8)
+	var brawler := _shooter_run(30.0, 8)
+	var model := ProfileModel.new(_config)
+	var far_score := model.score_run(sniper)
+	var close_score := model.score_run(brawler)
+	_check(far_score.has_distance and far_score.distance > 0.85 and close_score.distance == 0.0,
+			"shooting from afar scores near 1, from up close 0 (%.2f / %.2f)" % [far_score.distance, close_score.distance])
+	_check(not model.score_run(_shooter_run(150.0, 3)).has_distance, "too few aimed shots: the distance is not trusted")
+
+	model.merge_run(sniper)
+	_check(model.distance > ProfileModel.NEUTRAL, "a run shooting from afar moves the learned distance up (%.2f)" % model.distance)
+	var kept := model.distance
+	model.merge_run(_shooter_run(150.0, 2))
+	_check(model.distance == kept, "a run without enough aimed shots leaves the learned distance alone")
+	_check(model.live_scores(_shooter_run(150.0, 8)).distance > kept, "the live scores include the distance")
+	_check(model.live_scores(_shooter_run(150.0, 2)).distance == kept, "the live distance keeps the saved one without aimed shots")
+
+	var loaded := ProfileModel.new(_config)
+	_check(loaded.load_dict(model.to_dict()) and is_equal_approx(loaded.distance, snappedf(model.distance, 0.0001)),
+			"the distance survives saving and loading")
+	var old_save := model.to_dict()
+	old_save.erase("distance")
+	var legacy := ProfileModel.new(_config)
+	_check(legacy.load_dict(old_save) and legacy.distance == ProfileModel.NEUTRAL, "a profile saved before the distance loads as neutral")
+	model.reset()
+	_check(model.distance == ProfileModel.NEUTRAL, "reset forgets the distance")
+
+
+## A run of `aimed` shots at `distance` px, long enough to count.
+func _shooter_run(distance: float, aimed: int) -> RunStats:
+	var stats := RunStats.new(_config)
+	stats.advance(120.0)
+	for i in aimed:
+		stats.on_shot(distance)
+	return stats
 
 
 func _test_run_filtering() -> void:

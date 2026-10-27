@@ -70,10 +70,11 @@ func finish_run(reason: String) -> Dictionary:
 	return summary
 
 
-## Profile as the director should read it mid-run: {"aggression": 0..1, "stealth": 0..1}.
+## Profile as the director should read it mid-run: {"aggression": 0..1, "stealth": 0..1,
+## "distance": 0..1} (distance: 0 = shoots up close, 1 = from afar).
 func live_scores() -> Dictionary:
 	if not _run_active:
-		return {"aggression": model.aggression, "stealth": model.stealth}
+		return {"aggression": model.aggression, "stealth": model.stealth, "distance": model.distance}
 	return model.live_scores(stats)
 
 

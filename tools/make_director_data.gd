@@ -8,6 +8,8 @@ extends SceneTree
 ##   aggressive -> tougher enemies, more of them, more ambush rooms
 ##   stealth    -> sharper senses, wider patrols, more guarded ("watch") rooms
 ##   balanced   -> a mild mix of both
+##   ranged     -> (extra, on top of the style) faster enemies and ambushes for a player who shoots
+##                 from afar
 
 
 func _initialize() -> void:
@@ -37,8 +39,18 @@ func _initialize() -> void:
 	balanced.island_line = ""
 	balanced.hints = ["La isla aún te estudia: un poco más dura en todo"]
 
+	# Not a style: added on top when the player keeps shooting from afar (the island closes in).
+	var ranged := DirectorRule.new()
+	ranged.speed_multiplier = 1.25
+	ranged.vision_multiplier = 1.3
+	ranged.count_multiplier = 1.2
+	ranged.room_weights = {&"ambush": 2.0}
+	ranged.island_line = "La isla aprende a acortar distancias."
+	ranged.hints = ["Criaturas más rápidas para alcanzarte", "Más emboscadas a corta distancia"]
+
 	var config := DirectorConfig.new()
-	config.rules = {&"aggressive": aggressive, &"stealth": stealth, &"balanced": balanced}
+	config.rules = {&"aggressive": aggressive, &"stealth": stealth, &"balanced": balanced, &"ranged": ranged}
+	config.ranged_threshold = 0.6
 	config.full_intensity_difference = 0.6
 	config.balanced_intensity = 1.0
 	config.texts = {

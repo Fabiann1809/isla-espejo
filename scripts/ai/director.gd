@@ -28,7 +28,7 @@ func make_plan(announce := true) -> DirectorPlan:
 	if enabled:
 		var scores: Dictionary = PlayerProfile.live_scores()
 		var style := ProfileModel.style_key(PlayerProfile.live_style())
-		plan = DirectorLogic.plan_for(scores.aggression, scores.stealth, style, config)
+		plan = DirectorLogic.plan_for(scores.aggression, scores.stealth, style, config, scores.distance)
 	else:
 		plan = DirectorPlan.neutral()
 		plan.reasons.append("director disabled")

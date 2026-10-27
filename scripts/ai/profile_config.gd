@@ -28,6 +28,14 @@ extends Resource
 ## Detections per enemy room at or above which the player counts as "always seen".
 @export var detections_per_room_max := 2.0
 
+@export_group("Shot distance")
+## Average distance (px) to the target at or below which the player counts as fighting up close
+## (distance score 0), and at or above which as shooting from afar (score 1).
+@export var shot_distance_near := 40.0
+@export var shot_distance_far := 160.0
+## Shots that had a target needed before the distance of a run is trusted.
+@export var min_aimed_shots := 5
+
 @export_group("Aggression weights")
 @export var w_attack_rate := 0.35
 @export var w_fight_ratio := 0.35

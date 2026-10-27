@@ -4,11 +4,12 @@ extends RefCounted
 ## No nodes, no autoloads, so every decision can be tested exhaustively.
 
 
-static func plan_for(aggression: float, stealth: float, style: StringName, config: DirectorConfig) -> DirectorPlan:
+static func plan_for(aggression: float, stealth: float, style: StringName, config: DirectorConfig, distance := 0.0) -> DirectorPlan:
 	var plan := DirectorPlan.new()
 	plan.style = style
 	plan.aggression = aggression
 	plan.stealth = stealth
+	plan.distance = distance
 
 	var rule: DirectorRule = config.rules.get(style) if config != null else null
 	if rule == null:
@@ -39,9 +40,39 @@ static func plan_for(aggression: float, stealth: float, style: StringName, confi
 	plan.reasons.append("enemies: hp x%.2f, speed x%.2f, damage x%.2f, vision x%.2f, patrol x%.2f, count x%.2f"
 			% [plan.health_multiplier, plan.speed_multiplier, plan.damage_multiplier,
 			plan.vision_multiplier, plan.patrol_multiplier, plan.count_multiplier])
+	_apply_ranged(plan, distance, config)
 	if not plan.room_weights.is_empty():
 		plan.reasons.append("rooms favoured: %s" % [plan.room_weights])
 	return plan
+
+
+## A player who keeps shooting from afar gets the "ranged" rule on top of the style's reaction:
+## the island closes the distance. It scales with how far the player shoots from.
+static func _apply_ranged(plan: DirectorPlan, distance: float, config: DirectorConfig) -> void:
+	var rule: DirectorRule = config.rules.get(&"ranged")
+	if rule == null or distance <= config.ranged_threshold:
+		return
+	var strength := clampf((distance - config.ranged_threshold) / maxf(1.0 - config.ranged_threshold, 0.05), 0.0, 1.0)
+	plan.ranged_intensity = strength
+	plan.health_multiplier *= lerpf(1.0, rule.health_multiplier, strength)
+	plan.speed_multiplier *= lerpf(1.0, rule.speed_multiplier, strength)
+	plan.damage_multiplier *= lerpf(1.0, rule.damage_multiplier, strength)
+	plan.vision_multiplier *= lerpf(1.0, rule.vision_multiplier, strength)
+	plan.patrol_multiplier *= lerpf(1.0, rule.patrol_multiplier, strength)
+	plan.count_multiplier *= lerpf(1.0, rule.count_multiplier, strength)
+	_multiply_weights(plan.room_weights, rule.room_weights, strength)
+	_multiply_weights(plan.enemy_weights, rule.enemy_weights, strength)
+	if strength >= 0.25:
+		if plan.island_line == "":
+			plan.island_line = rule.island_line
+		plan.hints.append_array(rule.hints)
+	plan.reasons.append("shoots from afar (distance %.2f) -> ranged rule at %d%%: speed x%.2f, count x%.2f"
+			% [distance, roundi(strength * 100.0), plan.speed_multiplier, plan.count_multiplier])
+
+
+static func _multiply_weights(target: Dictionary, weights: Dictionary, strength: float) -> void:
+	for key in weights:
+		target[key] = target.get(key, 1.0) * lerpf(1.0, float(weights[key]), strength)
 
 
 ## Blends each weight with "no change" (1.0) by `intensity`.
