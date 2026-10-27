@@ -46,6 +46,14 @@ func update(direction: Vector2, delta: float) -> View:
 	return view
 
 
+## The view for a shot aimed in `direction` (no hysteresis: an attack picks its view once).
+## Diagonals keep the side view, like walking does.
+static func view_for_aim(direction: Vector2) -> View:
+	if absf(direction.y) > absf(direction.x) * SWITCH_RATIO:
+		return View.DOWN if direction.y > 0.0 else View.UP
+	return View.SIDE
+
+
 ## Animation name for a base animation (`idle`, `walk`, `attack`) in a view: `walk_side`,
 ## `walk_down`, `walk_up`. A view without art falls back to `<base>_side`, then to the bare `<base>`.
 static func animation_for(base: StringName, current_view: View, frames: SpriteFrames) -> StringName:

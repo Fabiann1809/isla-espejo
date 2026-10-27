@@ -30,24 +30,10 @@ max_health = 5
 script = ExtResource("5")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -10)
+position = Vector2(0, -11)
 scale = Vector2(1, 1)
 sprite_frames = ExtResource("6")
 animation = &"idle"
-
-[node name="BowPivot" type="Node2D" parent="."]
-visible = false
-position = Vector2(0, -8)
-
-[node name="Limb" type="Line2D" parent="BowPivot"]
-points = PackedVector2Array(7, -6, 10, -3, 11, 0, 10, 3, 7, 6)
-width = 1.5
-default_color = Color(0.45, 0.28, 0.12, 1)
-
-[node name="String" type="Line2D" parent="BowPivot"]
-points = PackedVector2Array(7, -6, 7, 6)
-width = 1.0
-default_color = Color(0.95, 0.95, 0.85, 1)
 
 [node name="Placeholder" type="ColorRect" parent="."]
 visible = false

@@ -61,7 +61,6 @@ var _shot_pending := false
 @onready var _hurtbox: Hurtbox = $Hurtbox
 ## Nico's art (the old colored square `Placeholder` stays hidden as a fallback).
 @onready var _body: AnimatedSprite2D = $Sprite
-@onready var _bow_pivot: Node2D = $BowPivot
 @onready var _camera: Camera2D = $Camera2D
 @onready var _interact_area: Area2D = $InteractArea
 
@@ -314,10 +313,7 @@ func _enter_state(new_state: State, duration: float) -> void:
 ## Starts or ends the attack pose. The shot is held until its release moment (see _fire); ending
 ## the attack early (hurt, dead) cancels it.
 func _set_attack_active(active: bool) -> void:
-	_bow_pivot.visible = active
 	_shot_pending = active and weapon.projectile_scene != null
-	if active:
-		_update_bow()
 
 
 func _fire() -> void:
@@ -344,11 +340,6 @@ func _nearest_enemy_distance(reach: float) -> float:
 	return best
 
 
-## The bow is held out toward the aim; its shape is a placeholder until there is art for it.
-func _update_bow() -> void:
-	_bow_pivot.rotation = _action_dir.angle()
-
-
 ## `<base>_side` if Nico's art has it, else nothing (the state keeps its old look).
 func _side_art(base: StringName) -> StringName:
 	var name := StringName(String(base) + "_side")
@@ -362,19 +353,20 @@ func _fit_to(anim: StringName, duration: float) -> float:
 
 
 func _update_visuals(delta: float) -> void:
-	if state == State.ATTACK:
-		_update_bow()
-	# Walking picks a view (side, front or back); attack, dash, hurt and death use the side view.
+	# Walking picks a view (side, front or back); the attack shows the view of its aim; dash, hurt
+	# and death use the side view.
 	var free := state in [State.IDLE, State.MOVE]
 	var view := _view.update(_move_dir if free else Vector2.ZERO, delta)
-	if not free:
+	if state == State.ATTACK:
+		view = FacingView.view_for_aim(_action_dir)
+	elif not free:
 		view = FacingView.View.SIDE
 	# The side art faces right: flip it to go left. Front and back are never flipped.
 	if absf(facing.x) > 0.1:
 		_side_flip = facing.x < 0.0
 	_body.flip_h = _side_flip if view == FacingView.View.SIDE else false
-	if state == State.ATTACK:
-		# The body faces the way the arrow goes, like the bow does.
+	if state == State.ATTACK and view == FacingView.View.SIDE:
+		# The body faces the way the arrow goes.
 		_body.flip_h = _action_dir.x < 0.0
 	var moving := velocity.length() > 5.0 and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)

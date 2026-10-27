@@ -82,6 +82,7 @@ func _arrow_flight(room: Node, player: Node, bow: Resource) -> void:
 	await _tap("attack")
 	await _frames(20)
 	_check(_arrows(room).is_empty(), "a wall in front stops the arrow long before its range")
+	_check(_impacts(room).size() == 1, "an impact puff plays where the arrow hit the wall (%d)" % _impacts(room).size())
 	wall.queue_free()
 	await _frames(30)
 
@@ -102,6 +103,10 @@ func _arrow_hits_dummy(room: Node, player: Node) -> void:
 			"it carries the distance to the nearest enemy in reach (%s)" % [_shots[0][1] if _shots.size() == 1 else "none"])
 	_check(dummy.hits == hits_before + 1, "the arrow hits the dummy exactly once (%d -> %d)" % [hits_before, dummy.hits])
 	_check(_arrows(room).is_empty(), "the arrow disappears on the enemy it hit")
+
+
+func _impacts(room: Node) -> Array:
+	return room.get_children().filter(func(child: Node) -> bool: return child is AnimatedSprite2D)
 
 
 func _arrows(room: Node) -> Array:

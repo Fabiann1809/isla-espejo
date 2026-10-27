@@ -38,6 +38,11 @@ func _pure_logic() -> void:
 	picker.update(Vector2.ZERO, 0.2)
 	_check(picker.update(Vector2(1, -1).normalized(), 0.01) == side, "a diagonal started from standing still goes to the side")
 
+	_check(script.view_for_aim(Vector2.RIGHT) == side and script.view_for_aim(Vector2.LEFT) == side, "aiming left or right shows the side view")
+	_check(script.view_for_aim(Vector2.DOWN) == down and script.view_for_aim(Vector2.UP) == up, "aiming down shows the front view, up the back view")
+	_check(script.view_for_aim(Vector2(1, 1).normalized()) == side and script.view_for_aim(Vector2(-1, -1).normalized()) == side,
+			"a diagonal shot keeps the side view")
+
 	# A wobbling diagonal walk (+-6 degrees; the 1.3x thresholds sit at about +-7.4 degrees): the naive rule (bigger axis wins) flips views often, the picker not.
 	var naive_changes := 0
 	var picker_changes := 0

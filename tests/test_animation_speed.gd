@@ -45,19 +45,19 @@ func _initialize() -> void:
 	await _frames(20)
 	_check(sprite.animation == &"idle_side" and is_equal_approx(sprite.speed_scale, 1.0), "resting plays idle at 1.0x")
 
-	# The swing: the 5 side frames last exactly attack_time, flipped to the side Nico faces.
-	for side in ["move_left", "move_down"]:
-		Input.action_press(side)
+	# The shot: the attack frames last exactly attack_time, in the view of the aim (side flipped to
+	# the side Nico faces; front and back never flipped).
+	for case in [["move_left", &"attack_side", true], ["move_down", &"attack_down", false], ["move_up", &"attack_up", false]]:
+		Input.action_press(case[0])
 		await _frames(3)
-		Input.action_release(side)
+		Input.action_release(case[0])
 		Input.action_press("attack")
 		await _frames(2)
 		Input.action_release("attack")
-		var expected_scale := 5.0 / (12.0 * float(player.attack_time))
-		_check(sprite.animation == &"attack_side" and is_equal_approx(sprite.speed_scale, expected_scale)
-				and sprite.flip_h == (side == "move_left")
-				and sprite.flip_h == (cos(player.get_node("BowPivot").rotation) < -0.01),
-				"attacking after %s plays attack_side at %.2fx, body and bow on the same side (got %s, %.2f, flip %s)" % [side, expected_scale, sprite.animation, sprite.speed_scale, sprite.flip_h])
+		var frame_count: int = sprite.sprite_frames.get_frame_count(case[1])
+		var expected_scale := float(frame_count) / (12.0 * float(player.attack_time))
+		_check(sprite.animation == case[1] and is_equal_approx(sprite.speed_scale, expected_scale) and sprite.flip_h == case[2],
+				"attacking after %s plays %s at %.2fx (got %s, %.2f, flip %s)" % [case[0], case[1], expected_scale, sprite.animation, sprite.speed_scale, sprite.flip_h])
 		await _frames(30)
 
 	# Dash to the left: flipped. A dash straight up keeps the side pose and the side Nico last faced.
@@ -73,10 +73,10 @@ func _initialize() -> void:
 				"dashing with %s plays dash_side, flip %s (got %s, %s)" % [case[0], case[1], sprite.animation, sprite.flip_h])
 		await _frames(40)
 
-	# Hurt: 2 frames at 8 fps last exactly hurt_time (0.25 s).
+	# Hurt: its frames at 8 fps last exactly hurt_time (0.25 s).
 	player.hurt(player.global_position + Vector2(20, 0))
 	await _frames(1)
-	var hurt_scale := 2.0 / (8.0 * float(player.hurt_time))
+	var hurt_scale := float(sprite.sprite_frames.get_frame_count(&"hurt_side")) / (8.0 * float(player.hurt_time))
 	_check(sprite.animation == &"hurt_side" and is_equal_approx(sprite.speed_scale, hurt_scale),
 			"getting hurt plays hurt_side fit to hurt_time (%.2fx; got %s, %.2f)" % [hurt_scale, sprite.animation, sprite.speed_scale])
 	_check(sprite.modulate == player.TINT_HURT_SOFT and player.is_invulnerable(),
