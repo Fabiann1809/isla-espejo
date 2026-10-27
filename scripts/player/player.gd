@@ -55,6 +55,8 @@ var _view := FacingView.new()
 var _side_flip := false
 ## The side walk has finished its first steps: Nico keeps running until he stops (see _update_visuals).
 var _run_ready := false
+## How long the run survives a short interruption before it restarts with the steps.
+var _run_grace_left := 0.0
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
 
@@ -69,6 +71,7 @@ var _shot_pending := false
 
 ## Distance from Nico's center to where the arrow appears.
 const MUZZLE := 8.0
+const RUN_GRACE := 0.15
 const DEFAULT_WEAPON := "res://data/weapons/bow.tres"
 ## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
 ## death animations.
@@ -374,12 +377,20 @@ func _update_visuals(delta: float) -> void:
 	if state == State.ATTACK:
 		# The attack art faces right in all its aims: mirrored when the shot goes left.
 		_body.flip_h = FacingView.attack_flips(_action_dir)
-	var moving := velocity.length() > 5.0 and state != State.DEAD
+	# A held direction counts as moving even if a collision zeroes the velocity for a tick, so a stumble
+	# does not flash the idle pose.
+	var moving := (velocity.length() > 5.0 or (free and _move_dir != Vector2.ZERO)) and state != State.DEAD
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
-	# Moving sideways starts with the walk steps and then breaks into a run that keeps going.
-	if not moving or wanted != &"walk_side":
-		_run_ready = false
-	elif _run_ready and _body.sprite_frames.has_animation(&"run_side"):
+	# Moving sideways starts with the walk steps and then breaks into a run that keeps going. A short
+	# interruption (a stumble, a tap on another key) does not send Nico back to the steps.
+	var side_walk := moving and wanted == &"walk_side"
+	if side_walk:
+		_run_grace_left = RUN_GRACE
+	else:
+		_run_grace_left = maxf(_run_grace_left - delta, 0.0)
+		if _run_grace_left == 0.0:
+			_run_ready = false
+	if side_walk and _run_ready and _body.sprite_frames.has_animation(&"run_side"):
 		wanted = &"run_side"
 	# One-shot states play their own side art when it exists (dash, hurt, death); without it the
 	# old look stays (walk/idle with a tint).

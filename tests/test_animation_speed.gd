@@ -43,6 +43,27 @@ func _initialize() -> void:
 		run_always = run_always and sprite.animation == &"run_side"
 	_check(run_always and run_frames.size() >= 2,
 			"the run keeps going without falling back to the walk start (%d different frames)" % run_frames.size())
+	# A short interruption (four ticks without the key) does not send him back to the first steps.
+	Input.action_release("move_right")
+	await _frames(4)
+	Input.action_press("move_right")
+	await _frames(3)
+	_check(sprite.animation == &"run_side", "after a short stumble Nico is still running (%s)" % sprite.animation)
+	# A held direction keeps the run even while a wall zeroes his velocity.
+	var wall := StaticBody2D.new()
+	wall.collision_layer = 1
+	var wall_shape := CollisionShape2D.new()
+	var wall_rect := RectangleShape2D.new()
+	wall_rect.size = Vector2(10, 80)
+	wall_shape.shape = wall_rect
+	wall.add_child(wall_shape)
+	wall.position = player.global_position + Vector2(30, 0)
+	room.add_child(wall)
+	await _frames(30)
+	_check(player.velocity.length() < 5.0 and sprite.animation == &"run_side",
+			"blocked by a wall with the key held he keeps the run, no idle flash (%s, v=%.1f)" % [sprite.animation, player.velocity.length()])
+	wall.queue_free()
+	await _frames(2)
 	Input.action_press("dash")
 	await _frames(3)
 	var dash_x: float = player.global_position.x
@@ -67,7 +88,7 @@ func _initialize() -> void:
 	# the side Nico faces; front and back never flipped).
 	var diagonal_down_left := ["move_left", "move_down"]
 	for case in [["move_left", &"attack_side", true], ["move_down", &"attack_down", false], ["move_up", &"attack_up", false],
-			[diagonal_down_left, &"attack_down", true], [["move_right", "move_up"], &"attack_up_side", false]]:
+			[diagonal_down_left, &"attack_down_side", true], [["move_right", "move_up"], &"attack_up_side", false]]:
 		var keys: Array = case[0] if case[0] is Array else [case[0]]
 		for key in keys:
 			Input.action_press(key)
