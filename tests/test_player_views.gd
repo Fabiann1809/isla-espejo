@@ -56,8 +56,9 @@ func _pure_logic() -> void:
 			"near an axis the shot snaps to that axis")
 	_check(script.attack_muzzle(&"attack_side", false) == Vector2(9, 0) and script.attack_muzzle(&"attack_side", true) == Vector2(-9, 0),
 			"the arrow leaves from the bow, mirrored with the art")
-	_check(script.attack_muzzle(&"attack_up", false).x < 0.0 and script.attack_muzzle(&"attack_down", false).x > 0.0,
-			"in the back pose the bow is on the other side than in the front pose")
+	_check(script.attack_muzzle(&"attack_up", false).x < 0.0 and script.attack_muzzle(&"attack_down_side", false).x > 0.0
+			and absf(script.attack_muzzle(&"attack_down", false).x) < 4.0,
+			"the back pose holds the bow on the left, the three-quarter pose on the right, the front pose in front")
 	_check(script.attack_muzzle(&"unknown", false) == script.attack_muzzle(&"attack_side", false), "an unknown pose uses the side muzzle")
 	var side_only := SpriteFrames.new()
 	side_only.add_animation(&"attack_side")

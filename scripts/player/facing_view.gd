@@ -67,11 +67,11 @@ static func attack_animation(direction: Vector2, frames: SpriteFrames) -> String
 
 
 ## Where the arrow leaves, from Nico's origin, for a pose facing right (the bow's position in that
-## art; mirrored with the art). The poses hold the bow at different places: beside him in the front
-## and three-quarter poses, on his left (the viewer's) in the back pose.
+## art; mirrored with the art). The poses hold the bow at different places: in front of him in the
+## front pose, beside him in the three-quarter poses, on his left (the viewer's) in the back pose.
 const MUZZLES := {
 	&"attack_side": Vector2(9, 0),
-	&"attack_down": Vector2(9, -2),
+	&"attack_down": Vector2(2, -1),
 	&"attack_down_side": Vector2(9, -2),
 	&"attack_up_side": Vector2(7, -3),
 	&"attack_up": Vector2(-9, -3),
