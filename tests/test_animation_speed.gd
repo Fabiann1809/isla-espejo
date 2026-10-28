@@ -31,20 +31,17 @@ func _initialize() -> void:
 	await _frames(1)
 	var step: float = player.global_position.x - before_x
 	_check(is_equal_approx(step, 2.0), "Nico walks exactly 2 px per physics tick (%.3f)" % step)
-	# The side walk starts with a few steps and then breaks into a run that keeps going.
-	await _frames(40)
-	_check(sprite.animation == &"run_side" and is_equal_approx(sprite.speed_scale, 1.0),
-			"after the first steps Nico breaks into the run (%s at %.2fx)" % [sprite.animation, sprite.speed_scale])
-	var run_frames := {}
-	var run_always := true
-	for i in 60:
+	# Nico always walks: the same loop goes on however long the key is held (no run).
+	var walk_frames := {}
+	var walk_always := true
+	for i in 100:
 		await physics_frame
-		run_frames[sprite.frame] = true
-		run_always = run_always and sprite.animation == &"run_side"
-	_check(run_always and run_frames.size() >= 2,
-			"the run keeps going without falling back to the walk start (%d different frames)" % run_frames.size())
-	# A short interruption (four ticks without the key) neither flashes the idle pose nor sends him
-	# back to the first steps.
+		walk_frames[sprite.frame] = true
+		walk_always = walk_always and sprite.animation == &"walk_side" and is_equal_approx(sprite.speed_scale, 1.0)
+	_check(walk_always and walk_frames.size() == sprite.sprite_frames.get_frame_count(&"walk_side"),
+			"the side walk loops through all its %d frames for as long as he moves (%d seen)" % [sprite.sprite_frames.get_frame_count(&"walk_side"), walk_frames.size()])
+	_check(not sprite.sprite_frames.has_animation(&"run_side"), "there is no run animation")
+	# A short interruption (four ticks without the key) does not flash the idle pose.
 	Input.action_release("move_right")
 	var flashed := false
 	for i in 4:
@@ -53,8 +50,8 @@ func _initialize() -> void:
 	Input.action_press("move_right")
 	await _frames(3)
 	_check(not flashed, "four ticks without the key do not flash the idle pose")
-	_check(sprite.animation == &"run_side", "after a short stumble Nico is still running (%s)" % sprite.animation)
-	# A held direction keeps the run even while a wall zeroes his velocity.
+	_check(sprite.animation == &"walk_side", "after a short stumble Nico is still walking (%s)" % sprite.animation)
+	# A held direction keeps the walk even while a wall zeroes his velocity.
 	var wall := StaticBody2D.new()
 	wall.collision_layer = 1
 	var wall_shape := CollisionShape2D.new()
@@ -65,8 +62,8 @@ func _initialize() -> void:
 	wall.position = player.global_position + Vector2(30, 0)
 	room.add_child(wall)
 	await _frames(30)
-	_check(player.velocity.length() < 5.0 and sprite.animation == &"run_side",
-			"blocked by a wall with the key held he keeps the run, no idle flash (%s, v=%.1f)" % [sprite.animation, player.velocity.length()])
+	_check(player.velocity.length() < 5.0 and sprite.animation == &"walk_side",
+			"blocked by a wall with the key held he keeps walking, no idle flash (%s, v=%.1f)" % [sprite.animation, player.velocity.length()])
 	wall.queue_free()
 	await _frames(2)
 	Input.action_press("dash")
@@ -84,11 +81,6 @@ func _initialize() -> void:
 	# The dash may still be ending, then the pose is held 0.1 s and the run waits 0.15 s: rest longer.
 	await _frames(45)
 	_check(sprite.animation == &"idle_side" and is_equal_approx(sprite.speed_scale, 1.0), "resting plays idle at 1.0x")
-	Input.action_press("move_right")
-	await _frames(6)
-	_check(sprite.animation == &"walk_side", "after stopping, the next run starts with the walk steps again (%s)" % sprite.animation)
-	Input.action_release("move_right")
-	await _frames(20)
 
 	# The shot: the attack frames last exactly attack_time, in the view of the aim (side flipped to
 	# the side Nico faces; front and back never flipped).

@@ -53,10 +53,6 @@ var _action_dir := Vector2.ZERO
 var _view := FacingView.new()
 ## Whether the side art is mirrored (Nico last faced left), kept while he shows the front or back.
 var _side_flip := false
-## The side walk has finished its first steps: Nico keeps running until he stops (see _update_visuals).
-var _run_ready := false
-## How long the run survives a short interruption before it restarts with the steps.
-var _run_grace_left := 0.0
 var _move_hold_left := 0.0
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
@@ -70,8 +66,7 @@ var _shot_pending := false
 @onready var _interact_area: Area2D = $InteractArea
 
 
-const RUN_GRACE := 0.15
-## How long the walk/run pose is kept after the movement stops for a tick (key ghosting, a graze).
+## How long the walk pose is kept after the movement stops for a tick (key ghosting, a graze).
 const MOVE_HOLD := 0.1
 const DEFAULT_WEAPON := "res://data/weapons/bow.tres"
 ## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
@@ -94,7 +89,6 @@ func _ready() -> void:
 	health.changed.connect(func(current: int, maximum: int) -> void:
 		Events.player_health_changed.emit(current, maximum))
 	health.died.connect(die)
-	_body.animation_finished.connect(_on_body_animation_finished)
 	Events.dialogue_started.connect(_on_dialogue_started)
 	Events.dialogue_finished.connect(_on_dialogue_finished)
 	equip(weapon if weapon != null else load(DEFAULT_WEAPON))
@@ -232,11 +226,6 @@ func _update_interaction() -> void:
 		Events.interaction_prompt_changed.emit(best.prompt if best != null else "")
 	if best != null and Input.is_action_just_pressed("interact"):
 		best.interact(self)
-
-
-func _on_body_animation_finished() -> void:
-	if _body.animation == &"walk_side":
-		_run_ready = true
 
 
 func _on_dialogue_started(_dialogue_id: StringName) -> void:
@@ -385,17 +374,6 @@ func _update_visuals(delta: float) -> void:
 	_move_hold_left = MOVE_HOLD if moving_now else maxf(_move_hold_left - delta, 0.0)
 	var moving := moving_now or (free and _move_hold_left > 0.0)
 	var wanted: StringName = FacingView.animation_for(&"walk" if moving else &"idle", view, _body.sprite_frames)
-	# Moving sideways starts with the walk steps and then breaks into a run that keeps going. A short
-	# interruption (a stumble, a tap on another key) does not send Nico back to the steps.
-	var side_walk := moving and wanted == &"walk_side"
-	if side_walk:
-		_run_grace_left = RUN_GRACE
-	else:
-		_run_grace_left = maxf(_run_grace_left - delta, 0.0)
-		if _run_grace_left == 0.0:
-			_run_ready = false
-	if side_walk and _run_ready and _body.sprite_frames.has_animation(&"run_side"):
-		wanted = &"run_side"
 	# One-shot states play their own side art when it exists (dash, hurt, death); without it the
 	# old look stays (walk/idle with a tint).
 	var one_shot := StringName()

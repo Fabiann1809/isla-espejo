@@ -1,8 +1,7 @@
 extends SceneTree
 ## Builds Nico's SpriteFrames (data/player/nico_frames.tres) from the strips in assets/sprites/nico/
 ## named nico_<animation>_<view>.png (32x32 cells side by side). Animations are found by name:
-## The side walk is only the start (standing, then a few steps) and plays once; Player then loops
-## `run_side` until Nico stops. idle/walk come in the down (front), up (back) and side views. The
+## idle/walk come in the down (front), up (back) and side views (Nico always walks, never runs). The
 ## attack comes in six aims (side, down, up, `attack_down_side` and `attack_up_side` for the
 ## diagonals; see FacingView.attack_animation); hurt, death and dash only from the side. Side art
 ## faces right; the game flips it to go left.
@@ -19,8 +18,7 @@ const ANIMATIONS := {
 	&"idle_side": [6.0, true],
 	&"walk_down": [12.0, true],
 	&"walk_up": [12.0, true],
-	&"walk_side": [12.0, false],
-	&"run_side": [12.0, true],
+	&"walk_side": [12.0, true],
 	&"attack_side": [12.0, false],
 	&"attack_down": [12.0, false],
 	&"attack_down_side": [12.0, false],
