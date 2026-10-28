@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SlimeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/slime_data.gd" id="1_f5jfp"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/slime_frames.tres" id="2_s20qs"]
+
+[resource]
+script = ExtResource("1_f5jfp")
+id = &"slime"
+display_name = "Slime"
+placeholder_color = Color(0.34, 0.69, 0.29, 1)
+sprite_frames = ExtResource("2_s20qs")
+sprite_offset = Vector2(0, -5)
+move_speed = 22.0
+chase_speed = 42.0
+detection_range = 110.0
+lose_range = 200.0
+attack_range = 52.0
+attack_windup = 0.45
+attack_time = 0.35
+attack_cooldown = 1.4
+knockback_speed = 110.0
+patrol_radius = 50.0

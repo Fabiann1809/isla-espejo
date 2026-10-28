@@ -163,12 +163,13 @@ Qué se modifica: composición y cantidad de enemigos por sala, parámetros de l
 
 Cada NPC tiene 3 estados de diálogo: primer encuentro, información después de avanzar y diálogo final. Animaciones: idle y una de interacción.
 
-### Enemigos (6)
+### Enemigos
 | Enemigo | Escenario | Concepto | Ataque / rasgo | Dificultad |
 |---|---|---|---|---|
 | Bestia de la niebla | Bosque | Lobo oscuro | Embiste; velocidad, ataque en manada | ⭐⭐ |
 | Sombra errante | Bosque / Ruinas | Espíritu encapuchado | Aparece y desaparece (teletransporte) | ⭐⭐ |
 | Murciélago | Ruinas | Criatura voladora | Picado rápido, ataque en grupo | ⭐ |
+| Slime verde | Bosque | Gelatina verde | Se agacha (aviso) y salta hacia donde estaba el jugador; un paso de lado lo esquiva | ⭐ |
 | Gólem menor | Ruinas | Roca animada | Ataque lento y fuerte; resistencia | ⭐⭐ |
 | Elemental de fuego | Templo | Criatura de llama | Proyectil corto, zona de fuego | ⭐⭐ |
 | Esqueleto guardián | Templo | Guerrero antiguo | Cuerpo a cuerpo con bloqueo | ⭐⭐ |
