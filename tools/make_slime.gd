@@ -7,7 +7,7 @@ extends SceneTree
 const STRIP := "res://assets/sprites/slime/slime_%s.png"
 const CELL := 32
 
-## animation -> [strip, frames per second, loops]. `run` (chasing) reuses the hopping walk.
+## animation -> [strip, frames per second, loops]. `run` is kept for compatibility: chasing also plays the hopping walk (see Slime).
 const ANIMATIONS := {
 	&"idle": [&"idle", 6.0, true],
 	&"walk": [&"walk", 10.0, true],
@@ -46,14 +46,16 @@ func _initialize() -> void:
 	data.chase_speed = 42.0
 	data.detection_range = 110.0
 	data.lose_range = 200.0
-	data.attack_range = 52.0
+	data.attack_range = 24.0
 	data.attack_damage = 1
-	data.attack_windup = 0.45
-	data.attack_time = 0.35
-	data.attack_cooldown = 1.4
+	data.attack_windup = 0.3
+	data.attack_time = 0.2
+	data.attack_cooldown = 1.2
 	data.knockback_speed = 110.0
 	data.patrol_radius = 50.0
-	data.leap_speed = 170.0
+	data.air_first_frame = 1
+	data.air_last_frame = 3
+	data.leap_speed = 60.0
 	ResourceSaver.save(data, "res://data/enemies/slime.tres")
 	print("slime written")
 	quit()

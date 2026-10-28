@@ -1,6 +1,6 @@
 extends SceneTree
-## Slime test: its art and data load, it chases, and it attacks by crouching and leaping toward where
-## the player stood (so sidestepping dodges it and a standing player gets hurt).
+## Slime test: its art and data load, it always moves by hopping (advancing only while airborne) and
+## its close-range lunge hurts a player who stands next to it.
 ## Run: godot --headless --path . --script res://tests/test_slime.gd
 
 const ARENA := Vector2(300, 180)
@@ -26,37 +26,45 @@ func _initialize() -> void:
 		_check(frames.has_animation(anim) and frames.get_frame_count(anim) > 0, "slime has %s" % anim)
 	_check(frames.get_frame_count(&"attack") == 5 and frames.get_frame_count(&"death") == 6,
 			"slime attack has 5 frames (crouch, leap, peak, land, recover) and death 6")
-	_check(slime.data is SlimeData and slime.data.leap_speed > 0.0, "slime uses a SlimeData with a leap speed")
+	_check(slime.data is SlimeData and slime.data.air_last_frame < frames.get_frame_count(&"walk"), "slime uses a SlimeData whose airborne frames exist")
 
-	# Dodge: the player steps away while the slime crouches; the leap goes where he stood.
+	# It advances only by hopping: it moves in the airborne frames and stays put on the ground, and it
+	# never shows the idle pose while it chases.
 	_player.global_position = ARENA
-	var start_health: int = _player.health.current
-	var dodged := false
-	var leap_from := Vector2.ZERO
-	var leap_dir := Vector2.ZERO
-	for i in 400:
+	var air_moves := 0.0
+	var ground_moves := 0.0
+	var air_samples := 0
+	var ground_samples := 0
+	var always_hopping := true
+	var start_distance: float = slime.global_position.distance_to(_player.global_position)
+	var previous: Vector2 = slime.global_position
+	for i in 120:
 		await physics_frame
-		if not dodged and slime.state == slime.State.ATTACK:
-			dodged = true
-			leap_from = slime.global_position
-			leap_dir = (_player.global_position - slime.global_position).normalized()
-			_player.global_position = ARENA + Vector2(0, 90)
-		if dodged and slime.state != slime.State.ATTACK:
-			break
-	_check(dodged, "the slime starts an attack when the player is in range")
-	var moved: Vector2 = slime.global_position - leap_from
-	var expected: float = slime.data.leap_speed * slime.data.attack_time
-	_check(moved.length() > expected * 0.6 and moved.normalized().dot(leap_dir) > 0.9,
-			"the slime leaps %.0f px toward where the player stood (expected about %.0f)" % [moved.length(), expected])
-	_check(_player.health.current == start_health, "a sidestep dodges the leap")
+		var step: float = slime.global_position.distance_to(previous)
+		previous = slime.global_position
+		if slime.state != slime.State.CHASE:
+			continue
+		var sprite: AnimatedSprite2D = slime.get_node("Sprite")
+		always_hopping = always_hopping and sprite.animation == &"walk"
+		if sprite.frame >= slime.data.air_first_frame and sprite.frame <= slime.data.air_last_frame:
+			air_moves += step
+			air_samples += 1
+		else:
+			ground_moves += step
+			ground_samples += 1
+	_check(air_samples > 10 and ground_samples > 5, "it chases through whole hops (%d airborne, %d grounded ticks)" % [air_samples, ground_samples])
+	_check(always_hopping, "it plays the hop, never the idle pose, while it chases")
+	_check(ground_moves < air_moves * 0.1, "it moves only while airborne (%.1f px in the air, %.1f px on the ground)" % [air_moves, ground_moves])
+	_check(slime.global_position.distance_to(_player.global_position) < start_distance, "hopping brings it closer to the player")
 	slime.queue_free()
 	await _frames(3)
+	var start_health: int = _player.health.current
 
 	# A player that stands still gets hit.
 	_player.global_position = ARENA
 	slime = _spawn(scene, ARENA + Vector2(60, 0))
 	await _frames(240)
-	_check(_player.health.current < start_health, "a leap that lands hurts the player (%d -> %d)" % [start_health, _player.health.current])
+	_check(_player.health.current < start_health, "its lunge hurts a player who stands next to it (%d -> %d)" % [start_health, _player.health.current])
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 

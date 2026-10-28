@@ -58,7 +58,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [ ] **Bestia de la niebla** (embiste)
 - [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`)
 - [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Aparece en el bosque mientras tanto
-- [x] **Slime verde** (se agacha y salta sobre el jugador; esquivable de lado): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
+- [x] **Slime verde** (siempre se mueve a saltos y ataca de cerca con un golpe corto): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
 - [ ] **Gólem menor** (ataque lento y fuerte)
 - [ ] **Elemental de fuego** (proyectil y zona de fuego)
 - [ ] **Esqueleto guardián** (cuerpo a cuerpo con bloqueo)
