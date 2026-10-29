@@ -1,6 +1,7 @@
 extends Node
-## Story progress that must survive dying: compass fragments, learned skills and story flags
-## (autoload "GameState"). A roguelike death restarts the map, not this (see docs/JUEGO.md).
+## Story progress of the current journey: compass fragments, learned skills and story flags
+## (autoload "GameState"). Dying wipes it (Level._on_player_died); only the player profile, which
+## is what the island learned, survives (see docs/JUEGO.md).
 ## Saving to disk belongs to the save/menu task; `to_dict()` / `from_dict()` are ready for it.
 
 signal fragment_collected(fragment_id: StringName)

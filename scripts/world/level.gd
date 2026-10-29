@@ -53,6 +53,7 @@ func _ready() -> void:
 	# Nico (a child of the level) is y-sorted with the rooms' enemies and props (see Room).
 	y_sort_enabled = true
 	Events.scenario_completed.connect(_on_scenario_completed)
+	Events.player_died.connect(_on_player_died)
 	_drops = DropSpawner.new()
 	_drops.name = "Drops"
 	add_child(_drops)
@@ -169,6 +170,17 @@ func _fade_veil(alpha: float, seconds: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(_veil, "color:a", alpha, seconds)
 	await tween.finished
+
+
+## Dying ends the whole journey: everything is lost (resources, skills, fragments, defeated bosses)
+## except what the island learned, which lives in the profile. The next attempt starts the first
+## island again (the death screen then reloads the scene).
+func _on_player_died() -> void:
+	if player != null:
+		player.clear_run_resources()
+	GameState.reset()
+	SaveGame.scenario_id = &""
+	SaveGame.save()
 
 
 func room_at(coord: Vector2i) -> Room:

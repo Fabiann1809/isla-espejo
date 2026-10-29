@@ -197,7 +197,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ---
 
-## 16. Combate a distancia, recursos y muerte por isla — A+B  ← 2, 8, 9
+## 16. Combate a distancia, recursos y muerte — A+B  ← 2, 8, 9
 Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustituye el ataque con espada de la tarea 2.
 - [x] `WeaponData` en `data/weapons/` y ataque del jugador leído desde datos (la espada sigue siendo la única arma, sin cambios visibles; `scripts/player/weapon_data.gd`, `data/weapons/sword.tres`, `Player.equip()`)
 - [x] Arco: proyectil con `Hitbox`, animación de disparo y `tests/test_weapons.gd` (`scenes/player/arrow.tscn`, `data/weapons/bow.tres`; arco y flecha provisionales con formas simples, sin arte nuevo)
@@ -206,7 +206,7 @@ Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustitu
 - [x] Señal de disparo en `Events` (`player_shot`, con la distancia al enemigo más cercano) y métricas de distancia y puntería en `RunStats` (disparos, aciertos, distancia media; "ataques cuerpo a cuerpo" renombrado a disparos)
 - [x] Reglas del director para el estilo a distancia en `data/ai/director_rules.tres` (puntuación `distance` en el perfil y regla `ranged` que se suma al estilo)
 - [x] Recursos básicos: `ResourceData` en `data/resources/` (corazón, orbe de flechas en abanico y oro), recogible genérico `Pickup`, `DropSpawner` que los deja al morir un enemigo según `ScenarioData.drops` y textos en español en los `.tres`; el HUD muestra el oro y el efecto temporal (`tests/test_resources.gd`)
-- [ ] Muerte por isla: al morir se pierden los recursos y mejoras de la partida y se conserva `GameState`
+- [x] Muerte total: al morir se pierde todo (recursos, mejoras, fragmentos, habilidades y jefes) y se reinicia desde la isla 1; solo se conserva el perfil que aprende la isla (`Level._on_player_died`, `tests/test_death.gd`)
 - [ ] Enemigos propios de las islas 2 y 3 (algunos pueden repetirse)
 
 **Hecho cuando:** Nico ataca solo con arco, la IA registra el estilo a distancia y el director lo usa, los recursos se recogen y se pierden al morir, y el chequeo local pasa sin errores.
