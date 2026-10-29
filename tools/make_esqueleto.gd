@@ -40,8 +40,8 @@ func _initialize() -> void:
 	data.display_name = "Esqueleto"
 	data.placeholder_color = Color(0.91, 0.78, 0.6)
 	data.sprite_frames = load("res://data/enemies/esqueleto_frames.tres")
-	# The cell's ground line is row 27: put it a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -5)
+	# The feet are on row 28 of the cell: put them a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -6)
 	data.max_health = 4
 	data.move_speed = 28.0
 	data.chase_speed = 55.0
