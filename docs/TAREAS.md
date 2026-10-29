@@ -60,6 +60,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Aparece en el bosque mientras tanto
 - [x] **Slime verde** (siempre se mueve a saltos y ataca de cerca con un golpe corto): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
 - [x] **Planta tiradora** (se queda quieta y escupe bolas de fuego hacia el jugador; no la tapa una pared): arte propio con `tools/make_planta_art.py`, datos en `data/enemies/planta_tiradora.tres` y escena `scenes/enemies/planta_tiradora.tscn`; ya aparece en el bosque
+- [x] **Esqueleto** (camina hacia el jugador y lo golpea con un hueso; comportamiento cuerpo a cuerpo genérico): arte propio con `tools/make_esqueleto_art.py`, datos en `data/enemies/esqueleto.tres` y escena `scenes/enemies/esqueleto.tscn`; ya aparece en el bosque
 - [ ] **Gólem menor** (ataque lento y fuerte)
 - [ ] **Elemental de fuego** (proyectil y zona de fuego)
 - [ ] **Esqueleto guardián** (cuerpo a cuerpo con bloqueo)

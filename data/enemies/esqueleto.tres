@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_87o6a"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/esqueleto_frames.tres" id="2_3pi28"]
+
+[resource]
+script = ExtResource("1_87o6a")
+id = &"esqueleto"
+display_name = "Esqueleto"
+placeholder_color = Color(0.91, 0.78, 0.6, 1)
+sprite_frames = ExtResource("2_3pi28")
+sprite_offset = Vector2(0, -5)
+max_health = 4
+move_speed = 28.0
+chase_speed = 55.0
+attack_windup = 0.45
+attack_time = 0.2
+attack_cooldown = 1.0
+knockback_speed = 130.0
