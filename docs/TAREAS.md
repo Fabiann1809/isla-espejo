@@ -59,7 +59,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`)
 - [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Aparece en el bosque mientras tanto
 - [x] **Slime verde** (siempre se mueve a saltos y ataca de cerca con un golpe corto): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
-- [x] **Planta tiradora** (se queda quieta y escupe bolas de fuego hacia el jugador; no la tapa una pared): arte propio con `tools/make_planta_art.py`, datos en `data/enemies/planta_tiradora.tres` y escena `scenes/enemies/planta_tiradora.tscn`; falta colocarla en una isla
+- [x] **Planta tiradora** (se queda quieta y escupe bolas de fuego hacia el jugador; no la tapa una pared): arte propio con `tools/make_planta_art.py`, datos en `data/enemies/planta_tiradora.tres` y escena `scenes/enemies/planta_tiradora.tscn`; ya aparece en el bosque
 - [ ] **Gólem menor** (ataque lento y fuerte)
 - [ ] **Elemental de fuego** (proyectil y zona de fuego)
 - [ ] **Esqueleto guardián** (cuerpo a cuerpo con bloqueo)
