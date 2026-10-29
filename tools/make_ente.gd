@@ -1,12 +1,12 @@
 extends SceneTree
 ## Builds the Ente del bosque's SpriteFrames (data/enemies/ente_frames.tres) from the strips in
-## assets/sprites/ente/ (made by tools/make_ente_art.py, 32x32 cells) and its EnemyData
+## assets/sprites/ente/ (made by tools/make_ente_art.py, 64x64 cells) and its EnemyData
 ## (data/enemies/ente.tres). It uses the generic melee behaviour: its attack is the slam drawn in the
 ## `attack` strip. The scene scenes/enemies/ente.tscn is hand-written.
 ## Run: godot --headless --path . --script res://tools/make_ente.gd
 
 const STRIP := "res://assets/sprites/ente/ente_%s.png"
-const CELL := 32
+const CELL := 64
 
 ## animation -> [strip, frames per second, loops]. `run` (chasing) reuses the walk.
 const ANIMATIONS := {
@@ -40,8 +40,8 @@ func _initialize() -> void:
 	data.display_name = "Ente del bosque"
 	data.placeholder_color = Color(0.4, 0.25, 0.14)
 	data.sprite_frames = load("res://data/enemies/ente_frames.tres")
-	# The feet are on row 29 of the cell: put them a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -7)
+	# The feet are on row 61 of the 64x64 cell: put them a few pixels below the body's origin.
+	data.sprite_offset = Vector2(0, -23)
 	data.max_health = 5
 	data.move_speed = 18.0
 	data.chase_speed = 34.0

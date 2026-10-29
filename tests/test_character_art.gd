@@ -21,7 +21,7 @@ const PLAYED := {
 	"res://data/npcs/merchant_frames.tres": [&"idle", &"face_south"],
 }
 ## Cell size of every sheet: 32x32 for Nico and the Sombra errante, 64x64 for the rest.
-const SMALL := ["nico_frames", "sombra_errante_frames", "slime_frames", "planta_tiradora_frames", "esqueleto_frames", "ente_frames"]
+const SMALL := ["nico_frames", "sombra_errante_frames", "slime_frames", "planta_tiradora_frames", "esqueleto_frames"]
 
 ## The Sombra floats without feet, so walking reuses its hover cells on purpose.
 const IDLE_MAY_SHARE_WITH_WALK := ["sombra_errante_frames"]
