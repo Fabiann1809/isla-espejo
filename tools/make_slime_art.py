@@ -20,7 +20,11 @@ EYE = (26, 26, 26, 255)
 SIZE = 32
 
 
+SCALE = 0.7  # the frames below are laid out at full size; the body is drawn at this fraction
+
+
 def blob(cx, bottom, w, h, eye_dx=1, eyes="normal", tint=0.0, n=2.7):
+    w, h = w * SCALE, max(h * SCALE, 3.0)
     img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     px = img.load()
     a, b = w / 2.0, h / 2.0
@@ -52,11 +56,11 @@ def blob(cx, bottom, w, h, eye_dx=1, eyes="normal", tint=0.0, n=2.7):
             px[p] = GLINT
     ey = int(cy - b * 0.15)
     ex = int(cx + eye_dx)
-    gap = max(2, round(w * 0.16))
-    for side in (-gap - 1, gap - 1):
+    gap = max(2, round(w * 0.2))
+    for side in (-gap, gap - 1):
         x0 = ex + side
         if eyes == "normal":
-            cells = [(x0, ey), (x0, ey + 1), (x0, ey + 2), (x0 + 1, ey), (x0 + 1, ey + 1), (x0 + 1, ey + 2)]
+            cells = [(x0, ey), (x0, ey + 1), (x0, ey + 2)]
         elif eyes == "squint":
             cells = [(x0, ey + 1), (x0 + 1, ey + 1)]
         elif eyes == "xx":
