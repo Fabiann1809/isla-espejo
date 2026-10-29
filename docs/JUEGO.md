@@ -169,6 +169,7 @@ Cada NPC tiene 3 estados de diálogo: primer encuentro, información después de
 | Bestia de la niebla | Bosque | Lobo oscuro | Embiste; velocidad, ataque en manada | ⭐⭐ |
 | Sombra errante | Bosque / Ruinas | Espíritu encapuchado | Aparece y desaparece (teletransporte) | ⭐⭐ |
 | Murciélago | Ruinas | Criatura voladora | Picado rápido, ataque en grupo | ⭐ |
+| Planta tiradora | (por decidir) | Planta-calabaza naranja | Se queda quieta, se carga (aviso) y escupe bolas hacia el jugador; sin línea de visión no dispara | ⭐⭐ |
 | Slime verde | Bosque | Gelatina verde | Siempre avanza a saltos (solo se mueve en el aire); de cerca se agacha (aviso) y embiste un poco | ⭐ |
 | Gólem menor | Ruinas | Roca animada | Ataque lento y fuerte; resistencia | ⭐⭐ |
 | Elemental de fuego | Templo | Criatura de llama | Proyectil corto, zona de fuego | ⭐⭐ |

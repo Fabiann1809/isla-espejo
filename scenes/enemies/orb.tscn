@@ -1,0 +1,56 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_orb.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/planta/orb.png" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/orb_impact.tscn" id="4"]
+
+[sub_resource type="AtlasTexture" id="1"]
+atlas = ExtResource("3")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="2"]
+atlas = ExtResource("3")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="3"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("1")
+}, {
+"duration": 1.0,
+"texture": SubResource("2")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]
+
+[sub_resource type="CircleShape2D" id="4"]
+radius = 4.0
+
+[sub_resource type="CircleShape2D" id="5"]
+radius = 2.0
+
+[node name="Orb" type="Node2D"]
+script = ExtResource("1")
+impact_scene = ExtResource("4")
+
+[node name="Art" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("3")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("4")
+
+[node name="WallSensor" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallSensor"]
+shape = SubResource("5")
