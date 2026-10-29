@@ -26,7 +26,8 @@ func _initialize() -> void:
 
 func _test_data(scenario: ScenarioData) -> void:
 	_check(scenario != null and scenario.id == &"forest" and scenario.display_name == "Bosque de la Aurora", "the forest scenario loads")
-	_check(scenario.theme != null and scenario.theme.tile_set != null, "it has a visual theme with a TileSet")
+	_check(scenario.theme != null and scenario.theme.tileset != null and scenario.theme.tileset.texture != null,
+			"it has a visual theme with a tileset profile")
 	var kinds := {}
 	for room in scenario.rooms:
 		kinds[room.type] = kinds.get(room.type, 0) + 1
@@ -51,28 +52,19 @@ func _test_data(scenario: ScenarioData) -> void:
 	_check(FileAccess.file_exists("res://assets/tilesets/kenney_roguelike_rpg/License.txt"), "the pack's license file is kept next to the art")
 
 
-## Every tile the catalog names must exist in the TileSet (so a wrong coordinate is caught).
+## Every role the game asks for has a tile in the default profile, inside its sheet (so a wrong
+## coordinate is caught), and the profile's TileSet matches the sheet (16x16, 1 px apart).
 func _test_tileset_catalog() -> void:
-	var tile_set: TileSet = load("res://assets/tilesets/forest_tileset.tres")
-	var source := tile_set.get_source(0) as TileSetAtlasSource
+	var profile: TilesetProfile = load(TileArt.DEFAULT_PROFILE)
+	var source := profile.tile_set().get_source(0) as TileSetAtlasSource
 	_check(source != null and source.texture_region_size == Vector2i(16, 16) and source.separation == Vector2i(1, 1),
 			"the TileSet is 16x16 with a 1 px separation")
-	var names: Dictionary = TileArt.new().get_script().get_script_constant_map()
-	var missing: Array[String] = []
-	var count := 0
-	for constant_name in names:
-		var value = names[constant_name]
-		var coords: Array = []
-		if value is Vector2i:
-			coords = [value]
-		elif value is Array:
-			coords = value
-		for coord in coords:
-			if coord is Vector2i:
-				count += 1
-				if not source.has_tile(coord):
-					missing.append("%s %s" % [constant_name, coord])
-	_check(count > 20 and missing.is_empty(), "every catalog tile exists in the TileSet (%d checked, missing: %s)" % [count, missing])
+	var problems := profile.problems(TileArt.ROLES, TileArt.PATTERNS)
+	_check(TileArt.ROLES.size() > 20 and problems.is_empty(),
+			"every role has a tile in the default profile (%d roles, problems: %s)" % [TileArt.ROLES.size(), problems])
+	var editor_set: TileSet = load("res://assets/tilesets/forest_tileset.tres")
+	_check(editor_set.get_source(0).get_tiles_count() == source.get_tiles_count(),
+			"the editor's TileSet has the same tiles as the profile")
 
 
 func _test_generation(scenario: ScenarioData) -> void:
@@ -112,7 +104,9 @@ func _test_built_level() -> void:
 	var floors_low := true
 	var layers := level.get_node("Map").find_children("*", "TileMapLayer", true, false)
 	for layer in layers:
-		floors_low = floors_low and layer.z_index < 0
+		# Effective z: the backdrop's layers sit in a parent drawn below the floors.
+		var z: int = layer.z_index + (layer.get_parent().z_index if layer.get_parent() is Node2D else 0)
+		floors_low = floors_low and z < 0
 	_check(not layers.is_empty() and floors_low, "every floor, border and corridor layer (%d) is drawn below the actors" % layers.size())
 	# The Ente waits alone in the middle of the last combat room before the boss.
 	var enemies := level.get_tree().get_nodes_in_group("enemies")
@@ -158,7 +152,8 @@ func _test_built_level() -> void:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if layout.are_connected(coord, coord + dir):
 				connections += 1
-	_check(corridor_layers == connections * 2, "every corridor has its tile layer and its walls (%d connections)" % connections)
+	# Per corridor: its grass, its path and trees, and its walls.
+	_check(corridor_layers == connections * 3, "every corridor has its tile layers and its walls (%d connections)" % connections)
 
 	var total := 0
 	var walkable := 0

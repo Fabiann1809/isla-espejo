@@ -44,6 +44,9 @@ func setup(room_data: RoomData, doors: Array[Vector2i]) -> void:
 
 
 func _ready() -> void:
+	# Merged into the map's y-sort: actors and upright props of every room are ordered together, so
+	# an enemy that walks into a room built later is not hidden by its trees.
+	y_sort_enabled = true
 	if theme != null:
 		_build_themed_floor()
 	else:
@@ -155,23 +158,35 @@ func _build_floor() -> void:
 ## Floor, decoration, border and paths drawn with the theme's tiles. Nothing here affects collision.
 func _build_themed_floor() -> void:
 	var ground := theme.new_layer(self, "Ground")
+	var patch_layer := theme.new_layer(self, "Patches")
 	var decor := theme.new_layer(self, "Decor")
 	var border := theme.new_layer(self, "Border")
 	# Below the props the room scene places by hand.
 	move_child(ground, 0)
-	move_child(decor, 1)
-	move_child(border, 2)
+	move_child(patch_layer, 1)
+	move_child(decor, 2)
+	move_child(border, 3)
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(position))
+	# Irregular patches of a second grass, continuous across rooms (sampled in world tiles).
+	var patches := FastNoiseLite.new()
+	patches.frequency = Tuning.GRASS_PATCH_FREQUENCY
+	var origin := Vector2i(position) / TILE
+	var in_patch := func(cell: Vector2i) -> bool:
+		return patches.get_noise_2d(origin.x + cell.x, origin.y + cell.y) > Tuning.GRASS_PATCH_THRESHOLD
 	for y in size_tiles.y:
 		for x in size_tiles.x:
-			var tile := theme.floor_tile
+			var tile: StringName = theme.floor_tile
+			if in_patch.call(Vector2i(x, y)):
+				# Rounded edges and inner corners where the patch ends (the same rule as the dirt paths).
+				patch_layer.set_cell(Vector2i(x, y), 0, TileArt.blob_tile(
+						TileArt.GRASS_PATCH, TileArt.GRASS_PATCH_INNER, in_patch, Vector2i(x, y)))
 			if not theme.floor_variants.is_empty() and rng.randf() < theme.floor_variant_chance:
 				tile = theme.floor_variants[rng.randi_range(0, theme.floor_variants.size() - 1)]
-			ground.set_cell(Vector2i(x, y), 0, tile)
+			ground.set_cell(Vector2i(x, y), 0, TileArt.coords(tile))
 			if not theme.decor_tiles.is_empty() and rng.randf() < theme.decor_chance and not _is_border(x, y):
-				decor.set_cell(Vector2i(x, y), 0, theme.decor_tiles[rng.randi_range(0, theme.decor_tiles.size() - 1)])
+				decor.set_cell(Vector2i(x, y), 0, TileArt.coords(theme.decor_tiles[rng.randi_range(0, theme.decor_tiles.size() - 1)]))
 
 	for y in size_tiles.y:
 		for x in size_tiles.x:
@@ -179,11 +194,38 @@ func _build_themed_floor() -> void:
 				continue
 			var cell := Vector2i(x, y)
 			if _is_door_cell(cell):
-				ground.set_cell(cell, 0, theme.path_tile)
+				ground.set_cell(cell, 0, TileArt.coords(theme.path_tile))
+				patch_layer.erase_cell(cell)
 				decor.erase_cell(cell)
 			else:
-				border.set_cell(cell, 0, theme.border_tile)
-	_paint_door_paths(ground, decor)
+				border.set_cell(cell, 0, TileArt.coords(theme.border_tile))
+	_add_detail_groups(decor, rng)
+	_paint_door_paths(ground, decor, patch_layer)
+
+
+## A few small natural groups of ground details: mushrooms, stones, flowers, a stump with mushrooms.
+## Drawn on the decor layer (no collision); the door paths are cleared afterwards.
+func _add_detail_groups(decor: TileMapLayer, rng: RandomNumberGenerator) -> void:
+	var families: Array = [
+		[TileArt.MUSHROOM_BROWN, TileArt.MUSHROOM_RED, TileArt.MUSHROOM_ORANGE, TileArt.MUSHROOM_PALE],
+		[TileArt.PEBBLES, TileArt.ROCK_SMALL],
+		[TileArt.FLOWER_PURPLE, TileArt.FLOWER_YELLOW],
+		[TileArt.STUMP],
+	]
+	for group in Tuning.DETAIL_GROUPS_PER_ROOM:
+		var family: Array = families[rng.randi_range(0, families.size() - 1)]
+		var center := Vector2i(rng.randi_range(2, size_tiles.x - 3), rng.randi_range(2, size_tiles.y - 3))
+		# One kind per group reads as natural (a ring of the same mushroom); a stump brings mushrooms.
+		var kind: StringName = family[rng.randi_range(0, family.size() - 1)]
+		var count := rng.randi_range(Tuning.DETAIL_GROUP_SIZE.x, Tuning.DETAIL_GROUP_SIZE.y)
+		for i in count:
+			var cell := center if i == 0 else center + Vector2i(rng.randi_range(-2, 2), rng.randi_range(-1, 1))
+			if _is_border(cell.x, cell.y):
+				continue
+			var tile := kind
+			if kind == TileArt.STUMP and i > 0:
+				tile = TileArt.MUSHROOM_BROWN
+			decor.set_cell(cell, 0, TileArt.coords(tile))
 
 
 func _is_border(x: int, y: int) -> bool:
@@ -207,7 +249,7 @@ func _is_door_cell(cell: Vector2i) -> bool:
 
 
 ## A two-tile-wide dirt path from every open door to the middle of the room.
-func _paint_door_paths(ground: TileMapLayer, decor: TileMapLayer) -> void:
+func _paint_door_paths(ground: TileMapLayer, decor: TileMapLayer, patch_layer: TileMapLayer) -> void:
 	var middle := size_tiles / 2
 	for door in open_doors:
 		var cells: Rect2i
@@ -221,6 +263,7 @@ func _paint_door_paths(ground: TileMapLayer, decor: TileMapLayer) -> void:
 		for y in range(cells.position.y, cells.end.y):
 			for x in range(cells.position.x, cells.end.x):
 				decor.erase_cell(Vector2i(x, y))
+				patch_layer.erase_cell(Vector2i(x, y))
 
 
 ## Wall rectangles around the room, with a gap of DOOR_WIDTH on every open side.
