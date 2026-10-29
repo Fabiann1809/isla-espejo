@@ -1,7 +1,7 @@
 """Draws the Planta tiradora (an orange pumpkin plant that spits orbs) and its orb with Pillow, from
 the palette of the reference sheet. Usage from the repo root:
   python tools/make_planta_art.py [--preview <folder>]
-Writes assets/sprites/planta/planta_<animation>.png (idle, attack, hurt, death; 32x32 cells) and
+Writes assets/sprites/planta/planta_<animation>.png (idle, walk, attack, hurt, death; 32x32 cells) and
 orb.png / orb_impact.png (16x16 cells). With --preview it also writes a labeled contact sheet and
 one GIF per animation to <folder> (not part of the game).
 Then: godot --headless --path . --script res://tools/make_planta.gd"""
@@ -163,7 +163,11 @@ death = [
     specks(plant(w=10, h=3, dy=3, eyes="x"), [(8, 22), (23, 21), (12, 20)], LEAF2),
     specks(Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0)), [(9, 26), (14, 25), (19, 26), (23, 25), (16, 27), (11, 24)], LEAF2),
 ]
-anims = {"idle": idle, "attack": attack, "hurt": hurt, "death": death}
+walk = [  # it scurries in short hops, the leaves staying on the ground
+    plant(w=15, h=12), plant(w=13, h=14, dy=-2, sway=1), plant(w=13, h=14, dy=-2, sway=1),
+    plant(w=15, h=12), plant(w=13, h=14, dy=-2, sway=-1), plant(w=13, h=14, dy=-2, sway=-1),
+]
+anims = {"idle": idle, "walk": walk, "attack": attack, "hurt": hurt, "death": death}
 
 
 def orb_frame(radius, core_dx=0):

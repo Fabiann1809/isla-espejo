@@ -1,7 +1,7 @@
 extends SceneTree
-## Planta tiradora test: its art and data load, it never leaves its spot, it shoots an orb at the
-## player when it has a clear shot (a wall blocks it), and the orb hurts, vanishes on walls and at
-## the end of its range.
+## Planta tiradora test: its art and data load, it scurries between shots but stays planted while it
+## charges, it shoots an orb at the player when it has a clear shot (a wall blocks it), and the orb
+## hurts, vanishes on walls and at the end of its range.
 ## Run: godot --headless --path . --script res://tests/test_planta.gd
 
 const ARENA := Vector2(300, 180)
@@ -23,11 +23,11 @@ func _initialize() -> void:
 	var scene: PackedScene = load("res://scenes/enemies/planta_tiradora.tscn")
 	var plant = _spawn(scene, ARENA + Vector2(100, 0))
 	var frames: SpriteFrames = plant.data.sprite_frames
-	for anim: StringName in [&"idle", &"attack", &"hurt", &"death"]:
+	for anim: StringName in [&"idle", &"walk", &"run", &"attack", &"hurt", &"death"]:
 		_check(frames.has_animation(anim) and frames.get_frame_count(anim) > 0, "plant has %s" % anim)
 	_check(plant.data is ShooterData and plant.data.projectile_scene != null, "plant uses a ShooterData with a projectile")
 
-	# It stays where it is and fires an orb that flies toward the player.
+	# It fires an orb that flies toward the player, and moves between shots.
 	_player.global_position = ARENA
 	var home: Vector2 = plant.global_position
 	var orb: Node = null
@@ -37,7 +37,6 @@ func _initialize() -> void:
 		if orb != null:
 			break
 	_check(orb != null, "the plant spits an orb when the player is in range")
-	_check(plant.global_position.distance_to(home) < 1.0, "the plant never leaves its spot")
 	if orb != null:
 		var from: Vector2 = orb.global_position
 		await _frames(6)
@@ -47,7 +46,7 @@ func _initialize() -> void:
 	var health_before: int = _player.health.current
 	await _frames(120)
 	_check(_player.health.current < health_before, "the orb hurts the player (%d -> %d)" % [health_before, _player.health.current])
-	_check(_find_orb() == null or _find_orb().global_position.x < plant.global_position.x, "an orb that hit is gone")
+	_check(plant.global_position.distance_to(home) > 4.0, "the plant scurries away from its spot between shots (%.0f px)" % plant.global_position.distance_to(home))
 	plant.queue_free()
 	await _frames(3)
 
@@ -74,7 +73,9 @@ func _initialize() -> void:
 	await _frames(40)
 	_check(not is_instance_valid(blocked), "an orb vanishes against a wall")
 
-	# A wall between the plant and the player blocks its shot.
+	# A wall between the plant and the player blocks its shot (the wall is long: it cannot walk around it).
+	rect.size = Vector2(8, 600)
+	shape.shape = rect
 	_spawn(scene, ARENA + Vector2(0, 150))
 	wall.global_position = ARENA + Vector2(0, 100)
 	wall.rotation = PI / 2.0

@@ -170,7 +170,7 @@ Cada NPC tiene 3 estados de diálogo: primer encuentro, información después de
 | Sombra errante | Bosque / Ruinas | Espíritu encapuchado | Aparece y desaparece (teletransporte) | ⭐⭐ |
 | Murciélago | Ruinas | Criatura voladora | Picado rápido, ataque en grupo | ⭐ |
 | Esqueleto | Bosque | Esqueleto pequeño | Avanza hacia el jugador y lo golpea con un hueso (aviso al levantarlo) | ⭐ |
-| Planta tiradora | Bosque | Planta-calabaza naranja | Se queda quieta, se carga (aviso) y escupe bolas hacia el jugador; sin línea de visión no dispara | ⭐⭐ |
+| Planta tiradora | Bosque | Planta-calabaza naranja | Se mueve a saltitos y, para disparar, se planta, se carga (aviso) y escupe bolas hacia el jugador; sin línea de visión no dispara | ⭐⭐ |
 | Slime verde | Bosque | Gelatina verde | Siempre avanza a saltos (solo se mueve en el aire); de cerca se agacha (aviso) y embiste un poco | ⭐ |
 | Gólem menor | Ruinas | Roca animada | Ataque lento y fuerte; resistencia | ⭐⭐ |
 | Elemental de fuego | Templo | Criatura de llama | Proyectil corto, zona de fuego | ⭐⭐ |

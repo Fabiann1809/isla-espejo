@@ -8,12 +8,14 @@ extends SceneTree
 const STRIP := "res://assets/sprites/planta/planta_%s.png"
 const CELL := 32
 
-## animation -> [frames per second, loops]. It never walks: missing animations fall back to idle.
+## animation -> [strip, frames per second, loops]. `run` (repositioning) reuses the scurry.
 const ANIMATIONS := {
-	&"idle": [6.0, true],
-	&"attack": [8.0, false],
-	&"hurt": [8.0, false],
-	&"death": [8.0, false],
+	&"idle": [&"idle", 6.0, true],
+	&"walk": [&"walk", 10.0, true],
+	&"run": [&"walk", 10.0, true],
+	&"attack": [&"attack", 8.0, false],
+	&"hurt": [&"hurt", 8.0, false],
+	&"death": [&"death", 8.0, false],
 }
 
 
@@ -21,10 +23,11 @@ func _initialize() -> void:
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
 	for anim: StringName in ANIMATIONS:
-		var strip: Texture2D = load(STRIP % anim)
+		var spec: Array = ANIMATIONS[anim]
+		var strip: Texture2D = load(STRIP % spec[0])
 		frames.add_animation(anim)
-		frames.set_animation_speed(anim, ANIMATIONS[anim][0])
-		frames.set_animation_loop(anim, ANIMATIONS[anim][1])
+		frames.set_animation_speed(anim, spec[1])
+		frames.set_animation_loop(anim, spec[2])
 		for i in strip.get_width() / CELL:
 			var atlas := AtlasTexture.new()
 			atlas.atlas = strip
@@ -40,9 +43,9 @@ func _initialize() -> void:
 	# The cell's ground line is row 27: put it a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -5)
 	data.max_health = 3
-	# It never leaves its spot: it only turns to face the player and shoots.
+	# It plants itself to shoot and, between shots, scurries sideways in short bursts (see Shooter).
 	data.move_speed = 0.0
-	data.chase_speed = 0.0
+	data.chase_speed = 45.0
 	data.detection_range = 170.0
 	data.lose_range = 260.0
 	data.attack_range = 150.0
@@ -57,6 +60,8 @@ func _initialize() -> void:
 	data.projectile_speed = 90.0
 	data.projectile_range = 220.0
 	data.muzzle_distance = 10.0
+	data.shuffle_time = 0.5
+	data.shuffle_wait = 1.0
 	ResourceSaver.save(data, "res://data/enemies/planta_tiradora.tres")
 	print("planta written")
 	quit()
