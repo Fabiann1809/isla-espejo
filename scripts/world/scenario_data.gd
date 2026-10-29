@@ -52,6 +52,9 @@ extends Resource
 ## counts as 1. The director's weights multiply these.
 @export var enemy_weights: Dictionary = {}
 @export var boss_scene: PackedScene
+## Optional mini boss that waits alone, in the middle of the room, in the last combat room before the
+## boss room (it replaces that room's normal enemies).
+@export var miniboss_scene: PackedScene
 ## The doorway to the next chapter, placed in the boss room (marker ExitSpawn).
 @export var exit_scene: PackedScene
 @export var npc_scene: PackedScene

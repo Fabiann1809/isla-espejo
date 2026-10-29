@@ -169,7 +169,8 @@ Cada NPC tiene 3 estados de diálogo: primer encuentro, información después de
 | Bestia de la niebla | Ruinas (mapa 2) | Lobo oscuro | Embiste; velocidad, ataque en manada | ⭐⭐ |
 | Sombra errante | Ruinas (mapa 2) | Espíritu encapuchado | Aparece y desaparece (teletransporte) | ⭐⭐ |
 | Murciélago | Ruinas (mapa 2) | Criatura voladora | Picado rápido, ataque en grupo | ⭐ |
-| Ente del bosque | Bosque | Espíritu de madera con astas | Avanza despacio, abre los brazos (aviso) y golpea de frente; resiste un poco el empuje | ⭐⭐ |
+| Ente del bosque (mini jefe) | Bosque, sala previa al jefe | Espíritu de madera con astas | Abre los brazos (aviso) y hace brotar Brotes (hasta 4 vivos); de cerca golpea el suelo; los Brotes mueren con él | ⭐⭐⭐ |
+| Brote | Bosque (solo los hace el Ente) | Retoño del Ente | Persigue al jugador y golpea de cerca | ⭐ |
 | Esqueleto | Bosque | Esqueleto pequeño | Avanza hacia el jugador y lo golpea con un hueso (aviso al levantarlo) | ⭐ |
 | Planta tiradora | Bosque | Planta-calabaza naranja | Se mueve a saltitos y, para disparar, se planta, se carga (aviso) y escupe bolas hacia el jugador; sin línea de visión no dispara | ⭐⭐ |
 | Slime verde | Bosque | Gelatina verde | Siempre avanza a saltos (solo se mueve en el aire); de cerca se agacha (aviso) y embiste un poco | ⭐ |

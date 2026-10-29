@@ -114,6 +114,19 @@ func _test_built_level() -> void:
 	for layer in layers:
 		floors_low = floors_low and layer.z_index < 0
 	_check(not layers.is_empty() and floors_low, "every floor, border and corridor layer (%d) is drawn below the actors" % layers.size())
+	# The Ente waits alone in the middle of the last combat room before the boss.
+	var enemies := level.get_tree().get_nodes_in_group("enemies")
+	var spirits := enemies.filter(func(n: Node) -> bool: return n.data.id == &"ente")
+	var guard_ok := false
+	if spirits.size() == 1:
+		var guard_room = spirits[0].get_parent()
+		var guard_cell: Vector2i = level.rooms.find_key(guard_room)
+		var later_combat := false
+		for i in range(layout.main_path.find(guard_cell) + 1, layout.main_path.size() - 1):
+			later_combat = later_combat or layout.get_cell(layout.main_path[i]).type == RoomData.RoomType.COMBAT
+		guard_ok = guard_room.data.type == RoomData.RoomType.COMBAT and guard_cell in layout.main_path 				and not later_combat and guard_room.enemies_alive == 1 and spirits[0].position.is_equal_approx(guard_room.center())
+	_check(guard_ok, "the Ente is the only enemy of the last combat room before the boss, in its center")
+	_check(enemies.filter(func(n: Node) -> bool: return n.data.id == &"ente").size() == 1, "there is exactly one Ente in the forest")
 	var npcs := level.get_tree().get_nodes_in_group("npcs")
 	var chests := level.get_tree().get_nodes_in_group("chests")
 	var elders := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"elder")

@@ -1,12 +1,14 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
 [ext_resource type="Resource" path="res://data/enemies/ente.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/summoner.gd" id="3"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(22, 32)
 
 [node name="Ente" instance=ExtResource("1")]
+script = ExtResource("3")
 data = ExtResource("2")
 
 [node name="CollisionShape2D" parent="Hurtbox" index="0"]

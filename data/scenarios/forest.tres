@@ -49,6 +49,7 @@ enemy_weights = {
 &"slime": 5.0
 }
 boss_scene = ExtResource("2_dqrix")
+miniboss_scene = ExtResource("27_ente")
 exit_scene = ExtResource("8_cxxwv")
 npc_scene = ExtResource("9_q2d2u")
 special_npc_scene = ExtResource("23_merchant")

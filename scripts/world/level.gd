@@ -33,6 +33,8 @@ var player: Node2D
 var bounds := Rect2()
 
 var _map: Node2D
+## Cell of the room that holds the mini boss (none = (-1, -1)).
+var _guard_cell := Vector2i(-1, -1)
 
 
 func _ready() -> void:
@@ -118,6 +120,7 @@ func _clear() -> void:
 
 
 func _build_rooms(rng: RandomNumberGenerator) -> void:
+	_guard_cell = _find_guard_cell()
 	for coord: Vector2i in layout.cells:
 		var cell := layout.get_cell(coord)
 		var room: Room = cell.room_data.scene.instantiate()
@@ -132,6 +135,9 @@ func _build_rooms(rng: RandomNumberGenerator) -> void:
 func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> void:
 	match cell.type:
 		RoomData.RoomType.COMBAT:
+			if cell.coord == _guard_cell:
+				_spawn_at(room, scenario.miniboss_scene, room.center())
+				return
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
 			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan, scenario.enemy_weights)
@@ -147,6 +153,25 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 		RoomData.RoomType.REWARD:
 			if not scenario.chest_scenes.is_empty():
 				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
+
+
+## The last combat room on the way to the boss, if the scenario has a mini boss.
+func _find_guard_cell() -> Vector2i:
+	if scenario.miniboss_scene == null:
+		return Vector2i(-1, -1)
+	for i in range(layout.main_path.size() - 2, 0, -1):
+		if layout.get_cell(layout.main_path[i]).type == RoomData.RoomType.COMBAT:
+			return layout.main_path[i]
+	return Vector2i(-1, -1)
+
+
+func _spawn_at(room: Room, scene: PackedScene, at: Vector2) -> Node2D:
+	var node: Node2D = scene.instantiate()
+	node.position = at
+	room.add_child(node)
+	Placement.reset(node)
+	room.register_enemy(node)
+	return node
 
 
 func _spawn_single(room: Room, scene: PackedScene, container: String) -> Node2D:

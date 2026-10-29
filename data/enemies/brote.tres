@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_8ogpi"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/brote_frames.tres" id="2_mq8og"]
+
+[resource]
+script = ExtResource("1_8ogpi")
+id = &"brote"
+display_name = "Brote"
+placeholder_color = Color(0.4, 0.25, 0.14, 1)
+sprite_frames = ExtResource("2_mq8og")
+sprite_offset = Vector2(0, -7)
+max_health = 2
+move_speed = 30.0
+chase_speed = 58.0
+detection_range = 260.0
+lose_range = 400.0
+attack_range = 20.0
+attack_windup = 0.35
+attack_time = 0.2
+attack_cooldown = 1.0
+knockback_speed = 130.0
+patrol_radius = 0.0

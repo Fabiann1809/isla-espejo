@@ -1,24 +1,26 @@
-[gd_resource type="Resource" script_class="EnemyData" format=3]
+[gd_resource type="Resource" script_class="SummonerData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_wmb6f"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/ente_frames.tres" id="2_spp4p"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/brote.tscn" id="1_spp4p"]
+[ext_resource type="Script" path="res://scripts/enemies/summoner_data.gd" id="2_5vwh6"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/ente_frames.tres" id="3_nbm2c"]
 
 [resource]
-script = ExtResource("1_wmb6f")
+script = ExtResource("2_5vwh6")
+minion_scene = ExtResource("1_spp4p")
 id = &"ente"
 display_name = "Ente del bosque"
 placeholder_color = Color(0.4, 0.25, 0.14, 1)
-sprite_frames = ExtResource("2_spp4p")
+sprite_frames = ExtResource("3_nbm2c")
 sprite_offset = Vector2(0, -23)
-max_health = 5
+max_health = 14
 move_speed = 18.0
 chase_speed = 34.0
-detection_range = 110.0
-lose_range = 200.0
+detection_range = 190.0
+lose_range = 320.0
 attack_range = 26.0
 attack_windup = 0.55
 attack_time = 0.25
 attack_cooldown = 1.5
 knockback_speed = 90.0
 knockback_resistance = 0.3
-patrol_radius = 40.0
+patrol_radius = 0.0
