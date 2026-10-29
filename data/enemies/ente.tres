@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_wmb6f"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/ente_frames.tres" id="2_spp4p"]
+
+[resource]
+script = ExtResource("1_wmb6f")
+id = &"ente"
+display_name = "Ente del bosque"
+placeholder_color = Color(0.4, 0.25, 0.14, 1)
+sprite_frames = ExtResource("2_spp4p")
+sprite_offset = Vector2(0, -7)
+max_health = 5
+move_speed = 18.0
+chase_speed = 34.0
+detection_range = 110.0
+lose_range = 200.0
+attack_range = 26.0
+attack_windup = 0.55
+attack_time = 0.25
+attack_cooldown = 1.5
+knockback_speed = 90.0
+knockback_resistance = 0.3
+patrol_radius = 40.0

@@ -13,6 +13,7 @@ const PLAYED := {
 	"res://data/enemies/slime_frames.tres": [&"idle", &"walk", &"run", &"attack", &"hurt", &"death"],
 	"res://data/enemies/planta_tiradora_frames.tres": [&"idle", &"attack", &"hurt", &"death"],
 	"res://data/enemies/esqueleto_frames.tres": [&"idle", &"walk", &"run", &"attack", &"hurt", &"death"],
+	"res://data/enemies/ente_frames.tres": [&"idle", &"walk", &"run", &"attack", &"hurt", &"death"],
 	"res://data/enemies/serpiente_frames.tres": [&"idle", &"attack", &"hurt", &"death"],
 	"res://data/enemies/guardian_de_la_isla_frames.tres": [&"idle", &"attack", &"hurt", &"death"],
 	"res://data/npcs/elder_frames.tres": [&"idle", &"face_south"],
@@ -20,7 +21,7 @@ const PLAYED := {
 	"res://data/npcs/merchant_frames.tres": [&"idle", &"face_south"],
 }
 ## Cell size of every sheet: 32x32 for Nico and the Sombra errante, 64x64 for the rest.
-const SMALL := ["nico_frames", "sombra_errante_frames", "slime_frames", "planta_tiradora_frames", "esqueleto_frames"]
+const SMALL := ["nico_frames", "sombra_errante_frames", "slime_frames", "planta_tiradora_frames", "esqueleto_frames", "ente_frames"]
 
 ## The Sombra floats without feet, so walking reuses its hover cells on purpose.
 const IDLE_MAY_SHARE_WITH_WALK := ["sombra_errante_frames"]
