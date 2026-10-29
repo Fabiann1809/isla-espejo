@@ -46,6 +46,12 @@ static func wave(origin: Vector2, facing: Vector2, reach: float, arc_degrees: fl
 	return zone
 
 
+func _ready() -> void:
+	# Warnings and skill areas lie on the ground: the level is y-sorted, so at z 0 a circle would be
+	# drawn over whoever stands above its center.
+	z_index = RoomTheme.GROUND_FX_Z
+
+
 func _physics_process(delta: float) -> void:
 	_age += delta
 	if on_tick.is_valid():
@@ -65,6 +71,10 @@ func _draw() -> void:
 			var fill := color
 			fill.a = 0.22 * (1.0 - progress * 0.6)
 			draw_circle(Vector2.ZERO, radius, fill)
+			# A dark ring under the colored edge so the warning reads on bright grass too.
+			if Tuning.ZONE_OUTLINE_ALPHA > 0.0:
+				var shade := Color(0, 0, 0, Tuning.ZONE_OUTLINE_ALPHA * (1.0 - progress))
+				draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, shade, 4.0)
 			var edge := color
 			edge.a = 0.8 * (1.0 - progress)
 			draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, edge, 2.0)
