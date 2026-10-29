@@ -1,0 +1,944 @@
+{
+  "trees_med": {
+    "tree_med_dense": {
+      "pivot": [
+        18,
+        34
+      ],
+      "size": [
+        35,
+        40
+      ]
+    },
+    "tree_med_emerald": {
+      "pivot": [
+        18,
+        40
+      ],
+      "size": [
+        37,
+        46
+      ]
+    },
+    "tree_med_mossy": {
+      "pivot": [
+        18,
+        36
+      ],
+      "size": [
+        37,
+        41
+      ]
+    },
+    "tree_med_oak": {
+      "pivot": [
+        18,
+        36
+      ],
+      "size": [
+        37,
+        41
+      ]
+    },
+    "tree_med_round": {
+      "pivot": [
+        17,
+        35
+      ],
+      "size": [
+        34,
+        40
+      ]
+    },
+    "tree_med_small": {
+      "pivot": [
+        15,
+        33
+      ],
+      "size": [
+        30,
+        38
+      ]
+    }
+  },
+  "trees_large": {
+    "tree_large_dense": {
+      "pivot": [
+        22,
+        48
+      ],
+      "size": [
+        45,
+        53
+      ]
+    },
+    "tree_large_emerald": {
+      "pivot": [
+        23,
+        55
+      ],
+      "size": [
+        47,
+        60
+      ]
+    },
+    "tree_large_grand": {
+      "pivot": [
+        25,
+        61
+      ],
+      "size": [
+        50,
+        66
+      ]
+    },
+    "tree_large_mossy": {
+      "pivot": [
+        24,
+        50
+      ],
+      "size": [
+        47,
+        54
+      ]
+    },
+    "tree_large_oak": {
+      "pivot": [
+        23,
+        48
+      ],
+      "size": [
+        46,
+        53
+      ]
+    },
+    "tree_large_round": {
+      "pivot": [
+        21,
+        47
+      ],
+      "size": [
+        42,
+        52
+      ]
+    }
+  },
+  "bushes": {
+    "bush_1": {
+      "pivot": [
+        4,
+        3
+      ],
+      "size": [
+        9,
+        8
+      ]
+    },
+    "bush_10": {
+      "pivot": [
+        4,
+        3
+      ],
+      "size": [
+        8,
+        8
+      ]
+    },
+    "bush_11": {
+      "pivot": [
+        10,
+        9
+      ],
+      "size": [
+        20,
+        14
+      ]
+    },
+    "bush_12": {
+      "pivot": [
+        7,
+        5
+      ],
+      "size": [
+        14,
+        10
+      ]
+    },
+    "bush_13": {
+      "pivot": [
+        3,
+        5
+      ],
+      "size": [
+        7,
+        10
+      ]
+    },
+    "bush_14": {
+      "pivot": [
+        6,
+        8
+      ],
+      "size": [
+        12,
+        12
+      ]
+    },
+    "bush_15": {
+      "pivot": [
+        5,
+        3
+      ],
+      "size": [
+        10,
+        8
+      ]
+    },
+    "bush_16": {
+      "pivot": [
+        4,
+        3
+      ],
+      "size": [
+        9,
+        8
+      ]
+    },
+    "bush_17": {
+      "pivot": [
+        6,
+        6
+      ],
+      "size": [
+        12,
+        11
+      ]
+    },
+    "bush_18": {
+      "pivot": [
+        7,
+        5
+      ],
+      "size": [
+        14,
+        10
+      ]
+    },
+    "bush_19": {
+      "pivot": [
+        7,
+        5
+      ],
+      "size": [
+        15,
+        10
+      ]
+    },
+    "bush_2": {
+      "pivot": [
+        4,
+        2
+      ],
+      "size": [
+        8,
+        7
+      ]
+    },
+    "bush_20": {
+      "pivot": [
+        5,
+        4
+      ],
+      "size": [
+        10,
+        9
+      ]
+    },
+    "bush_21": {
+      "pivot": [
+        6,
+        5
+      ],
+      "size": [
+        12,
+        10
+      ]
+    },
+    "bush_22": {
+      "pivot": [
+        4,
+        6
+      ],
+      "size": [
+        9,
+        11
+      ]
+    },
+    "bush_23": {
+      "pivot": [
+        3,
+        3
+      ],
+      "size": [
+        6,
+        8
+      ]
+    },
+    "bush_24": {
+      "pivot": [
+        6,
+        2
+      ],
+      "size": [
+        13,
+        7
+      ]
+    },
+    "bush_25": {
+      "pivot": [
+        6,
+        3
+      ],
+      "size": [
+        12,
+        8
+      ]
+    },
+    "bush_26": {
+      "pivot": [
+        7,
+        0
+      ],
+      "size": [
+        14,
+        5
+      ]
+    },
+    "bush_27": {
+      "pivot": [
+        4,
+        0
+      ],
+      "size": [
+        9,
+        5
+      ]
+    },
+    "bush_28": {
+      "pivot": [
+        9,
+        1
+      ],
+      "size": [
+        18,
+        6
+      ]
+    },
+    "bush_29": {
+      "pivot": [
+        8,
+        6
+      ],
+      "size": [
+        15,
+        11
+      ]
+    },
+    "bush_3": {
+      "pivot": [
+        3,
+        1
+      ],
+      "size": [
+        7,
+        6
+      ]
+    },
+    "bush_30": {
+      "pivot": [
+        7,
+        0
+      ],
+      "size": [
+        13,
+        5
+      ]
+    },
+    "bush_4": {
+      "pivot": [
+        3,
+        0
+      ],
+      "size": [
+        6,
+        5
+      ]
+    },
+    "bush_5": {
+      "pivot": [
+        3,
+        1
+      ],
+      "size": [
+        7,
+        6
+      ]
+    },
+    "bush_6": {
+      "pivot": [
+        3,
+        1
+      ],
+      "size": [
+        7,
+        6
+      ]
+    },
+    "bush_7": {
+      "pivot": [
+        4,
+        3
+      ],
+      "size": [
+        8,
+        8
+      ]
+    },
+    "bush_8": {
+      "pivot": [
+        5,
+        4
+      ],
+      "size": [
+        11,
+        9
+      ]
+    },
+    "bush_9": {
+      "pivot": [
+        5,
+        3
+      ],
+      "size": [
+        11,
+        8
+      ]
+    }
+  },
+  "rocks": {
+    "rock_1": {
+      "pivot": [
+        5,
+        0
+      ],
+      "size": [
+        9,
+        4
+      ]
+    },
+    "rock_10": {
+      "pivot": [
+        3,
+        0
+      ],
+      "size": [
+        7,
+        4
+      ]
+    },
+    "rock_11": {
+      "pivot": [
+        3,
+        0
+      ],
+      "size": [
+        7,
+        4
+      ]
+    },
+    "rock_12": {
+      "pivot": [
+        3,
+        1
+      ],
+      "size": [
+        5,
+        5
+      ]
+    },
+    "rock_13": {
+      "pivot": [
+        5,
+        5
+      ],
+      "size": [
+        10,
+        9
+      ]
+    },
+    "rock_14": {
+      "pivot": [
+        5,
+        2
+      ],
+      "size": [
+        9,
+        6
+      ]
+    },
+    "rock_15": {
+      "pivot": [
+        7,
+        7
+      ],
+      "size": [
+        13,
+        11
+      ]
+    },
+    "rock_16": {
+      "pivot": [
+        8,
+        9
+      ],
+      "size": [
+        16,
+        13
+      ]
+    },
+    "rock_17": {
+      "pivot": [
+        8,
+        6
+      ],
+      "size": [
+        16,
+        10
+      ]
+    },
+    "rock_18": {
+      "pivot": [
+        3,
+        0
+      ],
+      "size": [
+        6,
+        4
+      ]
+    },
+    "rock_19": {
+      "pivot": [
+        4,
+        0
+      ],
+      "size": [
+        8,
+        4
+      ]
+    },
+    "rock_2": {
+      "pivot": [
+        5,
+        3
+      ],
+      "size": [
+        10,
+        7
+      ]
+    },
+    "rock_20": {
+      "pivot": [
+        6,
+        1
+      ],
+      "size": [
+        12,
+        5
+      ]
+    },
+    "rock_21": {
+      "pivot": [
+        6,
+        2
+      ],
+      "size": [
+        13,
+        6
+      ]
+    },
+    "rock_3": {
+      "pivot": [
+        5,
+        0
+      ],
+      "size": [
+        11,
+        4
+      ]
+    },
+    "rock_4": {
+      "pivot": [
+        3,
+        3
+      ],
+      "size": [
+        6,
+        7
+      ]
+    },
+    "rock_5": {
+      "pivot": [
+        5,
+        0
+      ],
+      "size": [
+        10,
+        4
+      ]
+    },
+    "rock_6": {
+      "pivot": [
+        3,
+        0
+      ],
+      "size": [
+        5,
+        4
+      ]
+    },
+    "rock_7": {
+      "pivot": [
+        6,
+        0
+      ],
+      "size": [
+        13,
+        4
+      ]
+    },
+    "rock_8": {
+      "pivot": [
+        13,
+        15
+      ],
+      "size": [
+        26,
+        19
+      ]
+    },
+    "rock_9": {
+      "pivot": [
+        3,
+        0
+      ],
+      "size": [
+        7,
+        4
+      ]
+    }
+  },
+  "logs": {
+    "log_mossy": {
+      "pivot": [
+        14,
+        11
+      ],
+      "size": [
+        27,
+        15
+      ]
+    },
+    "stump_mossy": {
+      "pivot": [
+        9,
+        14
+      ],
+      "size": [
+        18,
+        18
+      ]
+    }
+  },
+  "boundary": {
+    "canopy_dark_1": {
+      "pivot": [
+        17,
+        26
+      ],
+      "size": [
+        34,
+        30
+      ]
+    },
+    "canopy_dark_2": {
+      "pivot": [
+        16,
+        27
+      ],
+      "size": [
+        32,
+        31
+      ]
+    },
+    "canopy_dark_3": {
+      "pivot": [
+        17,
+        26
+      ],
+      "size": [
+        34,
+        30
+      ]
+    },
+    "canopy_dark_4": {
+      "pivot": [
+        17,
+        27
+      ],
+      "size": [
+        33,
+        30
+      ]
+    },
+    "canopy_dark_5": {
+      "pivot": [
+        17,
+        31
+      ],
+      "size": [
+        34,
+        35
+      ]
+    },
+    "canopy_dark_6": {
+      "pivot": [
+        16,
+        30
+      ],
+      "size": [
+        33,
+        34
+      ]
+    },
+    "canopy_dark_7": {
+      "pivot": [
+        17,
+        33
+      ],
+      "size": [
+        35,
+        37
+      ]
+    },
+    "canopy_dark_8": {
+      "pivot": [
+        16,
+        28
+      ],
+      "size": [
+        32,
+        32
+      ]
+    },
+    "canopy_dark_9": {
+      "pivot": [
+        12,
+        20
+      ],
+      "size": [
+        24,
+        24
+      ]
+    },
+    "canopy_sil_1": {
+      "pivot": [
+        17,
+        26
+      ],
+      "size": [
+        34,
+        30
+      ]
+    },
+    "canopy_sil_2": {
+      "pivot": [
+        16,
+        27
+      ],
+      "size": [
+        32,
+        31
+      ]
+    },
+    "canopy_sil_3": {
+      "pivot": [
+        17,
+        26
+      ],
+      "size": [
+        34,
+        30
+      ]
+    },
+    "canopy_sil_4": {
+      "pivot": [
+        17,
+        27
+      ],
+      "size": [
+        33,
+        30
+      ]
+    },
+    "canopy_sil_5": {
+      "pivot": [
+        17,
+        31
+      ],
+      "size": [
+        34,
+        35
+      ]
+    },
+    "canopy_sil_6": {
+      "pivot": [
+        16,
+        30
+      ],
+      "size": [
+        33,
+        34
+      ]
+    },
+    "canopy_sil_7": {
+      "pivot": [
+        17,
+        33
+      ],
+      "size": [
+        35,
+        37
+      ]
+    },
+    "canopy_sil_8": {
+      "pivot": [
+        16,
+        28
+      ],
+      "size": [
+        32,
+        32
+      ]
+    },
+    "canopy_sil_9": {
+      "pivot": [
+        12,
+        20
+      ],
+      "size": [
+        24,
+        24
+      ]
+    },
+    "dark_dense": {
+      "pivot": [
+        20,
+        42
+      ],
+      "size": [
+        40,
+        46
+      ]
+    },
+    "dark_dense_silhouette": {
+      "pivot": [
+        20,
+        43
+      ],
+      "size": [
+        40,
+        46
+      ]
+    },
+    "dark_grand": {
+      "pivot": [
+        22,
+        53
+      ],
+      "size": [
+        44,
+        58
+      ]
+    },
+    "dark_grand_silhouette": {
+      "pivot": [
+        22,
+        54
+      ],
+      "size": [
+        44,
+        58
+      ]
+    },
+    "dark_mossy": {
+      "pivot": [
+        20,
+        41
+      ],
+      "size": [
+        40,
+        46
+      ]
+    },
+    "dark_mossy_silhouette": {
+      "pivot": [
+        20,
+        42
+      ],
+      "size": [
+        40,
+        46
+      ]
+    },
+    "dark_oak": {
+      "pivot": [
+        20,
+        41
+      ],
+      "size": [
+        40,
+        46
+      ]
+    },
+    "dark_oak_silhouette": {
+      "pivot": [
+        20,
+        42
+      ],
+      "size": [
+        40,
+        46
+      ]
+    },
+    "dark_round": {
+      "pivot": [
+        18,
+        40
+      ],
+      "size": [
+        36,
+        44
+      ]
+    },
+    "dark_round_silhouette": {
+      "pivot": [
+        18,
+        41
+      ],
+      "size": [
+        36,
+        44
+      ]
+    }
+  }
+}

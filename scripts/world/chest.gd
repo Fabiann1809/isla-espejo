@@ -19,6 +19,7 @@ var opened := false
 func _ready() -> void:
 	add_to_group("chests")
 	_sprite.texture = TileArt.tile(TileArt.CHEST_CLOSED)
+	_sprite.scale *= TileArt.draw_scale()
 	_talk.interacted.connect(_on_open)
 
 

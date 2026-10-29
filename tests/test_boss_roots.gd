@@ -187,6 +187,16 @@ func _test_in_generated_level() -> void:
 				art_here = true
 		placed = placed and circle_here and art_here
 	_check(placed, "in a real map each warning circle and its roots art sit on their spot")
+	# Nico in each corner of the arena: the scattered eruptions stay inside the boss's room.
+	var inside: Rect2 = Rect2(room.global_position, Vector2(480, 288)).grow(-16.0)
+	var outside := 0
+	for corner in [Vector2(40, 40), Vector2(440, 40), Vector2(40, 248), Vector2(440, 248)]:
+		player.global_position = room.global_position + corner
+		for i in 50:
+			for spot: Vector2 in boss._choose_roots_spots():
+				if not inside.has_point(spot):
+					outside += 1
+	_check(outside == 0, "roots never erupt in the walls or outside the arena (%d spots out in 200 attacks)" % outside)
 	var boss_at: Vector2 = boss.global_position
 	boss.health.take_damage(9999, boss_at)
 	await _frames(3)

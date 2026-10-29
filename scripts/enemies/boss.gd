@@ -241,8 +241,18 @@ func _choose_roots_spots() -> Array[Vector2]:
 	var total := _boss.roots_count + (_boss.phase_two_extra_roots if phase == 2 else 0)
 	for i in range(1, total):
 		var offset := Vector2.from_angle(randf() * TAU) * randf_range(_boss.roots_radius, _boss.roots_spread)
-		spots.append(target.global_position + offset)
+		spots.append(_inside_arena(target.global_position + offset))
 	return spots
+
+
+## Scattered eruptions near a wall used to land in it or in the corridor behind; they are kept on
+## the arena's floor (the boss's room, when it is in one).
+func _inside_arena(point: Vector2) -> Vector2:
+	var room := get_parent() as Node2D
+	if room == null or not room.has_method("pixel_size"):
+		return point
+	var floor_rect := Rect2(room.global_position, room.pixel_size()).grow(-Tuning.ARENA_MARGIN)
+	return point.clamp(floor_rect.position, floor_rect.end)
 
 
 ## One piece of art per eruption, over its warning circle (added after it, so drawn on top).
