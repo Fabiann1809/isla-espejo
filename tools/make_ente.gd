@@ -57,6 +57,8 @@ func _initialize() -> void:
 	data.knockback_speed = 90.0
 	data.knockback_resistance = 0.3
 	data.patrol_radius = 0.0
+	# The mini boss is a rare fight: it leaves resources far more often than a normal enemy.
+	data.drop_multiplier = 3.0
 	data.minion_scene = load("res://scenes/enemies/brote.tscn")
 	data.minions_per_summon = 2
 	data.max_minions = 4

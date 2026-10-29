@@ -54,6 +54,13 @@ var _view := FacingView.new()
 ## Whether the side art is mirrored (Nico last faced left), kept while he shows the front or back.
 var _side_flip := false
 var _move_hold_left := 0.0
+## Gold carried in this run (lost when the run ends, see clear_run_resources()).
+var gold := 0
+## Arrows added to every shot while the arrow orb lasts, and the angle between them.
+var _extra_arrows := 0
+var _arrow_spread := 0.0
+var _buff_left := 0.0
+var _buff_id := StringName()
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
 
@@ -104,6 +111,11 @@ func _physics_process(delta: float) -> void:
 		_stealth_left -= delta
 		if _stealth_left <= 0.0:
 			end_stealth()
+
+	if _buff_left > 0.0:
+		_buff_left -= delta
+		if _buff_left <= 0.0:
+			_end_arrow_buff()
 
 	_interact_block_left = maxf(_interact_block_left - delta, 0.0)
 	_move_dir = Vector2.ZERO if _locked else Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -174,6 +186,35 @@ func end_stealth() -> void:
 	_stealth_left = 0.0
 	visibility = 1.0
 	Events.player_stealth_changed.emit(false)
+
+
+func add_gold(amount: int) -> void:
+	gold = maxi(gold + amount, 0)
+	Events.player_gold_changed.emit(gold)
+
+
+## The arrow orb: every shot sends extra arrows in a fan for `data.duration` seconds (taking
+## another orb restarts the time).
+func start_arrow_buff(data: ResourceData) -> void:
+	_extra_arrows = data.extra_arrows
+	_arrow_spread = deg_to_rad(data.spread_degrees)
+	_buff_left = data.duration
+	_buff_id = data.id
+	Events.player_buff_changed.emit(data.id, data.duration, data.color)
+
+
+func _end_arrow_buff() -> void:
+	_extra_arrows = 0
+	_buff_left = 0.0
+	Events.player_buff_changed.emit(_buff_id, 0.0, Color.WHITE)
+	_buff_id = StringName()
+
+
+## Drops everything earned during the run (gold and timed effects); skills and story stay in GameState.
+func clear_run_resources() -> void:
+	if _buff_left > 0.0:
+		_end_arrow_buff()
+	add_gold(-gold)
 
 
 ## Limits the camera to a rectangle in world coordinates (usually the level bounds).
@@ -319,13 +360,19 @@ func _set_attack_active(active: bool) -> void:
 
 func _fire() -> void:
 	_shot_pending = false
-	var arrow: Arrow = weapon.projectile_scene.instantiate()
-	arrow.setup(_action_dir, weapon.projectile_speed, weapon.projectile_range, attack_damage)
-	arrow.hit_landed.connect(_on_arrow_hit)
-	get_parent().add_child(arrow)
 	var pose := FacingView.attack_animation(_action_dir, _body.sprite_frames)
-	arrow.global_position = global_position + FacingView.attack_muzzle(pose, FacingView.attack_flips(_action_dir))
-	Placement.reset(arrow)
+	var muzzle := global_position + FacingView.attack_muzzle(pose, FacingView.attack_flips(_action_dir))
+	# The middle arrow is the real shot (the AI counts its hit); the others of the fan are extra.
+	var count := 1 + _extra_arrows
+	for i in count:
+		var arrow: Arrow = weapon.projectile_scene.instantiate()
+		var angle := _arrow_spread * (i - (count - 1) / 2.0)
+		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, attack_damage)
+		if i == (count - 1) / 2:
+			arrow.hit_landed.connect(_on_arrow_hit)
+		get_parent().add_child(arrow)
+		arrow.global_position = muzzle
+		Placement.reset(arrow)
 	Events.player_shot.emit(_action_dir, _nearest_enemy_distance(weapon.projectile_range))
 
 

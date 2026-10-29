@@ -55,6 +55,8 @@ func _initialize() -> void:
 	data.attack_cooldown = 1.0
 	data.knockback_speed = 130.0
 	data.patrol_radius = 0.0
+	# Minions grow back, so they must not be a source of resources.
+	data.drop_multiplier = 0.0
 	ResourceSaver.save(data, "res://data/enemies/brote.tres")
 	print("brote written")
 	quit()

@@ -53,7 +53,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 - El Guardián de la isla se **fusiona con el último jefe** o queda como cinemática (extra).
 - **Muerte (decidido):** al morir Nico reaparece al inicio del escenario actual con un mapa nuevo. Pierde vida, recursos, munición y mejoras temporales de esa partida. Conserva fragmentos y habilidades de jefes ya derrotados y el perfil del jugador. La partida completa no se reinicia.
 - **Ataque a distancia (decidido):** Nico ya no usa espada. Ataca con arco (disparo manual en 8 direcciones) y el arma es un dato (`WeaponData`), así que se pueden añadir otras después.
-- **Recursos básicos (decidido):** en las islas se recogen objetos sencillos (curación, munición, mejora temporal) que solo valen durante la partida y se pierden al morir. No hay inventario complejo ni construcción.
+- **Recursos básicos (decidido):** en las islas se recogen objetos sencillos que solo valen durante la partida y se pierden al morir. No hay inventario complejo ni construcción. Los enemigos los dejan con poca probabilidad: **corazón** (cura 1; sale más si Nico está herido y hay uno garantizado tras una racha sin suerte), **orbe de flechas** (unos 12 s de disparos en abanico de 3 flechas) y **oro** (1 a 3 monedas, se atrae al acercarse). El oro por ahora solo se acumula; su uso será con el Mercader (se decide más adelante). Sin munición (el arco es infinito) ni experiencia por ahora.
 - **Enemigos por isla:** cada isla tiene su propio grupo de enemigos; algunos pueden repetirse entre islas si hace falta.
 
 ## 3. Historia

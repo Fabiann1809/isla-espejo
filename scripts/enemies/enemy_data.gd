@@ -46,3 +46,7 @@ extends Resource
 ## 0 = stands still while idle.
 @export var patrol_radius := 60.0
 @export var patrol_wait := 1.0
+
+@export_group("Drops")
+## Scales the chance of leaving resources when it dies (0 = never, e.g. minions that grow back).
+@export var drop_multiplier := 1.0

@@ -21,3 +21,4 @@ attack_time = 0.2
 attack_cooldown = 1.0
 knockback_speed = 130.0
 patrol_radius = 0.0
+drop_multiplier = 0.0

@@ -33,6 +33,7 @@ var player: Node2D
 var bounds := Rect2()
 
 var _map: Node2D
+var _drops: DropSpawner
 ## Cell of the room that holds the mini boss (none = (-1, -1)).
 var _guard_cell := Vector2i(-1, -1)
 ## Black cover hiding the hitch of building a map (a full-screen rect under the HUD).
@@ -52,6 +53,9 @@ func _ready() -> void:
 	# Nico (a child of the level) is y-sorted with the rooms' enemies and props (see Room).
 	y_sort_enabled = true
 	Events.scenario_completed.connect(_on_scenario_completed)
+	_drops = DropSpawner.new()
+	_drops.name = "Drops"
+	add_child(_drops)
 	Events.boss_defeated.connect(func(_id: StringName) -> void: _announce_objective())
 	# "Continue" in the main menu resumes the chapter that was saved.
 	var saved := SaveGame.take_pending_scenario()
@@ -80,6 +84,8 @@ func generate(new_seed := 0) -> void:
 	_clear()
 	# Rooms, corridors and props are drawn with the scenario's pack (the default one without a theme).
 	TileArt.use_profile(scenario.theme.tileset if scenario.theme != null else null)
+	_drops.drops = scenario.drops
+	_drops.rng.seed = current_seed + 2
 	_map = Node2D.new()
 	_map.name = "Map"
 	_map.y_sort_enabled = true

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="1_j22ov"]
+
+[resource]
+script = ExtResource("1_j22ov")
+id = &"gold"
+display_name = "Oro"
+kind = 2
+color = Color(1, 0.8, 0.25, 1)
+amount_max = 3
+drop_chance = 0.5
+max_on_floor = 6
+lifetime = 20.0
+magnet_radius = 48.0

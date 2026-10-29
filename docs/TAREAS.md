@@ -205,7 +205,7 @@ Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustitu
 - [x] Arte de Nico con arco: ataque de lado, de frente y de espalda según la dirección del disparo, flecha y efecto de impacto (tiras `assets/sprites/nico/`, `arrow.png`, `arrow_impact.png`)
 - [x] Señal de disparo en `Events` (`player_shot`, con la distancia al enemigo más cercano) y métricas de distancia y puntería en `RunStats` (disparos, aciertos, distancia media; "ataques cuerpo a cuerpo" renombrado a disparos)
 - [x] Reglas del director para el estilo a distancia en `data/ai/director_rules.tres` (puntuación `distance` en el perfil y regla `ranged` que se suma al estilo)
-- [ ] Recursos básicos: `ResourceData` en `data/`, recogible genérico y textos en español en `data/`
+- [x] Recursos básicos: `ResourceData` en `data/resources/` (corazón, orbe de flechas en abanico y oro), recogible genérico `Pickup`, `DropSpawner` que los deja al morir un enemigo según `ScenarioData.drops` y textos en español en los `.tres`; el HUD muestra el oro y el efecto temporal (`tests/test_resources.gd`)
 - [ ] Muerte por isla: al morir se pierden los recursos y mejoras de la partida y se conserva `GameState`
 - [ ] Enemigos propios de las islas 2 y 3 (algunos pueden repetirse)
 

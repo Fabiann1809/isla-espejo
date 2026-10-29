@@ -21,7 +21,16 @@ const TOAST_FADE := 0.8
 @onready var _boss_name: Label = $BossBar/Name
 @onready var _boss_fill: ColorRect = $BossBar/Track/Fill
 
+const GOLD_COLOR := Color(1.0, 0.8, 0.25)
+const BUFF_BAR_SIZE := Vector2(40, 3)
+
 var _fragment_icons := {}
+var _gold_label: Label
+var _buff_row: Control
+var _buff_icon: ColorRect
+var _buff_fill: ColorRect
+var _buff_left := 0.0
+var _buff_total := 1.0
 var _objective: Label
 var _toast_queue: Array[String] = []
 var _toast_busy := false
@@ -36,6 +45,9 @@ func _ready() -> void:
 	Events.boss_defeated.connect(func(_id: StringName) -> void: _boss_bar.hide())
 	Events.player_died.connect(func() -> void: _boss_bar.hide())
 	_build_fragments_and_objective()
+	_build_resources()
+	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
+	Events.player_buff_changed.connect(_on_buff_changed)
 	Events.objective_changed.connect(func(text: String) -> void: _objective.text = text)
 	Events.fragment_collected.connect(func(_id: StringName) -> void: _refresh_fragments())
 	_boss_bar.hide()
@@ -61,6 +73,59 @@ func _build_fragments_and_objective() -> void:
 	_objective.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
 	add_child(_objective)
 	_refresh_fragments()
+
+
+## Gold counter and the timed-effect icon, both in the top right corner. The effect only shows
+## while it lasts, so the HUD stays empty otherwise.
+func _build_resources() -> void:
+	var gold_row := HBoxContainer.new()
+	gold_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	gold_row.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	gold_row.position = Vector2(-8, 8)
+	gold_row.add_theme_constant_override("separation", 4)
+	gold_row.alignment = BoxContainer.ALIGNMENT_END
+	add_child(gold_row)
+	_gold_label = Label.new()
+	_gold_label.text = "0"
+	_gold_label.add_theme_font_size_override("font_size", 10)
+	_gold_label.add_theme_color_override("font_color", GOLD_COLOR)
+	gold_row.add_child(_gold_label)
+	var coin := ColorRect.new()
+	coin.custom_minimum_size = Vector2(8, 8)
+	coin.color = GOLD_COLOR
+	gold_row.add_child(coin)
+
+	_buff_row = Control.new()
+	_buff_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_buff_row.position = Vector2(-8 - 58, 24)
+	_buff_icon = ColorRect.new()
+	_buff_icon.size = Vector2(8, 8)
+	_buff_row.add_child(_buff_icon)
+	var track := ColorRect.new()
+	track.color = Color(0, 0, 0, 0.5)
+	track.size = BUFF_BAR_SIZE
+	track.position = Vector2(12, 3)
+	_buff_row.add_child(track)
+	_buff_fill = ColorRect.new()
+	_buff_fill.size = BUFF_BAR_SIZE
+	_buff_fill.position = Vector2(12, 3)
+	_buff_row.add_child(_buff_fill)
+	add_child(_buff_row)
+	_buff_row.hide()
+
+
+func _on_buff_changed(_buff_id: StringName, duration: float, color: Color) -> void:
+	_buff_left = duration
+	_buff_total = maxf(duration, 0.01)
+	_buff_row.visible = duration > 0.0
+	_buff_icon.color = color
+	_buff_fill.color = color
+
+
+func _process(delta: float) -> void:
+	if _buff_left > 0.0:
+		_buff_left = maxf(_buff_left - delta, 0.0)
+		_buff_fill.size.x = BUFF_BAR_SIZE.x * _buff_left / _buff_total
 
 
 func _refresh_fragments() -> void:

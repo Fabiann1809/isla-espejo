@@ -35,6 +35,12 @@ signal player_died
 ## Sombra and similar: true when the player becomes harder to detect, false when it ends.
 signal player_stealth_changed(active: bool)
 
+# Run resources (hearts, arrow orb, gold); lost when the run ends
+signal resource_collected(resource_id: StringName)
+signal player_gold_changed(total: int)
+## A timed effect started (`duration` > 0, with the color of its icon) or ended (`duration` = 0).
+signal player_buff_changed(buff_id: StringName, duration: float, color: Color)
+
 # Skills
 signal skill_unlocked(skill_id: StringName)
 ## `affected` = how many enemies the skill touched (the AI uses it to read the play style).

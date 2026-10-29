@@ -62,3 +62,7 @@ extends Resource
 @export var special_npc_scene: PackedScene
 ## Chests that fill the reward rooms (one is picked for each).
 @export var chest_scenes: Array[PackedScene] = []
+
+@export_group("Resources")
+## Basic resources that enemies leave behind in this scenario (data/resources/).
+@export var drops: Array[ResourceData] = []

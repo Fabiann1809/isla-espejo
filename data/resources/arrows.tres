@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="1_p0521"]
+
+[resource]
+script = ExtResource("1_p0521")
+id = &"arrows"
+display_name = "Lluvia de flechas"
+message = "¡Tus disparos salen triples!"
+kind = 1
+color = Color(0.35, 0.8, 0.95, 1)
+drop_chance = 0.06
+max_on_floor = 1
+lifetime = 10.0
