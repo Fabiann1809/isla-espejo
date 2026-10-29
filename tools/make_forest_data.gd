@@ -57,8 +57,8 @@ func _initialize() -> void:
 			&"forest_event", &"forest_reward", &"forest_special"]:
 		rooms.append(saved[id])
 	scenario.rooms = rooms
-	# Sombra errante and Murciélago (a visitor from the ruins, for now) are real; the grunt stays as a stand-in until the Bestia de la niebla exists.
-	var pool: Array[PackedScene] = [load("res://scenes/enemies/sombra_errante.tscn"), load("res://scenes/enemies/murcielago.tscn"), load("res://scenes/enemies/grunt.tscn")]
+	# The forest has its own four enemies; the Bestia de la niebla, the Sombra errante and the Murciélago belong to the second map.
+	var pool: Array[PackedScene] = [load("res://scenes/enemies/slime.tscn"), load("res://scenes/enemies/planta_tiradora.tscn"), load("res://scenes/enemies/esqueleto.tscn"), load("res://scenes/enemies/ente.tscn")]
 	scenario.enemy_pool = pool
 	scenario.npc_scene = load("res://scenes/npcs/elder.tscn")
 	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]

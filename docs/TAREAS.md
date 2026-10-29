@@ -55,9 +55,9 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 4. Enemigos base — B  ← 3
 - [x] Clase base de enemigo con vida, daño, estados (idle, patrulla, persecución, ataque, muerte) y datos en `data/enemies/` (`scripts/enemies/enemy.gd`, plantilla `scenes/enemies/grunt.tscn`)
 - [x] Detección del jugador (rango de visión, cono, línea de visión y señal `player_detected`)
-- [ ] **Bestia de la niebla** (embiste)
-- [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`)
-- [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Aparece en el bosque mientras tanto
+- [ ] **Bestia de la niebla** (embiste). Va en el mapa 2, no en el bosque
+- [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`). Va en el mapa 2, no en el bosque
+- [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Va en el mapa 2, no en el bosque
 - [x] **Slime verde** (siempre se mueve a saltos y ataca de cerca con un golpe corto): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
 - [x] **Planta tiradora** (se mueve a saltitos entre disparos y escupe bolas hacia el jugador; sin línea de visión no dispara): arte propio con `tools/make_planta_art.py`, datos en `data/enemies/planta_tiradora.tres` y escena `scenes/enemies/planta_tiradora.tscn`; ya aparece en el bosque
 - [x] **Esqueleto** (camina hacia el jugador y lo golpea con un hueso; comportamiento cuerpo a cuerpo genérico): arte propio con `tools/make_esqueleto_art.py`, datos en `data/enemies/esqueleto.tres` y escena `scenes/enemies/esqueleto.tscn`; ya aparece en el bosque
@@ -97,7 +97,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 7. Escenario 1: Bosque de la Aurora — A+B  ← 4, 5, 6
 - [x] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado (Kenney Roguelike/RPG, CC0)
 - [x] 6–10 salas del bosque (claros, río con puente, cofre, evento): 10 salas en `scenes/levels/rooms/forest/`
-- [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; cambiar el `enemy_pool` de `data/scenarios/forest.tres` por la Bestia de la niebla y la Sombra errante cuando existan)
+- [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; el `enemy_pool` de `data/scenarios/forest.tres` ya usa los cuatro enemigos del bosque: slime, planta tiradora, esqueleto y ente)
 - [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura; ya con su sprite nuevo y arte animado de raíces sobre el círculo de aviso)
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)

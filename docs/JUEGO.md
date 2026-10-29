@@ -166,9 +166,9 @@ Cada NPC tiene 3 estados de diálogo: primer encuentro, información después de
 ### Enemigos
 | Enemigo | Escenario | Concepto | Ataque / rasgo | Dificultad |
 |---|---|---|---|---|
-| Bestia de la niebla | Bosque | Lobo oscuro | Embiste; velocidad, ataque en manada | ⭐⭐ |
-| Sombra errante | Bosque / Ruinas | Espíritu encapuchado | Aparece y desaparece (teletransporte) | ⭐⭐ |
-| Murciélago | Ruinas | Criatura voladora | Picado rápido, ataque en grupo | ⭐ |
+| Bestia de la niebla | Ruinas (mapa 2) | Lobo oscuro | Embiste; velocidad, ataque en manada | ⭐⭐ |
+| Sombra errante | Ruinas (mapa 2) | Espíritu encapuchado | Aparece y desaparece (teletransporte) | ⭐⭐ |
+| Murciélago | Ruinas (mapa 2) | Criatura voladora | Picado rápido, ataque en grupo | ⭐ |
 | Ente del bosque | Bosque | Espíritu de madera con astas | Avanza despacio, abre los brazos (aviso) y golpea de frente; resiste un poco el empuje | ⭐⭐ |
 | Esqueleto | Bosque | Esqueleto pequeño | Avanza hacia el jugador y lo golpea con un hueso (aviso al levantarlo) | ⭐ |
 | Planta tiradora | Bosque | Planta-calabaza naranja | Se mueve a saltitos y, para disparar, se planta, se carga (aviso) y escupe bolas hacia el jugador; sin línea de visión no dispara | ⭐⭐ |
