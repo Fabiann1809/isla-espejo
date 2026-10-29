@@ -45,8 +45,8 @@ func _initialize() -> void:
 	data.max_health = 4
 	data.move_speed = 28.0
 	data.chase_speed = 55.0
-	data.detection_range = 120.0
-	data.lose_range = 220.0
+	data.detection_range = 170.0
+	data.lose_range = 260.0
 	data.attack_range = 22.0
 	data.attack_damage = 1
 	# The 7-frame swing raises the club for 5 frames (windup) and strikes on the 6th.

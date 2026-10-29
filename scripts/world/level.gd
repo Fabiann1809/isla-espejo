@@ -134,7 +134,7 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 		RoomData.RoomType.COMBAT:
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
-			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan)
+			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan, scenario.enemy_weights)
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")

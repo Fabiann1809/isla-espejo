@@ -42,7 +42,12 @@ theme = ExtResource("21_m2acy")
 start_room = ExtResource("20_366gm")
 boss_room = ExtResource("1_5vu37")
 rooms = Array[ExtResource("10_kw76a")]([ExtResource("11_n0i0u"), ExtResource("12_8bqs7"), ExtResource("13_6rtq2"), ExtResource("14_ytje3"), ExtResource("15_rnyrg"), ExtResource("16_sxhet"), ExtResource("17_iuoy7"), ExtResource("18_s1buj")])
-enemy_pool = Array[PackedScene]([ExtResource("24_slime"), ExtResource("25_planta"), ExtResource("26_esqueleto"), ExtResource("27_ente")])
+enemy_pool = Array[PackedScene]([ExtResource("24_slime"), ExtResource("25_planta"), ExtResource("26_esqueleto")])
+enemy_weights = {
+&"esqueleto": 3.0,
+&"planta_tiradora": 3.0,
+&"slime": 5.0
+}
 boss_scene = ExtResource("2_dqrix")
 exit_scene = ExtResource("8_cxxwv")
 npc_scene = ExtResource("9_q2d2u")

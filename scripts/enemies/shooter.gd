@@ -42,11 +42,11 @@ func _process_chase(delta: float) -> void:
 func _start_shuffle(distance: float) -> void:
 	var side := Vector2(-facing.y, facing.x) * (1.0 if randf() < 0.5 else -1.0)
 	var radial := 0.0
-	if distance > data.attack_range * 0.9:
+	if distance > data.attack_range * 0.55:
 		radial = 1.0
-	elif distance < data.attack_range * 0.4:
+	elif distance < data.attack_range * 0.3:
 		radial = -1.0
-	_shuffle_dir = (side * 0.8 + facing * radial).normalized()
+	_shuffle_dir = (side * 0.6 + facing * radial).normalized()
 	_shuffle_left = _shooter.shuffle_time
 	_shuffle_wait_left = _shooter.shuffle_wait * randf_range(0.7, 1.3)
 

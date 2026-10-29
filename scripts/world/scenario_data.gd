@@ -48,6 +48,9 @@ extends Resource
 
 @export_group("Population")
 @export var enemy_pool: Array[PackedScene] = []
+## How often each enemy of the pool is picked, by enemy id (the scene's file name); a missing id
+## counts as 1. The director's weights multiply these.
+@export var enemy_weights: Dictionary = {}
 @export var boss_scene: PackedScene
 ## The doorway to the next chapter, placed in the boss room (marker ExitSpawn).
 @export var exit_scene: PackedScene

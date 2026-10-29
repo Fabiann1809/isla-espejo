@@ -46,9 +46,9 @@ func _initialize() -> void:
 	# It plants itself to shoot and, between shots, scurries sideways in short bursts (see Shooter).
 	data.move_speed = 0.0
 	data.chase_speed = 45.0
-	data.detection_range = 170.0
-	data.lose_range = 260.0
-	data.attack_range = 150.0
+	data.detection_range = 190.0
+	data.lose_range = 280.0
+	data.attack_range = 120.0
 	data.attack_damage = 1
 	# The 6-frame attack charges for 4 frames (windup) and spits on the 5th (attack_time).
 	data.attack_windup = 0.5
@@ -61,7 +61,7 @@ func _initialize() -> void:
 	data.projectile_range = 220.0
 	data.muzzle_distance = 10.0
 	data.shuffle_time = 0.5
-	data.shuffle_wait = 1.0
+	data.shuffle_wait = 0.7
 	ResourceSaver.save(data, "res://data/enemies/planta_tiradora.tres")
 	print("planta written")
 	quit()

@@ -82,7 +82,7 @@ func spawn_points(container: String) -> Array[Vector2]:
 ## `plan`, enemies are picked by the plan's weights and tuned by its multipliers.
 ## An enemy's id is the file name of its scene (grunt.tscn -> "grunt").
 func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenerator,
-		plan: DirectorPlan = null) -> void:
+		plan: DirectorPlan = null, base_weights: Dictionary = {}) -> void:
 	var points := spawn_points("EnemySpawns")
 	if pool.is_empty() or points.is_empty():
 		return
@@ -92,7 +92,7 @@ func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenera
 		points[i] = points[j]
 		points[j] = tmp
 	for i in mini(count, points.size()):
-		var enemy: Node2D = _pick_enemy(pool, rng, plan).instantiate()
+		var enemy: Node2D = _pick_enemy(pool, rng, plan, base_weights).instantiate()
 		enemy.position = points[i]
 		if plan != null:
 			plan.apply_to_enemy(enemy)
@@ -101,13 +101,16 @@ func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenera
 		register_enemy(enemy)
 
 
-func _pick_enemy(pool: Array[PackedScene], rng: RandomNumberGenerator, plan: DirectorPlan) -> PackedScene:
-	if plan == null or plan.enemy_weights.is_empty():
+func _pick_enemy(pool: Array[PackedScene], rng: RandomNumberGenerator, plan: DirectorPlan,
+		base_weights: Dictionary = {}) -> PackedScene:
+	var director_weights := plan != null and not plan.enemy_weights.is_empty()
+	if not director_weights and base_weights.is_empty():
 		return pool[rng.randi_range(0, pool.size() - 1)]
 	var total := 0.0
 	var weights: Array[float] = []
 	for scene in pool:
-		var weight := plan.enemy_weight(StringName(scene.resource_path.get_file().get_basename()))
+		var id := StringName(scene.resource_path.get_file().get_basename())
+		var weight: float = float(base_weights.get(id, 1.0)) * (plan.enemy_weight(id) if director_weights else 1.0)
 		weights.append(weight)
 		total += weight
 	var roll := rng.randf() * total

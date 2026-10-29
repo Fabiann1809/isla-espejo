@@ -97,6 +97,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 7. Escenario 1: Bosque de la Aurora — A+B  ← 4, 5, 6
 - [x] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado (Kenney Roguelike/RPG, CC0)
 - [x] 6–10 salas del bosque (claros, río con puente, cofre, evento): 10 salas en `scenes/levels/rooms/forest/`
+- [x] Frecuencia de cada enemigo por escenario (`enemy_weights` en `ScenarioData`): en el bosque slime 5, planta tiradora 3 y esqueleto 3; el director las multiplica
 - [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; el `enemy_pool` de `data/scenarios/forest.tres` ya usa los cuatro enemigos del bosque: slime, planta tiradora, esqueleto y ente)
 - [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura; ya con su sprite nuevo y arte animado de raíces sobre el círculo de aviso)
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**

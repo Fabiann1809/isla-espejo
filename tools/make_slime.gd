@@ -44,8 +44,8 @@ func _initialize() -> void:
 	data.max_health = 3
 	data.move_speed = 22.0
 	data.chase_speed = 42.0
-	data.detection_range = 110.0
-	data.lose_range = 200.0
+	data.detection_range = 150.0
+	data.lose_range = 240.0
 	data.attack_range = 24.0
 	data.attack_damage = 1
 	data.attack_windup = 0.3

@@ -6,6 +6,7 @@
 
 [resource]
 script = ExtResource("2_lfs5r")
+shuffle_wait = 0.7
 projectile_scene = ExtResource("1_74ny0")
 id = &"planta_tiradora"
 display_name = "Planta tiradora"
@@ -14,9 +15,9 @@ sprite_frames = ExtResource("3_7u63y")
 sprite_offset = Vector2(0, -5)
 move_speed = 0.0
 chase_speed = 45.0
-detection_range = 170.0
-lose_range = 260.0
-attack_range = 150.0
+detection_range = 190.0
+lose_range = 280.0
+attack_range = 120.0
 attack_windup = 0.5
 attack_time = 0.25
 attack_cooldown = 1.8

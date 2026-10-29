@@ -44,7 +44,8 @@ func _test_data(scenario: ScenarioData) -> void:
 	_check(scenario.enemy_pool.size() > 0 and scenario.start_room != null and scenario.boss_room != null, "it has enemies, a start room and a boss room")
 	var pool_ids: Array = scenario.enemy_pool.map(func(scene: PackedScene) -> String: return scene.resource_path.get_file().get_basename())
 	pool_ids.sort()
-	_check(pool_ids == ["ente", "esqueleto", "planta_tiradora", "slime"], "the forest pool only has enemies with their own art (%s)" % [pool_ids])
+	_check(pool_ids == ["esqueleto", "planta_tiradora", "slime"], "the forest pool only has enemies with their own art (%s)" % [pool_ids])
+	_check_pool_weights(scenario)
 	var credits := FileAccess.get_file_as_string("res://CREDITS.md")
 	_check("Kenney" in credits and "CC0" in credits, "the tileset is credited in CREDITS.md")
 	_check(FileAccess.file_exists("res://assets/tilesets/kenney_roguelike_rpg/License.txt"), "the pack's license file is kept next to the art")
@@ -201,3 +202,19 @@ func _check(condition: bool, message: String) -> void:
 func _frames(count: int) -> void:
 	for i in count:
 		await physics_frame
+
+
+## The pool is picked by the scenario's weights: slimes most, then plants and skeletons.
+func _check_pool_weights(scenario: Resource) -> void:
+	var picker = load("res://scripts/world/room.gd").new()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var counts := {}
+	for i in 2200:
+		var id: String = picker._pick_enemy(scenario.enemy_pool, rng, null, scenario.enemy_weights).resource_path.get_file().get_basename()
+		counts[id] = counts.get(id, 0) + 1
+	picker.free()
+	_check(counts["slime"] > counts["planta_tiradora"] and counts["slime"] > counts["esqueleto"],
+			"slimes are the most frequent enemy of the forest (%s)" % [counts])
+	_check(abs(counts["slime"] - 1000) < 120 and abs(counts["planta_tiradora"] - 600) < 120 and abs(counts["esqueleto"] - 600) < 120,
+			"the picks follow the 5:3:3 weights")
