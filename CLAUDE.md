@@ -40,7 +40,7 @@ Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenar
 14. Game data is data, not code: skills, enemies, rooms and dialogues are defined in `data/` (JSON or Godot Resources) and read by generic systems. Adding a new enemy or skill must not require changing the core systems.
 15. The adaptive AI lives in `scripts/ai/` and is separated from combat code. Combat code only **emits events** (e.g. "player dashed", "player hit enemy", "enemy detected player"); the AI listens. Use signals or a small event bus autoload.
 16. The player profile is saved to `user://profile.json`. Keep the format versioned (`"version": 1`).
-17. Resolution is 640x360 with integer scaling and *nearest* filtering. Do not change display settings without asking.
+17. Resolution is 480x270 (camera zoom 1) with integer scaling and *nearest* filtering. Do not change display settings without asking.
 18. Combat uses the reusable components in `scripts/components/`: `HealthComponent` (health), `Hitbox` (deals damage, once per activation) and `Hurtbox` (receives damage). Never write ad-hoc damage code; a new enemy or trap reuses them.
     - Hitboxes and hurtboxes are `Area2D` nodes. Keep `monitorable = true` on them (turning it off makes the area blind).
     - Collision layers (named in `project.godot`): 1 `world`, 2 `player` (body + Hurtbox), 3 `enemy` (body + Hurtbox), 4 `player_attack`, 5 `enemy_attack`. Player Hitbox: layer 4, mask 3. Enemy/trap Hitbox: layer 5, mask 2.

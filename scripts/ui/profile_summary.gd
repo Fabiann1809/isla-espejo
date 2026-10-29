@@ -6,7 +6,7 @@ signal dismissed
 
 ## Input is ignored for this long so a key mashed during the death does not close it at once.
 const MIN_DISPLAY_TIME := 0.8
-const BAR_WIDTH := 220.0
+const BAR_WIDTH := 200.0
 const AGGRESSION_COLOR := Color(0.85, 0.3, 0.25)
 const STEALTH_COLOR := Color(0.6, 0.4, 0.9)
 
@@ -45,8 +45,8 @@ func _on_run_finished(summary: Dictionary) -> void:
 	for child in _content.get_children():
 		child.queue_free()
 
-	_add_label(texts.get("title", ""), 20)
-	_add_label(texts.get("style_label", "") + ": " + summary.style_name, 16)
+	_add_label(texts.get("title", ""), 16)
+	_add_label(texts.get("style_label", "") + ": " + summary.style_name, 13)
 	_add_bar(texts.get("aggression", ""), summary.aggression, AGGRESSION_COLOR)
 	_add_bar(texts.get("stealth", ""), summary.stealth, STEALTH_COLOR)
 	_add_stats([
@@ -57,15 +57,15 @@ func _on_run_finished(summary: Dictionary) -> void:
 		texts.get("stat_evaded", "%d") % stats.rooms_evaded,
 		texts.get("stat_detections", "%d") % stats.detections,
 	])
-	_add_label(summary.message, 14, true)
+	_add_label(summary.message, 11, true)
 	_add_prepare_lines()
-	_add_label(texts.get("continue", ""), 12)
+	_add_label(texts.get("continue", ""), 10)
 
 	_visible_time = 0.0
 	_panel.show()
 
 
-## The stats in two columns, so the whole screen fits in the game's 640x360 view.
+## The stats in two columns, so the whole screen fits in the game's 480x270 view.
 func _add_stats(lines: Array[String]) -> void:
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -74,7 +74,7 @@ func _add_stats(lines: Array[String]) -> void:
 	for line in lines:
 		var label := Label.new()
 		label.text = line
-		label.add_theme_font_size_override("font_size", 12)
+		label.add_theme_font_size_override("font_size", 10)
 		grid.add_child(label)
 	_content.add_child(grid)
 
@@ -84,9 +84,9 @@ func _add_prepare_lines() -> void:
 	var plan: DirectorPlan = Director.make_plan(false)
 	if plan.hints.is_empty():
 		return
-	_add_label(Director.config.texts.get("prepare_title", ""), 13)
+	_add_label(Director.config.texts.get("prepare_title", ""), 11)
 	for hint in plan.hints:
-		_add_label("- " + hint, 12)
+		_add_label("- " + hint, 10, true)
 
 
 func _add_label(text: String, font_size: int, wrap := false) -> void:
@@ -103,15 +103,16 @@ func _add_bar(title: String, value: float, color: Color) -> void:
 	var row := HBoxContainer.new()
 	var label := Label.new()
 	label.text = title
-	label.custom_minimum_size.x = 80
+	label.add_theme_font_size_override("font_size", 11)
+	label.custom_minimum_size.x = 70
 	row.add_child(label)
 
 	var track := ColorRect.new()
 	track.color = Color(0.15, 0.15, 0.18)
-	track.custom_minimum_size = Vector2(BAR_WIDTH, 14)
+	track.custom_minimum_size = Vector2(BAR_WIDTH, 10)
 	var fill := ColorRect.new()
 	fill.color = color
-	fill.size = Vector2(BAR_WIDTH * clampf(value, 0.0, 1.0), 14)
+	fill.size = Vector2(BAR_WIDTH * clampf(value, 0.0, 1.0), 10)
 	track.add_child(fill)
 	row.add_child(track)
 	_content.add_child(row)

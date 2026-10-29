@@ -20,7 +20,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ## 1. Base del proyecto y flujo de arte — A+B
 - [x] Repo público en GitHub con licencia, `.gitignore`, `.gitattributes`
-- [x] Proyecto Godot 4.7 configurado (640x360, escalado entero, filtro nearest, acciones de entrada)
+- [x] Proyecto Godot 4.7 configurado (480x270, escalado entero, filtro nearest, acciones de entrada)
 - [x] `CLAUDE.md`, `docs/JUEGO.md`, `docs/TAREAS.md`, `README.md`
 - [x] CI de GitHub Actions (`godot-check`) y plantilla de PR
 - [x] CI en cada push; `main` sin protección estricta (push directo, como los demás repos)

@@ -43,10 +43,10 @@ static func _box(fill: Color, border: Color, border_width := 1) -> StyleBoxFlat:
 	return box
 
 
-static func button(text: String, min_width := 200.0) -> Button:
+static func button(text: String, min_width := 200.0, min_height := 26.0) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(min_width, 28)
+	b.custom_minimum_size = Vector2(min_width, min_height)
 	return b
 
 

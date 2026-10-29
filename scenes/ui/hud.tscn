@@ -17,10 +17,13 @@ layout_mode = 2
 theme_override_constants/separation = 3
 
 [node name="SkillBar" type="HBoxContainer" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = 312.0
+offset_top = -44.0
 offset_right = 140.0
-offset_bottom = 348.0
+offset_bottom = -8.0
+grow_vertical = 0
 script = ExtResource("2")
 
 [node name="Toast" type="Label" parent="."]
@@ -28,9 +31,9 @@ visible = false
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -250.0
+offset_left = -220.0
 offset_top = 62.0
-offset_right = 250.0
+offset_right = 220.0
 offset_bottom = 86.0
 horizontal_alignment = 1
 vertical_alignment = 1

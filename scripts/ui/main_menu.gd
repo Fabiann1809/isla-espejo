@@ -26,28 +26,28 @@ func _ready() -> void:
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
-	var title := UiKit.label(UiText.t("menu_title"), 40, Color(0.85, 0.8, 1.0))
+	var title := UiKit.label(UiText.t("menu_title"), 32, Color(0.85, 0.8, 1.0))
 	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	title.offset_left = -200
 	title.offset_right = 200
-	title.offset_top = 22
+	title.offset_top = 12
 	add_child(title)
 	var subtitle := UiKit.label(UiText.t("menu_subtitle"), 13, UiKit.TEXT_DIM)
 	subtitle.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	subtitle.offset_left = -200
 	subtitle.offset_right = 200
-	subtitle.offset_top = 72
+	subtitle.offset_top = 54
 	add_child(subtitle)
 
 	_add_nico()
 
 	_menu = VBoxContainer.new()
-	_menu.add_theme_constant_override("separation", 6)
+	_menu.add_theme_constant_override("separation", 3)
 	_menu.set_anchors_preset(Control.PRESET_CENTER)
-	_menu.offset_left = -50
-	_menu.offset_right = 150
+	_menu.offset_left = -30
+	_menu.offset_right = 170
 	_menu.offset_top = -52
-	_menu.offset_bottom = 120
+	_menu.offset_bottom = 90
 	add_child(_menu)
 	start_button = _add_button(UiText.t("menu_start"), _on_start)
 	continue_button = _add_button(UiText.t("menu_continue"), _on_continue)
@@ -58,10 +58,10 @@ func _ready() -> void:
 
 	var controls := UiKit.label(UiText.t("menu_controls"), 10, UiKit.TEXT_DIM)
 	controls.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	controls.offset_left = -310
-	controls.offset_right = 310
-	controls.offset_top = -22
-	controls.offset_bottom = -6
+	controls.offset_left = -236
+	controls.offset_right = 236
+	controls.offset_top = -20
+	controls.offset_bottom = -4
 	add_child(controls)
 
 	options = OptionsMenu.new()
@@ -76,7 +76,7 @@ func _ready() -> void:
 
 
 func _add_button(text: String, action: Callable) -> Button:
-	var button := UiKit.button(text)
+	var button := UiKit.button(text, 200.0, 24.0)
 	button.pressed.connect(action)
 	_menu.add_child(button)
 	return button
@@ -89,8 +89,8 @@ func _add_nico() -> void:
 		return
 	var nico := AnimatedSprite2D.new()
 	nico.sprite_frames = frames
-	nico.scale = Vector2(2.5, 2.5)
-	nico.position = Vector2(150, 230)
+	nico.scale = Vector2(2, 2)
+	nico.position = Vector2(100, 175)
 	add_child(nico)
 	nico.play(&"walk")
 
