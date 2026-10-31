@@ -18,6 +18,8 @@ const VISION_CHECK_INTERVAL := 0.1
 const ARRIVE_DISTANCE := 4.0
 ## Animation hysteresis: an idle/walk/run animation shows at least this long, and chasing switches
 ## to run above RUN_ENTER_SPEED but only back to idle below RUN_EXIT_SPEED (px/s).
+## Seconds between two samples of a patrol's progress (see `_patrol_stalled`).
+const STALL_SAMPLE := 0.1
 const ANIM_MIN_HOLD := 0.15
 const RUN_ENTER_SPEED := 8.0
 const RUN_EXIT_SPEED := 2.0
@@ -51,7 +53,8 @@ var _wait_left := 0.0
 ## Time left for the current patrol leg, and the progress check that spots a blocked one.
 var _patrol_left := 0.0
 var _stall_clock := 0.0
-var _stall_from := Vector2.ZERO
+## Where the patrol was at each STALL_SAMPLE over the last Tuning.PATROL_STALL_TIME (oldest first).
+var _stall_trail: Array[Vector2] = []
 var _vision_timer := 0.0
 var _attack_phase := AttackPhase.WINDUP
 var _attack_time_left := 0.0
@@ -354,20 +357,25 @@ func _start_patrol_leg() -> void:
 	var walk_time := _patrol_point.distance_to(global_position) / maxf(data.move_speed * _speed_scale(), 1.0)
 	_patrol_left = walk_time * Tuning.PATROL_TIMEOUT_FACTOR + 0.5
 	_stall_clock = 0.0
-	_stall_from = global_position
+	_stall_trail = [global_position]
 
 
 ## True when a patrol made almost no progress over the last Tuning.PATROL_STALL_TIME. Measured over a
-## window, not frame by frame, so enemies that move in hops (a slime) are not taken for blocked.
+## sliding window, not frame by frame, so enemies that move in hops (a slime) are not taken for
+## blocked, and a blocked one is noticed within the window (plus one sample).
 func _patrol_stalled(delta: float) -> bool:
 	_stall_clock += delta
-	if _stall_clock < Tuning.PATROL_STALL_TIME:
+	if _stall_clock < STALL_SAMPLE:
 		return false
-	var expected := data.move_speed * _speed_scale() * _stall_clock
-	var stalled := global_position.distance_to(_stall_from) < expected * Tuning.PATROL_STALL_PROGRESS
 	_stall_clock = 0.0
-	_stall_from = global_position
-	return stalled and _root_left <= 0.0
+	_stall_trail.append(global_position)
+	var samples := ceili(Tuning.PATROL_STALL_TIME / STALL_SAMPLE) + 1
+	if _stall_trail.size() > samples:
+		_stall_trail.pop_front()
+	if _stall_trail.size() < samples or _root_left > 0.0:
+		return false
+	var expected := data.move_speed * _speed_scale() * Tuning.PATROL_STALL_TIME
+	return _stall_trail.back().distance_to(_stall_trail.front()) < expected * Tuning.PATROL_STALL_PROGRESS
 
 
 func _debug_log(message: String) -> void:
