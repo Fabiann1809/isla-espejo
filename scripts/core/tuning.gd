@@ -1,8 +1,30 @@
 class_name Tuning
 extends RefCounted
-## The one place for the values of the level-1 map polish: the look of the forest, the special rooms,
-## the tileset profile and the boss arena. Gameplay data (enemy stats, rooms, the director's rules)
+## The one place for the values of the level-1 polish: how enemies keep to their rooms, the look of
+## the forest, the special rooms, the tileset profile and the boss arena. Gameplay data (enemy stats, rooms, the director's rules)
 ## stays in `data/`; these are presentation limits. Every effect can be switched off here.
+
+# --- Enemies (every enemy that lives in a room, whatever the level) ------------------------------------
+## Enemies keep to their room: they hunt Nico while he is inside it or this far past its edge (px;
+## a corridor is 48 px long) and walk back home when he leaves.
+const TERRITORY_MARGIN := 40.0
+## A patrol point stays this far inside the enemy's room (px), so patrols do not walk into the walls.
+const PATROL_MARGIN := 24.0
+## A patrol leg gives up after this many times its expected walking time.
+const PATROL_TIMEOUT_FACTOR := 2.0
+## A patrol that covers less than this share of its expected distance over PATROL_STALL_TIME (s) is
+## blocked by a tree or a rock: the enemy rests and picks another point. The window is longer than a
+## slime's hop, so moving in hops does not count as blocked.
+const PATROL_STALL_TIME := 0.6
+const PATROL_STALL_PROGRESS := 0.25
+## An attack that moves the enemy (a lunge, a charge) stops this far inside its room (px), so no
+## attack carries it into another room.
+const DASH_ROOM_MARGIN := 20.0
+## Seconds an enemy waits, after its hurt, before warning again when a hit or a push cut its attack
+## short (0 = off).
+const INTERRUPTED_ATTACK_COOLDOWN := 0.6
+## Prints what each enemy decides (goes back home), for debugging.
+const ENEMY_DEBUG_LOG := false
 
 # --- Boss ----------------------------------------------------------------------------------------
 ## Boss eruptions (roots) stay this far inside the arena's outer edge (px): the wall is 16 px thick.

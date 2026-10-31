@@ -83,6 +83,11 @@ func _exit_tree() -> void:
 
 
 ## The boss ignores being pushed and rooted, and is slowed only half as much.
+## The boss keeps its own arena rules: it never takes the room as a patrol territory.
+func _keeps_to_room() -> bool:
+	return false
+
+
 func apply_knockback(_push: Vector2) -> void:
 	pass
 

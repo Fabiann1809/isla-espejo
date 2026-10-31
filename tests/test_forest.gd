@@ -218,9 +218,11 @@ func _check_pool_weights(scenario: Resource) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var counts := {}
-	for i in 2200:
-		var id: String = picker._pick_enemy(scenario.enemy_pool, rng, null, scenario.enemy_weights).resource_path.get_file().get_basename()
-		counts[id] = counts.get(id, 0) + 1
+	# 550 rooms of 4 enemies: 2200 picks.
+	for i in 550:
+		for scene in picker.pick_enemies(scenario.enemy_pool, 4, rng, null, scenario.enemy_weights):
+			var id: String = scene.resource_path.get_file().get_basename()
+			counts[id] = counts.get(id, 0) + 1
 	picker.free()
 	_check(counts["slime"] > counts["planta_tiradora"] and counts["slime"] > counts["esqueleto"],
 			"slimes are the most frequent enemy of the forest (%s)" % [counts])

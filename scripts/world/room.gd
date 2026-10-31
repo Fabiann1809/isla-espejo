@@ -94,8 +94,9 @@ func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenera
 		var tmp := points[i]
 		points[i] = points[j]
 		points[j] = tmp
-	for i in mini(count, points.size()):
-		var enemy: Node2D = _pick_enemy(pool, rng, plan, base_weights).instantiate()
+	var picks := pick_enemies(pool, mini(count, points.size()), rng, plan, base_weights)
+	for i in picks.size():
+		var enemy: Node2D = picks[i].instantiate()
 		enemy.position = points[i]
 		if plan != null:
 			plan.apply_to_enemy(enemy)
@@ -104,24 +105,51 @@ func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenera
 		register_enemy(enemy)
 
 
-func _pick_enemy(pool: Array[PackedScene], rng: RandomNumberGenerator, plan: DirectorPlan,
-		base_weights: Dictionary = {}) -> PackedScene:
-	var director_weights := plan != null and not plan.enemy_weights.is_empty()
-	if not director_weights and base_weights.is_empty():
-		return pool[rng.randi_range(0, pool.size() - 1)]
-	var total := 0.0
+## Which enemies fill `count` spots. Each enemy gets its share of the spots by weight (the scenario's
+## `base_weights` times the director's, a missing id counts as 1), rounded up or down at random so
+## that its expected number is exactly that share: the weights hold over many rooms, but a room never
+## repeats one enemy by chance (one independent draw per spot put three of a kind in a three-spot room
+## one time in nine with equal weights).
+static func pick_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenerator,
+		plan: DirectorPlan = null, base_weights: Dictionary = {}) -> Array[PackedScene]:
+	var picks: Array[PackedScene] = []
+	if pool.is_empty() or count <= 0:
+		return picks
 	var weights: Array[float] = []
+	var total := 0.0
 	for scene in pool:
 		var id := StringName(scene.resource_path.get_file().get_basename())
-		var weight: float = float(base_weights.get(id, 1.0)) * (plan.enemy_weight(id) if director_weights else 1.0)
+		var weight := maxf(float(base_weights.get(id, 1.0)), 0.0)
+		if plan != null:
+			weight *= maxf(plan.enemy_weight(id), 0.0)
 		weights.append(weight)
 		total += weight
-	var roll := rng.randf() * total
+	if total <= 0.0:
+		weights.fill(1.0)
+		total = pool.size()
+	# Systematic sampling: `count` evenly spaced marks, with one random offset, over the weights
+	# laid end to end (scaled so they span `count`).
+	var mark := rng.randf()
+	var edge := 0.0
 	for i in pool.size():
-		roll -= weights[i]
-		if roll < 0.0:
-			return pool[i]
-	return pool[pool.size() - 1]
+		edge += weights[i] * count / total
+		while mark < edge and picks.size() < count:
+			picks.append(pool[i])
+			mark += 1.0
+	while picks.size() < count:
+		picks.append(pool[pool.size() - 1])
+	# Spread the kinds over the spots in any order.
+	for i in range(picks.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp := picks[i]
+		picks[i] = picks[j]
+		picks[j] = tmp
+	return picks
+
+
+## The room in world coordinates: the territory of every enemy that lives in it (see Enemy.home_area).
+func home_rect() -> Rect2:
+	return Rect2(global_position, pixel_size())
 
 
 func register_enemy(enemy: Node) -> void:
