@@ -39,10 +39,19 @@ const ANIM_SPEED_MAX := 2.0
 var state: State = State.IDLE
 var target: Node2D = null
 var facing := Vector2.DOWN
+## The enemy's own room, in world coordinates. Any enemy that lives in a room (spawned by it, a mini
+## boss, a summoned minion) takes the room's rect in `_ready`; patrols stay inside it, it only hunts
+## Nico while he is in it (or at its doors) and walks back when he leaves. Empty = no limit: bosses
+## (`_keeps_to_room()`) and enemies placed by hand keep the free behaviour.
+var home_area := Rect2()
 
 var _home := Vector2.ZERO
 var _patrol_point := Vector2.ZERO
 var _wait_left := 0.0
+## Time left for the current patrol leg, and the progress check that spots a blocked one.
+var _patrol_left := 0.0
+var _stall_clock := 0.0
+var _stall_from := Vector2.ZERO
 var _vision_timer := 0.0
 var _attack_phase := AttackPhase.WINDUP
 var _attack_time_left := 0.0
@@ -73,6 +82,8 @@ func _ready() -> void:
 		push_error("Enemy '%s' has no EnemyData assigned." % name)
 		data = EnemyData.new()
 	_home = global_position
+	if not home_area.has_area() and _keeps_to_room() and get_parent() != null and get_parent().has_method("home_rect"):
+		home_area = get_parent().home_rect()
 	_vision_timer = randf() * VISION_CHECK_INTERVAL
 	_body.color = data.placeholder_color
 	_build_sprite()
@@ -106,6 +117,9 @@ func _physics_process(delta: float) -> void:
 
 	# Rooted enemies cannot walk but can still attack and be pushed.
 	if _root_left > 0.0 and state in [State.IDLE, State.PATROL, State.CHASE]:
+		velocity = Vector2.ZERO
+	# An attack that moves (a lunge) never carries the enemy out of its room.
+	if state == State.ATTACK and not _dash_allowed(global_position + velocity * delta):
 		velocity = Vector2.ZERO
 	move_and_slide()
 	_update_status_tint_target()
@@ -151,6 +165,7 @@ func apply_slow(factor: float, duration: float) -> void:
 func apply_knockback(push: Vector2) -> void:
 	if state == State.DEAD:
 		return
+	_interrupt_attack()
 	_hitbox.deactivate()
 	_telegraph.hide()
 	state = State.HURT
@@ -160,6 +175,13 @@ func apply_knockback(push: Vector2) -> void:
 
 func is_rooted() -> bool:
 	return _root_left > 0.0
+
+
+## A hit or a push during an attack cuts it short: a short rest after the hurt before the next
+## warning, so a cut attack is not started again at once.
+func _interrupt_attack() -> void:
+	if state == State.ATTACK and Tuning.INTERRUPTED_ATTACK_COOLDOWN > 0.0:
+		_attack_cooldown_left = maxf(_attack_cooldown_left, data.hurt_time + Tuning.INTERRUPTED_ATTACK_COOLDOWN)
 
 
 func is_slowed() -> bool:
@@ -178,9 +200,11 @@ func _process_idle(delta: float) -> void:
 		state = State.PATROL
 
 
-func _process_patrol(_delta: float) -> void:
+func _process_patrol(delta: float) -> void:
 	var to_point := _patrol_point - global_position
-	if to_point.length() <= ARRIVE_DISTANCE:
+	_patrol_left -= delta
+	# Blocked by a tree or a rock: rest and pick another point instead of walking into it forever.
+	if to_point.length() <= ARRIVE_DISTANCE or _patrol_left <= 0.0 or _patrol_stalled(delta):
 		_enter_idle()
 		return
 	facing = to_point.normalized()
@@ -252,13 +276,18 @@ func _update_awareness(delta: float) -> void:
 		var lose := data.lose_range * vision_multiplier * _visibility_of(target)
 		if global_position.distance_to(target.global_position) > lose:
 			_lose_target()
+		# Hurt first (a hit from outside its room still pushes it), then back home.
+		elif not _in_territory(target.global_position) and state != State.HURT:
+			_debug_log("Nico left my room: going back")
+			_lose_target()
+			_return_home()
 		return
 	_vision_timer -= delta
 	if _vision_timer > 0.0:
 		return
 	_vision_timer = VISION_CHECK_INTERVAL
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player != null and not _is_dead_node(player) and can_see(player):
+	if player != null and not _is_dead_node(player) and _in_territory(player.global_position) and can_see(player):
 		_acquire_target(player)
 
 
@@ -287,6 +316,63 @@ func _target_is_valid() -> bool:
 			_enter_idle()
 		return false
 	return true
+
+
+## False for enemies that never take a room as their territory (bosses keep their arena behaviour).
+func _keeps_to_room() -> bool:
+	return true
+
+
+## Nico counts as inside the enemy's room up to a little past its doors.
+func _in_territory(point: Vector2) -> bool:
+	return not home_area.has_area() or home_area.grow(Tuning.TERRITORY_MARGIN).has_point(point)
+
+
+## For dashing attacks (a charge, a lunge): may the enemy move on to `point` without leaving its room?
+func _dash_allowed(point: Vector2) -> bool:
+	return not home_area.has_area() or home_area.grow(-Tuning.DASH_ROOM_MARGIN).has_point(point)
+
+
+## True if the last move ran into the world (a wall, a tree, a rock).
+func _hit_world() -> bool:
+	for i in get_slide_collision_count():
+		var other := get_slide_collision(i).get_collider() as CollisionObject2D
+		if other != null and other.get_collision_layer_value(WORLD_LAYER):
+			return true
+	return false
+
+
+## Walks back to where it was spawned (a patrol leg to its home point).
+func _return_home() -> void:
+	state = State.PATROL
+	_patrol_point = _home
+	_start_patrol_leg()
+
+
+## Times a new patrol leg: it gives up after Tuning.PATROL_TIMEOUT_FACTOR times its walking time.
+func _start_patrol_leg() -> void:
+	var walk_time := _patrol_point.distance_to(global_position) / maxf(data.move_speed * _speed_scale(), 1.0)
+	_patrol_left = walk_time * Tuning.PATROL_TIMEOUT_FACTOR + 0.5
+	_stall_clock = 0.0
+	_stall_from = global_position
+
+
+## True when a patrol made almost no progress over the last Tuning.PATROL_STALL_TIME. Measured over a
+## window, not frame by frame, so enemies that move in hops (a slime) are not taken for blocked.
+func _patrol_stalled(delta: float) -> bool:
+	_stall_clock += delta
+	if _stall_clock < Tuning.PATROL_STALL_TIME:
+		return false
+	var expected := data.move_speed * _speed_scale() * _stall_clock
+	var stalled := global_position.distance_to(_stall_from) < expected * Tuning.PATROL_STALL_PROGRESS
+	_stall_clock = 0.0
+	_stall_from = global_position
+	return stalled and _root_left <= 0.0
+
+
+func _debug_log(message: String) -> void:
+	if Tuning.ENEMY_DEBUG_LOG:
+		print("[enemy %s] %s" % [name, message])
 
 
 func _speed_scale() -> float:
@@ -334,6 +420,10 @@ func _enter_chase_or_idle() -> void:
 func _choose_patrol_point() -> void:
 	var angle := randf() * TAU
 	_patrol_point = _home + Vector2.from_angle(angle) * randf_range(0.3, 1.0) * data.patrol_radius * patrol_multiplier
+	var inside := home_area.grow(-Tuning.PATROL_MARGIN)
+	if inside.has_area():
+		_patrol_point = _patrol_point.clamp(inside.position, inside.end)
+	_start_patrol_leg()
 
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
@@ -348,6 +438,7 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 		var player := get_tree().get_first_node_in_group("player") as Node2D
 		if player != null:
 			_acquire_target(player)
+	_interrupt_attack()
 	_hitbox.deactivate()
 	_telegraph.hide()
 	state = State.HURT
