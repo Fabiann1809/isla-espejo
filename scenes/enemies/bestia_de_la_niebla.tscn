@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
 [ext_resource type="Resource" path="res://data/enemies/bestia_de_la_niebla.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/charger.gd" id="3"]
 
 [node name="BestiaDeLaNiebla" instance=ExtResource("1")]
+script = ExtResource("3")
 data = ExtResource("2")
