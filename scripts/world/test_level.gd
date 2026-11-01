@@ -5,6 +5,8 @@ extends Level
 
 ## With `unlock_all_skills` the three skills are unlocked from the start (the test scenario does it).
 ## In the real scenarios they are earned from the bosses; U unlocks them for debugging.
+## The debug texts and keys (R, U) only exist when the game runs from the Godot editor: an exported
+## build is the real game, with no cheats and no developer labels over the HUD.
 const SKILLS := [
 	"res://data/skills/roots.tres",
 	"res://data/skills/current.tres",
@@ -16,15 +18,21 @@ const SKILLS := [
 @onready var _summary: Node = $ProfileSummary
 @onready var _info: Label = $Debug/Info
 @onready var _plan_info: Label = $Debug/PlanInfo
+@onready var _debug_layer: CanvasLayer = $Debug
+
+var _debug_tools := OS.has_feature("editor")
 
 
 func _ready() -> void:
 	generated.connect(_on_generated)
 	_summary.dismissed.connect(get_tree().reload_current_scene)
+	_debug_layer.visible = _debug_tools
 	super()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not _debug_tools:
+		return
 	if event.is_action_pressed("debug_regenerate"):
 		generate(0)
 	elif event.is_action_pressed("debug_unlock_skills"):
