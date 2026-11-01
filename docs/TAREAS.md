@@ -157,8 +157,8 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Prólogo y textos de inicio de capítulo (prólogo de la tormenta en `scenes/ui/prologue.tscn` con textos en `data/story/prologue.json`; el título de capítulo del bosque ya existía; los de los capítulos 2 y 3 van con sus escenarios)
 - [ ] Diálogos de jefes (antes y después): el Guardián del bosque ya tiene los dos (`intro_lines` y `defeat_lines` en su `BossData`); faltan los jefes 2 y 3
 - [x] Textos de muerte y reinicio ("La isla vuelve a empezar…", en `data/ai/profile_config.tres`)
-- [ ] Final: brújula completa y regreso a casa
-- [ ] Mensajes de interfaz (objetivo, objeto, puerta cerrada, cofre, guardado)
+- [ ] Final: brújula completa y regreso a casa (por ahora, al cruzar el portal de la primera isla sale una pantalla de final con el resumen del perfil y se vuelve al menú; textos `ending*` en `data/ai/profile_config.tres`)
+- [x] Mensajes de interfaz (objetivo, objeto, puerta cerrada, cofre, guardado): el portal sellado dice qué lo abre y el HUD muestra "Progreso guardado" al guardar (textos en `data/ui/texts.json`)
 - [ ] Revisar ortografía y coherencia con la historia
 
 **Hecho cuando:** la historia se puede seguir de principio a fin con todos los textos en `data/` y ninguno escrito en los scripts.
@@ -185,7 +185,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 15. Pulido, balance y entrega — A+B  ← 11, 12, 13
 - [ ] Balance de vida, daño y dificultad de enemigos y jefes: el bosque ya está ajustado a "difícil tipo roguelike" midiendo con `tools/playtest_bot.gd` (el bot juega solo un mapa completo y dice dónde y por quién recibe daño); faltan las islas 2 y 3
 - [ ] Jugar completo varias veces con estilos distintos y ajustar la IA
-- [ ] Corregir errores y revisar la consola de Godot sin errores ni avisos importantes
+- [ ] Corregir errores y revisar la consola de Godot sin errores ni avisos importantes (el bosque y el menú ya arrancan sin avisos; faltan las islas 2 y 3)
 - [x] Sensación de golpe en el bosque: pausa breve, temblor de cámara, chispas, números de daño, destello rojo y borde rojo con poca vida (`GameFeel`, valores en `Tuning`)
 - [x] HUD: corazones en pixel art, rastro de daño en la barra del jefe, presentación del jefe con su nombre y pista de controles en la primera isla
 - [x] Menú principal con bosque nocturno; los árboles se vuelven transparentes cuando Nico pasa detrás; la capa de depuración solo existe en el editor (F3)

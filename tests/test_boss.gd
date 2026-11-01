@@ -336,7 +336,9 @@ func _test_forest_level() -> void:
 	_check(fresh.skills.is_unlocked(0) and fresh.skills.get_skill(0).id == &"roots", "a new player gets the skills already learned (they survive death)")
 	fresh.free()
 
-	# Taking the exit moves on to a new map after the closing text
+	# Taking the exit moves on to a new map after the closing text (looping like a sandbox: the
+	# ending after the last chapter is covered by test_ending)
+	level.end_after_last_chapter = false
 	_messages.clear()
 	var portal = get_nodes_in_group("exit_portals")[0]
 	level.player.global_position = portal.global_position + Vector2(0, 20)
