@@ -26,5 +26,7 @@ texts = {
 "style_balanced": "Equilibrado",
 "style_label": "Estilo de juego",
 "style_stealth": "Sigiloso",
-"title": "La isla te recuerda"
+"title": "La isla te recuerda",
+"death_line": "Nico: No… todavía no. Tengo que volver.",
+"restart": "La isla vuelve a empezar. Pero Nico recuerda."
 }

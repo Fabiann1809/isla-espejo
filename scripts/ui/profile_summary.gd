@@ -45,6 +45,7 @@ func _on_run_finished(summary: Dictionary) -> void:
 	for child in _content.get_children():
 		child.queue_free()
 
+	_add_label(texts.get("death_line", ""), 11)
 	_add_label(texts.get("title", ""), 16)
 	_add_label(texts.get("style_label", "") + ": " + summary.style_name, 13)
 	_add_bar(texts.get("aggression", ""), summary.aggression, AGGRESSION_COLOR)
@@ -59,6 +60,7 @@ func _on_run_finished(summary: Dictionary) -> void:
 	])
 	_add_label(summary.message, 11, true)
 	_add_prepare_lines()
+	_add_label(texts.get("restart", ""), 11)
 	_add_label(texts.get("continue", ""), 10)
 
 	_visible_time = 0.0

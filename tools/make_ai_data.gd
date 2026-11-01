@@ -16,6 +16,8 @@ func _initialize() -> void:
 
 	config.texts = {
 		"title": "La isla te recuerda",
+		"death_line": "Nico: No… todavía no. Tengo que volver.",
+		"restart": "La isla vuelve a empezar. Pero Nico recuerda.",
 		"style_label": "Estilo de juego",
 		"style_aggressive": "Agresivo",
 		"style_stealth": "Sigiloso",

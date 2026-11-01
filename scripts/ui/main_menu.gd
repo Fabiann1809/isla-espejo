@@ -4,6 +4,8 @@ extends Control
 ## Texts come from data/ui/texts.json. Starting or continuing opens the first playable scene.
 
 const GAME_SCENE := "res://scenes/levels/forest_level.tscn"
+## A new journey starts with the storm (the prologue), which then opens GAME_SCENE.
+const PROLOGUE_SCENE := "res://scenes/ui/prologue.tscn"
 const NICO_FRAMES := "res://data/player/nico_frames.tres"
 
 var start_button: Button
@@ -19,6 +21,7 @@ var _confirming_start := false
 
 
 func _ready() -> void:
+	Sound.play_music(&"menu")
 	theme = UiKit.theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var background := ColorRect.new()
@@ -116,7 +119,7 @@ func _on_start() -> void:
 		start_button.text = UiText.t("menu_start_confirm")
 		return
 	SaveGame.new_game()
-	get_tree().change_scene_to_file(GAME_SCENE)
+	get_tree().change_scene_to_file(PROLOGUE_SCENE)
 
 
 func _on_continue() -> void:
