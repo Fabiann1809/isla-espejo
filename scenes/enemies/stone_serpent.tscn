@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/stone_serpent.gd" id="2"]
+[ext_resource type="Resource" path="res://data/enemies/stone_serpent.tres" id="3"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(30, 16)
+
+[sub_resource type="RectangleShape2D" id="2"]
+size = Vector2(44, 40)
+
+[node name="StoneSerpent" instance=ExtResource("1")]
+script = ExtResource("2")
+data = ExtResource("3")
+
+[node name="CollisionShape2D" parent="." index="2"]
+position = Vector2(0, 4)
+shape = SubResource("1")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -12)
+shape = SubResource("2")
+
+[node name="StateLabel" parent="." index="5"]
+offset_top = -64.0
+offset_bottom = -48.0
