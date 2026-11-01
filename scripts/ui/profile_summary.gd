@@ -44,6 +44,8 @@ func _on_run_finished(summary: Dictionary) -> void:
 	var stats: Dictionary = summary.stats
 	for child in _content.get_children():
 		child.queue_free()
+	# Tight rows: the whole summary must fit in the 270 px high view.
+	_content.add_theme_constant_override("separation", 1)
 
 	_add_label(texts.get("death_line", ""), 11)
 	_add_label(texts.get("title", ""), 16)
@@ -67,11 +69,11 @@ func _on_run_finished(summary: Dictionary) -> void:
 	_panel.show()
 
 
-## The stats in two columns, so the whole screen fits in the game's 480x270 view.
+## The stats in three columns, so the whole screen fits in the game's 480x270 view.
 func _add_stats(lines: Array[String]) -> void:
 	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 24)
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 1)
 	for line in lines:
 		var label := Label.new()
