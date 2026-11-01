@@ -188,7 +188,8 @@ func afterimage(actor: Node2D) -> void:
 
 
 func _on_boss_attack_struck(_boss_id: StringName, pattern: StringName, _at: Vector2) -> void:
-	shake(Tuning.SHAKE_BOSS_SLAM if pattern == &"slam" else Tuning.SHAKE_BOSS_ROOTS)
+	# Heavy blows (a slam, a charge) shake hard; spread attacks (roots, a spit) shake lightly.
+	shake(Tuning.SHAKE_BOSS_SLAM if pattern in [&"slam", &"charge"] else Tuning.SHAKE_BOSS_ROOTS)
 
 
 # --- Effects --------------------------------------------------------------------------------------
