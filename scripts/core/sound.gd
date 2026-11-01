@@ -27,6 +27,8 @@ var _next_voice := 0
 var _last_played := {}
 var _music_a: AudioStreamPlayer
 var _music_b: AudioStreamPlayer
+## The music player of the current track (the other one is free or fading out).
+var _music_active: AudioStreamPlayer
 var _music_tween: Tween
 var _scenario_music := StringName()
 var _boss_fight := false
@@ -43,6 +45,7 @@ func _ready() -> void:
 		_voices.append(voice)
 	_music_a = _music_player()
 	_music_b = _music_player()
+	_music_active = _music_a
 	_connect_events()
 
 
@@ -80,14 +83,19 @@ func play_music(id: StringName) -> void:
 	if id == current_music:
 		return
 	current_music = id if bank != null and bank.music.has(id) else StringName()
-	var outgoing := _music_a if _music_a.playing else _music_b
+	# The player of the track that is heard now fades out; the other one brings the new track in.
+	var outgoing := _music_active
 	var incoming := _music_b if outgoing == _music_a else _music_a
 	if _music_tween != null:
 		_music_tween.kill()
+	# A track still fading out from an earlier change stops now (its stop callback was killed).
+	if incoming.playing:
+		incoming.stop()
+	_music_active = incoming
 	_music_tween = create_tween().set_parallel(true)
 	if outgoing.playing:
 		_music_tween.tween_property(outgoing, "volume_db", -60.0, MUSIC_FADE)
-		_music_tween.chain().tween_callback(outgoing.stop)
+		_music_tween.tween_callback(outgoing.stop).set_delay(MUSIC_FADE)
 	if current_music != StringName():
 		incoming.stream = bank.music[current_music]
 		var target: float = bank.music_volumes_db.get(current_music, 0.0)
@@ -105,6 +113,7 @@ func stop_music() -> void:
 func _connect_events() -> void:
 	Events.player_shot.connect(func(_d: Vector2, _t: float) -> void: play(&"shot"))
 	Events.player_dashed.connect(func(_d: Vector2) -> void: play(&"dash"))
+	Events.arrow_blocked.connect(func(at: Vector2) -> void: play(&"arrow_wall", at))
 	Events.player_damaged.connect(func(_a: int, _p: Vector2) -> void: play(&"player_hurt"))
 	Events.player_died.connect(_on_player_died)
 	Events.enemy_damaged.connect(_on_enemy_damaged)

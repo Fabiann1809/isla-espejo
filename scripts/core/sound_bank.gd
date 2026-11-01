@@ -30,5 +30,6 @@ func pick(cue: StringName) -> AudioStream:
 	return variations.pick_random() if not variations.is_empty() else null
 
 
+## The cue's own volume, else the volume of the cue it borrows its sound from.
 func volume_of(cue: StringName) -> float:
-	return volumes_db.get(resolve(cue), 0.0)
+	return volumes_db.get(cue, volumes_db.get(resolve(cue), 0.0))

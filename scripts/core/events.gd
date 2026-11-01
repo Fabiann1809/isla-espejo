@@ -34,6 +34,8 @@ signal player_attacked(direction: Vector2)
 ## (-1 when there is none), so the AI can tell close fights from sniping.
 signal player_shot(direction: Vector2, target_distance: float)
 signal player_dashed(direction: Vector2)
+## An arrow of Nico's hit a wall, a tree or a rock at `at` (world position), for sound.
+signal arrow_blocked(at: Vector2)
 signal player_hit_enemy(enemy: Node, damage: int)
 signal player_damaged(amount: int, source_position: Vector2)
 signal player_health_changed(current: int, maximum: int)

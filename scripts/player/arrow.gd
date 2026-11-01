@@ -43,7 +43,9 @@ func _ready() -> void:
 	_hitbox.damage = _damage
 	_hitbox.hit_landed.connect(_on_hit_landed)
 	_hitbox.activate()
-	_wall_sensor.body_entered.connect(func(_body: Node2D) -> void: _end_with_impact())
+	_wall_sensor.body_entered.connect(func(_body: Node2D) -> void:
+		Events.arrow_blocked.emit(global_position)
+		_end_with_impact())
 
 
 func _physics_process(delta: float) -> void:

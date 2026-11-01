@@ -4,7 +4,7 @@ extends SceneTree
 ## Run: godot --headless --path . --script res://tests/test_sound.gd
 
 const NEEDED_CUES := [
-	&"shot", &"arrow_hit", &"enemy_hurt", &"enemy_death", &"death_slime", &"death_esqueleto",
+	&"shot", &"arrow_hit", &"arrow_wall", &"enemy_hurt", &"enemy_death", &"death_slime", &"death_esqueleto",
 	&"death_planta_tiradora", &"death_ente", &"death_brote", &"death_forest_guardian", &"player_hurt",
 	&"player_death", &"dash", &"step", &"pickup_heart", &"pickup_gold", &"pickup_arrows", &"chest",
 	&"ui_click", &"ui_hover", &"boss_warn", &"boss_slam", &"boss_roots", &"boss_defeated",
@@ -73,6 +73,10 @@ func _initialize() -> void:
 	Input.action_release("move_right")
 	_check(sound.played.count(&"step") >= 1, "Nico's steps are heard while he walks")
 
+	# The test room reloads the scene when Nico dies: remove it before the death below.
+	room.queue_free()
+	await process_frame
+
 	# Music follows the run.
 	events.level_started.emit(&"forest", 1)
 	_check(sound.current_music == &"forest", "a forest run plays the forest music")
@@ -86,6 +90,21 @@ func _initialize() -> void:
 	_check(sound.current_music == StringName(), "dying fades the music out")
 	sound.play_music(&"menu")
 	_check(sound.current_music == &"menu", "the menu has its own music")
+
+	# Cross-fade: the new track starts rising at once, and a change in the middle of a fade keeps
+	# the audible track instead of cutting it.
+	sound.play_music(&"forest")
+	await create_timer(0.3).timeout
+	var players: Array = sound.get_children().filter(func(n: Node) -> bool: return n is AudioStreamPlayer and n.bus == &"Music")
+	var forest_player = players.filter(func(p) -> bool: return p.playing and p.stream == bank.music[&"forest"])
+	_check(forest_player.size() == 1 and forest_player[0].volume_db > -40.0, "the new track fades in while the old one fades out")
+	sound.play_music(&"boss")
+	await create_timer(0.2).timeout
+	sound.play_music(&"forest")
+	await create_timer(2.0).timeout
+	var heard: Array = players.filter(func(p) -> bool: return p.playing)
+	_check(heard.size() == 1 and heard[0].stream == bank.music[&"forest"], "changing track mid-fade ends with only the new track playing")
+	_check(bank.volume_of(&"attack_shot") == bank.volumes_db[&"attack_shot"], "a cue keeps its own volume even when it borrows another cue's sound")
 
 	quit(0 if _ok else 1)
 
