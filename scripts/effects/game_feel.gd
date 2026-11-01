@@ -154,8 +154,37 @@ func _on_player_health_changed(current: int, _maximum: int) -> void:
 
 func _on_player_dashed(_direction: Vector2) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player != null:
-		burst(player.global_position, Tuning.DASH_DUST_COLOR, Tuning.DASH_DUST, Tuning.DASH_DUST_SPEED)
+	if player == null:
+		return
+	burst(player.global_position, Tuning.DASH_DUST_COLOR, Tuning.DASH_DUST, Tuning.DASH_DUST_SPEED)
+	for i in Tuning.DASH_GHOSTS:
+		if i > 0:
+			await get_tree().create_timer(Tuning.DASH_GHOST_EVERY, false).timeout
+		if not is_instance_valid(player):
+			return
+		afterimage(player)
+
+
+## A still copy of the actor's current frame that fades where it stands.
+func afterimage(actor: Node2D) -> void:
+	var sprite := actor.get_node_or_null("Sprite") as AnimatedSprite2D
+	if sprite == null or sprite.sprite_frames == null:
+		return
+	var ghost := Sprite2D.new()
+	ghost.texture = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	ghost.flip_h = sprite.flip_h
+	ghost.offset = sprite.offset
+	ghost.centered = sprite.centered
+	ghost.scale = sprite.scale
+	ghost.modulate = Tuning.DASH_GHOST_TINT
+	# Under every actor (Nico runs ahead of his own trail), over the floors.
+	ghost.z_as_relative = false
+	ghost.z_index = RoomTheme.GROUND_FX_Z
+	add_child(ghost)
+	ghost.global_position = sprite.global_position
+	var tween := ghost.create_tween()
+	tween.tween_property(ghost, "modulate:a", 0.0, Tuning.DASH_GHOST_FADE)
+	tween.tween_callback(ghost.queue_free)
 
 
 func _on_boss_attack_struck(_boss_id: StringName, pattern: StringName, _at: Vector2) -> void:

@@ -153,6 +153,12 @@ const DEATH_PARTICLE_SPEED := 70.0
 const DASH_DUST := 8
 const DASH_DUST_COLOR := Color(0.85, 0.8, 0.65, 0.8)
 const DASH_DUST_SPEED := 25.0
+## Afterimages left by Nico's dodge: how many (0 = off), seconds between them, how long each fades,
+## and their tint.
+const DASH_GHOSTS := 3
+const DASH_GHOST_EVERY := 0.04
+const DASH_GHOST_FADE := 0.25
+const DASH_GHOST_TINT := Color(0.6, 0.8, 1.0, 0.55)
 ## Damage numbers over an enemy: how high they rise (px) and how long they last (s; 0 = off).
 const DAMAGE_NUMBER_TIME := 0.6
 const DAMAGE_NUMBER_RISE := 14.0

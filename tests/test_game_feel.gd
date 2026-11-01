@@ -55,6 +55,15 @@ func _initialize() -> void:
 	_check(feel.get_children().filter(func(n: Node) -> bool: return n is Label or n is CPUParticles2D).is_empty(),
 			"sparks and numbers clean themselves up")
 
+	# A dodge leaves fading afterimages of Nico.
+	events.player_dashed.emit(Vector2.RIGHT)
+	await _real_wait(0.15)
+	_check(feel.get_children().filter(func(n: Node) -> bool: return n is Sprite2D).size() >= 2,
+			"a dodge leaves afterimages behind Nico")
+	await _real_wait(0.6)
+	_check(feel.get_children().filter(func(n: Node) -> bool: return n is Sprite2D).is_empty(),
+			"the afterimages fade away")
+
 	# Low health: the edge pulses at 1 heart and goes away when healed.
 	var low = feel.get_node("FeelOverlay/LowHealth")
 	events.player_health_changed.emit(1, 5)
