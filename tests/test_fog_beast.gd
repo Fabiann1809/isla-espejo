@@ -38,6 +38,8 @@ func _initialize() -> void:
 func _check_hunt() -> void:
 	var beast = _spawn(ARENA + Vector2(140, 0))
 	_check(beast.data.get("charge_speed") != null, "the fog beast uses a ChargerData")
+	var bank = root.get_node("Sound").bank
+	_check(bank.has_cue(&"attack_bestia_de_la_niebla") and bank.has_cue(&"death_bestia_de_la_niebla"), "the beast has its charge and death sounds")
 	await _frames(30)
 	_check(beast.target == _player, "fog beast detects the player")
 	_check(beast.state in [beast.State.CHASE, beast.State.ATTACK], "fog beast chases the player")
@@ -60,6 +62,8 @@ func _check_hunt() -> void:
 func _check_charge() -> void:
 	_player.global_position = ARENA
 	var health_before: int = _player.health.current
+	var sound = root.get_node("Sound")
+	sound.played.clear()
 	var beast = _spawn(ARENA + Vector2(90, 0))
 	while not beast.is_charging():
 		await physics_frame
@@ -105,6 +109,7 @@ func _check_charge() -> void:
 	_check(absf(top - beast.data.charge_speed) < 1.0, "it charges at its charge speed (%.0f px/s)" % top)
 	_check(absf(travelled - full) < 6.0 and travelled > aimed + 20.0, "the charge goes on past Nico (%.0f px, he stood %.0f px away)" % [travelled, aimed])
 	_check(_player.health.current < health_before, "the charge hurts Nico (%d -> %d)" % [health_before, _player.health.current])
+	_check(sound.played.has(&"attack_bestia_de_la_niebla"), "the charge is heard")
 	beast.queue_free()
 	_heal()
 	await _frames(60)

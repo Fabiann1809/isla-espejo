@@ -36,6 +36,9 @@ const VOLUMES := {
 	&"alert": -12.0,
 	&"attack_shot": -8.0,
 	&"attack_summon": -4.0,
+	&"attack_murcielago": -8.0,
+	&"attack_sombra_errante": -6.0,
+	&"attack_bestia_de_la_niebla": -6.0,
 }
 ## Cue -> the cue whose sound it uses (enemy ids are the scene file names).
 const ALIASES := {
@@ -48,6 +51,13 @@ const ALIASES := {
 	&"attack_planta_tiradora": &"spit",
 	&"attack_shot": &"spit",
 	&"attack_summon": &"summon",
+	# Chapter 2 (ruins): the bat's dive swoops, the shade's strike hisses, the beast's charge thumps.
+	&"attack_murcielago": &"dash",
+	&"attack_sombra_errante": &"skill_shadow",
+	&"attack_bestia_de_la_niebla": &"boss_slam",
+	&"death_murcielago": &"death_slime",
+	&"death_sombra_errante": &"skill_shadow",
+	&"death_bestia_de_la_niebla": &"death_wood",
 	&"pickup_arrows": &"pickup_heart",
 }
 const MUSIC_VOLUMES := {

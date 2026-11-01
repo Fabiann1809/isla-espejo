@@ -39,6 +39,8 @@ func _check_data() -> void:
 	_check(bat.data.get("dive_speed") != null and bat.data.id == &"murcielago", "the bat uses a DiverData")
 	_check(bat.data.max_health <= 2 and bat.data.chase_speed >= 90.0, "it is fast and fragile (%d hp, %.0f px/s)" % [bat.data.max_health, bat.data.chase_speed])
 	_check(bat.data.attack_windup >= 0.3, "its dive is warned for %.2f s" % bat.data.attack_windup)
+	var bank = root.get_node("Sound").bank
+	_check(bank.has_cue(&"attack_murcielago") and bank.has_cue(&"death_murcielago"), "the bat has its dive and death sounds")
 	bat.queue_free()
 	await _frames(2)
 
@@ -84,6 +86,8 @@ func _check_circling() -> void:
 func _check_dive() -> void:
 	_player.global_position = ARENA
 	var health_before: int = _player.health.current
+	var sound = root.get_node("Sound")
+	sound.played.clear()
 	var bat = _spawn(ARENA + Vector2(70, 10))
 	var warn_frames := 0
 	var lane_seen := false
@@ -119,6 +123,7 @@ func _check_dive() -> void:
 	_check(closest_to_aim < 6.0 and path_offset < 8.0, "the dive goes straight through Nico's spot (closest %.1f, off line %.1f)" % [closest_to_aim, path_offset])
 	_check((end_pos - aim).dot(dir) > 10.0, "and on past him")
 	_check(_player.health.current < health_before, "the dive hurts Nico (%d -> %d)" % [health_before, _player.health.current])
+	_check(sound.played.has(&"attack_murcielago"), "the dive is heard")
 	var after_dive: float = bat.global_position.distance_to(_player.global_position)
 	await _frames(25)
 	_check(bat.state == bat.State.ATTACK and bat._attack_phase == bat.AttackPhase.RECOVER, "it recovers after the dive")

@@ -39,6 +39,8 @@ func _check_data() -> void:
 	var shade = _spawn(ARENA + Vector2(400, 0))
 	_check(shade.data.get("teleport_range") != null and shade.data.id == &"sombra_errante", "the Sombra uses a TeleporterData")
 	_check(shade.data.sprite_frames.has_animation(&"teleport"), "it has its teleport animation")
+	var bank = root.get_node("Sound").bank
+	_check(bank.has_cue(&"attack_sombra_errante") and bank.has_cue(&"death_sombra_errante"), "the Sombra has its strike and death sounds")
 	shade.queue_free()
 	await _frames(2)
 
@@ -49,6 +51,8 @@ func _check_teleport() -> void:
 	_player.facing = Vector2.RIGHT
 	var health_before: int = _player.health.current
 	var start := ARENA + Vector2(110, 0)
+	var sound = root.get_node("Sound")
+	sound.played.clear()
 	var shade = _spawn(start)
 	var dodged_while_faded := false
 	var hit_while_visible := false
@@ -88,6 +92,7 @@ func _check_teleport() -> void:
 	_check(strike_frame >= landed_frame + int(shade.data.attack_windup * 60) - 1,
 			"its strike lands only after the telegraph (%d -> %d)" % [landed_frame, strike_frame])
 	_check(_player.health.current < health_before, "the strike hurts Nico (%d -> %d)" % [health_before, _player.health.current])
+	_check(sound.played.has(&"attack_sombra_errante"), "the strike is heard")
 	var health: int = shade.health.current
 	shade.get_node("Hurtbox").receive_hit(1, ARENA)
 	hit_while_visible = shade.health.current < health
