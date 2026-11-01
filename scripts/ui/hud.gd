@@ -29,6 +29,9 @@ const FRAGMENT_MISSING := Color(0.2, 0.2, 0.26)
 
 const TOAST_SECONDS := 3.2
 const TOAST_FADE := 0.8
+## The small "saved" note in the bottom right corner.
+const SAVED_SECONDS := 1.4
+const SAVED_FADE := 0.6
 
 @onready var _hearts: HBoxContainer = $Margin/Hearts
 @onready var _message: Label = $Message
@@ -60,6 +63,8 @@ var _announced_bosses := {}
 var _hint: Label
 var _hint_dodged := false
 var _hint_shot := false
+var _saved_note: Label
+var _saved_tween: Tween
 
 
 func _ready() -> void:
@@ -74,6 +79,7 @@ func _ready() -> void:
 	_heart_empty = _heart_texture(HEART_EMPTY)
 	_build_boss_trail()
 	_build_controls_hint()
+	_build_saved_note()
 	_build_fragments_and_objective()
 	_build_resources()
 	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
@@ -303,6 +309,33 @@ func _build_controls_hint() -> void:
 	Events.player_dashed.connect(func(_d: Vector2) -> void:
 		_hint_dodged = true
 		_maybe_hide_hint())
+
+
+## A quiet note in the bottom right corner each time the progress is written to disk.
+func _build_saved_note() -> void:
+	_saved_note = UiKit.label(UiText.t("saved_note"), 10, Color(0.8, 0.85, 0.95))
+	_saved_note.name = "SavedNote"
+	_saved_note.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_saved_note.add_theme_constant_override("outline_size", 3)
+	_saved_note.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_saved_note.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_saved_note.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_saved_note.offset_right = -8
+	_saved_note.offset_bottom = -6
+	_saved_note.hide()
+	add_child(_saved_note)
+	Events.game_saved.connect(_on_game_saved)
+
+
+func _on_game_saved() -> void:
+	if _saved_tween != null:
+		_saved_tween.kill()
+	_saved_note.modulate.a = 1.0
+	_saved_note.show()
+	_saved_tween = create_tween()
+	_saved_tween.tween_interval(SAVED_SECONDS)
+	_saved_tween.tween_property(_saved_note, "modulate:a", 0.0, SAVED_FADE)
+	_saved_tween.tween_callback(_saved_note.hide)
 
 
 func _maybe_hide_hint() -> void:

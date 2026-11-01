@@ -34,6 +34,8 @@ func save() -> void:
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file != null:
 		file.store_string(JSON.stringify(to_dict(), "\t"))
+		file.close()
+		Events.game_saved.emit()
 
 
 func to_dict() -> Dictionary:

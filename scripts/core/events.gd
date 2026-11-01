@@ -9,6 +9,8 @@ signal dialogue_finished(dialogue_id: StringName, state: StringName)
 signal interaction_prompt_changed(prompt: String)
 ## A line to show the player (rewards, chapter titles...).
 signal message_requested(text: String)
+## The progress was written to disk (the HUD shows a small note).
+signal game_saved
 signal chest_opened(chest: Node)
 ## Boss health, so the HUD can show its bar. Emitted when the fight starts and on every hit.
 signal boss_health_changed(boss_id: StringName, current: int, maximum: int, boss_name: String)

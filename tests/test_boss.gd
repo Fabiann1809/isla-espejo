@@ -244,8 +244,15 @@ func _test_defeat_and_rewards() -> void:
 	portal.scenario_id = &"forest"
 	_room.add_child(portal)
 	await _frames(3)
-	_check(not portal.is_open() and not portal.get_node("Glow").visible and not portal.get_node("Use").enabled,
+	_check(not portal.is_open() and not portal.get_node("Glow").visible
+			and portal.get_node("Use").prompt != "Continuar el viaje",
 			"before the boss falls the exit is closed and hidden")
+	var said: Array[String] = []
+	var listen := func(text: String) -> void: said.append(text)
+	root.get_node("Events").message_requested.connect(listen)
+	portal.get_node("Use").interact(_player)
+	root.get_node("Events").message_requested.disconnect(listen)
+	_check(said.size() == 1 and said[0] != "", "using the sealed exit says what opens it")
 
 	var boss := _spawn_boss()
 	_player.global_position = ARENA + Vector2(0, 400)
@@ -258,7 +265,8 @@ func _test_defeat_and_rewards() -> void:
 	_check(boss.state == boss.State.DEAD, "the boss dies")
 	var pickups := get_nodes_in_group("fragments")
 	_check(pickups.size() == 1 and pickups[0].global_position.distance_to(ARENA) < 2.0, "a green fragment appears where the boss fell")
-	_check(portal.is_open() and portal.get_node("Glow").visible and portal.get_node("Use").enabled, "the exit opens")
+	_check(portal.is_open() and portal.get_node("Glow").visible
+			and portal.get_node("Use").prompt == "Continuar el viaje", "the exit opens")
 
 	# Take the fragment
 	_messages.clear()

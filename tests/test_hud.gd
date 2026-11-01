@@ -48,6 +48,13 @@ func _initialize() -> void:
 	events.player_dashed.emit(Vector2.RIGHT)
 	await create_timer(2.2).timeout
 	_check(not hint.visible, "after shooting and dodging the hint fades away")
+	# Saving shows a short note that goes away by itself.
+	var saved: Label = hud.get_node("SavedNote")
+	_check(not saved.visible, "no saved note before anything is saved")
+	events.game_saved.emit()
+	_check(saved.visible and saved.text != "", "saving shows a short note")
+	await create_timer(2.4).timeout
+	_check(not saved.visible, "the saved note goes away by itself")
 	quit(0 if _ok else 1)
 
 
