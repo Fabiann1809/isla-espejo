@@ -135,6 +135,8 @@ func _initialize() -> void:
 		var veil: ColorRect = level.get_node_or_null("MapVeil/Veil")
 		seen.veil = veil.color.a if veil != null else -1.0
 	level.completion_delay = 0.05
+	# The forest is the last chapter: looping it like a sandbox lets the exit build a new map.
+	level.end_after_last_chapter = false
 	level.generated.connect(built)
 	root.get_node("Events").scenario_completed.emit(&"forest")
 	var waited := 0

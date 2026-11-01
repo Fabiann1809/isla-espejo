@@ -34,6 +34,9 @@ func _initialize() -> void:
 		"stat_evaded": "Salas evadidas: %d",
 		"stat_detections": "Veces detectado: %d",
 		"continue": "Pulsa E para volver a intentarlo",
+		"ending_line": "Nico: La brújula vuelve a brillar en verde.",
+		"ending": "Fin de la primera isla. El viaje de Nico continuará.",
+		"ending_continue": "Pulsa E para volver al menú",
 	}
 
 	ResourceSaver.save(config, "res://data/ai/profile_config.tres")

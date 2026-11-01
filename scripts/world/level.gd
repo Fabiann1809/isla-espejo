@@ -5,6 +5,8 @@ extends Node2D
 ## player in the start room. The camera simply follows the player through the continuous world.
 
 signal generated(layout: MapLayout)
+## The exit of the last chapter was taken (only with `end_after_last_chapter`): the journey is over.
+signal journey_ended
 
 const CELL_SIZE := Vector2(480, 288)
 const CORRIDOR_LENGTH := 48.0
@@ -19,6 +21,9 @@ const CORRIDOR_COLOR := Color(0.15, 0.22, 0.17)
 @export var use_director := true
 ## Pause between taking the exit and the next map, so the closing text can be read.
 @export var completion_delay := 3.5
+## After the last chapter (no `next_scenario`) the journey ends (`journey_ended`) instead of building
+## a new map of the same scenario. The real game turns it on; the sandboxes keep looping.
+@export var end_after_last_chapter := false
 
 ## Extra room tag -> weight multiplier, applied on top of the director's plan (debugging).
 var weight_modifiers := {}
@@ -140,6 +145,10 @@ func _on_scenario_completed(_scenario_id: StringName) -> void:
 		Events.message_requested.emit(scenario.completion_text)
 	await get_tree().create_timer(completion_delay).timeout
 	await _fade_veil(1.0, Tuning.MAP_VEIL_FADE_OUT)
+	if scenario.next_scenario == null and end_after_last_chapter:
+		# Stays "completing": the exit cannot be used again behind the ending screen.
+		journey_ended.emit()
+		return
 	if scenario.next_scenario != null:
 		scenario = scenario.next_scenario
 	generate(0)
