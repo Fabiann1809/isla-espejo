@@ -1,9 +1,26 @@
 extends CanvasLayer
-## In-game HUD. Reads state from the Events bus only. Placeholder art (colored squares).
+## In-game HUD. Reads state from the Events bus only. Hearts are small pixel icons drawn in code.
 
-const HEART_SIZE := Vector2(10, 10)
 const HEART_FULL := Color(0.85, 0.2, 0.25)
 const HEART_EMPTY := Color(0.25, 0.1, 0.12)
+## A 9x8 heart: 1 = fill, 2 = highlight, 3 = dark outline.
+const HEART_SHAPE := [
+	"033303330",
+	"312231113",
+	"311111113",
+	"311111113",
+	"031111130",
+	"003111300",
+	"000313000",
+	"000030000",
+]
+## The boss bar's pale trail shows the damage of the last hits, then catches up.
+const BOSS_TRAIL_COLOR := Color(1.0, 0.85, 0.7, 0.9)
+const BOSS_TRAIL_DELAY := 0.35
+const BOSS_TRAIL_TIME := 0.4
+## The boss's name over the screen when its fight starts, with black bars above and below.
+const BOSS_CARD_TIME := 2.2
+const BOSS_CARD_BARS := 22.0
 
 ## Compass fragment ids in story order, with the color each one has in the world.
 const FRAGMENT_COLORS := {&"green": Color(0.35, 0.85, 0.4), &"blue": Color(0.35, 0.6, 0.95), &"violet": Color(0.7, 0.45, 0.95)}
@@ -34,6 +51,11 @@ var _buff_total := 1.0
 var _objective: Label
 var _toast_queue: Array[String] = []
 var _toast_busy := false
+var _heart_full: Texture2D
+var _heart_empty: Texture2D
+var _boss_trail: ColorRect
+var _boss_trail_tween: Tween
+var _announced_bosses := {}
 
 
 func _ready() -> void:
@@ -44,6 +66,9 @@ func _ready() -> void:
 	Events.boss_health_changed.connect(_on_boss_health_changed)
 	Events.boss_defeated.connect(func(_id: StringName) -> void: _boss_bar.hide())
 	Events.player_died.connect(func() -> void: _boss_bar.hide())
+	_heart_full = _heart_texture(HEART_FULL)
+	_heart_empty = _heart_texture(HEART_EMPTY)
+	_build_boss_trail()
 	_build_fragments_and_objective()
 	_build_resources()
 	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
@@ -163,10 +188,70 @@ func _show_next_toast() -> void:
 		_show_next_toast())
 
 
-func _on_boss_health_changed(_boss_id: StringName, current: int, maximum: int, boss_name: String) -> void:
+func _on_boss_health_changed(boss_id: StringName, current: int, maximum: int, boss_name: String) -> void:
 	_boss_name.text = boss_name
-	_boss_fill.anchor_right = float(current) / maxf(maximum, 1)
+	var share := float(current) / maxf(maximum, 1)
+	var first := not _boss_bar.visible
+	_boss_fill.anchor_right = share
 	_boss_bar.show()
+	if _boss_trail_tween != null:
+		_boss_trail_tween.kill()
+	if first or share >= _boss_trail.anchor_right:
+		_boss_trail.anchor_right = share
+	else:
+		_boss_trail_tween = create_tween()
+		_boss_trail_tween.tween_interval(BOSS_TRAIL_DELAY)
+		_boss_trail_tween.tween_property(_boss_trail, "anchor_right", share, BOSS_TRAIL_TIME)
+	if not _announced_bosses.has(boss_id):
+		_announced_bosses[boss_id] = true
+		_show_boss_card(boss_name)
+
+
+func _build_boss_trail() -> void:
+	_boss_trail = ColorRect.new()
+	_boss_trail.name = "Trail"
+	_boss_trail.color = BOSS_TRAIL_COLOR
+	_boss_trail.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_boss_trail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var track := _boss_fill.get_parent()
+	track.add_child(_boss_trail)
+	track.move_child(_boss_trail, _boss_fill.get_index())
+
+
+## The boss's name in big letters between two black bars, for a moment, when its fight begins.
+func _show_boss_card(boss_name: String) -> void:
+	var card := Control.new()
+	card.name = "BossCard"
+	card.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(card)
+	for top in [true, false]:
+		var bar := ColorRect.new()
+		bar.color = Color.BLACK
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar.set_anchors_preset(Control.PRESET_TOP_WIDE if top else Control.PRESET_BOTTOM_WIDE)
+		bar.offset_top = -BOSS_CARD_BARS if top else 0.0
+		bar.offset_bottom = 0.0 if top else BOSS_CARD_BARS
+		card.add_child(bar)
+		var slide := create_tween()
+		slide.tween_property(bar, "offset_top" if top else "offset_bottom", 0.0, 0.3)
+		slide.parallel().tween_property(bar, "offset_bottom" if top else "offset_top",
+				BOSS_CARD_BARS if top else -BOSS_CARD_BARS, 0.3)
+	var title := UiKit.label(boss_name.to_upper(), 20, Color(1.0, 0.85, 0.75))
+	title.add_theme_color_override("font_outline_color", Color.BLACK)
+	title.add_theme_constant_override("outline_size", 4)
+	title.set_anchors_preset(Control.PRESET_CENTER)
+	title.offset_left = -220
+	title.offset_right = 220
+	title.offset_top = 52
+	title.offset_bottom = 80
+	title.modulate.a = 0.0
+	card.add_child(title)
+	var tween := create_tween()
+	tween.tween_property(title, "modulate:a", 1.0, 0.3)
+	tween.tween_interval(BOSS_CARD_TIME)
+	tween.tween_property(card, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(card.queue_free)
 
 
 func _on_prompt_changed(prompt: String) -> void:
@@ -183,7 +268,18 @@ func _on_player_health_changed(current: int, maximum: int) -> void:
 	for child in _hearts.get_children():
 		child.queue_free()
 	for i in maximum:
-		var heart := ColorRect.new()
-		heart.custom_minimum_size = HEART_SIZE
-		heart.color = HEART_FULL if i < current else HEART_EMPTY
+		var heart := TextureRect.new()
+		heart.texture = _heart_full if i < current else _heart_empty
+		heart.stretch_mode = TextureRect.STRETCH_KEEP
 		_hearts.add_child(heart)
+
+
+func _heart_texture(fill: Color) -> Texture2D:
+	var image := Image.create(9, 8, false, Image.FORMAT_RGBA8)
+	var colors := {"1": fill, "2": fill.lightened(0.5), "3": Color(0.1, 0.03, 0.05)}
+	for y in HEART_SHAPE.size():
+		var row: String = HEART_SHAPE[y]
+		for x in row.length():
+			if colors.has(row[x]):
+				image.set_pixel(x, y, colors[row[x]])
+	return ImageTexture.create_from_image(image)
