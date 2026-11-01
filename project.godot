@@ -32,6 +32,7 @@ GameState="*res://scripts/core/game_state.gd"
 Settings="*res://scripts/core/settings.gd"
 SaveGame="*res://scripts/core/save_game.gd"
 Dialogue="*res://scripts/core/dialogue.gd"
+Sound="*res://scripts/core/sound.gd"
 
 [display]
 

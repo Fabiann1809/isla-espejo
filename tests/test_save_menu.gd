@@ -92,6 +92,18 @@ func _test_settings() -> void:
 	_settings.set_volume(0.1)
 	_check(_settings.from_dict(data) and is_equal_approx(_settings.volume, 0.5), "settings round trip")
 	_check(not _settings.from_dict({"version": 99}), "settings of another version are rejected")
+	_settings.set_music_volume(0.25)
+	_check(is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(AudioServer.get_bus_index(&"Music"))), 0.25),
+			"the music volume sets the Music bus")
+	_settings.set_sfx_volume(0.0)
+	_check(AudioServer.is_bus_mute(AudioServer.get_bus_index(&"SFX")), "effects at 0 mute the SFX bus")
+	var with_buses: Dictionary = _settings.to_dict()
+	_settings.set_music_volume(0.9)
+	_settings.set_sfx_volume(0.9)
+	_check(_settings.from_dict(with_buses) and is_equal_approx(_settings.music_volume, 0.25)
+			and _settings.sfx_volume == 0.0, "music and effects volumes round trip")
+	_settings.set_music_volume(0.8)
+	_settings.set_sfx_volume(1.0)
 	_settings.set_volume(0.8)
 
 
