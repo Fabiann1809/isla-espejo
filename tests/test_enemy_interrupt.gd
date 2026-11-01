@@ -35,6 +35,7 @@ func _initialize() -> void:
 	var rested := []
 	var too_soon := []
 	var untouched := true
+	var armored_ok := true
 	for path in scenes:
 		var enemy: Node2D = scenes[path].instantiate()
 		enemy.position = Vector2(240, 144)
@@ -52,7 +53,11 @@ func _initialize() -> void:
 		var attacking: bool = enemy.state == ATTACK
 		enemy.get_node("Hurtbox").receive_hit(0, player.global_position)
 		var wanted: float = enemy.data.hurt_time + tuning.INTERRUPTED_ATTACK_COOLDOWN
-		if attacking and enemy._attack_cooldown_left >= wanted - 0.001:
+		if enemy.data.attack_armor:
+			# Armored attacks are not cut short: the hit leaves the attack going.
+			armored_ok = armored_ok and attacking and enemy.state == ATTACK
+			rested.append(path.get_file())
+		elif attacking and enemy._attack_cooldown_left >= wanted - 0.001:
 			rested.append(path.get_file())
 		else:
 			too_soon.append(path.get_file())
@@ -61,6 +66,7 @@ func _initialize() -> void:
 			"every enemy rests %.1f s after its hurt when an attack is cut short (%s; failed: %s)"
 			% [tuning.INTERRUPTED_ATTACK_COOLDOWN, rested, too_soon])
 	_check(untouched, "a hit outside an attack adds no rest")
+	_check(armored_ok, "an enemy with attack armor keeps attacking when hit")
 	level.free()
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)

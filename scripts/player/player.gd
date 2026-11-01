@@ -370,6 +370,7 @@ func _fire() -> void:
 		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, attack_damage)
 		if i == (count - 1) / 2:
 			arrow.hit_landed.connect(_on_arrow_hit)
+		arrow.blocked.connect(func(at: Vector2) -> void: Events.arrow_blocked.emit(at))
 		get_parent().add_child(arrow)
 		arrow.global_position = muzzle
 		Placement.reset(arrow)
