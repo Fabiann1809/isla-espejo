@@ -42,19 +42,21 @@ func _initialize() -> void:
 	data.sprite_frames = load("res://data/enemies/esqueleto_frames.tres")
 	# The feet are on row 28 of the cell: put them a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -6)
-	data.max_health = 4
+	data.max_health = 5
 	data.move_speed = 28.0
-	data.chase_speed = 55.0
+	data.chase_speed = 50.0
 	data.detection_range = 170.0
 	data.lose_range = 260.0
 	data.attack_range = 22.0
 	data.attack_damage = 1
 	# The 7-frame swing raises the club for 5 frames (windup) and strikes on the 6th.
-	data.attack_windup = 0.45
+	data.attack_windup = 0.55
 	data.attack_time = 0.2
-	data.attack_cooldown = 1.0
+	data.attack_cooldown = 1.3
 	data.knockback_speed = 130.0
 	data.patrol_radius = 60.0
+	data.hurt_time = 0.15
+	data.attack_armor = true
 	ResourceSaver.save(data, "res://data/enemies/esqueleto.tres")
 	print("esqueleto written")
 	quit()

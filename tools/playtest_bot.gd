@@ -3,7 +3,8 @@ extends SceneTree
 ## time and damage per room, who hurt Nico, shots and hits, and pictures every few seconds. The bot
 ## walks from room to room by jumping (no pathfinding), then fights with the real input actions:
 ## it keeps its distance, turns to the nearest enemy, shoots and dodges when something gets close.
-##   godot --path . --script res://tools/playtest_bot.gd -- <seed> <output folder> [picture every s] [rooms]
+##   godot --path . --script res://tools/playtest_bot.gd -- <seed> <output folder> [picture every s] [rooms] [boss]
+## With "boss" as the fifth argument the bot only fights the boss, with full health.
 
 const ROOM_TIME_LIMIT := 75.0
 const KEEP_DISTANCE := 90.0
@@ -23,6 +24,7 @@ var _next_shot := 0.0
 var _clock := 0.0
 var _shot_every := 4.0
 var _max_rooms := 999
+var _room: Node2D
 
 
 func _initialize() -> void:
@@ -57,6 +59,8 @@ func _initialize() -> void:
 	order.erase(_level.layout.boss_cell)
 	order.sort_custom(func(a, b) -> bool: return distances[a] < distances[b])
 	order.append(_level.layout.boss_cell)
+	if args.size() > 4 and args[4] == "boss":
+		order = [_level.layout.boss_cell]
 	var run_start := _clock
 	for coord in order.slice(0, _max_rooms):
 		if _dead:
@@ -73,6 +77,7 @@ func _initialize() -> void:
 
 func _play_room(coord: Vector2i) -> void:
 	var room: Node2D = _level.rooms[coord]
+	_room = room
 	var type := String(RoomData.RoomType.keys()[room.data.type])
 	_player.global_position = room.global_position + room.center()
 	_player.snap_camera()
@@ -109,7 +114,24 @@ func _fight_step(targets: Array) -> void:
 	var to_enemy: Vector2 = nearest.global_position - _player.global_position
 	var distance := to_enemy.length()
 	var aim := to_enemy.normalized()
-	if distance < TOO_CLOSE and _player._dash_cooldown_left == 0.0:
+	var orb := _incoming_orb(_room)
+	var danger := _warning_escape(_room)
+	if danger != Vector2.ZERO:
+		# Inside a boss warning circle: run out of it (dashing if possible), like a player would.
+		_press_direction(danger)
+		await physics_frame
+		if _player._dash_cooldown_left == 0.0:
+			Input.action_press("dash")
+			await physics_frame
+			Input.action_release("dash")
+	elif orb != Vector2.ZERO and _player._dash_cooldown_left == 0.0:
+		# Dodge sideways through an orb about to land, like a player would.
+		_press_direction(orb.orthogonal())
+		await physics_frame
+		Input.action_press("dash")
+		await physics_frame
+		Input.action_release("dash")
+	elif distance < TOO_CLOSE and _player._dash_cooldown_left == 0.0:
 		# Face away and dodge.
 		_press_direction(-aim.rotated(0.6))
 		await physics_frame
@@ -133,6 +155,29 @@ func _fight_step(targets: Array) -> void:
 		_press_direction(move)
 		await physics_frame
 	_tick(0.0)
+
+
+## Way out of the boss warning circle Nico stands in (zero if none). Warnings are the orange
+## circles the boss draws before it strikes.
+func _warning_escape(room: Node2D) -> Vector2:
+	for node in room.get_children():
+		if node is SkillZone and node.shape == SkillZone.Shape.CIRCLE and node.color.r > 0.9 and node.color.g < 0.6:
+			var center: Vector2 = node.global_position
+			var away: Vector2 = _player.global_position - center
+			if away.length() < node.radius + 6.0:
+				return away.normalized() if away.length() > 1.0 else Vector2.DOWN
+	return Vector2.ZERO
+
+
+## Direction of an enemy orb flying at Nico and less than 40 px away (zero if none).
+func _incoming_orb(room: Node2D) -> Vector2:
+	for node in room.get_children():
+		if node is EnemyOrb:
+			var to_player: Vector2 = _player.global_position - node.global_position
+			var flying: Vector2 = node._velocity
+			if to_player.length() < 40.0 and flying.dot(to_player) > 0.0:
+				return flying.normalized()
+	return Vector2.ZERO
 
 
 func _enemies_in(room: Node2D) -> Array:

@@ -42,7 +42,7 @@ func _initialize() -> void:
 	data.sprite_frames = load("res://data/enemies/planta_tiradora_frames.tres")
 	# The cell's ground line is row 27: put it a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -5)
-	data.max_health = 3
+	data.max_health = 4
 	# It plants itself to shoot and, between shots, scurries sideways in short bursts (see Shooter).
 	data.move_speed = 0.0
 	data.chase_speed = 45.0
@@ -53,15 +53,16 @@ func _initialize() -> void:
 	# The 6-frame attack charges for 4 frames (windup) and spits on the 5th (attack_time).
 	data.attack_windup = 0.5
 	data.attack_time = 0.25
-	data.attack_cooldown = 1.8
+	data.attack_cooldown = 1.7
 	data.knockback_speed = 60.0
 	data.patrol_radius = 0.0
 	data.projectile_scene = load("res://scenes/enemies/orb.tscn")
-	data.projectile_speed = 90.0
+	data.projectile_speed = 100.0
 	data.projectile_range = 220.0
 	data.muzzle_distance = 10.0
 	data.shuffle_time = 0.5
 	data.shuffle_wait = 0.7
+	data.hurt_time = 0.15
 	ResourceSaver.save(data, "res://data/enemies/planta_tiradora.tres")
 	print("planta written")
 	quit()

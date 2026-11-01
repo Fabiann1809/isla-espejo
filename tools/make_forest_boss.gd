@@ -8,13 +8,14 @@ func _initialize() -> void:
 	var boss := BossData.new()
 	boss.id = &"forest_guardian"
 	boss.display_name = "Guardián del bosque"
-	boss.max_health = 30
+	boss.placeholder_color = Color(0.42, 0.55, 0.25)
+	boss.max_health = 90
 	boss.move_speed = 20.0
 	boss.chase_speed = 42.0
 	boss.detection_range = 230.0
 	boss.lose_range = 420.0
 	boss.attack_range = 40.0
-	boss.attack_cooldown = 1.2
+	boss.attack_cooldown = 0.9
 	boss.hurt_time = 0.0
 	boss.knockback_speed = 0.0
 	boss.knockback_resistance = 1.0
@@ -22,22 +23,23 @@ func _initialize() -> void:
 
 	boss.slam_radius = 46.0
 	boss.slam_damage = 2
-	boss.slam_windup = 0.9
+	boss.slam_windup = 0.75
 	boss.slam_trigger_range = 58.0
-	boss.roots_count = 3
+	boss.roots_count = 4
 	boss.roots_radius = 22.0
 	boss.roots_damage = 1
-	boss.roots_windup = 1.1
+	boss.roots_windup = 0.95
 	boss.roots_spread = 64.0
 	boss.strike_time = 0.25
-	boss.recover_time = 0.8
+	boss.recover_time = 0.6
 	boss.arena_radius = 150.0
 	boss.phase_two_threshold = 0.5
 	boss.phase_two_speed = 1.3
 	boss.phase_two_windup = 0.75
-	boss.phase_two_extra_roots = 2
+	boss.phase_two_extra_roots = 3
 
 	boss.defeated_flag = &"forest_boss_defeated"
+	boss.defeat_lines = ["Nico: Uno menos. Solo necesito encontrar los otros fragmentos."]
 	boss.pickup_scene = load("res://scenes/world/fragment_green.tscn")
 	var intro: Array[String] = [
 		"Nico: Así que tú eres quien guarda el fragmento…",
