@@ -17,6 +17,7 @@
 	"options_sfx": "Efectos",
 	"options_fullscreen": "Pantalla completa",
 	"options_back": "Volver",
+	"hint_controls": "WASD: moverte   ·   J: disparar   ·   Espacio: esquivar",
 	"credits_title": "Créditos",
 	"credits_back": "Volver",
 	"credits_missing": "No se encontró la lista de créditos."

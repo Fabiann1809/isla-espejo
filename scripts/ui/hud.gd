@@ -56,6 +56,10 @@ var _heart_empty: Texture2D
 var _boss_trail: ColorRect
 var _boss_trail_tween: Tween
 var _announced_bosses := {}
+## The controls hint of a new journey: it leaves once the player has shot and dodged.
+var _hint: Label
+var _hint_dodged := false
+var _hint_shot := false
 
 
 func _ready() -> void:
@@ -69,6 +73,7 @@ func _ready() -> void:
 	_heart_full = _heart_texture(HEART_FULL)
 	_heart_empty = _heart_texture(HEART_EMPTY)
 	_build_boss_trail()
+	_build_controls_hint()
 	_build_fragments_and_objective()
 	_build_resources()
 	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
@@ -272,6 +277,41 @@ func _on_player_health_changed(current: int, maximum: int) -> void:
 		heart.texture = _heart_full if i < current else _heart_empty
 		heart.stretch_mode = TextureRect.STRETCH_KEEP
 		_hearts.add_child(heart)
+
+
+func _build_controls_hint() -> void:
+	_hint = UiKit.label(UiText.t("hint_controls"), 10, Color(0.95, 0.95, 1.0))
+	_hint.name = "ControlsHint"
+	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_hint.add_theme_constant_override("outline_size", 3)
+	_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_hint.offset_left = -200
+	_hint.offset_right = 200
+	_hint.offset_top = -74
+	_hint.offset_bottom = -58
+	_hint.hide()
+	add_child(_hint)
+	# Only on the first island of a journey: later islands assume the player knows.
+	Events.level_started.connect(func(_id: StringName, _seed: int) -> void:
+		_hint_dodged = false
+		_hint_shot = false
+		_hint.modulate.a = 1.0
+		_hint.visible = GameState.fragments.is_empty())
+	Events.player_shot.connect(func(_d: Vector2, _t: float) -> void:
+		_hint_shot = true
+		_maybe_hide_hint())
+	Events.player_dashed.connect(func(_d: Vector2) -> void:
+		_hint_dodged = true
+		_maybe_hide_hint())
+
+
+func _maybe_hide_hint() -> void:
+	if not _hint.visible or not (_hint_dodged and _hint_shot):
+		return
+	var tween := create_tween()
+	tween.tween_interval(1.0)
+	tween.tween_property(_hint, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(_hint.hide)
 
 
 func _heart_texture(fill: Color) -> Texture2D:

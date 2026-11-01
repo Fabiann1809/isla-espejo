@@ -39,6 +39,15 @@ func _initialize() -> void:
 	events.boss_health_changed.emit(&"forest_guardian", 40, 90, "Guardián del bosque")
 	await process_frame
 	_check(hud.get_node_or_null("BossCard") == null, "the card is shown once per boss, not on every hit")
+	# The controls hint: shown when the first island starts, gone after a shot and a dodge.
+	var hint: Label = hud.get_node("ControlsHint")
+	events.level_started.emit(&"forest", 1)
+	_check(hint.visible and hint.text != "", "the first island starts with the controls hint")
+	events.player_shot.emit(Vector2.RIGHT, -1.0)
+	_check(hint.visible, "one shot is not enough to hide it")
+	events.player_dashed.emit(Vector2.RIGHT)
+	await create_timer(2.2).timeout
+	_check(not hint.visible, "after shooting and dodging the hint fades away")
 	quit(0 if _ok else 1)
 
 
