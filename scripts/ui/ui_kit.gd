@@ -9,7 +9,11 @@ const ACCENT := Color(0.55, 0.45, 0.85)
 const TEXT := Color(0.92, 0.92, 0.96)
 const TEXT_DIM := Color(0.6, 0.62, 0.72)
 
+## Pixel font for small in-world texts (damage numbers); without the file the default font is used.
+const PIXEL_FONT := "res://assets/fonts/kenney_pixel.ttf"
+
 static var _theme: Theme
+static var _pixel_font: Font
 
 
 static func theme() -> Theme:
@@ -47,7 +51,17 @@ static func button(text: String, min_width := 200.0, min_height := 26.0) -> Butt
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(min_width, min_height)
+	# Interface sounds (the Sound autoload; missing in tools that run without it).
+	b.focus_entered.connect(func() -> void: _ui_sound(&"ui_hover"))
+	b.pressed.connect(func() -> void: _ui_sound(&"ui_click"))
 	return b
+
+
+static func _ui_sound(cue: StringName) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var sound := tree.root.get_node_or_null("Sound") if tree != null else null
+	if sound != null:
+		sound.play(cue)
 
 
 static func label(text: String, size := 14, color := TEXT, align := HORIZONTAL_ALIGNMENT_CENTER) -> Label:
@@ -57,3 +71,9 @@ static func label(text: String, size := 14, color := TEXT, align := HORIZONTAL_A
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	return l
+
+
+static func pixel_font() -> Font:
+	if _pixel_font == null and ResourceLoader.exists(PIXEL_FONT):
+		_pixel_font = load(PIXEL_FONT)
+	return _pixel_font

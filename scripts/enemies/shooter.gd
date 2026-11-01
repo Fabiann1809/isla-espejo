@@ -79,6 +79,7 @@ func _process_attack(delta: float) -> void:
 func _fire() -> void:
 	if _shooter.projectile_scene == null or get_parent() == null:
 		return
+	Events.enemy_attacked.emit(self, &"shot")
 	var orb: EnemyOrb = _shooter.projectile_scene.instantiate()
 	orb.setup(facing, _shooter.projectile_speed, _shooter.projectile_range,
 			ceili(data.attack_damage * damage_multiplier))

@@ -63,6 +63,11 @@ func _ready() -> void:
 	if saved != null:
 		scenario = saved
 	_build_veil()
+	var feel := GameFeel.new()
+	feel.name = "GameFeel"
+	add_child(feel)
+	# Right after the veil: its red flash covers the world but not the HUD.
+	move_child(feel, 1)
 	_veil.color.a = 1.0
 	generate(seed_value)
 	_lift_veil()

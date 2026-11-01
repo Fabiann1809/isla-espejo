@@ -84,6 +84,7 @@ func _spawn_minions() -> void:
 	var parent := get_parent()
 	if parent == null:
 		return
+	Events.enemy_attacked.emit(self, &"summon")
 	var count := mini(_summoner.minions_per_summon, _summoner.max_minions - living_minions())
 	var start_angle := randf() * TAU
 	for i in count:

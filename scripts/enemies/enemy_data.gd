@@ -41,6 +41,9 @@ extends Resource
 @export var knockback_speed := 120.0
 ## 0 = full knockback, 1 = immune.
 @export_range(0.0, 1.0) var knockback_resistance := 0.0
+## True: a hit during its attack (warning or blow) hurts and flashes but does not cut the attack
+## short or push it, so it cannot be kept stunned by a quick stream of arrows.
+@export var attack_armor := false
 
 @export_group("Patrol")
 ## 0 = stands still while idle.

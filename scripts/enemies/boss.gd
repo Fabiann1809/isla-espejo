@@ -130,6 +130,7 @@ func _start_attack() -> void:
 	state = State.ATTACK
 	velocity = Vector2.ZERO
 	step = Step.WINDUP
+	Events.boss_attack_warned.emit(_boss.id, _pattern_name())
 	if pattern == Pattern.SLAM:
 		_step_left = _scaled(_boss.slam_windup)
 		_warn(global_position, _boss.slam_radius)
@@ -164,6 +165,7 @@ func _process_attack(delta: float) -> void:
 
 ## The hit of the current pattern lands: whoever is inside a warned circle is hurt.
 func _strike() -> void:
+	Events.boss_attack_struck.emit(_boss.id, _pattern_name(), global_position)
 	if pattern == Pattern.SLAM:
 		_flash_zone(global_position, _boss.slam_radius)
 		_hurt_player_within(global_position, _boss.slam_radius, _boss.slam_damage)
@@ -221,6 +223,8 @@ func _on_died() -> void:
 	_retract_roots_art()
 	GameState.set_flag(_boss.defeated_flag)
 	Events.boss_defeated.emit(_boss.id)
+	for line in _boss.defeat_lines:
+		Events.message_requested.emit(line)
 	if _boss.pickup_scene != null:
 		var pickup: Node2D = _boss.pickup_scene.instantiate()
 		pickup.position = _local_to_room(global_position)
@@ -231,8 +235,13 @@ func _on_died() -> void:
 
 func _enter_phase_two() -> void:
 	phase = 2
+	Events.boss_phase_changed.emit(_boss.id, phase)
 	if _visual != null:
 		_visual.modulate = Color(1.0, 0.8, 0.8)
+
+
+func _pattern_name() -> StringName:
+	return &"slam" if pattern == Pattern.SLAM else &"roots"
 
 
 ## Warning time, shorter in phase two.

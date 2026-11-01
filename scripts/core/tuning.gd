@@ -120,3 +120,41 @@ const PORTAL_BASE := true
 const PORTAL_LIGHT := Color(0.7, 0.45, 1.0, 0.35)
 const PORTAL_LIGHT_RADIUS := 40.0
 const PORTAL_SPARKS := 10
+
+# --- Game feel (GameFeel: what a hit, a kill or a wound feels like) ------------------------------
+## Every effect below can be switched off on its own. Hit stop = the game freezes for an instant
+## (seconds, real time) so a blow reads; shake = the camera jumps (px, then fades over seconds).
+const GAME_FEEL_ENABLED := true
+## Time scale while a hit stop lasts (near 0 = frozen).
+const HIT_STOP_SCALE := 0.05
+const HIT_STOP_KILL := 0.05
+const HIT_STOP_PLAYER_HURT := 0.09
+const HIT_STOP_BOSS_PHASE := 0.15
+const HIT_STOP_BOSS_DEFEATED := 0.35
+const SHAKE_KILL := Vector2(2.0, 0.15)
+const SHAKE_PLAYER_HURT := Vector2(4.0, 0.25)
+const SHAKE_BOSS_SLAM := Vector2(5.0, 0.35)
+const SHAKE_BOSS_ROOTS := Vector2(2.5, 0.25)
+const SHAKE_BOSS_PHASE := Vector2(4.0, 0.4)
+const SHAKE_BOSS_DEFEATED := Vector2(7.0, 0.7)
+## Particles thrown when an enemy is hit and when it dies (count 0 = off), in the enemy's color.
+const HIT_PARTICLES := 5
+const DEATH_PARTICLES := 18
+## Size of each spark (px).
+const PARTICLE_SIZE := Vector2(2.0, 3.0)
+const DEATH_PARTICLE_SPEED := 70.0
+## Dust under Nico's feet when he dodges (count 0 = off).
+const DASH_DUST := 8
+## Damage numbers over an enemy: how high they rise (px) and how long they last (s; 0 = off).
+const DAMAGE_NUMBER_TIME := 0.6
+const DAMAGE_NUMBER_RISE := 14.0
+const DAMAGE_NUMBER_COLOR := Color(1.0, 0.95, 0.75)
+## Font size of the numbers (the pixel font is drawn crisp at multiples of 16).
+const DAMAGE_NUMBER_SIZE := 16
+const DAMAGE_NUMBER_BOSS_COLOR := Color(1.0, 0.75, 0.4)
+## Red flash over the screen when Nico is hurt (alpha 0 = off) and how long it fades (s).
+const HURT_FLASH := Color(0.85, 0.05, 0.05, 0.28)
+const HURT_FLASH_TIME := 0.3
+## Below this health Nico's screen edge pulses red (0 = off).
+const LOW_HEALTH := 1
+const LOW_HEALTH_PULSE := Color(0.6, 0.0, 0.0, 0.22)

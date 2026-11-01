@@ -13,6 +13,12 @@ signal chest_opened(chest: Node)
 ## Boss health, so the HUD can show its bar. Emitted when the fight starts and on every hit.
 signal boss_health_changed(boss_id: StringName, current: int, maximum: int, boss_name: String)
 signal boss_defeated(boss_id: StringName)
+## A boss starts warning an attack (`pattern`: &"slam" or &"roots"), for sound.
+signal boss_attack_warned(boss_id: StringName, pattern: StringName)
+## The warned attack lands at `at` (world position), for the screen shake and sound.
+signal boss_attack_struck(boss_id: StringName, pattern: StringName, at: Vector2)
+## The boss enters its second phase.
+signal boss_phase_changed(boss_id: StringName, phase: int)
 signal fragment_collected(fragment_id: StringName)
 signal scenario_completed(scenario_id: StringName)
 ## What the player should do now (Spanish, from the scenario's data), for the HUD.
@@ -49,6 +55,8 @@ signal skill_used(skill_id: StringName, direction: Vector2, affected: int)
 # Enemies
 signal enemy_damaged(enemy: Node, amount: int)
 signal enemy_killed(enemy: Node)
+## An enemy's attack goes off (`kind`: &"melee", &"shot" or &"summon"), for sound.
+signal enemy_attacked(enemy: Node, kind: StringName)
 ## An enemy noticed the player (once per detection, not every frame).
 signal enemy_detected_player(enemy: Node)
 
