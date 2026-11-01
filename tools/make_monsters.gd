@@ -1,36 +1,15 @@
 extends SceneTree
-## Builds the EnemyData of the Murciélago and the BossData of the Guardián antiguo. Their art
+## Builds the BossData of the Guardián antiguo (the Murciélago is built by tools/make_murcielago.gd). Its art
 ## (SpriteFrames) comes from tools/make_character_sheets.py and make_character_frames.gd. Run:
 ##   godot --headless --path . --script res://tools/make_monsters.gd
-## The scenes (scenes/enemies/murcielago.tscn, ancient_guardian.tscn) are hand-written and inherit
+## The scene scenes/enemies/ancient_guardian.tscn is hand-written and inherits
 ## enemy.tscn; only the numbers (here) and the art live in the .tres files.
 
 
 func _initialize() -> void:
-	_bat()
 	_guardian()
 	print("monsters written")
 	quit()
-
-
-func _bat() -> void:
-	var data := EnemyData.new()
-	data.id = &"murcielago"
-	data.display_name = "Murciélago"
-	data.sprite_frames = load("res://data/enemies/murcielago_frames.tres")
-	data.sprite_scale = 0.5
-	data.sprite_offset = Vector2(0, 3)
-	data.max_health = 2
-	data.move_speed = 55.0
-	data.chase_speed = 105.0
-	data.detection_range = 140.0
-	data.lose_range = 240.0
-	data.attack_range = 18.0
-	data.attack_windup = 0.3
-	data.attack_cooldown = 0.7
-	data.knockback_speed = 160.0
-	data.patrol_radius = 80.0
-	ResourceSaver.save(data, "res://data/enemies/murcielago.tres")
 
 
 func _guardian() -> void:
