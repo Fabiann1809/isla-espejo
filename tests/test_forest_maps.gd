@@ -97,7 +97,7 @@ func _walkability(level: Node) -> Dictionary:
 			params.shape = shape
 			params.transform = Transform2D(0.0, from)
 			params.motion = to - from
-			params.collision_mask = 1
+			params.collision_mask = 1 | 1 << 6  # world and water
 			var result := space.cast_motion(params)
 			if result.size() == 2 and result[0] >= 1.0:
 				report.walkable += 1

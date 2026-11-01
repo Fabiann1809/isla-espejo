@@ -122,7 +122,7 @@ func _on_enemy_damaged(enemy: Node, amount: int) -> void:
 	var body := enemy as Node2D
 	if body == null or not is_instance_valid(body):
 		return
-	burst(body.global_position + Vector2(0, -8), _color_of(enemy), Tuning.HIT_PARTICLES, 40.0)
+	burst(body.global_position + Vector2(0, -8), _color_of(enemy), Tuning.HIT_PARTICLES, Tuning.HIT_PARTICLE_SPEED)
 	damage_number(body.global_position + Vector2(0, -20), amount, enemy is Boss)
 
 
@@ -155,7 +155,7 @@ func _on_player_health_changed(current: int, _maximum: int) -> void:
 func _on_player_dashed(_direction: Vector2) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player != null:
-		burst(player.global_position, Color(0.85, 0.8, 0.65, 0.8), Tuning.DASH_DUST, 25.0)
+		burst(player.global_position, Tuning.DASH_DUST_COLOR, Tuning.DASH_DUST, Tuning.DASH_DUST_SPEED)
 
 
 func _on_boss_attack_struck(_boss_id: StringName, pattern: StringName, _at: Vector2) -> void:
@@ -173,14 +173,14 @@ func burst(at: Vector2, color: Color, count: int, speed: float) -> void:
 	sparks.one_shot = true
 	sparks.explosiveness = 1.0
 	sparks.amount = count
-	sparks.lifetime = 0.45
+	sparks.lifetime = Tuning.PARTICLE_LIFETIME
 	sparks.direction = Vector2.UP
 	sparks.spread = 180.0
 	sparks.initial_velocity_min = speed * 0.4
 	sparks.initial_velocity_max = speed
-	sparks.gravity = Vector2(0, 160)
-	sparks.damping_min = 40.0
-	sparks.damping_max = 80.0
+	sparks.gravity = Vector2(0, Tuning.PARTICLE_GRAVITY)
+	sparks.damping_min = Tuning.PARTICLE_DAMPING.x
+	sparks.damping_max = Tuning.PARTICLE_DAMPING.y
 	sparks.scale_amount_min = Tuning.PARTICLE_SIZE.x
 	sparks.scale_amount_max = Tuning.PARTICLE_SIZE.y
 	sparks.color = color

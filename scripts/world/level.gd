@@ -68,6 +68,9 @@ func _ready() -> void:
 	add_child(feel)
 	# Right after the veil: its red flash covers the world but not the HUD.
 	move_child(feel, 1)
+	var canopy := CanopyFade.new()
+	canopy.name = "CanopyFade"
+	add_child(canopy)
 	_veil.color.a = 1.0
 	generate(seed_value)
 	_lift_veil()

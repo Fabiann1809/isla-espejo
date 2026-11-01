@@ -19,6 +19,7 @@ enum Kind {
 
 const TRUNK := Vector2(10, 8)
 const WATER_INSET := 4.0
+const WATER_LAYER_BIT := 1 << 6
 ## Props that are part of the ground: drawn with the floor, never over an actor.
 const FLAT_KINDS: Array[Kind] = [Kind.POND, Kind.PLANKS, Kind.DIRT_PATCH, Kind.TUFT]
 ## Upright props are y-sorted with the actors by the bottom of their footprint (a little above it,
@@ -50,8 +51,14 @@ const LARGE_TREES := [
 static var _cached_textures := {}
 
 
+## Group of the trees whose crown fades while Nico stands behind it (CanopyFade).
+const CANOPY_GROUP := &"canopy"
+
+
 func _ready() -> void:
 	_build()
+	if kind in [Kind.PINE, Kind.TALL_PINE, Kind.ROUND_TREE, Kind.TALL_ROUND_TREE]:
+		add_to_group(CANOPY_GROUP)
 	if is_flat():
 		z_index = RoomTheme.FLOOR_Z
 	else:
@@ -73,7 +80,8 @@ func _build() -> void:
 			_collide(Rect2(2, 5, 12, 9))
 		Kind.POND:
 			_area(TileArt.POND)
-			_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0))
+			_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0),
+					WATER_LAYER_BIT)
 		Kind.PLANKS:
 			_planks()
 		Kind.DIRT_PATCH:
@@ -196,9 +204,10 @@ func _planks() -> void:
 
 
 ## Collision on the world layer (the same one the walls use).
-func _collide(rect: Rect2) -> void:
+## Water is its own physics layer (7): it stops bodies but arrows and orbs fly over it.
+func _collide(rect: Rect2, layer_bits := 1) -> void:
 	var body := StaticBody2D.new()
-	body.collision_layer = 1
+	body.collision_layer = layer_bits
 	body.collision_mask = 0
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()

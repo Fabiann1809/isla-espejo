@@ -142,9 +142,17 @@ const HIT_PARTICLES := 5
 const DEATH_PARTICLES := 18
 ## Size of each spark (px).
 const PARTICLE_SIZE := Vector2(2.0, 3.0)
+## How long sparks live (s), how fast they fall (px/s²) and slow down (min, max), and the speed of
+## the small burst of a hit (a death uses DEATH_PARTICLE_SPEED).
+const PARTICLE_LIFETIME := 0.45
+const PARTICLE_GRAVITY := 160.0
+const PARTICLE_DAMPING := Vector2(40.0, 80.0)
+const HIT_PARTICLE_SPEED := 40.0
 const DEATH_PARTICLE_SPEED := 70.0
 ## Dust under Nico's feet when he dodges (count 0 = off).
 const DASH_DUST := 8
+const DASH_DUST_COLOR := Color(0.85, 0.8, 0.65, 0.8)
+const DASH_DUST_SPEED := 25.0
 ## Damage numbers over an enemy: how high they rise (px) and how long they last (s; 0 = off).
 const DAMAGE_NUMBER_TIME := 0.6
 const DAMAGE_NUMBER_RISE := 14.0
@@ -158,3 +166,8 @@ const HURT_FLASH_TIME := 0.3
 ## Below this health Nico's screen edge pulses red (0 = off).
 const LOW_HEALTH := 1
 const LOW_HEALTH_PULSE := Color(0.6, 0.0, 0.0, 0.22)
+
+# --- Trees in front of Nico (CanopyFade) -----------------------------------------------------------
+## A tree whose crown covers Nico turns see-through to this alpha (1 = off), at this speed (per s).
+const CANOPY_FADE_ALPHA := 0.45
+const CANOPY_FADE_SPEED := 8.0
