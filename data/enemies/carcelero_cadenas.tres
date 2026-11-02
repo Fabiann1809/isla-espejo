@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ChainJailerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/carcelero_cadenas_data.gd" id="1_5ojmm"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/carcelero_cadenas_frames.tres" id="2_crhlo"]
+
+[resource]
+script = ExtResource("1_5ojmm")
+id = &"carcelero_cadenas"
+display_name = "Carcelero de cadenas"
+placeholder_color = Color(0.62, 0.22, 0.16, 1)
+sprite_frames = ExtResource("2_crhlo")
+sprite_offset = Vector2(0, -16)
+max_health = 6
+move_speed = 30.0
+chase_speed = 46.0
+detection_range = 170.0
+lose_range = 260.0
+attack_range = 24.0
+attack_time = 0.2
+attack_cooldown = 1.2
+hurt_time = 0.2
+knockback_speed = 100.0
+knockback_resistance = 0.3
+patrol_radius = 50.0
+patrol_wait = 1.2

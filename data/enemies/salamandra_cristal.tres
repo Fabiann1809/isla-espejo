@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CrystalSalamanderData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/salamandra_cristal_data.gd" id="1_gj10q"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/salamandra_cristal_frames.tres" id="2_si2pm"]
+
+[resource]
+script = ExtResource("1_gj10q")
+id = &"salamandra_cristal"
+display_name = "Salamandra de cristal"
+placeholder_color = Color(0.85, 0.3, 0.12, 1)
+sprite_frames = ExtResource("2_si2pm")
+sprite_offset = Vector2(0, -16)
+max_health = 4
+move_speed = 45.0
+chase_speed = 80.0
+detection_range = 170.0
+lose_range = 260.0
+attack_range = 150.0
+attack_windup = 0.5
+attack_time = 0.2
+attack_cooldown = 2.2
+hurt_time = 0.2
+knockback_speed = 130.0
+patrol_radius = 90.0
+patrol_wait = 0.6
