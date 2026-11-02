@@ -15,7 +15,29 @@ const ENEMIES := [
 	"res://scenes/enemies/caracol_escoria.tscn",
 	"res://scenes/enemies/carnero_basalto.tscn",
 	"res://scenes/enemies/manta_hollin.tscn",
+	"res://scenes/enemies/eco_espejo.tscn",
+	"res://scenes/enemies/monje_sin_rostro.tscn",
+	"res://scenes/enemies/mascara_parasita.tscn",
+	"res://scenes/enemies/oraculo_ceniza.tscn",
+	"res://scenes/enemies/custodio_sello.tscn",
+	"res://scenes/enemies/ojo_sol.tscn",
+	"res://scenes/enemies/campanero_bronce.tscn",
+	"res://scenes/enemies/rueda_devoradora.tscn",
+	"res://scenes/enemies/arana_talladora.tscn",
+	"res://scenes/enemies/forjador_condenado.tscn",
+	"res://scenes/enemies/baldosa_hambrienta.tscn",
+	"res://scenes/enemies/manos_abismo.tscn",
+	"res://scenes/enemies/vasija_poseida.tscn",
+	"res://scenes/enemies/relojero_trampas.tscn",
+	"res://scenes/enemies/nucleo_cria.tscn",
 ]
+## Enemies that work on other enemies (the mask rides one, the seal guardian shields them) come with
+## company: these scenes stand at both sides of them.
+const COMPANIONS := {
+	"res://scenes/enemies/mascara_parasita.tscn": ["res://scenes/enemies/esqueleto.tscn", "res://scenes/enemies/slime.tscn"],
+	"res://scenes/enemies/custodio_sello.tscn": ["res://scenes/enemies/esqueleto.tscn", "res://scenes/enemies/slime.tscn"],
+}
+const COMPANION_SPREAD := 80.0
 const SIZE := Vector2(560, 352)
 const WALL := 16.0
 const FLOOR_COLOR := Color(0.2, 0.17, 0.16)
@@ -29,6 +51,7 @@ const RESTART_DELAY := 1.5
 static var current := 0
 
 var _enemy: Node2D
+var _companions: Array[Node2D] = []
 var _player: Node2D
 
 @onready var _name_label: Label = $Info/Name
@@ -66,6 +89,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _spawn() -> void:
 	if _enemy != null and is_instance_valid(_enemy):
 		_enemy.queue_free()
+	for companion in _companions:
+		if is_instance_valid(companion):
+			companion.queue_free()
+	_companions.clear()
 	for hazard in get_tree().get_nodes_in_group(&"ground_hazards"):
 		hazard.queue_free()
 	var path: String = ENEMIES[current]
@@ -77,5 +104,13 @@ func _spawn() -> void:
 	# The arena is its room: it patrols, hunts and runs its edges inside it, like in a real room.
 	_enemy.home_area = Rect2(Vector2.ZERO, SIZE)
 	add_child(_enemy)
+	var side := -1.0
+	for companion_path: String in COMPANIONS.get(path, []):
+		var companion: Node2D = load(companion_path).instantiate()
+		companion.position = _enemy.position + Vector2(COMPANION_SPREAD * side, 0)
+		companion.home_area = _enemy.home_area
+		add_child(companion)
+		_companions.append(companion)
+		side = -side
 	_name_label.text = "%d/%d  %s   ·   N: siguiente   R: otra vez" % [
 			current + 1, ENEMIES.size(), _enemy.data.display_name]

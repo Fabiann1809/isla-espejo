@@ -10,6 +10,9 @@ const ENEMIES := [
 	&"centinela_obsidiana", &"carcelero_cadenas", &"acolito_brasero", &"verdugo_piedra",
 	&"duelista_maldito", &"salamandra_cristal", &"gusano_puentes", &"caracol_escoria",
 	&"carnero_basalto", &"manta_hollin",
+	&"arana_talladora", &"baldosa_hambrienta", &"campanero_bronce", &"custodio_sello",
+	&"forjador_condenado", &"manos_abismo", &"mascara_parasita", &"monje_sin_rostro", &"nucleo_cria",
+	&"ojo_sol", &"oraculo_ceniza", &"relojero_trampas", &"rueda_devoradora", &"vasija_poseida",
 ]
 ## animation -> [strip, frames per second, loops]
 const ANIMATIONS := {

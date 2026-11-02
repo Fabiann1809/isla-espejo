@@ -6,8 +6,12 @@ source next to the game's art (`assets/sprites/<id>/source/`), and this script t
 strips the game uses: each frame scaled down (area average, then a hard alpha edge so it stays pixel
 art) into `assets/sprites/<id>/<id>_<animation>.png`.
 
-    python tools/make_temple_enemy_art.py                 # from the kept sources
-    python tools/make_temple_enemy_art.py <pack folder>   # first copy the sources from the pack
+The second pack (`Isla_Espejo_14_Enemigos_Godot`, drawn animations, feet on row 112) has its strips
+in `<pack>/<id>/spritesheets/<animation>.png`, with `move` for the walk.
+
+    python tools/make_temple_enemy_art.py                          # from the kept sources
+    python tools/make_temple_enemy_art.py <pack folder>            # first copy the first pack
+    python tools/make_temple_enemy_art.py --second <pack folder>   # first copy the second pack
 Needs Pillow.
 """
 import os
@@ -31,7 +35,27 @@ ENEMIES = {
     "caracol_escoria": 0.5,
     "carnero_basalto": 0.5,
     "manta_hollin": 0.5,
+    # The second pack draws its figures smaller inside the cell: 0.75 brings them to Nico's size.
+    "arana_talladora": 0.75,
+    "baldosa_hambrienta": 0.5,
+    "campanero_bronce": 0.75,
+    "custodio_sello": 0.75,
+    "forjador_condenado": 0.75,
+    "manos_abismo": 0.75,
+    "mascara_parasita": 0.5,
+    "monje_sin_rostro": 0.75,
+    "nucleo_cria": 0.75,
+    "ojo_sol": 0.75,
+    "oraculo_ceniza": 0.75,
+    "relojero_trampas": 0.75,
+    "rueda_devoradora": 0.75,
+    "vasija_poseida": 0.75,
 }
+SECOND_PACK = [
+    "arana_talladora", "baldosa_hambrienta", "campanero_bronce", "custodio_sello",
+    "forjador_condenado", "manos_abismo", "mascara_parasita", "monje_sin_rostro", "nucleo_cria",
+    "ojo_sol", "oraculo_ceniza", "relojero_trampas", "rueda_devoradora", "vasija_poseida",
+]
 ## Pixels at least this opaque after scaling are kept (fully opaque); the rest become transparent.
 ALPHA_CUT = 110
 ## Animations whose frames carry scraps of other poses (the pack cut them from a sheet): only the
@@ -49,7 +73,7 @@ SCRAPPY = {
 ## between poses. Until real cycles are drawn, both are rebuilt from the first idle drawing with a
 ## small bob (source px per frame; 2 source px = 1 game px). Enemies in REAL_ART have properly drawn
 ## animations (the second pack: centered, feet on row 108) and keep them as they are.
-REAL_ART = {"carcelero_cadenas", "centinela_obsidiana"}
+REAL_ART = {"carcelero_cadenas", "centinela_obsidiana"} | set(SECOND_PACK)
 STEADY = {
     "idle": [0, 0, 0, -2, -2, -2],
     "walk": [0, -2, -2, 0, 0, -2, -2, 0],
@@ -71,6 +95,16 @@ def copy_sources(pack):
         os.makedirs(target, exist_ok=True)
         for anim in ANIMATIONS:
             shutil.copyfile(os.path.join(pack, enemy, "sprites", "%s_right.png" % anim),
+                            os.path.join(target, "%s_right.png" % anim))
+
+
+def copy_second_pack(pack):
+    for enemy in SECOND_PACK:
+        target = os.path.join(ROOT, enemy, "source")
+        os.makedirs(target, exist_ok=True)
+        for anim in ANIMATIONS:
+            name = "move" if anim == "walk" else anim
+            shutil.copyfile(os.path.join(pack, enemy, "spritesheets", "%s.png" % name),
                             os.path.join(target, "%s_right.png" % anim))
 
 
@@ -180,7 +214,9 @@ def build(enemy, scale):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 2 and sys.argv[1] == "--second":
+        copy_second_pack(sys.argv[2])
+    elif len(sys.argv) > 1:
         copy_sources(sys.argv[1])
     for enemy, scale in ENEMIES.items():
         print(enemy, build(enemy, scale))
