@@ -13,6 +13,14 @@ void fragment() {
 	COLOR = vec4(tint.rgb, tint.a * edge);
 }
 """
+## A flat silhouette of the sprite in one color: the dodge trail reads as a trail, not a second Nico.
+const SILHOUETTE_SHADER := """
+shader_type canvas_item;
+uniform vec4 tint : source_color;
+void fragment() {
+	COLOR = vec4(tint.rgb, COLOR.a * tint.a);
+}
+"""
 ## Above the actors and the props: these effects last an instant and must never hide behind a tree.
 const EFFECT_Z := 10
 
@@ -28,6 +36,7 @@ var _flash: ColorRect
 var _low_health: ColorRect
 var _low_health_on := false
 var _pulse_time := 0.0
+var _ghost_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -165,7 +174,7 @@ func _on_player_dashed(_direction: Vector2) -> void:
 		afterimage(player)
 
 
-## A still copy of the actor's current frame that fades where it stands.
+## A still silhouette of the actor's current frame that fades where it stands.
 func afterimage(actor: Node2D) -> void:
 	var sprite := actor.get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite == null or sprite.sprite_frames == null:
@@ -176,7 +185,7 @@ func afterimage(actor: Node2D) -> void:
 	ghost.offset = sprite.offset
 	ghost.centered = sprite.centered
 	ghost.scale = sprite.scale
-	ghost.modulate = Tuning.DASH_GHOST_TINT
+	ghost.material = _ghost_shader()
 	# Under every actor (Nico runs ahead of his own trail), over the floors.
 	ghost.z_as_relative = false
 	ghost.z_index = RoomTheme.GROUND_FX_Z
@@ -185,6 +194,16 @@ func afterimage(actor: Node2D) -> void:
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, Tuning.DASH_GHOST_FADE)
 	tween.tween_callback(ghost.queue_free)
+
+
+func _ghost_shader() -> ShaderMaterial:
+	if _ghost_material == null:
+		var shader := Shader.new()
+		shader.code = SILHOUETTE_SHADER
+		_ghost_material = ShaderMaterial.new()
+		_ghost_material.shader = shader
+		_ghost_material.set_shader_parameter("tint", Tuning.DASH_GHOST_TINT)
+	return _ghost_material
 
 
 func _on_boss_attack_struck(_boss_id: StringName, pattern: StringName, _at: Vector2) -> void:
