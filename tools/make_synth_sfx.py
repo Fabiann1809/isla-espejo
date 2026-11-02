@@ -70,12 +70,17 @@ def save(name, signal, gain=0.8):
 
 
 def bow_shot(variant):
-    # The string's twang plus the arrow's short whoosh of filtered noise.
-    seconds = 0.32
-    string = pluck(180 + variant * 22, seconds, 0.993) * envelope(int(RATE * seconds), 0.002, 3)
-    noise = lowpass(rng.uniform(-1, 1, int(RATE * seconds)), 0.25)
-    whoosh = noise * envelope(len(noise), 0.03, 2.5) * 0.6
-    return string + whoosh
+    # A soft, short "fwip" of air with a faint thump of the string: no ringing twang, because the
+    # player shoots constantly and a tonal sound gets tiring fast.
+    seconds = 0.13
+    raw = rng.uniform(-1, 1, int(RATE * seconds))
+    # Band of noise: a bright low-pass minus a dark one keeps the airy middle only.
+    air = lowpass(raw, 0.30 + variant * 0.04) - lowpass(raw, 0.04)
+    air *= envelope(len(air), 0.012, 3.0)
+    thump = np.sin(2 * np.pi * np.cumsum(np.geomspace(150, 90, int(RATE * 0.06))) / RATE)
+    thump *= envelope(len(thump), 0.002, 2.5) * 0.35
+    air[: len(thump)] += thump
+    return air
 
 
 def portal_open():
@@ -156,7 +161,7 @@ def thunder():
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     for v in range(3):
-        save("shot_%d" % v, bow_shot(v), 0.6)
+        save("shot_%d" % v, bow_shot(v), 0.45)
     save("portal_0", portal_open(), 0.6)
     save("fragment_0", fragment(), 0.7)
     save("boss_warn_0", boss_warn(), 0.7)

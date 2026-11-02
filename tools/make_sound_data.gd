@@ -9,7 +9,7 @@ const MUSIC_DIR := "res://assets/audio/music"
 
 ## Cue -> dB. Loud Kenney impacts are brought down; the quiet synth sounds are left at 0.
 const VOLUMES := {
-	&"shot": -6.0,
+	&"shot": -12.0,
 	&"arrow_hit": -8.0,
 	&"arrow_wall": -10.0,
 	&"enemy_hurt": -4.0,
