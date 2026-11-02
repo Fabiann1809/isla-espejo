@@ -37,8 +37,30 @@ ALPHA_CUT = 110
 ## Animations whose frames carry scraps of other poses (the pack cut them from a sheet): only the
 ## frame's biggest piece and what touches its box are kept. Elsewhere separate pieces are meant
 ## (the acolyte's flame, sparks, dust), so nothing is cut.
+CLEAN_ALL = ["idle", "walk", "attack", "special", "hurt"]
 SCRAPPY = {
-    "manta_hollin": ["idle", "walk", "attack", "special", "hurt"],
+    "manta_hollin": CLEAN_ALL,
+    "salamandra_cristal": CLEAN_ALL,
+    "gusano_puentes": CLEAN_ALL,
+    "caracol_escoria": CLEAN_ALL,
+    "carnero_basalto": CLEAN_ALL,
+    "centinela_obsidiana": ["special"],
+}
+## The pack's idle and walk alternate two or three unrelated drawings (not steps), so the figure pops
+## between poses. Until real cycles are drawn, both are rebuilt from the first idle drawing with a
+## small bob (source px per frame; 2 source px = 1 game px). Empty this when the pack has real ones.
+STEADY = {
+    "idle": [0, 0, 0, -2, -2, -2],
+    "walk": [0, -2, -2, 0, 0, -2, -2, 0],
+}
+
+
+## Specials that flip between unrelated drawings: only these frames (the move's own pose) are used,
+## repeated to the strip's length. Empty these when the pack has real animations.
+HELD_FRAMES = {
+    ("carnero_basalto", "special"): [1, 2, 6],
+    ("salamandra_cristal", "special"): [0, 3, 4, 5, 7],
+    ("gusano_puentes", "special"): [1, 2],
 }
 
 
@@ -106,11 +128,37 @@ def scale_frame(frame, cell):
     return small
 
 
+def steady_strip(enemy, bob):
+    """A strip of the first idle drawing, moved up and down by `bob` (one offset per frame)."""
+    idle = Image.open(os.path.join(ROOT, enemy, "source", "idle_right.png")).convert("RGBA")
+    pose = idle.crop((0, 0, SOURCE_CELL, SOURCE_CELL))
+    if "idle" in SCRAPPY.get(enemy, []):
+        keep_main_piece(pose)
+    strip = Image.new("RGBA", (SOURCE_CELL * len(bob), SOURCE_CELL), (0, 0, 0, 0))
+    for i, offset in enumerate(bob):
+        strip.paste(pose, (i * SOURCE_CELL, offset), pose)
+    return strip
+
+
+def held_strip(strip, frames):
+    """The strip with only `frames` (indices), repeated in order to its original length."""
+    count = strip.width // SOURCE_CELL
+    held = Image.new("RGBA", strip.size, (0, 0, 0, 0))
+    for i in range(count):
+        index = frames[i % len(frames)]
+        held.paste(strip.crop((index * SOURCE_CELL, 0, (index + 1) * SOURCE_CELL, SOURCE_CELL)), (i * SOURCE_CELL, 0))
+    return held
+
+
 def build(enemy, scale):
     cell = int(round(SOURCE_CELL * scale))
     scraps = [0]
     for anim in ANIMATIONS:
         strip = Image.open(os.path.join(ROOT, enemy, "source", "%s_right.png" % anim)).convert("RGBA")
+        if anim in STEADY:
+            strip = steady_strip(enemy, STEADY[anim])
+        elif (enemy, anim) in HELD_FRAMES:
+            strip = held_strip(strip, HELD_FRAMES[(enemy, anim)])
         count = strip.width // SOURCE_CELL
         # Average in premultiplied space so transparent pixels do not bleed black into the edges.
         out = Image.new("RGBA", (cell * count, cell), (0, 0, 0, 0))
