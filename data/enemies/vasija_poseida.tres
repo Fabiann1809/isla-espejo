@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="PossessedVaseData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/espiritu_vasija.tscn" id="1_7ivwj"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/vase_decoy.tscn" id="2_8gpkb"]
+[ext_resource type="Script" path="res://scripts/enemies/vasija_poseida_data.gd" id="3_rsdgu"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/vasija_poseida_frames.tres" id="4_fmoey"]
+
+[resource]
+script = ExtResource("3_rsdgu")
+decoy_scene = ExtResource("2_8gpkb")
+creature_scene = ExtResource("1_7ivwj")
+id = &"vasija_poseida"
+display_name = "Vasija poseída"
+placeholder_color = Color(0.75, 0.4, 0.15, 1)
+sprite_frames = ExtResource("4_fmoey")
+sprite_offset = Vector2(0, -30)
+move_speed = 0.0
+chase_speed = 0.0
+detection_range = 40.0
+lose_range = 120.0
+attack_range = 34.0
+patrol_radius = 0.0
+drop_multiplier = 0.0
