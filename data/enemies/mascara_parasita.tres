@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ParasiteMaskData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/mascara_parasita_data.gd" id="1_i1ww5"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/mascara_parasita_frames.tres" id="2_exni1"]
+
+[resource]
+script = ExtResource("1_i1ww5")
+id = &"mascara_parasita"
+display_name = "Máscara parásita"
+placeholder_color = Color(0.62, 0.25, 0.75, 1)
+sprite_frames = ExtResource("2_exni1")
+sprite_offset = Vector2(0, -18)
+max_health = 4
+detection_range = 160.0
+lose_range = 260.0
+attack_range = 18.0
+attack_windup = 0.45
+attack_cooldown = 1.2
+hurt_time = 0.2
+knockback_speed = 150.0
+patrol_radius = 50.0
+patrol_wait = 0.8
