@@ -285,46 +285,44 @@ func _swap_details_for_art(decor: TileMapLayer, rng: RandomNumberGenerator) -> v
 		decor.erase_cell(cell)
 		var foot := Vector2(cell * TILE) + Vector2(TILE / 2.0, TILE - Tuning.DETAIL_FOOT_LIFT)
 		details.add_child(ForestArt.standing(tex, foot))
-	_plant_hedge(details, rng)
+	_plant_tree_wall(rng)
 
 
-## The room's walls as a thick hedge of the forest art's green bushes, a few pixels apart so they
-## overlap (the walls' collision is the room's own, not this). The hundreds of bushes are painted
-## into one picture per room, so the hedge costs a single sprite.
-func _plant_hedge(details: Node2D, rng: RandomNumberGenerator) -> void:
-	var step := Tuning.HEDGE_STEP
+## The room's walls as rows of trees whose crowns touch, standing on the border (the walls keep
+## their own collision). The top wall, which nobody walks behind, is two staggered rows painted into
+## one picture; the sides and the bottom are single trees y-sorted with the actors, fading while
+## Nico is behind them.
+func _plant_tree_wall(rng: RandomNumberGenerator) -> void:
+	var trees := Node2D.new()
+	trees.name = "WallTrees"
+	trees.y_sort_enabled = true
+	add_child(trees)
 	var size := Vector2(size_tiles * TILE)
-	var spots: Array[Vector2] = []
-	var x := step / 2.0
-	while x < size.x:
-		spots.append(Vector2(x, TILE - 1.0))
-		spots.append(Vector2(x, size.y - 1.0))
-		x += step
-	var y := TILE + step / 2.0
-	while y < size.y - TILE:
-		spots.append(Vector2(TILE / 2.0, y + TILE / 2.0))
-		spots.append(Vector2(size.x - TILE / 2.0, y + TILE / 2.0))
-		y += step
-	# Top to bottom, so the lower bushes overlap the ones behind them.
-	spots.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
-	var picture := Image.create_empty(int(size.x), int(size.y), false, Image.FORMAT_RGBA8)
-	for spot in spots:
-		var cell := Vector2i(spot / TILE)
-		cell = cell.clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)
-		if not _is_border(cell.x, cell.y) or _is_door_cell(cell):
-			continue
-		var jitter := Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)).round()
-		var bush := ForestArt.image(ForestArt.BUSHES % ForestArt.HEDGE_BUSHES[rng.randi_range(0, ForestArt.HEDGE_BUSHES.size() - 1)])
-		if bush == null:
-			continue
-		var corner := Vector2i(spot + jitter) - Vector2i(bush.get_width() / 2, bush.get_height())
-		picture.blend_rect(bush, Rect2i(Vector2i.ZERO, bush.get_size()), corner)
-	var hedge := Sprite2D.new()
-	hedge.name = "Hedge"
-	hedge.centered = false
-	hedge.texture = ImageTexture.create_from_image(picture)
-	hedge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	details.add_child(hedge)
+	var front := TILE - 1.0
+	var back := front - Tuning.WALL_TREE_BACK_ROW
+	var top: Array[Vector2] = _on_wall(TreeWall.feet_along(Vector2(0, front), Vector2(size.x, front), rng))
+	var shifted := Vector2(Tuning.WALL_TREE_STEP / 2.0, 0)
+	top.append_array(_on_wall(TreeWall.feet_along(Vector2(0, back) + shifted, Vector2(size.x, back), rng)))
+	var row := TreeWall.baked_row(top, rng)
+	row.name = "TopRow"
+	trees.add_child(row)
+	var singles: Array[Vector2] = []
+	singles.append_array(TreeWall.feet_along(Vector2(0, size.y - 1.0), Vector2(size.x, size.y - 1.0), rng))
+	for x in [TILE / 2.0, size.x - TILE / 2.0]:
+		singles.append_array(TreeWall.feet_along(Vector2(x, TILE * 2.0), Vector2(x, size.y - TILE), rng))
+	for foot in _on_wall(singles):
+		trees.add_child(TreeWall.tree(foot, rng))
+
+
+## The feet that stand on the wall (not in a door's gap).
+func _on_wall(feet: Array[Vector2]) -> Array[Vector2]:
+	return feet.filter(func(foot: Vector2) -> bool:
+		return is_wall_cell(Vector2i(foot / TILE).clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)))
+
+
+## True for a tile of the room's wall (its border, except the gaps of its open doors), in room tiles.
+func is_wall_cell(cell: Vector2i) -> bool:
+	return _is_border(cell.x, cell.y) and not _is_door_cell(cell)
 
 
 func _is_border(x: int, y: int) -> bool:

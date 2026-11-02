@@ -11,8 +11,27 @@ const STUMP := "res://assets/art_forest/logs/stump.png"
 
 ## Round, leafy bushes (some with flowers or berries): they stand up and block the way.
 const SOLID_BUSHES := [8, 11, 12, 14, 17, 18, 19, 20, 21, 25, 29]
-## The plain green ones of those (no flowers), packed together as the hedge around a room.
-const HEDGE_BUSHES := [8, 17, 21, 25]
+## The medium trees: they line the walls of the rooms and corridors.
+const WALL_TREES := [
+	"res://assets/art_forest/trees_med/tree_med_oak.png",
+	"res://assets/art_forest/trees_med/tree_med_round.png",
+	"res://assets/art_forest/trees_med/tree_med_mossy.png",
+	"res://assets/art_forest/trees_med/tree_med_dense.png",
+	"res://assets/art_forest/trees_med/tree_med_emerald.png",
+	"res://assets/art_forest/trees_med/tree_med_small.png",
+]
+## Medium and large trees: the deep forest around the map.
+const FOREST_TREES := [
+	"res://assets/art_forest/trees_med/tree_med_oak.png",
+	"res://assets/art_forest/trees_med/tree_med_round.png",
+	"res://assets/art_forest/trees_med/tree_med_mossy.png",
+	"res://assets/art_forest/trees_med/tree_med_dense.png",
+	"res://assets/art_forest/trees_med/tree_med_emerald.png",
+	"res://assets/art_forest/trees_large/tree_large_oak.png",
+	"res://assets/art_forest/trees_large/tree_large_round.png",
+	"res://assets/art_forest/trees_large/tree_large_mossy.png",
+	"res://assets/art_forest/trees_large/tree_large_dense.png",
+]
 ## Tufts, sprouts and low plants: ground decoration that never blocks.
 const GROUND_PLANTS := [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 15, 16, 22, 23, 24, 26, 27, 28, 30]
 ## Boulders big enough to block the way (and no wider than a tile, like the bush they replace).
@@ -43,6 +62,25 @@ static func image(path: String) -> Image:
 			img.convert(Image.FORMAT_RGBA8)
 		_images[path] = img
 	return _images[path]
+
+
+static func pick_path(paths: Array, rng: RandomNumberGenerator) -> Texture2D:
+	return texture(paths[rng.randi_range(0, paths.size() - 1)])
+
+
+## Paints `picture` standing on `foot` into `canvas` (alpha blended).
+static func paint(canvas: Image, picture: Image, foot: Vector2) -> void:
+	var corner := Vector2i(foot) - Vector2i(picture.get_width() / 2, picture.get_height())
+	canvas.blend_rect(picture, Rect2i(Vector2i.ZERO, picture.get_size()), corner)
+
+
+## A pixel-sharp sprite of a painted image, with its top-left corner at its position.
+static func baked(picture: Image) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = ImageTexture.create_from_image(picture)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return sprite
 
 
 static func pick(pattern: String, numbers: Array, rng: RandomNumberGenerator) -> Texture2D:

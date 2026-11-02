@@ -75,10 +75,10 @@ func _initialize() -> void:
 			if decor.get_cell_atlas_coords(cell) in old_details:
 				old_left += 1
 		art_details += room.get_node("Details").get_child_count()
-		if room.get_node_or_null("Details/Hedge") == null or not room.get_node("Border").get_used_cells().is_empty():
+		if room.get_node("WallTrees").get_child_count() == 0 or not room.get_node("Border").get_used_cells().is_empty():
 			old_left += 1
 	_check(old_left == 0 and art_details > 0,
-			"floor details and the walls' hedge are drawn with the forest art (%d pictures, %d old tiles)" % [art_details, old_left])
+			"floor details and the walls' trees are drawn with the forest art (%d pictures, %d old tiles)" % [art_details, old_left])
 	var allowed := {}
 	for n in forest_art.SOLID_BUSHES:
 		allowed[forest_art.BUSHES % n] = true
@@ -109,16 +109,27 @@ func _initialize() -> void:
 	level.generate(7)
 	await _frames(1)
 	_check(first == _backdrop_signature(level) and first != other, "the forest is fixed by the map's seed")
-	# A tall tree's crown never lands on a tree of the next band (they are on separate layers).
-	var used := {}
-	var stacked := 0
-	for layer in level.get_node("Map/Backdrop").get_children():
-		if String(layer.name).begins_with("Canopy"):
-			for cell in layer.get_used_cells():
-				if used.has(cell):
-					stacked += 1
-				used[cell] = true
-	_check(stacked == 0, "no two backdrop trees on the same tile (%d stacked)" % stacked)
+	# The backdrop is under the rooms and corridors: a tree reaching over them would be cut off in a
+	# straight line, so none does; and the forest's floor is darker, with no hard edge.
+	var tree_rects: Array = level.get_node("Map/Backdrop").get_meta("tree_rects", [])
+	var keep_clear: Array[Rect2] = []
+	for coord in level.layout.cells:
+		keep_clear.append(Rect2(level.cell_origin(coord), level.CELL_SIZE))
+	keep_clear.append_array(level._corridor_floors)
+	keep_clear.append_array(level._corridor_walls)
+	var reaching := 0
+	for rect: Rect2 in tree_rects:
+		var inner := rect.grow(-minf(4.0, minf(rect.size.x, rect.size.y) / 2.0 - 0.5))
+		for clear_rect: Rect2 in keep_clear:
+			if clear_rect.intersects(inner):
+				reaching += 1
+				break
+	_check(tree_rects.size() > 100 and reaching == 0,
+			"%d backdrop trees, none reaching over a room or a corridor (%d do)" % [tree_rects.size(), reaching])
+	var shade: Node2D = level.get_node_or_null("Map/ForestShade")
+	var shade_sprite: Sprite2D = shade.get_child(0) if shade != null else null
+	_check(shade_sprite != null and shade_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR
+			and shade.z_index < 0, "the forest floor is shaded softly, under the actors")
 
 	# --- Shadows and the overall look.
 	map = level.get_node("Map")
@@ -270,11 +281,14 @@ func _look_on(level: Node) -> bool:
 
 func _backdrop_signature(level: Node) -> Array:
 	var signature := []
-	for layer in level.get_node("Map/Backdrop").get_children():
-		var cells: Array = layer.get_used_cells()
-		cells.sort()
-		signature.append(cells.size())
-		signature.append(hash(cells))
+	var backdrop: Node = level.get_node("Map/Backdrop")
+	for layer in backdrop.get_children():
+		if layer is TileMapLayer:
+			var cells: Array = layer.get_used_cells()
+			cells.sort()
+			signature.append(cells.size())
+			signature.append(hash(cells))
+	signature.append(hash(backdrop.get_meta("tree_rects", [])))
 	return signature
 
 

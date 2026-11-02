@@ -33,16 +33,30 @@ const ARENA_MARGIN := 24.0
 # --- Forest look -----------------------------------------------------------------------------------
 ## The deep forest drawn around (and between) the rooms, so no black shows anywhere.
 const BACKDROP_ENABLED := true
-## Dark trees and canopies from `scripts/world/forest_boundary.gd` around the map (branch diseño-de-paisajes).
-const FOREST_BOUNDARY_ENABLED := true
-## How far the forest reaches beyond the map's rooms, in tiles.
-const BACKDROP_MARGIN_TILES := 12
-## Brightness of the forest by distance to the nearest room or corridor (tiles): near, middle, far.
-const BACKDROP_BAND_LIMITS: Array[int] = [3, 7]
-const BACKDROP_BAND_TINTS: Array[Color] = [
-	Color(0.62, 0.7, 0.62), Color(0.47, 0.54, 0.5), Color(0.34, 0.4, 0.38)]
-## Chance of a tree, bush or rock on a forest tile, by band: thicker next to the paths.
-const BACKDROP_BAND_DENSITY: Array[float] = [0.7, 0.5, 0.38]
+## Dark trees and canopies from `scripts/world/forest_boundary.gd` around the map (branch
+## diseño-de-paisajes). Off: the backdrop covers it completely, so it only cost time.
+const FOREST_BOUNDARY_ENABLED := false
+## How far the forest reaches beyond the map's rooms, in tiles: the camera never looks past the
+## rooms, so only enough for the crowns that lean in.
+const BACKDROP_MARGIN_TILES := 3
+## Trees of the deep forest: spacing of their scattered spots (px), how far each spot wanders from
+## its place (px), the chance that a spot gets a tree, how many px of a tree's picture (its
+## transparent edge) may lie over a room or corridor, and the size of the pictures they are painted
+## into (px).
+const BACKDROP_TREE_STEP := 20.0
+const BACKDROP_TREE_JITTER := 6.0
+const BACKDROP_TREE_DENSITY := 0.92
+const BACKDROP_TREE_OVERLAP := 3.0
+const BACKDROP_CHUNK := 512
+## The forest's darker floor (Level's ForestShade): its color, how dark under the trees, how dark at
+## a clearing's edge, how many tiles it fades over into the clearing, how much that edge wobbles
+## (tiles) and how fast.
+const FOREST_SHADE_COLOR := Color(0.02, 0.09, 0.05)
+const FOREST_SHADE_ALPHA := 0.42
+const FOREST_SHADE_EDGE_ALPHA := 0.3
+const FOREST_SHADE_DEPTH := 2.5
+const FOREST_SHADE_WOBBLE := 1.4
+const FOREST_SHADE_FREQUENCY := 0.15
 ## Irregular patches of textured grass on room floors: noise frequency and how much is covered.
 const GRASS_PATCH_FREQUENCY := 0.09
 const GRASS_PATCH_THRESHOLD := 0.28
@@ -51,10 +65,16 @@ const DETAIL_GROUPS_PER_ROOM := 5
 const DETAIL_GROUP_SIZE := Vector2i(2, 4)
 ## Share of the rooms' bushes that are boulders of the forest art set instead.
 const BUSH_ROCK_CHANCE := 0.3
+## How far a bush's picture may wander from its tile's middle (px), so bushes side by side do not
+## line up like a hedge.
+const BUSH_NUDGE := Vector2(3, 2)
 ## How far above a tile's bottom the floor details of the forest art stand (px).
 const DETAIL_FOOT_LIFT := 3.0
-## Distance between the bushes of a room's hedge (px): less than a bush is wide, so they overlap.
-const HEDGE_STEP := 8.0
+## Trees on the walls of the rooms and corridors: distance between them, how far each one wanders
+## from its place and how far behind the top wall's front row its back row stands (px).
+const WALL_TREE_STEP := 18.0
+const WALL_TREE_JITTER := 2.0
+const WALL_TREE_BACK_ROW := 9.0
 ## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
 ## narrower than the picture, and its smallest and largest size (px).
 const PROP_FOOT_INSET := 2.0

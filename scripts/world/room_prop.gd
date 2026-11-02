@@ -145,7 +145,10 @@ func _bush_or_rock(rng: RandomNumberGenerator) -> void:
 		add_child(TileArt.sprite(TileArt.BUSH))
 		_collide(Rect2(2, 5, 12, 9))
 		return
-	add_child(ForestArt.standing(tex, PROP_FOOT))
+	# The picture wanders a little from the tile's middle, so bushes placed side by side do not
+	# line up like a hedge; the collision stays put.
+	var nudge := (Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * Tuning.BUSH_NUDGE).round()
+	add_child(ForestArt.standing(tex, PROP_FOOT + nudge))
 	_collide(ForestArt.footprint(tex, PROP_FOOT))
 
 

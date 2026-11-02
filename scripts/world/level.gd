@@ -12,6 +12,8 @@ const CELL_SIZE := Vector2(480, 288)
 const CORRIDOR_LENGTH := 48.0
 const STRIDE := CELL_SIZE + Vector2(CORRIDOR_LENGTH, CORRIDOR_LENGTH)
 const CORRIDOR_COLOR := Color(0.15, 0.22, 0.17)
+## The forest shade's sort point: below every room, so it is drawn after all their floors.
+const SHADE_SORT_Y := 1000000.0
 
 @export var scenario: ScenarioData
 @export var player_scene: PackedScene
@@ -350,8 +352,25 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 	var layer := scenario.theme.new_layer(parent, "Corridor%d" % number)
 	scenario.theme.fill(layer, _cells(floor_rect), scenario.theme.path_tile)
 	for wall in walls:
-		scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
+		if scenario.theme.forest_art_details:
+			_plant_corridor_trees(parent, wall)
+		else:
+			scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
 	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+
+
+## A corridor wall as a row of trees, like the rooms' walls (y-sorted with the actors).
+func _plant_corridor_trees(parent: Node, wall: Rect2) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([current_seed, wall.position])
+	var feet: Array[Vector2]
+	if wall.size.x > wall.size.y:
+		feet = TreeWall.feet_along(Vector2(wall.position.x, wall.end.y - 1.0), Vector2(wall.end.x, wall.end.y - 1.0), rng)
+	else:
+		var x := wall.get_center().x
+		feet = TreeWall.feet_along(Vector2(x, wall.position.y), Vector2(x, wall.end.y), rng)
+	for foot in feet:
+		parent.add_child(TreeWall.tree(foot, rng))
 
 
 ## The deep forest around and between the rooms (themed scenarios only).
@@ -368,6 +387,67 @@ func _build_backdrop() -> void:
 		_mark(taken, _cells(rect))
 	var area := _cells(bounds).grow(Tuning.BACKDROP_MARGIN_TILES)
 	ForestBackdrop.build(_map, area, walkable, taken, current_seed)
+	if scenario.theme.forest_art_details:
+		_build_forest_shade(area)
+
+
+## The forest's darker floor: everything but the clearings (rooms' insides, door gaps, corridor
+## floors) is shaded, and the shade creeps a tile or two into the clearings with a wobbly edge, so
+## no straight line marks where a room ends. One pixel per tile, stretched with linear filtering.
+func _build_forest_shade(area: Rect2i) -> void:
+	var clearing := {}
+	for coord: Vector2i in layout.cells:
+		var room: Room = rooms[coord]
+		var origin := Vector2i(cell_origin(coord)) / TileArt.TILE
+		for y in room.size_tiles.y:
+			for x in room.size_tiles.x:
+				if not room.is_wall_cell(Vector2i(x, y)):
+					clearing[origin + Vector2i(x, y)] = true
+	for rect in _corridor_floors:
+		_mark(clearing, _cells(rect))
+	# Tiles from each clearing tile to the forest (breadth first from the forest's edge).
+	var depth := {}
+	var frontier: Array[Vector2i] = []
+	for cell: Vector2i in clearing:
+		for step in MapLayout.DIRS:
+			if not clearing.has(cell + step):
+				depth[cell] = 1
+				frontier.append(cell)
+				break
+	var head := 0
+	while head < frontier.size():
+		var cell := frontier[head]
+		head += 1
+		for step in MapLayout.DIRS:
+			var next: Vector2i = cell + step
+			if clearing.has(next) and not depth.has(next):
+				depth[next] = depth[cell] + 1
+				frontier.append(next)
+	var noise := FastNoiseLite.new()
+	noise.seed = current_seed
+	noise.frequency = Tuning.FOREST_SHADE_FREQUENCY
+	var picture := Image.create_empty(area.size.x, area.size.y, false, Image.FORMAT_RGBA8)
+	for y in area.size.y:
+		for x in area.size.x:
+			var cell := area.position + Vector2i(x, y)
+			var alpha := Tuning.FOREST_SHADE_ALPHA
+			if clearing.has(cell):
+				var inside: float = depth.get(cell, 99) - 1 + noise.get_noise_2d(cell.x, cell.y) * Tuning.FOREST_SHADE_WOBBLE
+				alpha = Tuning.FOREST_SHADE_EDGE_ALPHA * (1.0 - smoothstep(0.0, Tuning.FOREST_SHADE_DEPTH, inside))
+			picture.set_pixel(x, y, Color(Tuning.FOREST_SHADE_COLOR, alpha))
+	# Over every floor (sorted after all the rooms by its far-down origin), under every actor.
+	var shade := Node2D.new()
+	shade.name = "ForestShade"
+	shade.z_index = RoomTheme.FLOOR_Z
+	shade.position = Vector2(0, SHADE_SORT_Y)
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = ImageTexture.create_from_image(picture)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	sprite.scale = Vector2.ONE * TileArt.TILE
+	sprite.position = Vector2(area.position * TileArt.TILE) - shade.position
+	shade.add_child(sprite)
+	_map.add_child(shade)
 
 
 ## Dirt paths (doors and corridors) drawn with the rounded edges of the dirt patch instead of
