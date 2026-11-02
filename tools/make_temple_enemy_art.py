@@ -34,6 +34,12 @@ ENEMIES = {
 }
 ## Pixels at least this opaque after scaling are kept (fully opaque); the rest become transparent.
 ALPHA_CUT = 110
+## Animations whose frames carry scraps of other poses (the pack cut them from a sheet): only the
+## frame's biggest piece and what touches its box are kept. Elsewhere separate pieces are meant
+## (the acolyte's flame, sparks, dust), so nothing is cut.
+SCRAPPY = {
+    "manta_hollin": ["idle", "walk", "attack", "special", "hurt"],
+}
 
 
 def copy_sources(pack):
@@ -43,6 +49,46 @@ def copy_sources(pack):
         for anim in ANIMATIONS:
             shutil.copyfile(os.path.join(pack, enemy, "sprites", "%s_right.png" % anim),
                             os.path.join(target, "%s_right.png" % anim))
+
+
+def keep_main_piece(frame):
+    """Clears every piece of the frame but the biggest and those touching its box."""
+    width, height = frame.size
+    pixels = frame.load()
+    seen = [[False] * width for _ in range(height)]
+    pieces = []
+    for sy in range(height):
+        for sx in range(width):
+            if seen[sy][sx] or pixels[sx, sy][3] == 0:
+                continue
+            piece = []
+            stack = [(sx, sy)]
+            seen[sy][sx] = True
+            while stack:
+                x, y = stack.pop()
+                piece.append((x, y))
+                for dx in (-1, 0, 1):
+                    for dy in (-1, 0, 1):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < width and 0 <= ny < height and not seen[ny][nx] and pixels[nx, ny][3] > 0:
+                            seen[ny][nx] = True
+                            stack.append((nx, ny))
+            pieces.append(piece)
+    if not pieces:
+        return 0
+    main = max(pieces, key=len)
+    x0 = min(x for x, _ in main)
+    x1 = max(x for x, _ in main)
+    y0 = min(y for _, y in main)
+    y1 = max(y for _, y in main)
+    dropped = 0
+    for piece in pieces:
+        if piece is main or any(x0 <= x <= x1 and y0 <= y <= y1 for x, y in piece):
+            continue
+        for x, y in piece:
+            pixels[x, y] = (0, 0, 0, 0)
+        dropped += 1
+    return dropped
 
 
 def scale_frame(frame, cell):
@@ -62,6 +108,7 @@ def scale_frame(frame, cell):
 
 def build(enemy, scale):
     cell = int(round(SOURCE_CELL * scale))
+    scraps = [0]
     for anim in ANIMATIONS:
         strip = Image.open(os.path.join(ROOT, enemy, "source", "%s_right.png" % anim)).convert("RGBA")
         count = strip.width // SOURCE_CELL
@@ -69,6 +116,8 @@ def build(enemy, scale):
         out = Image.new("RGBA", (cell * count, cell), (0, 0, 0, 0))
         for i in range(count):
             frame = strip.crop((i * SOURCE_CELL, 0, (i + 1) * SOURCE_CELL, SOURCE_CELL))
+            if anim in SCRAPPY.get(enemy, []):
+                scraps[0] += keep_main_piece(frame)
             premultiplied = Image.new("RGBA", frame.size)
             src = frame.load()
             dst = premultiplied.load()
@@ -78,7 +127,7 @@ def build(enemy, scale):
                     dst[x, y] = (r * a // 255, g * a // 255, b * a // 255, a)
             out.paste(scale_frame(premultiplied, cell), (i * cell, 0))
         out.save(os.path.join(ROOT, enemy, "%s_%s.png" % (enemy, anim)))
-    return cell
+    return cell, scraps[0]
 
 
 if __name__ == "__main__":

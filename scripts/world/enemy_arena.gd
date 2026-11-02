@@ -74,6 +74,8 @@ func _spawn() -> void:
 		return
 	_enemy = load(path).instantiate()
 	_enemy.position = SIZE * ENEMY_SPOT
+	# The arena is its room: it patrols, hunts and runs its edges inside it, like in a real room.
+	_enemy.home_area = Rect2(Vector2.ZERO, SIZE)
 	add_child(_enemy)
 	_name_label.text = "%d/%d  %s   ·   N: siguiente   R: otra vez" % [
 			current + 1, ENEMIES.size(), _enemy.data.display_name]

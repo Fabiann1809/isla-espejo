@@ -146,7 +146,8 @@ func _physics_process(delta: float) -> void:
 		State.DEAD:
 			velocity = Vector2.ZERO
 
-	if _pull_left > 0.0 and state in [State.IDLE, State.MOVE, State.ATTACK]:
+	# Also while hurt: the chain that catches him also hits him, and its knockback must not win.
+	if _pull_left > 0.0 and state in [State.IDLE, State.MOVE, State.ATTACK, State.HURT]:
 		var to_anchor := _pull_to - global_position
 		if to_anchor.length() <= PULL_ARRIVE:
 			_pull_left = 0.0
