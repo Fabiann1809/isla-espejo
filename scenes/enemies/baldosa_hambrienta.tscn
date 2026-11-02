@@ -1,0 +1,30 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/baldosa_hambrienta.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/baldosa_hambrienta.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="body"]
+size = Vector2(24, 10)
+
+[sub_resource type="RectangleShape2D" id="hurt"]
+size = Vector2(28, 16)
+
+[sub_resource type="CircleShape2D" id="jaws"]
+radius = 15.0
+
+[node name="BaldosaHambrienta" instance=ExtResource("1")]
+script = ExtResource("3")
+data = ExtResource("2")
+
+[node name="CollisionShape2D" parent="." index="2"]
+position = Vector2(0, -2)
+shape = SubResource("body")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -4)
+shape = SubResource("hurt")
+
+[node name="CollisionShape2D" parent="AttackPivot/Hitbox" index="0"]
+position = Vector2(0, -4)
+shape = SubResource("jaws")
