@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BroodCoreData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/cria_volcanica.tscn" id="1_5bxhk"]
+[ext_resource type="Script" path="res://scripts/enemies/nucleo_cria_data.gd" id="2_gxrv4"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/nucleo_cria_frames.tres" id="3_yydsl"]
+
+[resource]
+script = ExtResource("2_gxrv4")
+brood_scene = ExtResource("1_5bxhk")
+id = &"nucleo_cria"
+display_name = "Núcleo de cría"
+placeholder_color = Color(0.9, 0.4, 0.1, 1)
+sprite_frames = ExtResource("3_yydsl")
+sprite_offset = Vector2(0, -30)
+max_health = 12
+move_speed = 0.0
+chase_speed = 0.0
+detection_range = 200.0
+lose_range = 320.0
+attack_time = 0.3
+hurt_time = 0.15
+knockback_resistance = 1.0
+attack_armor = true
+patrol_radius = 0.0
