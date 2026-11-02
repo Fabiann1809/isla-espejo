@@ -24,6 +24,9 @@ const GROUND_FX_Z := -1
 @export var border_tile := TileArt.PINE
 ## Doors and corridors.
 @export var path_tile := TileArt.DIRT
+## Draws the floor's tufts, pebbles and stumps with the forest art set (assets/art_forest/) instead
+## of the tileset's tiles (Room swaps them once the floor is painted).
+@export var forest_art_details := false
 
 
 ## Makes this theme's pack the one TileArt draws with (Level does it before building a map).

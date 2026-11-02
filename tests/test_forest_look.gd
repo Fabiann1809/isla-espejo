@@ -57,9 +57,46 @@ func _initialize() -> void:
 	var backdrop: Node = map.get_node("Backdrop")
 	var bodies := backdrop.find_children("*", "CollisionObject2D", true, false)
 	for room in level.rooms.values():
-		for layer_name in ["Ground", "Patches", "Decor", "Border"]:
+		for layer_name in ["Ground", "Patches", "Decor", "Border", "Details"]:
 			bodies.append_array(room.get_node(layer_name).find_children("*", "CollisionObject2D", true, false))
 	_check(bodies.is_empty(), "the backdrop and the floor details add no bodies")
+
+	# --- The forest art set: floor details are its pictures, and bushes, rocks and stumps only use
+	# the pictures that fit them and block only with their base.
+	var tile_art: Script = load("res://scripts/world/tile_art.gd")
+	var forest_art: Script = load("res://scripts/world/forest_art.gd")
+	var old_details := [tile_art.TUFT_A, tile_art.TUFT_B, tile_art.PEBBLES, tile_art.ROCK_SMALL, tile_art.STUMP].map(
+			func(role: StringName) -> Vector2i: return tile_art.coords(role))
+	var old_left := 0
+	var art_details := 0
+	for room in level.rooms.values():
+		var decor: TileMapLayer = room.get_node("Decor")
+		for cell in decor.get_used_cells():
+			if decor.get_cell_atlas_coords(cell) in old_details:
+				old_left += 1
+		art_details += room.get_node("Details").get_child_count()
+		if room.get_node_or_null("Details/Hedge") == null or not room.get_node("Border").get_used_cells().is_empty():
+			old_left += 1
+	_check(old_left == 0 and art_details > 0,
+			"floor details and the walls' hedge are drawn with the forest art (%d pictures, %d old tiles)" % [art_details, old_left])
+	var allowed := {}
+	for n in forest_art.SOLID_BUSHES:
+		allowed[forest_art.BUSHES % n] = true
+	for n in forest_art.BIG_ROCKS:
+		allowed[forest_art.ROCKS % n] = true
+	allowed[forest_art.STUMP] = true
+	var blockers := 0
+	var wrong := []
+	for prop in level.get_node("Map").find_children("*", "Node2D", true, false):
+		if not prop.has_method("is_flat") or not (prop.kind in [4, 9]):  # RoomProp.Kind.BUSH, LOGS
+			continue
+		blockers += 1
+		var sprite: Sprite2D = prop.find_children("*", "Sprite2D", false, false)[0]
+		var shape: RectangleShape2D = prop.find_children("*", "CollisionShape2D", true, false)[0].shape
+		if not allowed.has(sprite.texture.resource_path) or shape.size.x > sprite.texture.get_width():
+			wrong.append(sprite.texture.resource_path.get_file())
+	_check(blockers > 0 and wrong.is_empty(),
+			"bushes, boulders and stumps use solid pictures and block no wider than them (%d; wrong: %s)" % [blockers, wrong])
 	_check(backdrop.z_index < -1, "the backdrop is drawn below every floor")
 
 	# --- Same seed, same forest.

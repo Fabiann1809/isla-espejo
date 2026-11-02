@@ -225,10 +225,12 @@ func _build_themed_floor() -> void:
 				ground.set_cell(cell, 0, TileArt.coords(theme.path_tile))
 				patch_layer.erase_cell(cell)
 				decor.erase_cell(cell)
-			else:
+			elif not theme.forest_art_details:
 				border.set_cell(cell, 0, TileArt.coords(theme.border_tile))
 	_add_detail_groups(decor, rng)
 	_paint_door_paths(ground, decor, patch_layer)
+	if theme.forest_art_details:
+		_swap_details_for_art(decor, rng)
 
 
 ## A few small natural groups of ground details: mushrooms, stones, flowers, a stump with mushrooms.
@@ -254,6 +256,75 @@ func _add_detail_groups(decor: TileMapLayer, rng: RandomNumberGenerator) -> void
 			if kind == TileArt.STUMP and i > 0:
 				tile = TileArt.MUSHROOM_BROWN
 			decor.set_cell(cell, 0, TileArt.coords(tile))
+
+
+## Replaces the decor layer's tufts, pebbles and stumps (tileset tiles) with sprites of the forest
+## art set, on a "Details" node at the floor's level: still no collision, still clear of the paths.
+func _swap_details_for_art(decor: TileMapLayer, rng: RandomNumberGenerator) -> void:
+	var swaps := {
+		TileArt.coords(TileArt.TUFT_A): [ForestArt.BUSHES, ForestArt.GROUND_PLANTS],
+		TileArt.coords(TileArt.TUFT_B): [ForestArt.BUSHES, ForestArt.GROUND_PLANTS],
+		TileArt.coords(TileArt.PEBBLES): [ForestArt.ROCKS, ForestArt.SMALL_ROCKS],
+		TileArt.coords(TileArt.ROCK_SMALL): [ForestArt.ROCKS, ForestArt.SMALL_ROCKS],
+	}
+	var stump := TileArt.coords(TileArt.STUMP)
+	var details := Node2D.new()
+	details.name = "Details"
+	details.z_index = RoomTheme.FLOOR_Z
+	add_child(details)
+	move_child(details, decor.get_index() + 1)
+	for cell in decor.get_used_cells():
+		var coords := decor.get_cell_atlas_coords(cell)
+		var tex: Texture2D = null
+		if coords == stump:
+			tex = ForestArt.texture(ForestArt.STUMP)
+		elif swaps.has(coords):
+			tex = ForestArt.pick(swaps[coords][0], swaps[coords][1], rng)
+		if tex == null:
+			continue
+		decor.erase_cell(cell)
+		var foot := Vector2(cell * TILE) + Vector2(TILE / 2.0, TILE - Tuning.DETAIL_FOOT_LIFT)
+		details.add_child(ForestArt.standing(tex, foot))
+	_plant_hedge(details, rng)
+
+
+## The room's walls as a thick hedge of the forest art's green bushes, a few pixels apart so they
+## overlap (the walls' collision is the room's own, not this). The hundreds of bushes are painted
+## into one picture per room, so the hedge costs a single sprite.
+func _plant_hedge(details: Node2D, rng: RandomNumberGenerator) -> void:
+	var step := Tuning.HEDGE_STEP
+	var size := Vector2(size_tiles * TILE)
+	var spots: Array[Vector2] = []
+	var x := step / 2.0
+	while x < size.x:
+		spots.append(Vector2(x, TILE - 1.0))
+		spots.append(Vector2(x, size.y - 1.0))
+		x += step
+	var y := TILE + step / 2.0
+	while y < size.y - TILE:
+		spots.append(Vector2(TILE / 2.0, y + TILE / 2.0))
+		spots.append(Vector2(size.x - TILE / 2.0, y + TILE / 2.0))
+		y += step
+	# Top to bottom, so the lower bushes overlap the ones behind them.
+	spots.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
+	var picture := Image.create_empty(int(size.x), int(size.y), false, Image.FORMAT_RGBA8)
+	for spot in spots:
+		var cell := Vector2i(spot / TILE)
+		cell = cell.clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)
+		if not _is_border(cell.x, cell.y) or _is_door_cell(cell):
+			continue
+		var jitter := Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)).round()
+		var bush := ForestArt.image(ForestArt.BUSHES % ForestArt.HEDGE_BUSHES[rng.randi_range(0, ForestArt.HEDGE_BUSHES.size() - 1)])
+		if bush == null:
+			continue
+		var corner := Vector2i(spot + jitter) - Vector2i(bush.get_width() / 2, bush.get_height())
+		picture.blend_rect(bush, Rect2i(Vector2i.ZERO, bush.get_size()), corner)
+	var hedge := Sprite2D.new()
+	hedge.name = "Hedge"
+	hedge.centered = false
+	hedge.texture = ImageTexture.create_from_image(picture)
+	hedge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	details.add_child(hedge)
 
 
 func _is_border(x: int, y: int) -> bool:

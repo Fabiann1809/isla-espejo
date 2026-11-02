@@ -53,10 +53,8 @@ static var _cached_textures := {}
 
 ## Group of the trees whose crown fades while Nico stands behind it (CanopyFade).
 const CANOPY_GROUP := &"canopy"
-## The stump of the forest art set (made from the trunk base of the old mossy log, with its cut top
-## painted on) and the point of it that stands on the ground.
-const STUMP_ART := "res://assets/art_forest/logs/stump.png"
-const STUMP_PIVOT := Vector2(7, 12)
+## Where a bush, rock or stump stands in its tile (the middle of the tile's bottom).
+const PROP_FOOT := Vector2(8, 15)
 
 
 func _ready() -> void:
@@ -80,8 +78,7 @@ func _build() -> void:
 			_lush_tree(LARGE_TREES, Vector2(8, 30), rng)
 			_collide(Rect2(Vector2(3, TileArt.TILE + 6), TRUNK))
 		Kind.BUSH:
-			_bush(rng)
-			_collide(Rect2(2, 5, 12, 9))
+			_bush_or_rock(rng)
 		Kind.POND:
 			_area(TileArt.POND)
 			_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0),
@@ -95,7 +92,6 @@ func _build() -> void:
 			_collide(Rect2(3, 6, 10, 8))
 		Kind.LOGS:
 			_stump()
-			_collide(Rect2(4, 7, 9, 7))
 			_collide(Rect2(1, 4, 14, 10))
 		Kind.TUFT:
 			_tuft(rng)
@@ -141,48 +137,36 @@ func _lush_tree(catalog: Array, base_pos: Vector2, rng: RandomNumberGenerator) -
 		add_child(TileArt.sprite(TileArt.PINE))
 
 
-func _bush(rng: RandomNumberGenerator) -> void:
-	var idx := rng.randi_range(1, 30)
-	var path := "res://assets/art_forest/bushes/bush_%d.png" % idx
-	var tex := _get_texture(path)
-	if tex != null:
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		sprite.centered = true
-		sprite.position = Vector2(8, 9)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
-	else:
+## A solid bush of the forest art set, or now and then a boulder, blocking only its lower part.
+func _bush_or_rock(rng: RandomNumberGenerator) -> void:
+	var rock := rng.randf() < Tuning.BUSH_ROCK_CHANCE
+	var tex := ForestArt.pick(ForestArt.ROCKS, ForestArt.BIG_ROCKS, rng) if rock 			else ForestArt.pick(ForestArt.BUSHES, ForestArt.SOLID_BUSHES, rng)
+	if tex == null:
 		add_child(TileArt.sprite(TileArt.BUSH))
+		_collide(Rect2(2, 5, 12, 9))
+		return
+	add_child(ForestArt.standing(tex, PROP_FOOT))
+	_collide(ForestArt.footprint(tex, PROP_FOOT))
 
 
-## A stump of the forest art set, standing on the bottom of its tile (the tileset's one as fallback).
+## A stump of the forest art set (the tileset's one as fallback).
 func _stump() -> void:
-	var tex := _get_texture(STUMP_ART)
+	var tex := ForestArt.texture(ForestArt.STUMP)
 	if tex == null:
 		add_child(TileArt.sprite(TileArt.STUMP))
+		_collide(Rect2(4, 7, 9, 7))
 		return
-	var sprite := Sprite2D.new()
-	sprite.texture = tex
-	sprite.centered = false
-	sprite.position = Vector2(8, 15) - STUMP_PIVOT
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(sprite)
+	add_child(ForestArt.standing(tex, PROP_FOOT))
+	_collide(ForestArt.footprint(tex, PROP_FOOT))
 
 
+## A low plant of the forest art set, lying on the ground (no collision).
 func _tuft(rng: RandomNumberGenerator) -> void:
-	var idx := rng.randi_range(1, 7)
-	var path := "res://assets/art_forest/bushes/bush_%d.png" % idx
-	var tex := _get_texture(path)
-	if tex != null:
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		sprite.centered = true
-		sprite.position = Vector2(8, 10)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
-	else:
+	var tex := ForestArt.pick(ForestArt.BUSHES, ForestArt.GROUND_PLANTS, rng)
+	if tex == null:
 		add_child(TileArt.sprite(TileArt.TUFT_A))
+		return
+	add_child(ForestArt.standing(tex, PROP_FOOT - Vector2(0, 2)))
 
 
 func _get_texture(path: String) -> Texture2D:

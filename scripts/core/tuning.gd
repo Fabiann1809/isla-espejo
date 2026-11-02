@@ -49,6 +49,17 @@ const GRASS_PATCH_THRESHOLD := 0.28
 ## Small natural groups of ground details (mushrooms, stones, a stump) per room.
 const DETAIL_GROUPS_PER_ROOM := 5
 const DETAIL_GROUP_SIZE := Vector2i(2, 4)
+## Share of the rooms' bushes that are boulders of the forest art set instead.
+const BUSH_ROCK_CHANCE := 0.3
+## How far above a tile's bottom the floor details of the forest art stand (px).
+const DETAIL_FOOT_LIFT := 3.0
+## Distance between the bushes of a room's hedge (px): less than a bush is wide, so they overlap.
+const HEDGE_STEP := 8.0
+## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
+## narrower than the picture, and its smallest and largest size (px).
+const PROP_FOOT_INSET := 2.0
+const PROP_FOOT_MIN := Vector2(6, 4)
+const PROP_FOOT_MAX := Vector2(14, 7)
 ## Soft dirt edges on paths (the nine-slice dirt patch of the sheet) instead of square tiles.
 const SOFT_PATH_EDGES := true
 ## A light tint over the whole world (not the HUD); white = off.

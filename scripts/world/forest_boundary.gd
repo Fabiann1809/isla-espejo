@@ -12,7 +12,6 @@ const DOOR_WIDTH := 64.0
 
 const CANOPY_DARK_COUNT := 9
 const CANOPY_SIL_COUNT := 9
-const BUSH_COUNT := 30
 const TREE_DARK_NAMES := ["dark_oak", "dark_round", "dark_mossy", "dark_dense", "dark_grand"]
 
 var _dark_canopies: Array[Texture2D] = []
@@ -44,10 +43,11 @@ func _load_textures() -> void:
 		if ResourceLoader.exists(path_ts):
 			_sil_trees.append(load(path_ts))
 
-	for i in range(1, BUSH_COUNT + 1):
-		var path_b := "res://assets/art_forest/bushes/bush_%d.png" % i
-		if ResourceLoader.exists(path_b):
-			_bushes.append(load(path_b))
+	# Only the solid bushes: the folder also holds tufts of grass that look like litter here.
+	for i in ForestArt.SOLID_BUSHES:
+		var tex := ForestArt.texture(ForestArt.BUSHES % i)
+		if tex != null:
+			_bushes.append(tex)
 
 
 ## Generates the dark forest filling the black void and gaps between rooms.
