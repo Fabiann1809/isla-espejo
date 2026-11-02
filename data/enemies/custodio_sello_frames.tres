@@ -136,30 +136,26 @@ atlas = ExtResource("6_avp0q")
 region = Rect2(384, 0, 96, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_yvaw2"]
-atlas = ExtResource("6_avp0q")
-region = Rect2(480, 0, 96, 96)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_web16"]
 atlas = ExtResource("5_vu4kl")
 region = Rect2(0, 0, 96, 96)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_tnasu"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_web16"]
 atlas = ExtResource("5_vu4kl")
 region = Rect2(96, 0, 96, 96)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_i6loy"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_tnasu"]
 atlas = ExtResource("5_vu4kl")
 region = Rect2(192, 0, 96, 96)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_bauv2"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_i6loy"]
 atlas = ExtResource("5_vu4kl")
 region = Rect2(288, 0, 96, 96)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_n0vfx"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_bauv2"]
 atlas = ExtResource("5_vu4kl")
 region = Rect2(384, 0, 96, 96)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_6usi2"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_n0vfx"]
 atlas = ExtResource("5_vu4kl")
 region = Rect2(480, 0, 96, 96)
 
@@ -286,15 +282,15 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_pwb02")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_yvaw2")
 }],
 "loop": 0,
 "name": &"special",
 "speed": 10.0
 }, {
 "frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yvaw2")
+}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_web16")
 }, {
@@ -309,9 +305,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_n0vfx")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_6usi2")
 }],
 "loop": 1,
 "name": &"walk",

@@ -1,14 +1,14 @@
 [gd_resource type="SpriteFrames" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/vasija_poseida/vasija_poseida_attack.png" id="1_j7oan"]
+[ext_resource type="Texture2D" path="res://assets/sprites/vasija_poseida/vasija_poseida_spirit.png" id="1_j7oan"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hk62x"]
 atlas = ExtResource("1_j7oan")
-region = Rect2(592, 56, 64, 40)
+region = Rect2(16, 56, 64, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_8il33"]
 atlas = ExtResource("1_j7oan")
-region = Rect2(688, 56, 64, 40)
+region = Rect2(112, 56, 64, 40)
 
 [resource]
 animations = [{

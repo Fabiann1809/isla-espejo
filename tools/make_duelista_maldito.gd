@@ -11,7 +11,7 @@ func _initialize() -> void:
 	data.display_name = "Duelista maldito"
 	data.placeholder_color = Color(0.85, 0.8, 0.7)
 	data.sprite_frames = load("res://data/enemies/duelista_maldito_frames.tres")
-	data.sprite_offset = Vector2(0, -16)
+	data.sprite_offset = Vector2(0, -11)
 	data.max_health = 5
 	data.move_speed = 36.0
 	data.chase_speed = 62.0

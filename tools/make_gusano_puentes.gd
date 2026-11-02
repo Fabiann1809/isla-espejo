@@ -6,8 +6,8 @@ extends SceneTree
 ## Run: godot --headless --path . --script res://tools/make_gusano_puentes.gd
 
 const IDLE_STRIP := "res://assets/sprites/gusano_puentes/gusano_puentes_idle.png"
-## A piece of the arched body in the first idle frame (64x64 cells), clear of the head.
-const SEGMENT_REGION := Rect2i(9, 30, 22, 24)
+## One ring of the body in the first idle frame (64x64 cells), clear of the head.
+const SEGMENT_REGION := Rect2i(16, 30, 20, 18)
 
 
 func _initialize() -> void:

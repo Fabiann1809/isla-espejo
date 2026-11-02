@@ -12,7 +12,7 @@ func _initialize() -> void:
 	data.placeholder_color = Color(0.45, 0.3, 0.25)
 	data.sprite_frames = load("res://data/enemies/caracol_escoria_frames.tres")
 	# 64x64 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -8)
+	data.sprite_offset = Vector2(0, -5)
 	# Very sturdy: lots of health, barely pushed, and a hit never cuts its bite short.
 	data.max_health = 14
 	data.knockback_resistance = 0.85

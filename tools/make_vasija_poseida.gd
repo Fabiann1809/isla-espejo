@@ -2,14 +2,14 @@ extends SceneTree
 ## Writes the Vasija poseída's data (data/enemies/vasija_poseida.tres) and the creature it releases:
 ## the Espíritu de la vasija (data/enemies/espiritu_vasija.tres, a plain EnemyData) with its
 ## SpriteFrames (data/enemies/espiritu_vasija_frames.tres), cut here from the fire spirit that leaps
-## out of the vase in the last frames of its attack strip. The vase's own SpriteFrames come from
+## out of the vase (its own strip, made by tools/make_temple_enemy_art.py from the pack's attack). The vase's own SpriteFrames come from
 ## tools/make_temple_enemy_frames.gd; the scenes are hand-written.
 ## Run: godot --headless --path . --script res://tools/make_vasija_poseida.gd
 
-const ATTACK_STRIP := "res://assets/sprites/vasija_poseida/vasija_poseida_attack.png"
-## The vase's art cells are 96 px; the spirit flies in cells 6 and 7 of its attack strip.
+const SPIRIT_STRIP := "res://assets/sprites/vasija_poseida/vasija_poseida_spirit.png"
+## The vase's art cells are 96 px; the spirit's strip has its two flame frames.
 const CELL := 96
-const SPIRIT_CELLS := [6, 7]
+const SPIRIT_CELLS := [0, 1]
 ## The part of a cell around the spirit (it is centered in it).
 const SPIRIT_REGION := Rect2(16, 56, 64, 40)
 const SPIRIT_FRAMES_PATH := "res://data/enemies/espiritu_vasija_frames.tres"
@@ -87,7 +87,7 @@ func _spirit_data() -> EnemyData:
 
 ## The spirit is the same two flame frames in every animation, at different speeds.
 func _spirit_frames() -> SpriteFrames:
-	var strip: Texture2D = load(ATTACK_STRIP)
+	var strip: Texture2D = load(SPIRIT_STRIP)
 	var cells: Array[AtlasTexture] = []
 	for cell: int in SPIRIT_CELLS:
 		var texture := AtlasTexture.new()

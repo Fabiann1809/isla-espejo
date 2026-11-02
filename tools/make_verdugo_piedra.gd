@@ -11,7 +11,7 @@ func _initialize() -> void:
 	data.display_name = "Verdugo de piedra"
 	data.placeholder_color = Color(0.42, 0.36, 0.33)
 	data.sprite_frames = load("res://data/enemies/verdugo_piedra_frames.tres")
-	data.sprite_offset = Vector2(0, -21)
+	data.sprite_offset = Vector2(0, -22)
 	data.max_health = 20
 	data.move_speed = 16.0
 	data.chase_speed = 26.0

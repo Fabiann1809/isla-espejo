@@ -12,7 +12,7 @@ func _initialize() -> void:
 	data.placeholder_color = Color(0.9, 0.42, 0.12)
 	data.sprite_frames = load("res://data/enemies/acolito_brasero_frames.tres")
 	# 64x64 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -16)
+	data.sprite_offset = Vector2(0, -11)
 	data.max_health = 5
 	data.move_speed = 26.0
 	data.chase_speed = 40.0

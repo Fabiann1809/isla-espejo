@@ -11,7 +11,7 @@ func _initialize() -> void:
 	data.display_name = "Carnero de basalto"
 	data.placeholder_color = Color(0.3, 0.27, 0.28)
 	data.sprite_frames = load("res://data/enemies/carnero_basalto_frames.tres")
-	data.sprite_offset = Vector2(0, -12)
+	data.sprite_offset = Vector2(0, -8)
 	data.max_health = 7
 	data.move_speed = 30.0
 	data.chase_speed = 40.0

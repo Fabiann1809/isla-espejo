@@ -30,17 +30,19 @@ SOURCE_CELL = 128
 ANIMATIONS = ["idle", "walk", "attack", "special", "hurt", "death"]
 ## Enemy id -> scale of the art (0.5 = a 64 px cell, about Nico's size; the Verdugo is huge).
 ENEMIES = {
+    # Their figures are drawn 75-90 px tall: scaled to about Nico's height (28 px); the sentinel, the
+    # worm and the executioner (a huge enemy) stay bigger.
     "centinela_obsidiana": 0.5,
-    "carcelero_cadenas": 0.5,
-    "acolito_brasero": 0.5,
+    "carcelero_cadenas": 0.375,
+    "acolito_brasero": 0.375,
     "verdugo_piedra": 0.625,
-    "duelista_maldito": 0.5,
-    # The volcanic beasts fill their cells: scaled so each keeps the size it had in the game.
-    "salamandra_cristal": 0.4375,
+    "duelista_maldito": 0.375,
+    "salamandra_cristal": 0.375,
     "gusano_puentes": 0.5,
-    "caracol_escoria": 0.3125,
-    "carnero_basalto": 0.40625,
-    "manta_hollin": 0.4375,
+    # The volcanic beasts are enlarged x2 in their pack (2x2 pixel blocks).
+    "caracol_escoria": 0.25,
+    "carnero_basalto": 0.3125,
+    "manta_hollin": 0.3125,
     # The second pack draws its figures smaller inside the cell: 0.75 brings them to Nico's size.
     "arana_talladora": 0.75,
     "baldosa_hambrienta": 0.5,
@@ -74,8 +76,8 @@ ALPHA_CUT = 110
 ## Animations whose frames carry scraps of other poses (the pack cut them from a sheet): only the
 ## frame's biggest piece and what touches its box are kept. Elsewhere separate pieces are meant
 ## (the acolyte's flame, sparks, dust), so nothing is cut.
-## (Every enemy that needed it now has redrawn art.)
-SCRAPPY = {}
+## (The brood core's death: drips and debris of other frames float above its rubble.)
+SCRAPPY = {"nucleo_cria": ["death"]}
 ## The pack's idle and walk alternate two or three unrelated drawings (not steps), so the figure pops
 ## between poses. Until real cycles are drawn, both are rebuilt from the first idle drawing with a
 ## small bob (source px per frame; 2 source px = 1 game px). Enemies in REAL_ART have properly drawn
@@ -91,13 +93,58 @@ STEADY = {
 ## Specials that flip between unrelated drawings: only these frames (the move's own pose) are used,
 ## repeated to the strip's length. Empty these when the pack has real animations.
 HELD_FRAMES = {
-    ("gusano_puentes", "special"): [0, 1, 2],
     ("manta_hollin", "special"): [0, 1, 2, 6],
     ("carnero_basalto", "special"): [0, 1, 2, 5, 6, 7],
 }
 ## Specials drawn as an effect without the creature: the strip of another animation stands in for
 ## them. (None left: the salamander's second version draws its own.)
 STRIP_FROM = {}
+## The second pack cut some frames badly from its sheets: frames where only the effect is left (the
+## creature gone), frames clipped to a rectangle, a different drawing (the oracle's first idle has no
+## staff) or another creature (the sun eye's death ends on a spider). Only the listed frames are used,
+## in order: an index into the animation's own strip, or (animation, index) for a frame of another.
+## The brood core's idle, walk, hurt and death strips cut its hive in half: its special's whole hive
+## stands in for them.
+CORE = ("special", 0)
+FRAMES = {
+    ("arana_talladora", "special"): [0, 1, 2, 3, 4],
+    ("baldosa_hambrienta", "idle"): [0, 1, 2, 3],
+    ("baldosa_hambrienta", "attack"): [0, 1, 2, 4, 5, 6],
+    ("baldosa_hambrienta", "death"): [0, 2, 3, 4, 5],
+    ("campanero_bronce", "special"): [0, 1, 2, 3, 4],
+    ("custodio_sello", "special"): [0, 1, 2, 3, 5],
+    ("forjador_condenado", "special"): [0, 1, 2, 3],
+    ("mascara_parasita", "special"): [0, 1, 2, 3, 6],
+    ("monje_sin_rostro", "attack"): [0, 1, 2, 3, 4, 5],
+    ("nucleo_cria", "idle"): [CORE],
+    ("nucleo_cria", "walk"): [CORE],
+    ("nucleo_cria", "attack"): [("special", i) for i in range(6)],
+    ("nucleo_cria", "special"): [0, 1, 2, 3, 4, 5],
+    ("nucleo_cria", "hurt"): [CORE, CORE, CORE, CORE],
+    ("nucleo_cria", "death"): [CORE, 4, 5],
+    ("ojo_sol", "attack"): [0, 1, 2, 3, 4, 5, 6],
+    ("ojo_sol", "special"): [0, 1, 2, 3, 4, 5, 6],
+    ("ojo_sol", "death"): [0, 1, 2],
+    ("oraculo_ceniza", "idle"): [1, 2, 3, 4, 5],
+    ("oraculo_ceniza", "attack"): [0, 1, 2, 3, 4, 5],
+    ("oraculo_ceniza", "special"): [0, 1, 2, 3, 4, 5],
+    ("relojero_trampas", "special"): [0, 1, 2, 3],
+    # Its last two frames are the spirit alone: they go to their own strip (SPIRIT).
+    ("vasija_poseida", "attack"): [0, 1, 2, 3, 4, 5],
+}
+## The fire spirit that leaps out of the vase: cut from the vase's attack into its own strip,
+## `vasija_poseida_spirit.png` (tools/make_vasija_poseida.gd makes the spirit's animations from it).
+SPIRIT = ("vasija_poseida", "attack", [6, 7])
+## The second pack's frames carry thin strips of the frame drawn above them in the sheet: separate
+## pieces at most this tall lying wholly above the figure are cleared.
+SCRAP_HEIGHT = 8
+## Strips whose scrap touches the figure (the clockmaker's feet from another strip sit on its head):
+## every row above this one is cleared.
+CUT_ABOVE = {
+    ("relojero_trampas", "walk"): 81,
+    ("relojero_trampas", "attack"): 77,
+    ("relojero_trampas", "death"): 79,
+}
 
 
 def copy_sources(pack):
@@ -127,8 +174,8 @@ def copy_second_pack(pack):
                             os.path.join(target, "%s_right.png" % anim))
 
 
-def keep_main_piece(frame):
-    """Clears every piece of the frame but the biggest and those touching its box."""
+def pieces_of(frame):
+    """The frame's separate pieces (8-connected opaque pixels), each a list of (x, y)."""
     width, height = frame.size
     pixels = frame.load()
     seen = [[False] * width for _ in range(height)]
@@ -150,6 +197,12 @@ def keep_main_piece(frame):
                             seen[ny][nx] = True
                             stack.append((nx, ny))
             pieces.append(piece)
+    return pieces
+
+
+def keep_main_piece(frame):
+    """Clears every piece of the frame but the biggest and those touching its box."""
+    pieces = pieces_of(frame)
     if not pieces:
         return 0
     main = max(pieces, key=len)
@@ -157,6 +210,7 @@ def keep_main_piece(frame):
     x1 = max(x for x, _ in main)
     y0 = min(y for _, y in main)
     y1 = max(y for _, y in main)
+    pixels = frame.load()
     dropped = 0
     for piece in pieces:
         if piece is main or any(x0 <= x <= x1 and y0 <= y <= y1 for x, y in piece):
@@ -165,6 +219,35 @@ def keep_main_piece(frame):
             pixels[x, y] = (0, 0, 0, 0)
         dropped += 1
     return dropped
+
+
+def drop_scrap_strips(frame):
+    """Clears the thin pieces (SCRAP_HEIGHT) lying wholly above the frame's biggest piece."""
+    pieces = pieces_of(frame)
+    if not pieces:
+        return 0
+    main = max(pieces, key=len)
+    top = min(y for _, y in main)
+    pixels = frame.load()
+    dropped = 0
+    for piece in pieces:
+        ys = [y for _, y in piece]
+        if piece is main or max(ys) >= top or max(ys) - min(ys) + 1 > SCRAP_HEIGHT:
+            continue
+        for x, y in piece:
+            pixels[x, y] = (0, 0, 0, 0)
+        dropped += 1
+    return dropped
+
+
+def picked_strip(enemy, anim, frames):
+    """A strip of the listed frames of the enemy's sources (see FRAMES)."""
+    strip = Image.new("RGBA", (SOURCE_CELL * len(frames), SOURCE_CELL), (0, 0, 0, 0))
+    for i, frame in enumerate(frames):
+        source, index = frame if isinstance(frame, tuple) else (anim, frame)
+        sheet = Image.open(os.path.join(ROOT, enemy, "source", "%s_right.png" % source)).convert("RGBA")
+        strip.paste(sheet.crop((index * SOURCE_CELL, 0, (index + 1) * SOURCE_CELL, SOURCE_CELL)), (i * SOURCE_CELL, 0))
+    return strip
 
 
 def scale_frame(frame, cell):
@@ -204,6 +287,30 @@ def held_strip(strip, frames):
     return held
 
 
+def scaled_strip(enemy, anim, strip, cell, scraps):
+    """The strip with each frame cleaned and scaled to `cell`; counts the pieces cleared in `scraps`."""
+    count = strip.width // SOURCE_CELL
+    # Average in premultiplied space so transparent pixels do not bleed black into the edges.
+    out = Image.new("RGBA", (cell * count, cell), (0, 0, 0, 0))
+    for i in range(count):
+        frame = strip.crop((i * SOURCE_CELL, 0, (i + 1) * SOURCE_CELL, SOURCE_CELL))
+        if anim in SCRAPPY.get(enemy, []):
+            scraps[0] += keep_main_piece(frame)
+        if enemy in SECOND_PACK:
+            scraps[0] += drop_scrap_strips(frame)
+        if (enemy, anim) in CUT_ABOVE:
+            frame.paste((0, 0, 0, 0), (0, 0, SOURCE_CELL, CUT_ABOVE[(enemy, anim)]))
+        premultiplied = Image.new("RGBA", frame.size)
+        src = frame.load()
+        dst = premultiplied.load()
+        for y in range(frame.height):
+            for x in range(frame.width):
+                r, g, b, a = src[x, y]
+                dst[x, y] = (r * a // 255, g * a // 255, b * a // 255, a)
+        out.paste(scale_frame(premultiplied, cell), (i * cell, 0))
+    return out
+
+
 def build(enemy, scale):
     cell = int(round(SOURCE_CELL * scale))
     scraps = [0]
@@ -214,22 +321,12 @@ def build(enemy, scale):
             strip = steady_strip(enemy, STEADY[anim])
         elif (enemy, anim) in HELD_FRAMES:
             strip = held_strip(strip, HELD_FRAMES[(enemy, anim)])
-        count = strip.width // SOURCE_CELL
-        # Average in premultiplied space so transparent pixels do not bleed black into the edges.
-        out = Image.new("RGBA", (cell * count, cell), (0, 0, 0, 0))
-        for i in range(count):
-            frame = strip.crop((i * SOURCE_CELL, 0, (i + 1) * SOURCE_CELL, SOURCE_CELL))
-            if anim in SCRAPPY.get(enemy, []):
-                scraps[0] += keep_main_piece(frame)
-            premultiplied = Image.new("RGBA", frame.size)
-            src = frame.load()
-            dst = premultiplied.load()
-            for y in range(frame.height):
-                for x in range(frame.width):
-                    r, g, b, a = src[x, y]
-                    dst[x, y] = (r * a // 255, g * a // 255, b * a // 255, a)
-            out.paste(scale_frame(premultiplied, cell), (i * cell, 0))
-        out.save(os.path.join(ROOT, enemy, "%s_%s.png" % (enemy, anim)))
+        elif (enemy, anim) in FRAMES:
+            strip = picked_strip(enemy, anim, FRAMES[(enemy, anim)])
+        scaled_strip(enemy, anim, strip, cell, scraps).save(os.path.join(ROOT, enemy, "%s_%s.png" % (enemy, anim)))
+    if enemy == SPIRIT[0]:
+        strip = picked_strip(enemy, SPIRIT[1], SPIRIT[2])
+        scaled_strip(enemy, SPIRIT[1], strip, cell, scraps).save(os.path.join(ROOT, enemy, "%s_spirit.png" % enemy))
     return cell, scraps[0]
 
 
