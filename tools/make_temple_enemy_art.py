@@ -73,7 +73,8 @@ SCRAPPY = {
 ## between poses. Until real cycles are drawn, both are rebuilt from the first idle drawing with a
 ## small bob (source px per frame; 2 source px = 1 game px). Enemies in REAL_ART have properly drawn
 ## animations (the second pack: centered, feet on row 108) and keep them as they are.
-REAL_ART = {"carcelero_cadenas", "centinela_obsidiana"} | set(SECOND_PACK)
+REAL_ART = {"carcelero_cadenas", "centinela_obsidiana", "verdugo_piedra", "duelista_maldito",
+            "acolito_brasero"} | set(SECOND_PACK)
 STEADY = {
     "idle": [0, 0, 0, -2, -2, -2],
     "walk": [0, -2, -2, 0, 0, -2, -2, 0],
