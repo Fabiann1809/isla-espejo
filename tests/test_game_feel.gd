@@ -62,10 +62,17 @@ func _initialize() -> void:
 		if n is Sprite2D:
 			ghosts[0] += 1
 	feel.child_entered_tree.connect(count_ghost)
+	var still := [true]
+	var check_still := func(n: Node) -> void:
+		if n is Node2D and n.physics_interpolation_mode != Node.PHYSICS_INTERPOLATION_MODE_OFF:
+			still[0] = false
+	feel.child_entered_tree.connect(check_still)
 	events.player_dashed.emit(Vector2.RIGHT)
 	await _real_wait(0.2)
 	feel.child_entered_tree.disconnect(count_ghost)
+	feel.child_entered_tree.disconnect(check_still)
 	_check(ghosts[0] >= 2, "a dodge leaves afterimages behind Nico")
+	_check(still[0], "afterimages and sparks are not interpolated (no stray copy far from Nico)")
 	await _real_wait(0.6)
 	_check(feel.get_children().filter(func(n: Node) -> bool: return n is Sprite2D).is_empty(),
 			"the afterimages fade away")

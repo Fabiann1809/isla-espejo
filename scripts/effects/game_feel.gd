@@ -189,11 +189,18 @@ func afterimage(actor: Node2D) -> void:
 	# Under every actor (Nico runs ahead of his own trail), over the floors.
 	ghost.z_as_relative = false
 	ghost.z_index = RoomTheme.GROUND_FX_Z
+	_keep_still(ghost)
 	add_child(ghost)
 	ghost.global_position = sprite.global_position
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, Tuning.DASH_GHOST_FADE)
 	tween.tween_callback(ghost.queue_free)
+
+
+## Effects appear where they belong and stay there: with physics interpolation the game would draw
+## their first frame on the way from the map's origin, a stray copy of Nico far from him.
+func _keep_still(node: Node2D) -> void:
+	node.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 
 
 func _ghost_shader() -> ShaderMaterial:
@@ -237,6 +244,7 @@ func burst(at: Vector2, color: Color, count: int, speed: float) -> void:
 	fade.set_color(0, Color.WHITE)
 	fade.set_color(1, Color(1, 1, 1, 0))
 	sparks.color_ramp = fade
+	_keep_still(sparks)
 	add_child(sparks)
 	sparks.global_position = at
 	sparks.emitting = true
