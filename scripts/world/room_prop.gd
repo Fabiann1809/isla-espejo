@@ -90,7 +90,9 @@ func _build() -> void:
 			add_child(TileArt.sprite(TileArt.CAMPFIRE))
 			_collide(Rect2(3, 6, 10, 8))
 		Kind.LOGS:
-			_mossy_log(rng)
+			# The tileset's stump: the mossy log and stump of the forest art set were cut badly out
+			# of their sheet (a trunk's base with a flat top) and looked like broken trees.
+			add_child(TileArt.sprite(TileArt.STUMP))
 			_collide(Rect2(1, 4, 14, 10))
 		Kind.TUFT:
 			_tuft(rng)
@@ -149,20 +151,6 @@ func _bush(rng: RandomNumberGenerator) -> void:
 		add_child(sprite)
 	else:
 		add_child(TileArt.sprite(TileArt.BUSH))
-
-
-func _mossy_log(rng: RandomNumberGenerator) -> void:
-	var path := "res://assets/art_forest/logs/log_mossy.png" if rng.randf() < 0.6 else "res://assets/art_forest/logs/stump_mossy.png"
-	var tex := _get_texture(path)
-	if tex != null:
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		sprite.centered = true
-		sprite.position = Vector2(8, 9)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
-	else:
-		add_child(TileArt.sprite(TileArt.LOGS))
 
 
 func _tuft(rng: RandomNumberGenerator) -> void:
