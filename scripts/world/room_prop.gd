@@ -53,6 +53,10 @@ static var _cached_textures := {}
 
 ## Group of the trees whose crown fades while Nico stands behind it (CanopyFade).
 const CANOPY_GROUP := &"canopy"
+## The stump of the forest art set (made from the trunk base of the old mossy log, with its cut top
+## painted on) and the point of it that stands on the ground.
+const STUMP_ART := "res://assets/art_forest/logs/stump.png"
+const STUMP_PIVOT := Vector2(7, 12)
 
 
 func _ready() -> void:
@@ -90,9 +94,8 @@ func _build() -> void:
 			add_child(TileArt.sprite(TileArt.CAMPFIRE))
 			_collide(Rect2(3, 6, 10, 8))
 		Kind.LOGS:
-			# The tileset's stump: the mossy log and stump of the forest art set were cut badly out
-			# of their sheet (a trunk's base with a flat top) and looked like broken trees.
-			add_child(TileArt.sprite(TileArt.STUMP))
+			_stump()
+			_collide(Rect2(4, 7, 9, 7))
 			_collide(Rect2(1, 4, 14, 10))
 		Kind.TUFT:
 			_tuft(rng)
@@ -151,6 +154,20 @@ func _bush(rng: RandomNumberGenerator) -> void:
 		add_child(sprite)
 	else:
 		add_child(TileArt.sprite(TileArt.BUSH))
+
+
+## A stump of the forest art set, standing on the bottom of its tile (the tileset's one as fallback).
+func _stump() -> void:
+	var tex := _get_texture(STUMP_ART)
+	if tex == null:
+		add_child(TileArt.sprite(TileArt.STUMP))
+		return
+	var sprite := Sprite2D.new()
+	sprite.texture = tex
+	sprite.centered = false
+	sprite.position = Vector2(8, 15) - STUMP_PIVOT
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(sprite)
 
 
 func _tuft(rng: RandomNumberGenerator) -> void:
