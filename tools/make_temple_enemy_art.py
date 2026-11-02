@@ -44,11 +44,12 @@ SCRAPPY = {
     "gusano_puentes": CLEAN_ALL,
     "caracol_escoria": CLEAN_ALL,
     "carnero_basalto": CLEAN_ALL,
-    "centinela_obsidiana": ["special"],
 }
 ## The pack's idle and walk alternate two or three unrelated drawings (not steps), so the figure pops
 ## between poses. Until real cycles are drawn, both are rebuilt from the first idle drawing with a
-## small bob (source px per frame; 2 source px = 1 game px). Empty this when the pack has real ones.
+## small bob (source px per frame; 2 source px = 1 game px). Enemies in REAL_ART have properly drawn
+## animations (the second pack: centered, feet on row 108) and keep them as they are.
+REAL_ART = {"carcelero_cadenas", "centinela_obsidiana"}
 STEADY = {
     "idle": [0, 0, 0, -2, -2, -2],
     "walk": [0, -2, -2, 0, 0, -2, -2, 0],
@@ -155,7 +156,7 @@ def build(enemy, scale):
     scraps = [0]
     for anim in ANIMATIONS:
         strip = Image.open(os.path.join(ROOT, enemy, "source", "%s_right.png" % anim)).convert("RGBA")
-        if anim in STEADY:
+        if anim in STEADY and enemy not in REAL_ART:
             strip = steady_strip(enemy, STEADY[anim])
         elif (enemy, anim) in HELD_FRAMES:
             strip = held_strip(strip, HELD_FRAMES[(enemy, anim)])
