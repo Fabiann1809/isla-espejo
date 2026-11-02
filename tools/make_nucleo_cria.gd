@@ -61,7 +61,7 @@ func _write_brood() -> void:
 	data.placeholder_color = Color(1.0, 0.5, 0.25)
 	data.sprite_frames = load("res://data/enemies/salamandra_cristal_frames.tres")
 	data.sprite_scale = 0.5
-	data.sprite_offset = Vector2(0, -5)
+	data.sprite_offset = Vector2(0, -7)
 	data.max_health = 1
 	data.move_speed = 50.0
 	data.chase_speed = 100.0

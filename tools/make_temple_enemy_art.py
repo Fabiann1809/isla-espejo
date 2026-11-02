@@ -36,7 +36,7 @@ ENEMIES = {
     "verdugo_piedra": 0.625,
     "duelista_maldito": 0.5,
     # The volcanic beasts fill their cells: scaled so each keeps the size it had in the game.
-    "salamandra_cristal": 0.375,
+    "salamandra_cristal": 0.4375,
     "gusano_puentes": 0.5,
     "caracol_escoria": 0.3125,
     "carnero_basalto": 0.40625,
@@ -95,11 +95,9 @@ HELD_FRAMES = {
     ("manta_hollin", "special"): [0, 1, 2, 6],
     ("carnero_basalto", "special"): [0, 1, 2, 5, 6, 7],
 }
-## Specials drawn as an effect without the creature (the salamander's crystal burst): the strip of
-## another animation stands in for them.
-STRIP_FROM = {
-    ("salamandra_cristal", "special"): "attack",
-}
+## Specials drawn as an effect without the creature: the strip of another animation stands in for
+## them. (None left: the salamander's second version draws its own.)
+STRIP_FROM = {}
 
 
 def copy_sources(pack):
