@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DevouringWheelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/rueda_devoradora_data.gd" id="1_s1xsx"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/rueda_devoradora_frames.tres" id="2_w4xgl"]
+
+[resource]
+script = ExtResource("1_s1xsx")
+id = &"rueda_devoradora"
+display_name = "Rueda devoradora"
+placeholder_color = Color(0.55, 0.4, 0.3, 1)
+sprite_frames = ExtResource("2_w4xgl")
+sprite_offset = Vector2(0, -30)
+max_health = 6
+move_speed = 25.0
+chase_speed = 35.0
+detection_range = 180.0
+lose_range = 280.0
+attack_range = 170.0
+attack_cooldown = 0.4
+hurt_time = 0.25
+knockback_speed = 80.0
+knockback_resistance = 0.8
+attack_armor = true
+patrol_radius = 40.0
+patrol_wait = 1.2
