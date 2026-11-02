@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AshOracleData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/oraculo_ceniza_data.gd" id="1_8t3vo"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/oraculo_ceniza_frames.tres" id="2_nimrv"]
+
+[resource]
+script = ExtResource("1_8t3vo")
+id = &"oraculo_ceniza"
+display_name = "Oráculo de ceniza"
+placeholder_color = Color(0.7, 0.22, 0.12, 1)
+sprite_frames = ExtResource("2_nimrv")
+sprite_offset = Vector2(0, -30)
+max_health = 5
+move_speed = 24.0
+chase_speed = 34.0
+detection_range = 190.0
+lose_range = 280.0
+attack_range = 180.0
+attack_windup = 0.5
+attack_time = 0.2
+attack_cooldown = 2.4
+hurt_time = 0.2
+knockback_speed = 110.0
+patrol_radius = 40.0
+patrol_wait = 1.6

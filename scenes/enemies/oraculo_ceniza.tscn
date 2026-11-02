@@ -1,0 +1,22 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/oraculo_ceniza.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/oraculo_ceniza.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="body"]
+size = Vector2(12, 10)
+
+[sub_resource type="RectangleShape2D" id="hurt"]
+size = Vector2(18, 28)
+
+[node name="OraculoCeniza" instance=ExtResource("1")]
+script = ExtResource("3")
+data = ExtResource("2")
+
+[node name="CollisionShape2D" parent="." index="2"]
+shape = SubResource("body")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -9)
+shape = SubResource("hurt")
