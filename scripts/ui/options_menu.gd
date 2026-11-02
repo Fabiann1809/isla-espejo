@@ -6,6 +6,8 @@ extends PanelContainer
 signal closed
 
 var volume_slider: HSlider
+var music_slider: HSlider
+var sfx_slider: HSlider
 var fullscreen_check: CheckButton
 var back_button: Button
 
@@ -17,17 +19,9 @@ func _ready() -> void:
 	add_child(box)
 	box.add_child(UiKit.label(UiText.t("options_title"), 18))
 
-	var volume_row := HBoxContainer.new()
-	volume_row.add_theme_constant_override("separation", 12)
-	volume_row.add_child(UiKit.label(UiText.t("options_volume"), 14, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT))
-	volume_slider = HSlider.new()
-	volume_slider.min_value = 0.0
-	volume_slider.max_value = 1.0
-	volume_slider.step = 0.05
-	volume_slider.custom_minimum_size = Vector2(150, 20)
-	volume_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	volume_row.add_child(volume_slider)
-	box.add_child(volume_row)
+	volume_slider = _slider_row(box, UiText.t("options_volume"))
+	music_slider = _slider_row(box, UiText.t("options_music"))
+	sfx_slider = _slider_row(box, UiText.t("options_sfx"))
 
 	fullscreen_check = CheckButton.new()
 	fullscreen_check.text = UiText.t("options_fullscreen")
@@ -38,6 +32,8 @@ func _ready() -> void:
 
 	refresh()
 	volume_slider.value_changed.connect(Settings.set_volume)
+	music_slider.value_changed.connect(Settings.set_music_volume)
+	sfx_slider.value_changed.connect(Settings.set_sfx_volume)
 	fullscreen_check.toggled.connect(Settings.set_fullscreen)
 	back_button.pressed.connect(close)
 	hide()
@@ -57,4 +53,24 @@ func close() -> void:
 ## Shows the current values without triggering a change.
 func refresh() -> void:
 	volume_slider.set_value_no_signal(Settings.volume)
+	music_slider.set_value_no_signal(Settings.music_volume)
+	sfx_slider.set_value_no_signal(Settings.sfx_volume)
 	fullscreen_check.set_pressed_no_signal(Settings.fullscreen)
+
+
+## A labeled 0..1 slider in a row of `box`.
+func _slider_row(box: Container, text: String) -> HSlider:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var label := UiKit.label(text, 14, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
+	label.custom_minimum_size.x = 80
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.05
+	slider.custom_minimum_size = Vector2(150, 20)
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(slider)
+	box.add_child(row)
+	return slider

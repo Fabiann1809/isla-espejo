@@ -1,17 +1,17 @@
 class_name ForestBackdrop
 extends RefCounted
-## The deep forest around a generated map: dark grass and a thick wall of trees, bushes and rocks on
-## every tile that is not a room or a corridor floor, so nothing black shows between rooms, in empty
-## grid cells or around the corridors. Thicker next to the paths and darker the farther away.
-## Purely decorative: tile layers with no collision, drawn below every floor. Same seed = same forest.
-
-const DEEP_TREES: Array[StringName] = [TileArt.TREE_DARK, TileArt.PINE_DARK, TileArt.TREE_DARK, TileArt.PINE_DARK]
-const UNDERGROWTH: Array[StringName] = [TileArt.BUSH_DARK, TileArt.BUSH_DARK, TileArt.BUSH_BERRIES, TileArt.ROCK, TileArt.ROCK_MOSSY, TileArt.STUMP]
+## The deep forest around a generated map: the rooms' grass and a thick wood of the team's forest art
+## (assets/art_forest/) on every tile that is not a room or a corridor, so nothing black shows
+## between rooms, in empty grid cells or around the corridors. The trees are scattered (no grid)
+## and packed close, and the ForestShade darkens this whole floor (see Level), so the forest reads
+## as one dark wood around bright clearings.
+## Purely decorative: no collision, drawn below every floor. Same seed = same forest.
+## The trees are painted into a few big pictures (chunks): thousands of sprites would cost frames.
 
 
 ## Builds the forest under `parent`. `walkable` holds the floor tiles (rooms and corridor floors) and
-## `taken` the tiles already drawn by something else (corridor walls of trees); `area` is in tiles.
-## Drawn with the active tileset profile (TileArt).
+## `taken` the corridor walls; no tree reaches over either (the backdrop is drawn below them, so the
+## part over them would be cut off in a straight line). `area` is in tiles.
 static func build(parent: Node, area: Rect2i, walkable: Dictionary,
 		taken: Dictionary, map_seed: int) -> Node2D:
 	var root := Node2D.new()
@@ -21,83 +21,99 @@ static func build(parent: Node, area: Rect2i, walkable: Dictionary,
 	parent.add_child(root)
 	parent.move_child(root, 0)
 
-	var bands := Tuning.BACKDROP_BAND_TINTS.size()
-	var grounds: Array[TileMapLayer] = []
-	var canopies: Array[TileMapLayer] = []
-	for band in bands:
-		grounds.append(_layer(root, "Ground%d" % band, Tuning.BACKDROP_BAND_TINTS[band]))
-	for band in bands:
-		canopies.append(_layer(root, "Canopy%d" % band, Tuning.BACKDROP_BAND_TINTS[band]))
-
-	var distance := _distances(area, walkable)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(["backdrop", map_seed])
-	# Every tile with a tree, bush or rock, on any band's layer (a crown reaches into the row above).
-	var planted := {}
-	var ground_tile := TileArt.coords(TileArt.GRASS_TEXTURED)
+	var ground := TileMapLayer.new()
+	ground.name = "Ground0"
+	TileArt.prepare_layer(ground)
+	root.add_child(ground)
+	var grass := TileArt.coords(TileArt.GRASS)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
-			var cell := Vector2i(x, y)
-			if walkable.has(cell):
-				continue
-			var band := _band(distance.get(cell, 999))
-			grounds[band].set_cell(cell, 0, ground_tile)
-			if taken.has(cell) or planted.has(cell) or rng.randf() >= Tuning.BACKDROP_BAND_DENSITY[band]:
-				continue
-			_plant(canopies[band], cell, rng, walkable, taken, planted)
+			if not walkable.has(Vector2i(x, y)):
+				ground.set_cell(Vector2i(x, y), 0, grass)
+
+	var trees := _plant(area, walkable, taken, map_seed)
+	var rects: Array[Rect2] = []
+	for tree in trees:
+		rects.append(tree.rect)
+	root.set_meta("tree_rects", rects)
+	_bake(root, trees)
 	return root
 
 
-## One tree, bush or rock on `cell`. A tall tree also takes the tile above it for its crown.
-static func _plant(layer: TileMapLayer, cell: Vector2i, rng: RandomNumberGenerator,
-		walkable: Dictionary, taken: Dictionary, planted: Dictionary) -> void:
-	var roll := rng.randf()
-	var above := cell + Vector2i.UP
-	var room_above := walkable.has(above) or taken.has(above) or planted.has(above)
-	planted[cell] = true
-	if roll < 0.22 and not room_above:
-		var pine := rng.randf() < 0.5
-		layer.set_cell(above, 0, TileArt.coords(TileArt.PINE_DARK_TALL_TOP if pine else TileArt.TREE_DARK_TALL_TOP))
-		layer.set_cell(cell, 0, TileArt.coords(TileArt.PINE_DARK_TALL_BASE if pine else TileArt.TREE_DARK_TALL_BASE))
-		planted[above] = true
-	elif roll < 0.82:
-		layer.set_cell(cell, 0, TileArt.coords(DEEP_TREES[rng.randi_range(0, DEEP_TREES.size() - 1)]))
-	else:
-		layer.set_cell(cell, 0, TileArt.coords(UNDERGROWTH[rng.randi_range(0, UNDERGROWTH.size() - 1)]))
+## Where every tree goes: {image, foot, rect}, sorted top to bottom so lower trees overlap. Where a
+## tree does not fit (the narrow strips between rooms) a bush may.
+static func _plant(area: Rect2i, walkable: Dictionary, taken: Dictionary, map_seed: int) -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(["backdrop", map_seed])
+	var trees := []
+	var tile := float(TileArt.TILE)
+	var step := Tuning.BACKDROP_TREE_STEP
+	var y := area.position.y * tile
+	while y < area.end.y * tile:
+		var x := area.position.x * tile
+		while x < area.end.x * tile:
+			var foot := (Vector2(x, y) + Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0))
+					* Tuning.BACKDROP_TREE_JITTER).round()
+			x += step
+			if rng.randf() >= Tuning.BACKDROP_TREE_DENSITY:
+				continue
+			# Most spots fall inside a room: skip them before looking at any picture.
+			var cell := Vector2i((foot / tile).floor())
+			if walkable.has(cell) or taken.has(cell):
+				continue
+			var picture := ForestArt.image(ForestArt.FOREST_TREES[rng.randi_range(0, ForestArt.FOREST_TREES.size() - 1)])
+			var rect := _rect_of(picture, foot)
+			if _blocks_the_way(rect, walkable, taken):
+				picture = ForestArt.image(ForestArt.BUSHES % ForestArt.SOLID_BUSHES[rng.randi_range(0, ForestArt.SOLID_BUSHES.size() - 1)])
+				rect = _rect_of(picture, foot)
+				if _blocks_the_way(rect, walkable, taken):
+					continue
+			trees.append({"image": picture, "foot": foot, "rect": rect})
+		y += step
+	trees.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.foot.y < b.foot.y)
+	return trees
 
 
-static func _band(tiles_away: int) -> int:
-	for band in Tuning.BACKDROP_BAND_LIMITS.size():
-		if tiles_away <= Tuning.BACKDROP_BAND_LIMITS[band]:
-			return band
-	return Tuning.BACKDROP_BAND_LIMITS.size()
+static func _rect_of(picture: Image, foot: Vector2) -> Rect2:
+	if picture == null:
+		return Rect2()
+	return Rect2(foot - Vector2(picture.get_width() / 2, picture.get_height()), picture.get_size())
 
 
-## Tiles to the nearest walkable tile (4-neighbour steps), for every tile of `area`.
-static func _distances(area: Rect2i, walkable: Dictionary) -> Dictionary:
-	var distance := {}
-	var frontier: Array[Vector2i] = []
-	for cell: Vector2i in walkable:
-		distance[cell] = 0
-		frontier.append(cell)
-	var head := 0
-	while head < frontier.size():
-		var cell := frontier[head]
-		head += 1
-		var next_distance: int = distance[cell] + 1
-		for step in MapLayout.DIRS:
-			var next: Vector2i = cell + step
-			if area.has_point(next) and not distance.has(next):
-				distance[next] = next_distance
-				frontier.append(next)
-	return distance
+## True if a tree drawn on `rect` would reach a room, a corridor floor or a corridor wall.
+static func _blocks_the_way(rect: Rect2, walkable: Dictionary, taken: Dictionary) -> bool:
+	if rect.size == Vector2.ZERO:
+		return true
+	# Its transparent edge may overlap a little; small pictures keep at least their middle pixel.
+	var shrink := minf(Tuning.BACKDROP_TREE_OVERLAP, minf(rect.size.x, rect.size.y) / 2.0 - 0.5)
+	var inner := rect.grow(-maxf(shrink, 0.0))
+	var first := Vector2i((inner.position / TileArt.TILE).floor())
+	var last := Vector2i((inner.end / TileArt.TILE).floor())
+	for cy in range(first.y, last.y + 1):
+		for cx in range(first.x, last.x + 1):
+			if walkable.has(Vector2i(cx, cy)) or taken.has(Vector2i(cx, cy)):
+				return true
+	return false
 
 
-static func _layer(parent: Node, layer_name: String, tint: Color) -> TileMapLayer:
-	var layer := TileMapLayer.new()
-	layer.name = layer_name
-	TileArt.prepare_layer(layer)
-	# `modulate`, not `self_modulate`: a layer draws its tiles through child canvas items.
-	layer.modulate = tint
-	parent.add_child(layer)
-	return layer
+## Paints the trees into square chunks and adds one sprite per chunk that has any.
+static func _bake(root: Node2D, trees: Array) -> void:
+	var size := Tuning.BACKDROP_CHUNK
+	var chunks := {}
+	for tree in trees:
+		var rect: Rect2 = tree.rect
+		var first := Vector2i((rect.position / size).floor())
+		var last := Vector2i((rect.end / size).floor())
+		for cy in range(first.y, last.y + 1):
+			for cx in range(first.x, last.x + 1):
+				var key := Vector2i(cx, cy)
+				if not chunks.has(key):
+					chunks[key] = Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+				ForestArt.paint(chunks[key], tree.image, tree.foot - Vector2(key * size))
+	var keys := chunks.keys()
+	keys.sort()
+	for key: Vector2i in keys:
+		var sprite := ForestArt.baked(chunks[key])
+		sprite.name = "Trees_%d_%d" % [key.x + 1000, key.y + 1000]
+		sprite.position = Vector2(key * size)
+		root.add_child(sprite)

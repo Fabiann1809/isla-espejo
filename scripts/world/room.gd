@@ -225,10 +225,12 @@ func _build_themed_floor() -> void:
 				ground.set_cell(cell, 0, TileArt.coords(theme.path_tile))
 				patch_layer.erase_cell(cell)
 				decor.erase_cell(cell)
-			else:
+			elif not theme.forest_art_details:
 				border.set_cell(cell, 0, TileArt.coords(theme.border_tile))
 	_add_detail_groups(decor, rng)
 	_paint_door_paths(ground, decor, patch_layer)
+	if theme.forest_art_details:
+		_swap_details_for_art(decor, rng)
 
 
 ## A few small natural groups of ground details: mushrooms, stones, flowers, a stump with mushrooms.
@@ -254,6 +256,73 @@ func _add_detail_groups(decor: TileMapLayer, rng: RandomNumberGenerator) -> void
 			if kind == TileArt.STUMP and i > 0:
 				tile = TileArt.MUSHROOM_BROWN
 			decor.set_cell(cell, 0, TileArt.coords(tile))
+
+
+## Replaces the decor layer's tufts, pebbles and stumps (tileset tiles) with sprites of the forest
+## art set, on a "Details" node at the floor's level: still no collision, still clear of the paths.
+func _swap_details_for_art(decor: TileMapLayer, rng: RandomNumberGenerator) -> void:
+	var swaps := {
+		TileArt.coords(TileArt.TUFT_A): [ForestArt.BUSHES, ForestArt.GROUND_PLANTS],
+		TileArt.coords(TileArt.TUFT_B): [ForestArt.BUSHES, ForestArt.GROUND_PLANTS],
+		TileArt.coords(TileArt.PEBBLES): [ForestArt.ROCKS, ForestArt.SMALL_ROCKS],
+		TileArt.coords(TileArt.ROCK_SMALL): [ForestArt.ROCKS, ForestArt.SMALL_ROCKS],
+	}
+	var stump := TileArt.coords(TileArt.STUMP)
+	var details := Node2D.new()
+	details.name = "Details"
+	details.z_index = RoomTheme.FLOOR_Z
+	add_child(details)
+	move_child(details, decor.get_index() + 1)
+	for cell in decor.get_used_cells():
+		var coords := decor.get_cell_atlas_coords(cell)
+		var tex: Texture2D = null
+		if coords == stump:
+			tex = ForestArt.texture(ForestArt.STUMP)
+		elif swaps.has(coords):
+			tex = ForestArt.pick(swaps[coords][0], swaps[coords][1], rng)
+		if tex == null:
+			continue
+		decor.erase_cell(cell)
+		var foot := Vector2(cell * TILE) + Vector2(TILE / 2.0, TILE - Tuning.DETAIL_FOOT_LIFT)
+		details.add_child(ForestArt.standing(tex, foot))
+	_plant_tree_wall(rng)
+
+
+## The room's walls as rows of trees whose crowns touch, standing on the border (the walls keep
+## their own collision). The top wall, which nobody walks behind, is two staggered rows painted into
+## one picture; the sides and the bottom are single trees y-sorted with the actors, fading while
+## Nico is behind them.
+func _plant_tree_wall(rng: RandomNumberGenerator) -> void:
+	var trees := Node2D.new()
+	trees.name = "WallTrees"
+	trees.y_sort_enabled = true
+	add_child(trees)
+	var size := Vector2(size_tiles * TILE)
+	var front := TILE - 1.0
+	var back := front - Tuning.WALL_TREE_BACK_ROW
+	var top: Array[Vector2] = _on_wall(TreeWall.feet_along(Vector2(0, front), Vector2(size.x, front), rng))
+	var shifted := Vector2(Tuning.WALL_TREE_STEP / 2.0, 0)
+	top.append_array(_on_wall(TreeWall.feet_along(Vector2(0, back) + shifted, Vector2(size.x, back), rng)))
+	var row := TreeWall.baked_row(top, rng)
+	row.name = "TopRow"
+	trees.add_child(row)
+	var singles: Array[Vector2] = []
+	singles.append_array(TreeWall.feet_along(Vector2(0, size.y - 1.0), Vector2(size.x, size.y - 1.0), rng))
+	for x in [TILE / 2.0, size.x - TILE / 2.0]:
+		singles.append_array(TreeWall.feet_along(Vector2(x, TILE * 2.0), Vector2(x, size.y - TILE), rng))
+	for foot in _on_wall(singles):
+		trees.add_child(TreeWall.tree(foot, rng))
+
+
+## The feet that stand on the wall (not in a door's gap).
+func _on_wall(feet: Array[Vector2]) -> Array[Vector2]:
+	return feet.filter(func(foot: Vector2) -> bool:
+		return is_wall_cell(Vector2i(foot / TILE).clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)))
+
+
+## True for a tile of the room's wall (its border, except the gaps of its open doors), in room tiles.
+func is_wall_cell(cell: Vector2i) -> bool:
+	return _is_border(cell.x, cell.y) and not _is_door_cell(cell)
 
 
 func _is_border(x: int, y: int) -> bool:

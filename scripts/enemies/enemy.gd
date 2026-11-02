@@ -14,6 +14,8 @@ enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD }
 enum AttackPhase { WINDUP, STRIKE, RECOVER }
 
 const WORLD_LAYER := 1
+## Ponds: they block bodies but not sight (enemies see across the water).
+const WATER_LAYER := 7
 const VISION_CHECK_INTERVAL := 0.1
 const ARRIVE_DISTANCE := 4.0
 ## Animation hysteresis: an idle/walk/run animation shows at least this long, and chasing switches
@@ -250,6 +252,7 @@ func _process_attack(delta: float) -> void:
 			_telegraph.hide()
 			_hitbox.damage = ceili(data.attack_damage * damage_multiplier)
 			_hitbox.activate()
+			Events.enemy_attacked.emit(self, &"melee")
 			_attack_phase = AttackPhase.STRIKE
 			_attack_time_left = data.attack_time
 		AttackPhase.STRIKE:
@@ -340,7 +343,8 @@ func _dash_allowed(point: Vector2) -> bool:
 func _hit_world() -> bool:
 	for i in get_slide_collision_count():
 		var other := get_slide_collision(i).get_collider() as CollisionObject2D
-		if other != null and other.get_collision_layer_value(WORLD_LAYER):
+		if other != null and (other.get_collision_layer_value(WORLD_LAYER)
+				or other.get_collision_layer_value(WATER_LAYER)):
 			return true
 	return false
 
@@ -446,6 +450,9 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 		var player := get_tree().get_first_node_in_group("player") as Node2D
 		if player != null:
 			_acquire_target(player)
+	if data.attack_armor and state == State.ATTACK:
+		_flash_hit_only()
+		return
 	_interrupt_attack()
 	_hitbox.deactivate()
 	_telegraph.hide()
@@ -459,6 +466,13 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 	else:
 		_body.color = Color.WHITE
 		create_tween().tween_property(_body, "color", data.placeholder_color, 0.12)
+
+
+## The white flash of a hit, without the hurt state (armored attacks).
+func _flash_hit_only() -> void:
+	if _sprite != null:
+		_sprite.modulate = Color(2.5, 2.5, 2.5)
+		create_tween().tween_property(_sprite, "modulate", Color.WHITE, 0.12)
 
 
 func _on_died() -> void:

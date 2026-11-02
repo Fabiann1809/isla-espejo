@@ -4,6 +4,9 @@ extends Node2D
 ## (layer 4, mask 3, like every player attack); a wall or the end of its range makes it vanish.
 
 signal hit_landed(hurtbox: Hurtbox)
+## The arrow stopped against the world at `at` (world position). The player passes it on to the
+## Events bus (the arrow itself stays free of autoloads so tests can use its class).
+signal blocked(at: Vector2)
 
 ## From the arrow's origin to its tip, where the impact puff appears.
 const TIP_DISTANCE := 10.0
@@ -43,7 +46,9 @@ func _ready() -> void:
 	_hitbox.damage = _damage
 	_hitbox.hit_landed.connect(_on_hit_landed)
 	_hitbox.activate()
-	_wall_sensor.body_entered.connect(func(_body: Node2D) -> void: _end_with_impact())
+	_wall_sensor.body_entered.connect(func(_body: Node2D) -> void:
+		blocked.emit(global_position)
+		_end_with_impact())
 
 
 func _physics_process(delta: float) -> void:

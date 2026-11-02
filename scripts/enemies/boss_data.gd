@@ -45,3 +45,5 @@ extends EnemyData
 @export_group("Texts")
 ## Lines shown when the fight begins, as "Speaker: text" (Spanish).
 @export var intro_lines: Array[String] = []
+## Lines shown when the boss falls, same format.
+@export var defeat_lines: Array[String] = []

@@ -3,7 +3,8 @@ extends SkillEffect
 ## Sombra: short teleport in the facing direction (stopping before walls) that also makes the player
 ## harder to detect for a while. Attacking breaks the stealth.
 
-const WORLD_MASK := 1
+## World and water: Sombra never lands Nico inside a tree, a wall or a pond.
+const WORLD_MASK := 1 | 1 << 6
 const WALL_GAP := 1.0
 
 @export var stealth_time := 3.0

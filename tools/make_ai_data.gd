@@ -16,6 +16,8 @@ func _initialize() -> void:
 
 	config.texts = {
 		"title": "La isla te recuerda",
+		"death_line": "Nico: No… todavía no. Tengo que volver.",
+		"restart": "La isla vuelve a empezar. Pero Nico recuerda.",
 		"style_label": "Estilo de juego",
 		"style_aggressive": "Agresivo",
 		"style_stealth": "Sigiloso",
@@ -32,6 +34,9 @@ func _initialize() -> void:
 		"stat_evaded": "Salas evadidas: %d",
 		"stat_detections": "Veces detectado: %d",
 		"continue": "Pulsa E para volver a intentarlo",
+		"ending_line": "Nico: La brújula vuelve a brillar en verde.",
+		"ending": "Fin de la primera isla. El viaje de Nico continuará.",
+		"ending_continue": "Pulsa E para volver al menú",
 	}
 
 	ResourceSaver.save(config, "res://data/ai/profile_config.tres")

@@ -18,6 +18,7 @@ func _initialize() -> void:
 	theme.decor_chance = 0.05
 	theme.border_tile = TileArt.PINE
 	theme.path_tile = TileArt.DIRT
+	theme.forest_art_details = true
 	ResourceSaver.save(theme, "res://data/themes/forest.tres")
 	print("forest tileset and theme written")
 	quit()

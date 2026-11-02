@@ -107,7 +107,7 @@ func _free_path(space: PhysicsDirectSpaceState2D, shape: Shape2D, from: Vector2,
 	params.shape = shape
 	params.transform = Transform2D(0.0, from)
 	params.motion = to - from
-	params.collision_mask = 1
+	params.collision_mask = 1 | 1 << 6  # world and water
 	var result := space.cast_motion(params)
 	return result.size() == 2 and result[0] >= 1.0
 
@@ -116,7 +116,7 @@ func _is_free_spot(space: PhysicsDirectSpaceState2D, shape: Shape2D, at: Vector2
 	var params := PhysicsShapeQueryParameters2D.new()
 	params.shape = shape
 	params.transform = Transform2D(0.0, at)
-	params.collision_mask = 1
+	params.collision_mask = 1 | 1 << 6  # world and water
 	return space.intersect_shape(params, 1).is_empty()
 
 

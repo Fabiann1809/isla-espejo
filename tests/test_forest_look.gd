@@ -57,9 +57,46 @@ func _initialize() -> void:
 	var backdrop: Node = map.get_node("Backdrop")
 	var bodies := backdrop.find_children("*", "CollisionObject2D", true, false)
 	for room in level.rooms.values():
-		for layer_name in ["Ground", "Patches", "Decor", "Border"]:
+		for layer_name in ["Ground", "Patches", "Decor", "Border", "Details"]:
 			bodies.append_array(room.get_node(layer_name).find_children("*", "CollisionObject2D", true, false))
 	_check(bodies.is_empty(), "the backdrop and the floor details add no bodies")
+
+	# --- The forest art set: floor details are its pictures, and bushes, rocks and stumps only use
+	# the pictures that fit them and block only with their base.
+	var tile_art: Script = load("res://scripts/world/tile_art.gd")
+	var forest_art: Script = load("res://scripts/world/forest_art.gd")
+	var old_details := [tile_art.TUFT_A, tile_art.TUFT_B, tile_art.PEBBLES, tile_art.ROCK_SMALL, tile_art.STUMP].map(
+			func(role: StringName) -> Vector2i: return tile_art.coords(role))
+	var old_left := 0
+	var art_details := 0
+	for room in level.rooms.values():
+		var decor: TileMapLayer = room.get_node("Decor")
+		for cell in decor.get_used_cells():
+			if decor.get_cell_atlas_coords(cell) in old_details:
+				old_left += 1
+		art_details += room.get_node("Details").get_child_count()
+		if room.get_node("WallTrees").get_child_count() == 0 or not room.get_node("Border").get_used_cells().is_empty():
+			old_left += 1
+	_check(old_left == 0 and art_details > 0,
+			"floor details and the walls' trees are drawn with the forest art (%d pictures, %d old tiles)" % [art_details, old_left])
+	var allowed := {}
+	for n in forest_art.SOLID_BUSHES:
+		allowed[forest_art.BUSHES % n] = true
+	for n in forest_art.BIG_ROCKS:
+		allowed[forest_art.ROCKS % n] = true
+	allowed[forest_art.STUMP] = true
+	var blockers := 0
+	var wrong := []
+	for prop in level.get_node("Map").find_children("*", "Node2D", true, false):
+		if not prop.has_method("is_flat") or not (prop.kind in [4, 9]):  # RoomProp.Kind.BUSH, LOGS
+			continue
+		blockers += 1
+		var sprite: Sprite2D = prop.find_children("*", "Sprite2D", false, false)[0]
+		var shape: RectangleShape2D = prop.find_children("*", "CollisionShape2D", true, false)[0].shape
+		if not allowed.has(sprite.texture.resource_path) or shape.size.x > sprite.texture.get_width():
+			wrong.append(sprite.texture.resource_path.get_file())
+	_check(blockers > 0 and wrong.is_empty(),
+			"bushes, boulders and stumps use solid pictures and block no wider than them (%d; wrong: %s)" % [blockers, wrong])
 	_check(backdrop.z_index < -1, "the backdrop is drawn below every floor")
 
 	# --- Same seed, same forest.
@@ -72,16 +109,27 @@ func _initialize() -> void:
 	level.generate(7)
 	await _frames(1)
 	_check(first == _backdrop_signature(level) and first != other, "the forest is fixed by the map's seed")
-	# A tall tree's crown never lands on a tree of the next band (they are on separate layers).
-	var used := {}
-	var stacked := 0
-	for layer in level.get_node("Map/Backdrop").get_children():
-		if String(layer.name).begins_with("Canopy"):
-			for cell in layer.get_used_cells():
-				if used.has(cell):
-					stacked += 1
-				used[cell] = true
-	_check(stacked == 0, "no two backdrop trees on the same tile (%d stacked)" % stacked)
+	# The backdrop is under the rooms and corridors: a tree reaching over them would be cut off in a
+	# straight line, so none does; and the forest's floor is darker, with no hard edge.
+	var tree_rects: Array = level.get_node("Map/Backdrop").get_meta("tree_rects", [])
+	var keep_clear: Array[Rect2] = []
+	for coord in level.layout.cells:
+		keep_clear.append(Rect2(level.cell_origin(coord), level.CELL_SIZE))
+	keep_clear.append_array(level._corridor_floors)
+	keep_clear.append_array(level._corridor_walls)
+	var reaching := 0
+	for rect: Rect2 in tree_rects:
+		var inner := rect.grow(-minf(4.0, minf(rect.size.x, rect.size.y) / 2.0 - 0.5))
+		for clear_rect: Rect2 in keep_clear:
+			if clear_rect.intersects(inner):
+				reaching += 1
+				break
+	_check(tree_rects.size() > 100 and reaching == 0,
+			"%d backdrop trees, none reaching over a room or a corridor (%d do)" % [tree_rects.size(), reaching])
+	var shade: Node2D = level.get_node_or_null("Map/ForestShade")
+	var shade_sprite: Sprite2D = shade.get_child(0) if shade != null else null
+	_check(shade_sprite != null and shade_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR
+			and shade.z_index < 0, "the forest floor is shaded softly, under the actors")
 
 	# --- Shadows and the overall look.
 	map = level.get_node("Map")
@@ -135,6 +183,8 @@ func _initialize() -> void:
 		var veil: ColorRect = level.get_node_or_null("MapVeil/Veil")
 		seen.veil = veil.color.a if veil != null else -1.0
 	level.completion_delay = 0.05
+	# The forest is the last chapter: looping it like a sandbox lets the exit build a new map.
+	level.end_after_last_chapter = false
 	level.generated.connect(built)
 	root.get_node("Events").scenario_completed.emit(&"forest")
 	var waited := 0
@@ -195,6 +245,8 @@ func _path_corners(level: Node) -> Dictionary:
 	var art: Script = load("res://scripts/world/tile_art.gd")
 	var inner: Array = art.pattern(art.DIRT_PATCH_INNER)
 	var path_tile: Vector2i = art.coords(art.DIRT)
+	_check(path_tile == art.pattern(art.DIRT_PATCH)[4],
+			"paths are drawn with the patch's plain dirt (a tile with a grass rim shows as squares)")
 	var dirt: Array = art.pattern(art.DIRT_PATCH) + inner + [path_tile]
 	var tiles := {}
 	for layer in level.get_node("Map").find_children("*", "TileMapLayer", true, false):
@@ -229,11 +281,14 @@ func _look_on(level: Node) -> bool:
 
 func _backdrop_signature(level: Node) -> Array:
 	var signature := []
-	for layer in level.get_node("Map/Backdrop").get_children():
-		var cells: Array = layer.get_used_cells()
-		cells.sort()
-		signature.append(cells.size())
-		signature.append(hash(cells))
+	var backdrop: Node = level.get_node("Map/Backdrop")
+	for layer in backdrop.get_children():
+		if layer is TileMapLayer:
+			var cells: Array = layer.get_used_cells()
+			cells.sort()
+			signature.append(cells.size())
+			signature.append(hash(cells))
+	signature.append(hash(backdrop.get_meta("tree_rects", [])))
 	return signature
 
 

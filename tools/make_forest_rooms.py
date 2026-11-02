@@ -177,12 +177,13 @@ build("dense", "ForestDense",
       spawns={"EnemySpawns": [(120, 90), (360, 90), (136, 176), (360, 200), (60, 144), (420, 144)]},
       scatter=[(BUSH, 6), (TALL_PINE, 3)])
 
-# --- Combat (watch): two lines of bushes make lanes, enemies stand guard ---------------------------------------------
+# --- Combat (watch): two thickets of bushes make lanes, enemies stand guard ------------------------------------------
+# Each thicket zigzags a tile outwards here and there, so it reads as undergrowth, not a hedge.
 build("watch", "ForestWatch",
-      props=[(BUSH, 5, 5), (BUSH, 6, 5), (BUSH, 7, 5), (BUSH, 8, 5), (BUSH, 9, 5), (BUSH, 10, 5),
-             (BUSH, 19, 5), (BUSH, 20, 5), (BUSH, 21, 5), (BUSH, 22, 5), (BUSH, 23, 5), (BUSH, 24, 5),
-             (BUSH, 5, 12), (BUSH, 6, 12), (BUSH, 7, 12), (BUSH, 8, 12), (BUSH, 9, 12), (BUSH, 10, 12),
-             (BUSH, 19, 12), (BUSH, 20, 12), (BUSH, 21, 12), (BUSH, 22, 12), (BUSH, 23, 12), (BUSH, 24, 12),
+      props=[(BUSH, 5, 5), (BUSH, 6, 4), (BUSH, 7, 5), (BUSH, 8, 5), (BUSH, 9, 4), (BUSH, 10, 5),
+             (BUSH, 19, 5), (BUSH, 20, 5), (BUSH, 21, 4), (BUSH, 22, 5), (BUSH, 23, 4), (BUSH, 24, 5),
+             (BUSH, 5, 12), (BUSH, 6, 13), (BUSH, 7, 12), (BUSH, 8, 12), (BUSH, 9, 13), (BUSH, 10, 12),
+             (BUSH, 19, 12), (BUSH, 20, 13), (BUSH, 21, 12), (BUSH, 22, 13), (BUSH, 23, 12), (BUSH, 24, 12),
              (TALL_PINE, 2, 2), (TALL_PINE, 27, 2), (TALL_PINE, 2, 14), (TALL_PINE, 27, 14)],
       spawns={"EnemySpawns": [(60, 80), (60, 210), (420, 80), (420, 210), (240, 50), (240, 240), (120, 144), (360, 144)]},
       scatter=[(PINE, 6), (TALL_ROUND_TREE, 2)])

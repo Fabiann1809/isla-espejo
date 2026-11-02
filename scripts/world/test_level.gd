@@ -5,30 +5,52 @@ extends Level
 
 ## With `unlock_all_skills` the three skills are unlocked from the start (the test scenario does it).
 ## In the real scenarios they are earned from the bosses; U unlocks them for debugging.
+## The debug keys (R, U, and F3 to show the debug texts) only work when the game runs from the
+## Godot editor: an exported build is the real game, with no cheats and no developer labels. Even
+## in the editor the texts start hidden, so a demo from the editor looks like the real game.
 const SKILLS := [
 	"res://data/skills/roots.tres",
 	"res://data/skills/current.tres",
 	"res://data/skills/shadow.tres",
 ]
 
+const MENU_SCENE := "res://scenes/ui/main_menu.tscn"
+
 @export var unlock_all_skills := true
 
 @onready var _summary: Node = $ProfileSummary
 @onready var _info: Label = $Debug/Info
 @onready var _plan_info: Label = $Debug/PlanInfo
+@onready var _debug_layer: CanvasLayer = $Debug
+
+var _debug_tools := OS.has_feature("editor")
 
 
 func _ready() -> void:
 	generated.connect(_on_generated)
-	_summary.dismissed.connect(get_tree().reload_current_scene)
+	_summary.dismissed.connect(_on_summary_dismissed)
+	journey_ended.connect(_summary.show_victory)
+	_debug_layer.visible = false
 	super()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("debug_regenerate"):
+	if not _debug_tools:
+		return
+	if event.is_action_pressed("debug_overlay"):
+		_debug_layer.visible = not _debug_layer.visible
+	elif event.is_action_pressed("debug_regenerate"):
 		generate(0)
 	elif event.is_action_pressed("debug_unlock_skills"):
 		_unlock_all_skills()
+
+
+## After a death a new run starts here; after the ending the player goes back to the main menu.
+func _on_summary_dismissed() -> void:
+	if _summary.ending_shown:
+		get_tree().change_scene_to_file(MENU_SCENE)
+	else:
+		get_tree().reload_current_scene()
 
 
 func _unlock_all_skills() -> void:

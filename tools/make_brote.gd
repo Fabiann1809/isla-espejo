@@ -44,7 +44,7 @@ func _initialize() -> void:
 	data.sprite_offset = Vector2(0, -7)
 	data.max_health = 2
 	data.move_speed = 30.0
-	data.chase_speed = 58.0
+	data.chase_speed = 62.0
 	# It is born next to the player: it hunts from far away and never gives up.
 	data.detection_range = 260.0
 	data.lose_range = 400.0
@@ -57,6 +57,7 @@ func _initialize() -> void:
 	data.patrol_radius = 0.0
 	# Minions grow back, so they must not be a source of resources.
 	data.drop_multiplier = 0.0
+	data.attack_armor = true
 	ResourceSaver.save(data, "res://data/enemies/brote.tres")
 	print("brote written")
 	quit()

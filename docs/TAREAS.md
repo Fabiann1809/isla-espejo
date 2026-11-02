@@ -9,7 +9,7 @@ Reglas: una tarea a la vez, en orden (salvo las que son independientes), push di
 
 ## Estado actual
 - **Hecho:** tareas 2 (Nico), 3 (vida, daño y bus de eventos), 5 (habilidades), 6 (generador de mapas), 8 (perfil del jugador, IA capa 1), 9 (la isla reacciona, IA capa 2) y la base de la tarea 4 (clase de enemigo y detección). CI y CD configurados.
-- **Escenario 1 (tarea 7): jugable de principio a fin** con soldados de plantilla: bosque, 10 salas, Anciano, cofres, jefe, fragmento verde, habilidad Raíces y salida. Solo falta cambiar los soldados por los enemigos del bosque de la tarea 4 (de B). Hecho también el sistema de diálogo; B solo escribe los textos de la Viajera y el Mercader.
+- **Escenario 1 (tarea 7): completo y pulido**: bosque, 10 salas, sus enemigos propios (slime, planta tiradora, esqueleto, ente como mini jefe), Anciano, cofres, jefe, fragmento verde, habilidad Raíces y salida. Tiene prólogo, sonido y música, sensación de golpe (pausa breve, temblor, chispas, números de daño), presentación del jefe y dificultad "difícil tipo roguelike" medida con `tools/playtest_bot.gd`. Hecho también el sistema de diálogo; B solo escribe los textos de la Viajera y el Mercader.
 - **La IA ya está completa** (capas 1 y 2). Quien haga los enemigos y escenarios solo debe respetar las convenciones de `docs/EMPEZAR.md` (sección 5) para que el director los controle.
 - **Persona A, siguiente:** los escenarios 2 y 3 (tareas 10 y 11), siguiendo la guía de `docs/EMPEZAR.md`.
 - **Persona B puede empezar ya:** 4 (los 6 enemigos), 12 (solo los textos de la Viajera y el Mercader) y 14 (sonido). La tarea 13 (menús, pausa, guardado, opciones y créditos) ya la hizo A. Las tareas 5, 6, 8 y 9, el sistema de diálogo y el escenario 1 ya los hizo la persona A: **no hay que rehacerlos**. Ver `docs/EMPEZAR.md`, sección 6.
@@ -98,7 +98,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Tileset del bosque (pack gratuito, con créditos) y `TileSet` configurado (Kenney Roguelike/RPG, CC0)
 - [x] 6–10 salas del bosque (claros, río con puente, cofre, evento): 10 salas en `scenes/levels/rooms/forest/`
 - [x] Frecuencia de cada enemigo por escenario (`enemy_weights` en `ScenarioData`): en el bosque slime 5, planta tiradora 3 y esqueleto 3; el director las multiplica
-- [ ] Enemigos del bosque colocados en las salas (hoy usa el soldado de plantilla como relleno; el `enemy_pool` de `data/scenarios/forest.tres` ya usa los cuatro enemigos del bosque: slime, planta tiradora, esqueleto y ente)
+- [x] Enemigos del bosque colocados en las salas (el `enemy_pool` de `data/scenarios/forest.tres` usa slime, planta tiradora y esqueleto, y el ente espera como mini jefe; ya no queda el soldado de plantilla)
 - [x] **Jefe: Guardián del bosque** (golpes de área, invocación de raíces, segunda fase, súper armadura; ya con su sprite nuevo y arte animado de raíces sobre el círculo de aviso)
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)
@@ -154,11 +154,11 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 12. Diálogos, historia y final — B  ← 7
 - [x] Sistema de diálogo (caja de texto, avance, retratos opcionales) leyendo de `data/dialogues/` (hecho por A; faltan los retratos, que son opcionales)
 - [ ] Redactar los 3 estados de diálogo de Anciano (hecho), Viajera y Mercader (pendientes: copiar `elder.json`)
-- [ ] Prólogo y textos de inicio de capítulo
-- [ ] Diálogos de jefes (antes y después)
-- [ ] Textos de muerte y reinicio ("La isla vuelve a empezar…")
-- [ ] Final: brújula completa y regreso a casa
-- [ ] Mensajes de interfaz (objetivo, objeto, puerta cerrada, cofre, guardado)
+- [x] Prólogo y textos de inicio de capítulo (prólogo de la tormenta en `scenes/ui/prologue.tscn` con textos en `data/story/prologue.json`; el título de capítulo del bosque ya existía; los de los capítulos 2 y 3 van con sus escenarios)
+- [ ] Diálogos de jefes (antes y después): el Guardián del bosque ya tiene los dos (`intro_lines` y `defeat_lines` en su `BossData`); faltan los jefes 2 y 3
+- [x] Textos de muerte y reinicio ("La isla vuelve a empezar…", en `data/ai/profile_config.tres`)
+- [ ] Final: brújula completa y regreso a casa (por ahora, al cruzar el portal de la primera isla sale una pantalla de final con el resumen del perfil y se vuelve al menú; textos `ending*` en `data/ai/profile_config.tres`)
+- [x] Mensajes de interfaz (objetivo, objeto, puerta cerrada, cofre, guardado): el portal sellado dice qué lo abre y el HUD muestra "Progreso guardado" al guardar (textos en `data/ui/texts.json`)
 - [ ] Revisar ortografía y coherencia con la historia
 
 **Hecho cuando:** la historia se puede seguir de principio a fin con todos los textos en `data/` y ninguno escrito en los scripts.
@@ -175,17 +175,20 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** se puede iniciar, pausar, morir, continuar y salir del juego sin errores, y el progreso se conserva al cerrarlo.
 
 ## 14. Sonido y música — B  ← 3
-- [ ] Elegir packs gratuitos de música y efectos y registrarlos en `CREDITS.md`
-- [ ] Música por escenario, menú y jefe
-- [ ] Efectos: golpes, esquiva, habilidades, daño, muerte, UI, pasos
-- [ ] Bus de audio y control de volumen
+- [x] Elegir packs gratuitos de música y efectos y registrarlos en `CREDITS.md` (Kenney CC0 y música CC0 de OpenGameArt; los `.wav` propios salen de `tools/make_synth_sfx.py`)
+- [x] Música por escenario, menú y jefe (autoload `Sound`; cada escenario usa la pista con su `id` en `data/audio/sound_bank.tres`)
+- [x] Efectos: golpes, esquiva, habilidades, daño, muerte, UI, pasos
+- [x] Bus de audio y control de volumen (buses `Music` y `SFX` con su barra en Configuración)
 
 **Hecho cuando:** cada acción principal tiene su sonido y cada escenario su música, con créditos completos.
 
 ## 15. Pulido, balance y entrega — A+B  ← 11, 12, 13
-- [ ] Balance de vida, daño y dificultad de enemigos y jefes
+- [ ] Balance de vida, daño y dificultad de enemigos y jefes: el bosque ya está ajustado a "difícil tipo roguelike" midiendo con `tools/playtest_bot.gd` (el bot juega solo un mapa completo y dice dónde y por quién recibe daño); faltan las islas 2 y 3
 - [ ] Jugar completo varias veces con estilos distintos y ajustar la IA
-- [ ] Corregir errores y revisar la consola de Godot sin errores ni avisos importantes
+- [ ] Corregir errores y revisar la consola de Godot sin errores ni avisos importantes (el bosque y el menú ya arrancan sin avisos; faltan las islas 2 y 3)
+- [x] Sensación de golpe en el bosque: pausa breve, temblor de cámara, chispas, números de daño, destello rojo y borde rojo con poca vida (`GameFeel`, valores en `Tuning`)
+- [x] HUD: corazones en pixel art, rastro de daño en la barra del jefe, presentación del jefe con su nombre y pista de controles en la primera isla
+- [x] Menú principal con bosque nocturno; los árboles se vuelven transparentes cuando Nico pasa detrás; la capa de depuración solo existe en el editor (F3)
 - [ ] Rendimiento estable en un equipo normal
 - [x] Preset de exportación para Windows y build jugable (`export_presets.cfg` y `.github/workflows/release.yml`, probado)
 - [ ] Publicar la build como *release* en GitHub

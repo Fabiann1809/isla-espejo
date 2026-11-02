@@ -33,22 +33,53 @@ const ARENA_MARGIN := 24.0
 # --- Forest look -----------------------------------------------------------------------------------
 ## The deep forest drawn around (and between) the rooms, so no black shows anywhere.
 const BACKDROP_ENABLED := true
-## Dark trees and canopies from `scripts/world/forest_boundary.gd` around the map (branch diseño-de-paisajes).
-const FOREST_BOUNDARY_ENABLED := true
-## How far the forest reaches beyond the map's rooms, in tiles.
-const BACKDROP_MARGIN_TILES := 12
-## Brightness of the forest by distance to the nearest room or corridor (tiles): near, middle, far.
-const BACKDROP_BAND_LIMITS: Array[int] = [3, 7]
-const BACKDROP_BAND_TINTS: Array[Color] = [
-	Color(0.62, 0.7, 0.62), Color(0.47, 0.54, 0.5), Color(0.34, 0.4, 0.38)]
-## Chance of a tree, bush or rock on a forest tile, by band: thicker next to the paths.
-const BACKDROP_BAND_DENSITY: Array[float] = [0.7, 0.5, 0.38]
+## Dark trees and canopies from `scripts/world/forest_boundary.gd` around the map (branch
+## diseño-de-paisajes). Off: the backdrop covers it completely, so it only cost time.
+const FOREST_BOUNDARY_ENABLED := false
+## How far the forest reaches beyond the map's rooms, in tiles: the camera never looks past the
+## rooms, so only enough for the crowns that lean in.
+const BACKDROP_MARGIN_TILES := 3
+## Trees of the deep forest: spacing of their scattered spots (px), how far each spot wanders from
+## its place (px), the chance that a spot gets a tree, how many px of a tree's picture (its
+## transparent edge) may lie over a room or corridor, and the size of the pictures they are painted
+## into (px).
+const BACKDROP_TREE_STEP := 20.0
+const BACKDROP_TREE_JITTER := 6.0
+const BACKDROP_TREE_DENSITY := 0.92
+const BACKDROP_TREE_OVERLAP := 3.0
+const BACKDROP_CHUNK := 512
+## The forest's darker floor (Level's ForestShade): its color, how dark under the trees, how dark at
+## a clearing's edge, how many tiles it fades over into the clearing, how much that edge wobbles
+## (tiles) and how fast.
+const FOREST_SHADE_COLOR := Color(0.02, 0.09, 0.05)
+const FOREST_SHADE_ALPHA := 0.42
+const FOREST_SHADE_EDGE_ALPHA := 0.3
+const FOREST_SHADE_DEPTH := 2.5
+const FOREST_SHADE_WOBBLE := 1.4
+const FOREST_SHADE_FREQUENCY := 0.15
 ## Irregular patches of textured grass on room floors: noise frequency and how much is covered.
 const GRASS_PATCH_FREQUENCY := 0.09
 const GRASS_PATCH_THRESHOLD := 0.28
 ## Small natural groups of ground details (mushrooms, stones, a stump) per room.
 const DETAIL_GROUPS_PER_ROOM := 5
 const DETAIL_GROUP_SIZE := Vector2i(2, 4)
+## Share of the rooms' bushes that are boulders of the forest art set instead.
+const BUSH_ROCK_CHANCE := 0.3
+## How far a bush's picture may wander from its tile's middle (px), so bushes side by side do not
+## line up like a hedge.
+const BUSH_NUDGE := Vector2(3, 2)
+## How far above a tile's bottom the floor details of the forest art stand (px).
+const DETAIL_FOOT_LIFT := 3.0
+## Trees on the walls of the rooms and corridors: distance between them, how far each one wanders
+## from its place and how far behind the top wall's front row its back row stands (px).
+const WALL_TREE_STEP := 18.0
+const WALL_TREE_JITTER := 2.0
+const WALL_TREE_BACK_ROW := 9.0
+## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
+## narrower than the picture, and its smallest and largest size (px).
+const PROP_FOOT_INSET := 2.0
+const PROP_FOOT_MIN := Vector2(6, 4)
+const PROP_FOOT_MAX := Vector2(14, 7)
 ## Soft dirt edges on paths (the nine-slice dirt patch of the sheet) instead of square tiles.
 const SOFT_PATH_EDGES := true
 ## A light tint over the whole world (not the HUD); white = off.
@@ -120,3 +151,60 @@ const PORTAL_BASE := true
 const PORTAL_LIGHT := Color(0.7, 0.45, 1.0, 0.35)
 const PORTAL_LIGHT_RADIUS := 40.0
 const PORTAL_SPARKS := 10
+
+# --- Game feel (GameFeel: what a hit, a kill or a wound feels like) ------------------------------
+## Every effect below can be switched off on its own. Hit stop = the game freezes for an instant
+## (seconds, real time) so a blow reads; shake = the camera jumps (px, then fades over seconds).
+const GAME_FEEL_ENABLED := true
+## Time scale while a hit stop lasts (near 0 = frozen).
+const HIT_STOP_SCALE := 0.05
+const HIT_STOP_KILL := 0.05
+const HIT_STOP_PLAYER_HURT := 0.09
+const HIT_STOP_BOSS_PHASE := 0.15
+const HIT_STOP_BOSS_DEFEATED := 0.35
+const SHAKE_KILL := Vector2(2.0, 0.15)
+const SHAKE_PLAYER_HURT := Vector2(4.0, 0.25)
+const SHAKE_BOSS_SLAM := Vector2(5.0, 0.35)
+const SHAKE_BOSS_ROOTS := Vector2(2.5, 0.25)
+const SHAKE_BOSS_PHASE := Vector2(4.0, 0.4)
+const SHAKE_BOSS_DEFEATED := Vector2(7.0, 0.7)
+## Particles thrown when an enemy is hit and when it dies (count 0 = off), in the enemy's color.
+const HIT_PARTICLES := 5
+const DEATH_PARTICLES := 18
+## Size of each spark (px).
+const PARTICLE_SIZE := Vector2(2.0, 3.0)
+## How long sparks live (s), how fast they fall (px/s²) and slow down (min, max), and the speed of
+## the small burst of a hit (a death uses DEATH_PARTICLE_SPEED).
+const PARTICLE_LIFETIME := 0.45
+const PARTICLE_GRAVITY := 160.0
+const PARTICLE_DAMPING := Vector2(40.0, 80.0)
+const HIT_PARTICLE_SPEED := 40.0
+const DEATH_PARTICLE_SPEED := 70.0
+## Dust under Nico's feet when he dodges (count 0 = off).
+const DASH_DUST := 8
+const DASH_DUST_COLOR := Color(0.85, 0.8, 0.65, 0.8)
+const DASH_DUST_SPEED := 25.0
+## Afterimages left by Nico's dodge: how many (0 = off), seconds between them, how long each fades,
+## and the one color of their silhouette (its alpha is how see-through they start).
+const DASH_GHOSTS := 3
+const DASH_GHOST_EVERY := 0.04
+const DASH_GHOST_FADE := 0.2
+const DASH_GHOST_TINT := Color(0.55, 0.85, 1.0, 0.4)
+## Damage numbers over an enemy: how high they rise (px) and how long they last (s; 0 = off).
+const DAMAGE_NUMBER_TIME := 0.6
+const DAMAGE_NUMBER_RISE := 14.0
+const DAMAGE_NUMBER_COLOR := Color(1.0, 0.95, 0.75)
+## Font size of the numbers (the pixel font is drawn crisp at multiples of 16).
+const DAMAGE_NUMBER_SIZE := 16
+const DAMAGE_NUMBER_BOSS_COLOR := Color(1.0, 0.75, 0.4)
+## Red flash over the screen when Nico is hurt (alpha 0 = off) and how long it fades (s).
+const HURT_FLASH := Color(0.85, 0.05, 0.05, 0.28)
+const HURT_FLASH_TIME := 0.3
+## Below this health Nico's screen edge pulses red (0 = off).
+const LOW_HEALTH := 1
+const LOW_HEALTH_PULSE := Color(0.6, 0.0, 0.0, 0.22)
+
+# --- Trees in front of Nico (CanopyFade) -----------------------------------------------------------
+## A tree whose crown covers Nico turns see-through to this alpha (1 = off), at this speed (per s).
+const CANOPY_FADE_ALPHA := 0.45
+const CANOPY_FADE_SPEED := 8.0

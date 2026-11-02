@@ -41,21 +41,23 @@ func _initialize() -> void:
 	data.sprite_frames = load("res://data/enemies/slime_frames.tres")
 	# The cell's ground line is row 27: put it a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -5)
-	data.max_health = 3
+	data.max_health = 4
 	data.move_speed = 22.0
-	data.chase_speed = 42.0
+	data.chase_speed = 46.0
 	data.detection_range = 150.0
 	data.lose_range = 240.0
 	data.attack_range = 24.0
 	data.attack_damage = 1
 	data.attack_windup = 0.3
 	data.attack_time = 0.2
-	data.attack_cooldown = 1.2
+	data.attack_cooldown = 1.1
 	data.knockback_speed = 110.0
 	data.patrol_radius = 50.0
 	data.air_first_frame = 1
 	data.air_last_frame = 3
 	data.leap_speed = 60.0
+	data.hurt_time = 0.15
+	data.attack_armor = false
 	ResourceSaver.save(data, "res://data/enemies/slime.tres")
 	print("slime written")
 	quit()

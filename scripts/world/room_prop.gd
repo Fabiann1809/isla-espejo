@@ -19,6 +19,7 @@ enum Kind {
 
 const TRUNK := Vector2(10, 8)
 const WATER_INSET := 4.0
+const WATER_LAYER_BIT := 1 << 6
 ## Props that are part of the ground: drawn with the floor, never over an actor.
 const FLAT_KINDS: Array[Kind] = [Kind.POND, Kind.PLANKS, Kind.DIRT_PATCH, Kind.TUFT]
 ## Upright props are y-sorted with the actors by the bottom of their footprint (a little above it,
@@ -50,8 +51,16 @@ const LARGE_TREES := [
 static var _cached_textures := {}
 
 
+## Group of the trees whose crown fades while Nico stands behind it (CanopyFade).
+const CANOPY_GROUP := &"canopy"
+## Where a bush, rock or stump stands in its tile (the middle of the tile's bottom).
+const PROP_FOOT := Vector2(8, 15)
+
+
 func _ready() -> void:
 	_build()
+	if kind in [Kind.PINE, Kind.TALL_PINE, Kind.ROUND_TREE, Kind.TALL_ROUND_TREE]:
+		add_to_group(CANOPY_GROUP)
 	if is_flat():
 		z_index = RoomTheme.FLOOR_Z
 	else:
@@ -69,11 +78,11 @@ func _build() -> void:
 			_lush_tree(LARGE_TREES, Vector2(8, 30), rng)
 			_collide(Rect2(Vector2(3, TileArt.TILE + 6), TRUNK))
 		Kind.BUSH:
-			_bush(rng)
-			_collide(Rect2(2, 5, 12, 9))
+			_bush_or_rock(rng)
 		Kind.POND:
 			_area(TileArt.POND)
-			_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0))
+			_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0),
+					WATER_LAYER_BIT)
 		Kind.PLANKS:
 			_planks()
 		Kind.DIRT_PATCH:
@@ -82,7 +91,7 @@ func _build() -> void:
 			add_child(TileArt.sprite(TileArt.CAMPFIRE))
 			_collide(Rect2(3, 6, 10, 8))
 		Kind.LOGS:
-			_mossy_log(rng)
+			_stump()
 			_collide(Rect2(1, 4, 14, 10))
 		Kind.TUFT:
 			_tuft(rng)
@@ -128,48 +137,39 @@ func _lush_tree(catalog: Array, base_pos: Vector2, rng: RandomNumberGenerator) -
 		add_child(TileArt.sprite(TileArt.PINE))
 
 
-func _bush(rng: RandomNumberGenerator) -> void:
-	var idx := rng.randi_range(1, 30)
-	var path := "res://assets/art_forest/bushes/bush_%d.png" % idx
-	var tex := _get_texture(path)
-	if tex != null:
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		sprite.centered = true
-		sprite.position = Vector2(8, 9)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
-	else:
+## A solid bush of the forest art set, or now and then a boulder, blocking only its lower part.
+func _bush_or_rock(rng: RandomNumberGenerator) -> void:
+	var rock := rng.randf() < Tuning.BUSH_ROCK_CHANCE
+	var tex := ForestArt.pick(ForestArt.ROCKS, ForestArt.BIG_ROCKS, rng) if rock 			else ForestArt.pick(ForestArt.BUSHES, ForestArt.SOLID_BUSHES, rng)
+	if tex == null:
 		add_child(TileArt.sprite(TileArt.BUSH))
+		_collide(Rect2(2, 5, 12, 9))
+		return
+	# The picture wanders a little from the tile's middle, so bushes placed side by side do not
+	# line up like a hedge; the collision stays put.
+	var nudge := (Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * Tuning.BUSH_NUDGE).round()
+	add_child(ForestArt.standing(tex, PROP_FOOT + nudge))
+	_collide(ForestArt.footprint(tex, PROP_FOOT))
 
 
-func _mossy_log(rng: RandomNumberGenerator) -> void:
-	var path := "res://assets/art_forest/logs/log_mossy.png" if rng.randf() < 0.6 else "res://assets/art_forest/logs/stump_mossy.png"
-	var tex := _get_texture(path)
-	if tex != null:
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		sprite.centered = true
-		sprite.position = Vector2(8, 9)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
-	else:
-		add_child(TileArt.sprite(TileArt.LOGS))
+## A stump of the forest art set (the tileset's one as fallback).
+func _stump() -> void:
+	var tex := ForestArt.texture(ForestArt.STUMP)
+	if tex == null:
+		add_child(TileArt.sprite(TileArt.STUMP))
+		_collide(Rect2(4, 7, 9, 7))
+		return
+	add_child(ForestArt.standing(tex, PROP_FOOT))
+	_collide(ForestArt.footprint(tex, PROP_FOOT))
 
 
+## A low plant of the forest art set, lying on the ground (no collision).
 func _tuft(rng: RandomNumberGenerator) -> void:
-	var idx := rng.randi_range(1, 7)
-	var path := "res://assets/art_forest/bushes/bush_%d.png" % idx
-	var tex := _get_texture(path)
-	if tex != null:
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		sprite.centered = true
-		sprite.position = Vector2(8, 10)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
-	else:
+	var tex := ForestArt.pick(ForestArt.BUSHES, ForestArt.GROUND_PLANTS, rng)
+	if tex == null:
 		add_child(TileArt.sprite(TileArt.TUFT_A))
+		return
+	add_child(ForestArt.standing(tex, PROP_FOOT - Vector2(0, 2)))
 
 
 func _get_texture(path: String) -> Texture2D:
@@ -196,9 +196,10 @@ func _planks() -> void:
 
 
 ## Collision on the world layer (the same one the walls use).
-func _collide(rect: Rect2) -> void:
+## Water is its own physics layer (7): it stops bodies but arrows and orbs fly over it.
+func _collide(rect: Rect2, layer_bits := 1) -> void:
 	var body := StaticBody2D.new()
-	body.collision_layer = 1
+	body.collision_layer = layer_bits
 	body.collision_mask = 0
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()

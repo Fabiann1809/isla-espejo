@@ -43,9 +43,9 @@ func _initialize() -> void:
 	data.sprite_frames = load("res://data/enemies/ente_frames.tres")
 	# The feet are on row 61 of the 64x64 cell: put them a few pixels below the body's origin.
 	data.sprite_offset = Vector2(0, -23)
-	data.max_health = 14
+	data.max_health = 30
 	data.move_speed = 18.0
-	data.chase_speed = 34.0
+	data.chase_speed = 40.0
 	data.detection_range = 190.0
 	data.lose_range = 320.0
 	data.attack_range = 26.0
@@ -65,6 +65,8 @@ func _initialize() -> void:
 	data.summon_cooldown = 4.5
 	data.summon_range = 170.0
 	data.spawn_radius = 26.0
+	data.hurt_time = 0.1
+	data.attack_armor = true
 	ResourceSaver.save(data, "res://data/enemies/ente.tres")
 	print("ente written")
 	quit()

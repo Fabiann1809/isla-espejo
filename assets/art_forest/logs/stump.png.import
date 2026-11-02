@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3gj2d145f2a3"
-path="res://.godot/imported/log_mossy.png-e30daa9661bf2923a1f421f4dd768cdf.ctex"
+uid="uid://detijmsjh2pph"
+path="res://.godot/imported/stump.png-f6879ec0ca4c0e74dc7542461e9bda7b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art_forest/logs/log_mossy.png"
-dest_files=["res://.godot/imported/log_mossy.png-e30daa9661bf2923a1f421f4dd768cdf.ctex"]
+source_file="res://assets/art_forest/logs/stump.png"
+dest_files=["res://.godot/imported/stump.png-f6879ec0ca4c0e74dc7542461e9bda7b.ctex"]
 
 [params]
 

@@ -11,7 +11,7 @@ func _initialize() -> void:
 	heart.kind = ResourceData.Kind.HEAL
 	heart.color = Color(0.9, 0.25, 0.3)
 	heart.amount = 1
-	heart.drop_chance = 0.12
+	heart.drop_chance = 0.16
 	heart.hurt_chance_multiplier = 2.0
 	heart.pity_kills = 12
 	heart.max_on_floor = 2

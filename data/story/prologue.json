@@ -1,0 +1,9 @@
+{
+	"lines": [
+		{"speaker": "", "text": "La tormenta llegó sin aviso.", "storm": true},
+		{"speaker": "", "text": "Cuando Nico abrió los ojos, el mar ya no estaba a su alrededor.", "storm": true},
+		{"speaker": "Nico", "text": "Mi brújula… está rota. ¿Qué es este lugar?"},
+		{"speaker": "Nico", "text": "No sé dónde estoy… pero tengo que volver a casa."}
+	],
+	"hint": "E / J: continuar   ·   Esc: saltar"
+}

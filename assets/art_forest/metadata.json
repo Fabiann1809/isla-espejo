@@ -637,28 +637,6 @@
       ]
     }
   },
-  "logs": {
-    "log_mossy": {
-      "pivot": [
-        14,
-        11
-      ],
-      "size": [
-        27,
-        15
-      ]
-    },
-    "stump_mossy": {
-      "pivot": [
-        9,
-        14
-      ],
-      "size": [
-        18,
-        18
-      ]
-    }
-  },
   "boundary": {
     "canopy_dark_1": {
       "pivot": [
@@ -938,6 +916,18 @@
       "size": [
         36,
         44
+      ]
+    }
+  },
+  "logs": {
+    "stump": {
+      "pivot": [
+        7,
+        12
+      ],
+      "size": [
+        15,
+        13
       ]
     }
   }

@@ -1,5 +1,7 @@
 extends CanvasLayer
-## Screen shown when a run ends in death: what the island learned about the player.
+## Screen shown when a run ends: what the island learned about the player. A death shows it at
+## once; a victory is kept until the Level says the journey is over (`show_victory`), because
+## finishing a chapter that leads to another one shows nothing.
 ## Listens to PlayerProfile.run_finished; all texts come from the profile config (data/ai/).
 
 signal dismissed
@@ -11,6 +13,9 @@ const AGGRESSION_COLOR := Color(0.85, 0.3, 0.25)
 const STEALTH_COLOR := Color(0.6, 0.4, 0.9)
 
 var _visible_time := 0.0
+## True while the ending (not a death) is on screen.
+var ending_shown := false
+var _last_victory := {}
 
 @onready var _panel: PanelContainer = $Panel
 @onready var _content: VBoxContainer = $Panel/Margin/Content
@@ -38,13 +43,28 @@ func _process(delta: float) -> void:
 
 
 func _on_run_finished(summary: Dictionary) -> void:
-	if summary.reason != "death":
-		return
+	if summary.reason == "death":
+		_show(summary, false)
+	elif summary.reason == "victory":
+		_last_victory = summary
+
+
+## The ending screen, with the summary of the run that just won.
+func show_victory() -> void:
+	if not _last_victory.is_empty():
+		_show(_last_victory, true)
+
+
+func _show(summary: Dictionary, ending: bool) -> void:
+	ending_shown = ending
 	var texts: Dictionary = PlayerProfile.config.texts
 	var stats: Dictionary = summary.stats
 	for child in _content.get_children():
 		child.queue_free()
+	# Tight rows: the whole summary must fit in the 270 px high view.
+	_content.add_theme_constant_override("separation", 1)
 
+	_add_label(texts.get("ending_line" if ending else "death_line", ""), 11)
 	_add_label(texts.get("title", ""), 16)
 	_add_label(texts.get("style_label", "") + ": " + summary.style_name, 13)
 	_add_bar(texts.get("aggression", ""), summary.aggression, AGGRESSION_COLOR)
@@ -58,18 +78,23 @@ func _on_run_finished(summary: Dictionary) -> void:
 		texts.get("stat_detections", "%d") % stats.detections,
 	])
 	_add_label(summary.message, 11, true)
-	_add_prepare_lines()
-	_add_label(texts.get("continue", ""), 10)
+	if ending:
+		_add_label(texts.get("ending", ""), 11, true)
+		_add_label(texts.get("ending_continue", ""), 10)
+	else:
+		_add_prepare_lines()
+		_add_label(texts.get("restart", ""), 11)
+		_add_label(texts.get("continue", ""), 10)
 
 	_visible_time = 0.0
 	_panel.show()
 
 
-## The stats in two columns, so the whole screen fits in the game's 480x270 view.
+## The stats in three columns, so the whole screen fits in the game's 480x270 view.
 func _add_stats(lines: Array[String]) -> void:
 	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 24)
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 1)
 	for line in lines:
 		var label := Label.new()

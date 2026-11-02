@@ -7,3 +7,4 @@
 script = ExtResource("1_0c3iq")
 tileset = ExtResource("2_10j4l")
 decor_tiles = Array[StringName]([&"tuft_a", &"tuft_b"])
+forest_art_details = true

@@ -1,7 +1,7 @@
 class_name ExitPortal
 extends Node2D
-## The way out of a scenario. It stays closed and unusable until the scenario's boss has been
-## defeated (its story flag is set); then E takes the player to the next chapter.
+## The way out of a scenario. It stays sealed until the scenario's boss has been defeated (its
+## story flag is set); then E takes the player to the next chapter. Sealed, E only says so.
 ## Placeholder art: a glowing violet doorway on a base of flagstones. The base shows from the start
 ## (the player knows where the way out will be); light and sparks join the glow once it opens.
 
@@ -12,6 +12,8 @@ const BASE_SORT_OFFSET := 320.0
 
 ## Set by the Level that places the portal.
 var scenario_id: StringName = &""
+## The prompt of the open portal (from the scene); a sealed one shows the sealed prompt instead.
+var _open_prompt := ""
 var _time := 0.0
 var _light: Sprite2D
 var _sparks: CPUParticles2D
@@ -23,6 +25,7 @@ var _sparks: CPUParticles2D
 func _ready() -> void:
 	add_to_group("exit_portals")
 	_build_base()
+	_open_prompt = _use.prompt
 	_use.interacted.connect(_on_used)
 	Events.boss_defeated.connect(func(_id: StringName) -> void: _refresh())
 	_refresh()
@@ -43,7 +46,8 @@ func is_open() -> bool:
 func _refresh() -> void:
 	var open := is_open()
 	_glow.visible = open
-	_use.enabled = open
+	# Sealed, it can still be used: it says what opens it instead of staying silent.
+	_use.prompt = _open_prompt if open else UiText.t("portal_sealed_prompt")
 	if _light != null:
 		_light.visible = open
 	if _sparks != null:
@@ -53,6 +57,8 @@ func _refresh() -> void:
 func _on_used(_player: Node) -> void:
 	if is_open():
 		Events.scenario_completed.emit(scenario_id)
+	else:
+		Events.message_requested.emit(UiText.t("portal_sealed"))
 
 
 ## Flagstones under the doorway (on the floor), and the light and sparks it shows once open.

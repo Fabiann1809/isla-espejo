@@ -6,6 +6,6 @@
 script = ExtResource("1_3upd8")
 id = &"heart"
 display_name = "Corazón"
-drop_chance = 0.12
+drop_chance = 0.16
 hurt_chance_multiplier = 2.0
 pity_kills = 12

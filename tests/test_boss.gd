@@ -97,7 +97,8 @@ func _zones() -> int:
 
 func _test_engagement() -> void:
 	var boss := _spawn_boss()
-	_check(boss.health.max_health == 30, "the boss starts with 30 health")
+	var max_health: int = boss.data.max_health
+	_check(boss.health.max_health == max_health and max_health > 0, "the boss starts with its data's health (%d)" % max_health)
 	_player.global_position = ARENA + Vector2(0, 400)
 	_messages.clear()
 	await _frames(30)
@@ -108,7 +109,7 @@ func _test_engagement() -> void:
 	_check(boss.target == _player, "when the player comes close the boss notices them")
 	_check(_messages.size() == 2 and _messages[0].begins_with("Nico:") and _messages[1].begins_with("Guardián:"),
 			"the fight opens with the two intro lines (%s)" % [_messages])
-	_check(_boss_bars.size() > 0 and _boss_bars[-1] == [&"forest_guardian", 30, 30, "Guardián del bosque"], "the boss health bar is announced")
+	_check(_boss_bars.size() > 0 and _boss_bars[-1] == [&"forest_guardian", max_health, max_health, "Guardián del bosque"], "the boss health bar is announced")
 	_player.global_position = ARENA + Vector2(0, 400)
 	await _frames(5)
 	boss.free()
@@ -157,8 +158,8 @@ func _test_roots() -> void:
 	var before: int = _player.health.current
 	await _frames(25)
 	_check(boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS, "at range the boss calls the roots")
-	_check(boss._roots_spots.size() == 3 and boss._roots_spots[0].distance_to(_player.global_position) < 2.0,
-			"3 eruptions, the first one right where the player stands")
+	_check(boss._roots_spots.size() == boss.data.roots_count and boss._roots_spots[0].distance_to(_player.global_position) < 2.0,
+			"%d eruptions, the first one right where the player stands" % boss.data.roots_count)
 	await _frames(80)
 	_check(_player.health.current == before - 1, "an eruption under the player costs 1 health (%d -> %d)" % [before, _player.health.current])
 	boss.free()
@@ -187,9 +188,9 @@ func _test_super_armor() -> void:
 	var hurtbox: Hurtbox = boss.get_node("Hurtbox")
 	_boss_bars.clear()
 	hurtbox.receive_hit(1, ARENA + Vector2(-20, 0))
-	_check(boss.health.current == 29 and boss.state != boss.State.HURT, "a hit hurts the boss but does not interrupt it")
+	_check(boss.health.current == boss.health.max_health - 1 and boss.state != boss.State.HURT, "a hit hurts the boss but does not interrupt it")
 	_check(boss.target == _player, "being hit makes the boss aware of the player")
-	_check(_boss_bars.size() > 0 and _boss_bars[-1][1] == 29 and _boss_bars[-1][2] == 30, "the health bar shows the new health after a hit")
+	_check(_boss_bars.size() > 0 and _boss_bars[-1][1] == boss.health.max_health - 1 and _boss_bars[-1][2] == boss.health.max_health, "the health bar shows the new health after a hit")
 	boss.apply_knockback(Vector2(300, 0))
 	_check(boss.state != boss.State.HURT and boss.velocity.length() < 1.0, "the Corriente cannot push the boss")
 	boss.apply_root(5.0)
@@ -207,17 +208,20 @@ func _test_phase_two_and_territory() -> void:
 	_player.global_position = ARENA + Vector2(0, 400)
 	await _frames(3)
 	_check(boss.phase == 1 and is_equal_approx(boss._scaled(1.0), 1.0), "the boss starts in phase one")
-	boss.get_node("Hurtbox").receive_hit(14, ARENA)
-	_check(boss.health.current == 16 and boss.phase == 1, "still phase one above half health")
+	# Down to one point above the phase-two line, then the hit that crosses it.
+	var line := int(floor(boss.health.max_health * boss.data.phase_two_threshold))
+	boss.get_node("Hurtbox").receive_hit(boss.health.max_health - line - 1, ARENA)
+	_check(boss.health.current == line + 1 and boss.phase == 1, "still phase one above half health")
 	boss.get_node("Hurtbox").receive_hit(1, ARENA)
-	_check(boss.health.current == 15 and boss.phase == 2, "at half health the boss enters phase two")
-	_check(is_equal_approx(boss._scaled(1.0), 0.75), "phase two gives the player 25% less time to react")
+	_check(boss.health.current == line and boss.phase == 2, "at half health the boss enters phase two")
+	_check(is_equal_approx(boss._scaled(1.0), boss.data.phase_two_windup) and boss.data.phase_two_windup < 1.0,
+			"phase two gives the player less time to react")
 	_player.global_position = ARENA + Vector2(100, 0)
 	boss._last_pattern = boss.Pattern.SLAM
 	boss._attack_cooldown_left = 0.0
 	await _frames(25)
-	_check(boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS and boss._roots_spots.size() == 5,
-			"phase two calls 5 eruptions instead of 3 (%d)" % boss._roots_spots.size())
+	_check(boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS and boss._roots_spots.size() == boss.data.roots_count + boss.data.phase_two_extra_roots,
+			"phase two calls more eruptions (%d)" % boss._roots_spots.size())
 	boss.free()
 	await _frames(3)
 
@@ -240,8 +244,15 @@ func _test_defeat_and_rewards() -> void:
 	portal.scenario_id = &"forest"
 	_room.add_child(portal)
 	await _frames(3)
-	_check(not portal.is_open() and not portal.get_node("Glow").visible and not portal.get_node("Use").enabled,
+	_check(not portal.is_open() and not portal.get_node("Glow").visible
+			and portal.get_node("Use").prompt != "Continuar el viaje",
 			"before the boss falls the exit is closed and hidden")
+	var said: Array[String] = []
+	var listen := func(text: String) -> void: said.append(text)
+	root.get_node("Events").message_requested.connect(listen)
+	portal.get_node("Use").interact(_player)
+	root.get_node("Events").message_requested.disconnect(listen)
+	_check(said.size() == 1 and said[0] != "", "using the sealed exit says what opens it")
 
 	var boss := _spawn_boss()
 	_player.global_position = ARENA + Vector2(0, 400)
@@ -254,7 +265,8 @@ func _test_defeat_and_rewards() -> void:
 	_check(boss.state == boss.State.DEAD, "the boss dies")
 	var pickups := get_nodes_in_group("fragments")
 	_check(pickups.size() == 1 and pickups[0].global_position.distance_to(ARENA) < 2.0, "a green fragment appears where the boss fell")
-	_check(portal.is_open() and portal.get_node("Glow").visible and portal.get_node("Use").enabled, "the exit opens")
+	_check(portal.is_open() and portal.get_node("Glow").visible
+			and portal.get_node("Use").prompt == "Continuar el viaje", "the exit opens")
 
 	# Take the fragment
 	_messages.clear()
@@ -324,7 +336,9 @@ func _test_forest_level() -> void:
 	_check(fresh.skills.is_unlocked(0) and fresh.skills.get_skill(0).id == &"roots", "a new player gets the skills already learned (they survive death)")
 	fresh.free()
 
-	# Taking the exit moves on to a new map after the closing text
+	# Taking the exit moves on to a new map after the closing text (looping like a sandbox: the
+	# ending after the last chapter is covered by test_ending)
+	level.end_after_last_chapter = false
 	_messages.clear()
 	var portal = get_nodes_in_group("exit_portals")[0]
 	level.player.global_position = portal.global_position + Vector2(0, 20)

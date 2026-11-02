@@ -11,7 +11,9 @@ const OUT := "res://data/tilesets/kenney_forest.tres"
 const TILES := {
 	# Ground
 	&"grass": Vector2i(5, 0),
-	&"dirt": Vector2i(6, 0),
+	# The plain center of the dirt patch: the sheet's own dirt tile (6, 0) was repainted with a grass
+	# rim and shows as squares in wide paths.
+	&"dirt": Vector2i(8, 10),
 	&"flowers_red": Vector2i(0, 6),
 	&"flowers_white": Vector2i(0, 9),
 	&"flowers_blue": Vector2i(0, 12),
