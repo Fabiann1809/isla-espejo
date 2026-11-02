@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SlagSnailData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/caracol_escoria_data.gd" id="1_ipbfy"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/caracol_escoria_frames.tres" id="2_pu7ru"]
+
+[resource]
+script = ExtResource("1_ipbfy")
+id = &"caracol_escoria"
+display_name = "Caracol de escoria"
+placeholder_color = Color(0.45, 0.3, 0.25, 1)
+sprite_frames = ExtResource("2_pu7ru")
+sprite_offset = Vector2(0, -16)
+max_health = 14
+move_speed = 12.0
+chase_speed = 20.0
+detection_range = 140.0
+attack_range = 20.0
+attack_windup = 0.6
+attack_time = 0.2
+attack_cooldown = 1.6
+hurt_time = 0.12
+knockback_speed = 80.0
+knockback_resistance = 0.85
+attack_armor = true
+patrol_radius = 50.0
+patrol_wait = 1.5
