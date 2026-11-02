@@ -197,6 +197,8 @@ func _path_corners(level: Node) -> Dictionary:
 	var art: Script = load("res://scripts/world/tile_art.gd")
 	var inner: Array = art.pattern(art.DIRT_PATCH_INNER)
 	var path_tile: Vector2i = art.coords(art.DIRT)
+	_check(path_tile == art.pattern(art.DIRT_PATCH)[4],
+			"paths are drawn with the patch's plain dirt (a tile with a grass rim shows as squares)")
 	var dirt: Array = art.pattern(art.DIRT_PATCH) + inner + [path_tile]
 	var tiles := {}
 	for layer in level.get_node("Map").find_children("*", "TileMapLayer", true, false):
