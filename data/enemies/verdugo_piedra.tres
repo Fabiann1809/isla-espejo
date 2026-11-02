@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="StoneExecutionerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/verdugo_piedra_data.gd" id="1_k30kc"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/verdugo_piedra_frames.tres" id="2_5wg78"]
+
+[resource]
+script = ExtResource("1_k30kc")
+id = &"verdugo_piedra"
+display_name = "Verdugo de piedra"
+placeholder_color = Color(0.42, 0.36, 0.33, 1)
+sprite_frames = ExtResource("2_5wg78")
+sprite_offset = Vector2(0, -21)
+max_health = 20
+move_speed = 16.0
+chase_speed = 26.0
+detection_range = 150.0
+lose_range = 250.0
+attack_range = 44.0
+attack_damage = 2
+attack_windup = 0.9
+attack_time = 0.3
+attack_cooldown = 1.6
+hurt_time = 0.2
+knockback_speed = 60.0
+knockback_resistance = 0.85
+attack_armor = true
+patrol_radius = 30.0
+patrol_wait = 2.0
