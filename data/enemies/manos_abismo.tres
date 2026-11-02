@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AbyssHandsData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/manos_abismo_data.gd" id="1_665pt"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/manos_abismo_frames.tres" id="2_nuj36"]
+
+[resource]
+script = ExtResource("1_665pt")
+id = &"manos_abismo"
+display_name = "Manos del abismo"
+placeholder_color = Color(0.75, 0.25, 0.08, 1)
+sprite_frames = ExtResource("2_nuj36")
+sprite_offset = Vector2(0, -30)
+max_health = 5
+move_speed = 60.0
+chase_speed = 60.0
+detection_range = 320.0
+lose_range = 420.0
+attack_range = 0.0
+attack_windup = 0.8
+attack_time = 0.0
+attack_cooldown = 1.6
+hurt_time = 0.25
+knockback_speed = 0.0
+knockback_resistance = 1.0
+patrol_radius = 0.0
