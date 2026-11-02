@@ -12,6 +12,11 @@ in `<pack>/<id>/spritesheets/<animation>.png`, with `move` for the walk.
     python tools/make_temple_enemy_art.py                          # from the kept sources
     python tools/make_temple_enemy_art.py <pack folder>            # first copy the first pack
     python tools/make_temple_enemy_art.py --second <pack folder>   # first copy the second pack
+    python tools/make_temple_enemy_art.py --beasts <pack folder>   # first copy the volcanic beasts
+
+The volcanic beasts pack (`Bestias_Volcanicas_5_Enemigos_Godot`) redraws five of the first pack's
+enemies (drawn animations, feet on row 108, enlarged so the figure fills the cell): its strips are in
+`<pack>/<Folder>/spritesheets/<animation>.png`.
 Needs Pillow.
 """
 import os
@@ -30,11 +35,12 @@ ENEMIES = {
     "acolito_brasero": 0.5,
     "verdugo_piedra": 0.625,
     "duelista_maldito": 0.5,
-    "salamandra_cristal": 0.5,
+    # The volcanic beasts fill their cells: scaled so each keeps the size it had in the game.
+    "salamandra_cristal": 0.375,
     "gusano_puentes": 0.5,
-    "caracol_escoria": 0.5,
-    "carnero_basalto": 0.5,
-    "manta_hollin": 0.5,
+    "caracol_escoria": 0.3125,
+    "carnero_basalto": 0.40625,
+    "manta_hollin": 0.4375,
     # The second pack draws its figures smaller inside the cell: 0.75 brings them to Nico's size.
     "arana_talladora": 0.75,
     "baldosa_hambrienta": 0.5,
@@ -51,6 +57,13 @@ ENEMIES = {
     "rueda_devoradora": 0.75,
     "vasija_poseida": 0.75,
 }
+BEASTS = {
+    "salamandra_cristal": "Salamandra_de_Cristal",
+    "gusano_puentes": "Gusano_de_los_Puentes",
+    "caracol_escoria": "Caracol_de_Escoria",
+    "carnero_basalto": "Carnero_de_Basalto",
+    "manta_hollin": "Manta_de_Hollin",
+}
 SECOND_PACK = [
     "arana_talladora", "baldosa_hambrienta", "campanero_bronce", "custodio_sello",
     "forjador_condenado", "manos_abismo", "mascara_parasita", "monje_sin_rostro", "nucleo_cria",
@@ -61,20 +74,14 @@ ALPHA_CUT = 110
 ## Animations whose frames carry scraps of other poses (the pack cut them from a sheet): only the
 ## frame's biggest piece and what touches its box are kept. Elsewhere separate pieces are meant
 ## (the acolyte's flame, sparks, dust), so nothing is cut.
-CLEAN_ALL = ["idle", "walk", "attack", "special", "hurt"]
-SCRAPPY = {
-    "manta_hollin": CLEAN_ALL,
-    "salamandra_cristal": CLEAN_ALL,
-    "gusano_puentes": CLEAN_ALL,
-    "caracol_escoria": CLEAN_ALL,
-    "carnero_basalto": CLEAN_ALL,
-}
+## (Every enemy that needed it now has redrawn art.)
+SCRAPPY = {}
 ## The pack's idle and walk alternate two or three unrelated drawings (not steps), so the figure pops
 ## between poses. Until real cycles are drawn, both are rebuilt from the first idle drawing with a
 ## small bob (source px per frame; 2 source px = 1 game px). Enemies in REAL_ART have properly drawn
 ## animations (the second pack: centered, feet on row 108) and keep them as they are.
 REAL_ART = {"carcelero_cadenas", "centinela_obsidiana", "verdugo_piedra", "duelista_maldito",
-            "acolito_brasero"} | set(SECOND_PACK)
+            "acolito_brasero"} | set(SECOND_PACK) | set(BEASTS)
 STEADY = {
     "idle": [0, 0, 0, -2, -2, -2],
     "walk": [0, -2, -2, 0, 0, -2, -2, 0],
@@ -84,9 +91,14 @@ STEADY = {
 ## Specials that flip between unrelated drawings: only these frames (the move's own pose) are used,
 ## repeated to the strip's length. Empty these when the pack has real animations.
 HELD_FRAMES = {
-    ("carnero_basalto", "special"): [1, 2, 6],
-    ("salamandra_cristal", "special"): [0, 3, 4, 5, 7],
-    ("gusano_puentes", "special"): [1, 2],
+    ("gusano_puentes", "special"): [0, 1, 2],
+    ("manta_hollin", "special"): [0, 1, 2, 6],
+    ("carnero_basalto", "special"): [0, 1, 2, 5, 6, 7],
+}
+## Specials drawn as an effect without the creature (the salamander's crystal burst): the strip of
+## another animation stands in for them.
+STRIP_FROM = {
+    ("salamandra_cristal", "special"): "attack",
 }
 
 
@@ -96,6 +108,14 @@ def copy_sources(pack):
         os.makedirs(target, exist_ok=True)
         for anim in ANIMATIONS:
             shutil.copyfile(os.path.join(pack, enemy, "sprites", "%s_right.png" % anim),
+                            os.path.join(target, "%s_right.png" % anim))
+
+
+def copy_beasts(pack):
+    for enemy, folder in BEASTS.items():
+        target = os.path.join(ROOT, enemy, "source")
+        for anim in ANIMATIONS:
+            shutil.copyfile(os.path.join(pack, folder, "spritesheets", "%s.png" % anim),
                             os.path.join(target, "%s_right.png" % anim))
 
 
@@ -190,7 +210,8 @@ def build(enemy, scale):
     cell = int(round(SOURCE_CELL * scale))
     scraps = [0]
     for anim in ANIMATIONS:
-        strip = Image.open(os.path.join(ROOT, enemy, "source", "%s_right.png" % anim)).convert("RGBA")
+        source = STRIP_FROM.get((enemy, anim), anim)
+        strip = Image.open(os.path.join(ROOT, enemy, "source", "%s_right.png" % source)).convert("RGBA")
         if anim in STEADY and enemy not in REAL_ART:
             strip = steady_strip(enemy, STEADY[anim])
         elif (enemy, anim) in HELD_FRAMES:
@@ -217,6 +238,8 @@ def build(enemy, scale):
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "--second":
         copy_second_pack(sys.argv[2])
+    elif len(sys.argv) > 2 and sys.argv[1] == "--beasts":
+        copy_beasts(sys.argv[2])
     elif len(sys.argv) > 1:
         copy_sources(sys.argv[1])
     for enemy, scale in ENEMIES.items():

@@ -12,7 +12,7 @@ func _initialize() -> void:
 	data.placeholder_color = Color(0.85, 0.3, 0.12)
 	data.sprite_frames = load("res://data/enemies/salamandra_cristal_frames.tres")
 	# 64x64 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -16)
+	data.sprite_offset = Vector2(0, -10)
 	data.max_health = 4
 	# Quick on its feet: it scurries from edge to edge.
 	data.move_speed = 45.0
