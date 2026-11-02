@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TrapClockmakerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/relojero_trampas_data.gd" id="1_d1uxe"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/relojero_trampas_frames.tres" id="2_1rb84"]
+
+[resource]
+script = ExtResource("1_d1uxe")
+id = &"relojero_trampas"
+display_name = "Relojero de trampas"
+placeholder_color = Color(0.6, 0.42, 0.25, 1)
+sprite_frames = ExtResource("2_1rb84")
+sprite_offset = Vector2(0, -30)
+max_health = 4
+chase_speed = 85.0
+detection_range = 200.0
+lose_range = 300.0
+attack_range = 20.0
+attack_windup = 0.45
+attack_cooldown = 1.2
+hurt_time = 0.25
+knockback_speed = 150.0
+patrol_radius = 30.0
