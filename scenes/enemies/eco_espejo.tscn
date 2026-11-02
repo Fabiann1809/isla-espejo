@@ -1,0 +1,16 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/eco_espejo.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/eco_espejo.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="hurt"]
+size = Vector2(12, 18)
+
+[node name="EcoEspejo" instance=ExtResource("1")]
+script = ExtResource("3")
+data = ExtResource("2")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -4)
+shape = SubResource("hurt")

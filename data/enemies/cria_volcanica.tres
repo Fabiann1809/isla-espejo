@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_xuxvy"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/salamandra_cristal_frames.tres" id="2_hmk2h"]
+
+[resource]
+script = ExtResource("1_xuxvy")
+id = &"cria_volcanica"
+display_name = "Cría volcánica"
+placeholder_color = Color(1, 0.5, 0.25, 1)
+sprite_frames = ExtResource("2_hmk2h")
+sprite_scale = 0.5
+sprite_offset = Vector2(0, -8)
+max_health = 1
+move_speed = 50.0
+chase_speed = 100.0
+detection_range = 200.0
+lose_range = 300.0
+attack_range = 14.0
+attack_windup = 0.35
+attack_time = 0.12
+attack_cooldown = 1.0
+hurt_time = 0.15
+knockback_speed = 170.0
+patrol_radius = 30.0
+patrol_wait = 0.5
+drop_multiplier = 0.0

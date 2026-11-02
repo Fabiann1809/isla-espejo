@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MirrorEchoData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/orb.tscn" id="1_txbke"]
+[ext_resource type="Script" path="res://scripts/enemies/eco_espejo_data.gd" id="2_6k2ka"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/eco_espejo_frames.tres" id="3_8vijk"]
+
+[resource]
+script = ExtResource("2_6k2ka")
+projectile_scene = ExtResource("1_txbke")
+id = &"eco_espejo"
+display_name = "Eco del Espejo"
+placeholder_color = Color(0.72, 0.85, 1, 1)
+sprite_frames = ExtResource("3_8vijk")
+sprite_offset = Vector2(0, -11)
+max_health = 5
+chase_speed = 120.0
+detection_range = 200.0
+lose_range = 320.0
+hurt_time = 0.2
+knockback_speed = 140.0
+patrol_radius = 40.0
