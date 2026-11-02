@@ -93,8 +93,10 @@ func _spawn() -> void:
 		if is_instance_valid(companion):
 			companion.queue_free()
 	_companions.clear()
-	for hazard in get_tree().get_nodes_in_group(&"ground_hazards"):
-		hazard.queue_free()
+	# What the last enemy left behind (hazards, traps, iron blocks) goes with it.
+	for group: StringName in [&"ground_hazards", &"iron_blocks"]:
+		for leftover in get_tree().get_nodes_in_group(group):
+			leftover.queue_free()
 	var path: String = ENEMIES[current]
 	if not ResourceLoader.exists(path):
 		_name_label.text = "%d/%d  (falta %s)" % [current + 1, ENEMIES.size(), path.get_file()]
