@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="BrazierAcolyteData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/orb.tscn" id="1_hf7lo"]
+[ext_resource type="Script" path="res://scripts/enemies/acolito_brasero_data.gd" id="2_i8qu8"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/acolito_brasero_frames.tres" id="3_3uhqb"]
+
+[resource]
+script = ExtResource("2_i8qu8")
+shuffle_time = 0.4
+projectile_scene = ExtResource("1_hf7lo")
+projectile_speed = 85.0
+projectile_range = 200.0
+id = &"acolito_brasero"
+display_name = "Acólito del brasero"
+placeholder_color = Color(0.9, 0.42, 0.12, 1)
+sprite_frames = ExtResource("3_3uhqb")
+sprite_offset = Vector2(0, -16)
+max_health = 5
+move_speed = 26.0
+chase_speed = 40.0
+detection_range = 180.0
+lose_range = 270.0
+attack_range = 140.0
+attack_windup = 0.7
+attack_time = 0.25
+attack_cooldown = 2.4
+hurt_time = 0.2
+knockback_speed = 110.0
+patrol_radius = 40.0
+patrol_wait = 1.4
