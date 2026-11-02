@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="BasaltRamData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/carnero_basalto_data.gd" id="1_fykgi"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/carnero_basalto_frames.tres" id="2_fuf6w"]
+
+[resource]
+script = ExtResource("1_fykgi")
+id = &"carnero_basalto"
+display_name = "Carnero de basalto"
+placeholder_color = Color(0.3, 0.27, 0.28, 1)
+sprite_frames = ExtResource("2_fuf6w")
+sprite_offset = Vector2(0, -16)
+max_health = 7
+move_speed = 30.0
+chase_speed = 40.0
+detection_range = 170.0
+lose_range = 260.0
+attack_range = 140.0
+attack_cooldown = 1.2
+hurt_time = 0.25
+knockback_speed = 80.0
+knockback_resistance = 0.6
+attack_armor = true
+patrol_radius = 50.0
+patrol_wait = 1.2
