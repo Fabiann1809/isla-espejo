@@ -10,7 +10,7 @@ func _initialize() -> void:
 		printerr("TIMEOUT")
 		quit(1))
 	await process_frame
-	for key in ["options_controller", "controller_title", "controller_connect", "controller_waiting",
+	for key in ["options_controller", "controller_title", "controller_waiting",
 			"controller_connected", "controller_busy", "controller_error", "controller_back"]:
 		var text := _text(key)
 		_check(text != "" and text != key, "text %s resolves" % key)
@@ -33,6 +33,7 @@ func _initialize() -> void:
 	_check(panel.status_label.text == _text("controller_connected"), "connected status")
 	panel.server.controller_disconnected.emit()
 	_check(panel.status_label.text == _text("controller_waiting"), "waiting after disconnect")
+	panel.server.controller_connected.emit()
 	panel.server.controller_rejected.emit()
 	_check(panel.status_label.text == _text("controller_busy"), "busy status")
 
@@ -54,6 +55,19 @@ func _initialize() -> void:
 	_check(options.visible and not options.controller_panel.visible, "back returns to options")
 	holder.queue_free()
 	panel.queue_free()
+
+	var pause: CanvasLayer = (load("res://scenes/ui/pause_menu.tscn") as PackedScene).instantiate()
+	root.add_child(pause)
+	await process_frame
+	pause.pause()
+	pause.options_button.pressed.emit()
+	pause.options.controller_button.pressed.emit()
+	_check(pause.options.is_controller_open(), "pause: controller panel open")
+	pause.resume()
+	_check(not pause.options.is_controller_open() and not pause.options.controller_panel.server.is_running(),
+			"resume closes the panel and stops the server")
+	_check(not pause.is_open() and not paused, "resume still resumes")
+	pause.queue_free()
 	await process_frame
 	print("PASS" if _ok else "FAIL")
 	quit(0 if _ok else 1)

@@ -7,7 +7,8 @@ extends PanelContainer
 signal closed
 
 const PORT := 8080
-const QR_MODULE_PX := 4
+const QR_MODULE_PX := 3
+const BUSY_SHOWN_SECONDS := 2.0
 
 var server: ControlServer
 var mapper: RemoteControlMapper
@@ -15,7 +16,7 @@ var qr_rect: TextureRect
 var url_label: Label
 var status_label: Label
 var back_button: Button
-var current_url := ""
+var _status_serial := 0
 
 
 func _ready() -> void:
@@ -61,6 +62,10 @@ func open() -> void:
 	back_button.grab_focus()
 
 
+func is_open() -> bool:
+	return visible
+
+
 func close() -> void:
 	server.stop()
 	mapper.release_all()
@@ -70,7 +75,6 @@ func close() -> void:
 
 ## Shows the address as text and as a QR image.
 func show_url(url: String) -> void:
-	current_url = url
 	url_label.text = url
 	var image := QrCode.make_image(url, QR_MODULE_PX)
 	if image == null:
@@ -80,13 +84,13 @@ func show_url(url: String) -> void:
 
 
 func _show_error() -> void:
-	current_url = ""
 	qr_rect.texture = null
 	url_label.text = ""
 	_set_status("controller_error")
 
 
 func _set_status(key: String) -> void:
+	_status_serial += 1
 	status_label.text = UiText.t(key)
 
 
@@ -96,9 +100,14 @@ func _on_controller_disconnected() -> void:
 
 
 func _on_controller_rejected() -> void:
-	# A second phone was turned away; the first one is still the controller.
-	if not server.has_controller():
-		_set_status("controller_busy")
+	# A second phone was turned away; the first one is still the controller, so the busy
+	# message is shown briefly and then replaced by the connected one, unless the status
+	# changed in the meantime.
+	_set_status("controller_busy")
+	var serial := _status_serial
+	await get_tree().create_timer(BUSY_SHOWN_SECONDS).timeout
+	if serial == _status_serial and server != null and server.has_controller():
+		_set_status("controller_connected")
 
 
 func _exit_tree() -> void:

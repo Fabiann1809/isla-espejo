@@ -72,6 +72,17 @@ func _open_controller() -> void:
 	controller_panel.open()
 
 
+## True while the phone controller panel is on screen (the options are hidden then).
+func is_controller_open() -> bool:
+	return controller_panel != null and controller_panel.visible
+
+
+## Closes the controller panel if open (stops the server, releases the held actions).
+func close_all() -> void:
+	if is_controller_open():
+		controller_panel.close()
+
+
 func _exit_tree() -> void:
 	if controller_panel != null and is_instance_valid(controller_panel):
 		controller_panel.queue_free()

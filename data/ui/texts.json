@@ -19,7 +19,6 @@
 	"options_back": "Volver",
 	"options_controller": "Conectar mando",
 	"controller_title": "Mando en el celular",
-	"controller_connect": "Conectar mando",
 	"controller_hint": "Escanea el código con el celular (misma red Wi-Fi)",
 	"controller_waiting": "Esperando mando",
 	"controller_connected": "Mando conectado",
