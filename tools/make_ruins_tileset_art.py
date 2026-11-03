@@ -186,6 +186,101 @@ def floor_tile(seed, tones=(FLOOR_1, FLOOR_2, FLOOR_3), joint=JOINT, wear=0.0, m
     return img
 
 
+# --- floor variety (see RuinShape._build_floor_detail) ------------------------------------------------------
+def crack_over(img, rng, x=None, branch=True):
+    """A crack running down the tile with a lit edge on one side and, sometimes, a branch."""
+    x = rng.randrange(3, 12) if x is None else x
+    path = []
+    for y in range(T):
+        path.append((x, y))
+        x = max(1, min(14, x + rng.choice((-1, 0, 0, 1))))
+    for px_, py_ in path:
+        put(img, px_, py_, shade(JOINT, 0.7))
+        if img.getpixel((min(15, px_ + 1), py_))[:3] != shade(JOINT, 0.7)[:3]:
+            put(img, px_ + 1, py_, shade(FLOOR_2, 1.12))
+    if branch:
+        bx, by = path[rng.randrange(4, 10)]
+        direction = rng.choice((-1, 1))
+        for _ in range(rng.randrange(3, 6)):
+            bx += direction
+            by += rng.choice((0, 1))
+            put(img, bx, by, shade(JOINT, 0.75))
+    return img
+
+
+def floor_cracked(seed):
+    rng = random.Random(seed)
+    return crack_over(floor_tile(seed), rng)
+
+
+def floor_slab_big(seed):
+    """One 32x32 flagstone (four tiles, joint only on its right and bottom sides)."""
+    rng = random.Random(seed)
+    img = blank(32, 32)
+    noise = value_noise(rng, 32, 32, 6)
+    base = rng.choice((FLOOR_2, FLOOR_3))
+    for y in range(32):
+        for x in range(32):
+            n = noise[y][x] - 0.5
+            c = shade(base, 1.0 + n * 0.2 + rng.uniform(-0.03, 0.03))
+            if x == 31 or y == 31:
+                c = JOINT
+            elif x == 0 or y == 0:
+                c = shade(c, 1.14)
+            elif x == 30 or y == 30:
+                c = shade(c, 0.86)
+            img.putpixel((x, y), c)
+    # a chiselled inset line so a big flagstone reads as one carved slab
+    for i in range(4, 28):
+        for x, y in ((i, 4), (i, 27), (4, i), (27, i)):
+            put(img, x, y, shade(img.getpixel((x, y)), 0.86))
+    for _ in range(rng.randrange(1, 3)):
+        crack = blank(T, T)
+        crack_over(crack, rng, branch=False)
+        img.alpha_composite(crack, (rng.choice((0, 16)), rng.choice((0, 16))))
+    # a chipped corner
+    for dx, dy in ((0, 0), (1, 0), (0, 1)):
+        put(img, 29 + dx - 1, 29 + dy - 1, shade(JOINT, 0.8))
+    return img
+
+
+def floor_broken(seed, hole=0.34, core=False):
+    """A slab with a ragged hole: dark ground under it, a shadowed lip, a few stones that fell in."""
+    rng = random.Random(seed)
+    img = floor_tile(seed)
+    noise = value_noise(rng, T, T, 5)
+    cx, cy = rng.randrange(5, 11), rng.randrange(5, 11)
+    mask = set()
+    for y in range(T):
+        for x in range(T):
+            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 / 9.0
+            if (noise[y][x] * 0.6 + (1.0 - d) * 0.7 > 1.0 - hole * (2.4 if core else 1.0) + 0.1) and d < 1.0:
+                mask.add((x, y))
+    for x, y in mask:
+        n = noise[y][x]
+        put(img, x, y, mix(ROCK_D, ROCK_1, n * 0.9))
+    for x, y in mask:
+        above, below = (x, y - 1), (x, y + 1)
+        if above not in mask and 0 <= y - 1:
+            put(img, x, y, ROCK_D)
+        if below not in mask and y + 1 < T:
+            put(img, x, y + 1, shade(FLOOR_HI, 0.9))
+    for x, y in list(mask):
+        if (x + 1, y) not in mask and x + 1 < T:
+            put(img, x + 1, y, shade(JOINT, 0.8))
+    for _ in range(3):
+        if mask:
+            x, y = rng.choice(sorted(mask))
+            put(img, x, y, ROCK_3)
+            put(img, x + 1, y, ROCK_4)
+    return img
+
+
+def floor_rubbled(seed):
+    """Whole floor with fallen stones on it."""
+    return over(floor_tile(seed, wear=0.3), rubble(seed))
+
+
 def void_tile(seed):
     """Cave ground outside the rooms: almost black rock, a few faint cracks."""
     rng = random.Random(seed)
@@ -1175,6 +1270,29 @@ def build_tiles():
     add("terrace_top", terrace_top())
     add("spike_trap_off", spike_trap(False))
     add("spike_trap_on", spike_trap(True))
+
+    # floor variety: tone shifts, cracks, big flagstones, holes, fallen stones (kept at the end of the
+    # sheet so the coordinates of every older tile stay the same)
+    add("floor_dim_a", floor_tile(51, tones=(FLOOR_D, FLOOR_1, FLOOR_1)))
+    add("floor_dim_b", floor_tile(52, tones=(FLOOR_D, FLOOR_1, FLOOR_2), wear=0.3))
+    add("floor_pale_a", floor_tile(53, tones=(FLOOR_2, FLOOR_3, FLOOR_HI)))
+    add("floor_pale_b", floor_tile(54, tones=(FLOOR_2, FLOOR_3, FLOOR_3), moss=0.2))
+    add("floor_cracked_a", floor_cracked(55))
+    add("floor_cracked_b", floor_cracked(56))
+    add("floor_cracked_c", floor_cracked(57))
+    add("floor_moss_b", floor_tile(58, moss=0.8))
+    add("floor_moss_c", floor_tile(59, tones=(FLOOR_1, FLOOR_2, FLOOR_2), moss=0.65))
+    add("floor_broken_a", floor_broken(60))
+    add("floor_broken_b", floor_broken(61))
+    add("floor_broken_c", floor_broken(62, hole=0.5))
+    add("floor_debris_a", floor_broken(63, hole=0.6, core=True))
+    add("floor_debris_b", floor_broken(64, hole=0.7, core=True))
+    add("floor_rubbled_a", floor_rubbled(65))
+    add("floor_rubbled_b", floor_rubbled(66))
+    for k, seed in enumerate((71, 72, 73)):
+        slab = floor_slab_big(seed)
+        for name, box in (("tl", (0, 0)), ("tr", (16, 0)), ("bl", (0, 16)), ("br", (16, 16))):
+            add("floor_slab_%s_%s" % ("abc"[k], name), slab.crop((box[0], box[1], box[0] + T, box[1] + T)))
     return tiles, patterns
 
 

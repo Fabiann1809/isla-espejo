@@ -29,6 +29,16 @@ func _initialize() -> void:
 			"the plan reads as rock, water and planks")
 	_check(shape.get_node("RockMass") != null and shape.get_node("Water") != null and shape.get_node("Rocks") != null
 			and shape.get_node("Waterfalls").get_child_count() == 4, "it draws rock, water, columns and a waterfall (2x2 cells)")
+	var detail: TileMapLayer = shape.get_node("FloorDetail")
+	var plain := TileArt.coords(&"floor_a")
+	var lane_hole := false
+	for cell in detail.get_used_cells():
+		var coords := detail.get_cell_atlas_coords(cell)
+		var is_hole := coords == TileArt.coords(&"floor_debris_a") or coords == TileArt.coords(&"floor_debris_b") 				or coords == TileArt.coords(&"floor_broken_a")
+		if is_hole and shape._in_lanes(cell):
+			lane_hole = true
+	_check(detail.get_used_cells().size() > 20 and not lane_hole and plain != Vector2i(-1, -1),
+			"the floor varies (%d cells) and the lanes keep no hole" % detail.get_used_cells().size())
 	_check(shape.hides_wall_at(Vector2i(0, 4)) and not shape.hides_wall_at(Vector2i(0, 8)),
 			"a border wall the rock leans on is hidden, one in front of floor is not")
 

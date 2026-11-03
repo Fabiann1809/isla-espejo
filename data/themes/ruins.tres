@@ -7,7 +7,7 @@
 script = ExtResource("1_ehlfu")
 tileset = ExtResource("2_iou61")
 floor_variants = Array[StringName]([&"floor_b", &"floor_crack", &"floor_moss"])
-floor_variant_chance = 0.12
+floor_variant_chance = 0.05
 decor_tiles = Array[StringName]([&"pebbles", &"moss_clump_a", &"moss_clump_b", &"rubble_a", &"rubble_b"])
 decor_chance = 0.025
 world_tint = Color(0.8, 0.86, 1, 1)

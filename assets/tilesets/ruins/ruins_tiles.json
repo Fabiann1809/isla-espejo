@@ -641,6 +641,118 @@
   "spike_trap_on": [
    15,
    9
+  ],
+  "floor_dim_a": [
+   0,
+   10
+  ],
+  "floor_dim_b": [
+   1,
+   10
+  ],
+  "floor_pale_a": [
+   2,
+   10
+  ],
+  "floor_pale_b": [
+   3,
+   10
+  ],
+  "floor_cracked_a": [
+   4,
+   10
+  ],
+  "floor_cracked_b": [
+   5,
+   10
+  ],
+  "floor_cracked_c": [
+   6,
+   10
+  ],
+  "floor_moss_b": [
+   7,
+   10
+  ],
+  "floor_moss_c": [
+   8,
+   10
+  ],
+  "floor_broken_a": [
+   9,
+   10
+  ],
+  "floor_broken_b": [
+   10,
+   10
+  ],
+  "floor_broken_c": [
+   11,
+   10
+  ],
+  "floor_debris_a": [
+   12,
+   10
+  ],
+  "floor_debris_b": [
+   13,
+   10
+  ],
+  "floor_rubbled_a": [
+   14,
+   10
+  ],
+  "floor_rubbled_b": [
+   15,
+   10
+  ],
+  "floor_slab_a_tl": [
+   0,
+   11
+  ],
+  "floor_slab_a_tr": [
+   1,
+   11
+  ],
+  "floor_slab_a_bl": [
+   2,
+   11
+  ],
+  "floor_slab_a_br": [
+   3,
+   11
+  ],
+  "floor_slab_b_tl": [
+   4,
+   11
+  ],
+  "floor_slab_b_tr": [
+   5,
+   11
+  ],
+  "floor_slab_b_bl": [
+   6,
+   11
+  ],
+  "floor_slab_b_br": [
+   7,
+   11
+  ],
+  "floor_slab_c_tl": [
+   8,
+   11
+  ],
+  "floor_slab_c_tr": [
+   9,
+   11
+  ],
+  "floor_slab_c_bl": [
+   10,
+   11
+  ],
+  "floor_slab_c_br": [
+   11,
+   11
   ]
  },
  "patterns": {

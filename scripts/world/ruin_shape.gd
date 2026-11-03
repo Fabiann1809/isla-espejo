@@ -52,6 +52,7 @@ func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(global_position))
 	_build_rock_mass()
+	_build_floor_detail(rng)
 	_build_water()
 	_build_deck()
 	_build_waterfalls()
@@ -111,6 +112,86 @@ func hides_wall_at(cell: Vector2i) -> bool:
 		return false
 	var on_border := cell.x == 0 or cell.y == 0 or cell.x == COLUMNS - 1 or cell.y == ROWS - 1
 	return on_border and _cells[_inward(cell).y][_inward(cell).x] == ROCK
+
+
+## The floor is not one stone: soft drifts of darker and paler slabs, a few big flagstones and patches of
+## worn, mossy or broken floor (holes with dark ground, fallen stones). Only decoration (nothing here
+## has collision) and never over the cross of lanes that joins the doors, so the way stays plain.
+func _build_floor_detail(rng: RandomNumberGenerator) -> void:
+	var layer := _new_layer("FloorDetail")
+	var used := {}
+	var drift := FastNoiseLite.new()
+	drift.seed = rng.randi()
+	drift.frequency = Tuning.RUIN_FLOOR_DRIFT_FREQUENCY
+	for y in range(1, ROWS - 1):
+		for x in range(1, COLUMNS - 1):
+			var cell := Vector2i(x, y)
+			if cell_at(cell) != FLOOR:
+				continue
+			var n := drift.get_noise_2d(x, y)
+			if n > Tuning.RUIN_FLOOR_DIM_THRESHOLD:
+				layer.set_cell(cell, 0, TileArt.coords([&"floor_dim_a", &"floor_dim_b"][rng.randi() % 2]))
+			elif n < -Tuning.RUIN_FLOOR_DIM_THRESHOLD:
+				layer.set_cell(cell, 0, TileArt.coords([&"floor_pale_a", &"floor_pale_b"][rng.randi() % 2]))
+	_place_slabs(layer, rng, used)
+	var kinds := [&"broken", &"worn", &"mossy"]
+	var zones := rng.randi_range(Tuning.RUIN_FLOOR_ZONES_MIN, Tuning.RUIN_FLOOR_ZONES_MAX)
+	for i in zones:
+		_place_zone(layer, rng, used, kinds[i % kinds.size()])
+
+
+## True for the cells of the cross that joins the doors (kept free of broken floor).
+func _in_lanes(cell: Vector2i) -> bool:
+	return absi(cell.x - COLUMNS / 2) <= 2 or absi(cell.y - ROWS / 2) <= 2
+
+
+func _place_slabs(layer: TileMapLayer, rng: RandomNumberGenerator, used: Dictionary) -> void:
+	for attempt in Tuning.RUIN_FLOOR_SLAB_TRIES:
+		var cell := Vector2i(rng.randi_range(2, COLUMNS - 4), rng.randi_range(2, ROWS - 4))
+		var block := [cell, cell + Vector2i.RIGHT, cell + Vector2i.DOWN, cell + Vector2i.ONE]
+		if block.any(func(c: Vector2i) -> bool: return cell_at(c) != FLOOR or used.has(c) or _in_lanes(c)):
+			continue
+		var set_name: String = ["a", "b", "c"][rng.randi() % 3]
+		for k in 4:
+			used[block[k]] = true
+			layer.set_cell(block[k], 0, TileArt.coords(StringName("floor_slab_%s_%s" % [set_name, ["tl", "tr", "bl", "br"][k]])))
+
+
+func _place_zone(layer: TileMapLayer, rng: RandomNumberGenerator, used: Dictionary, kind: StringName) -> void:
+	var center := Vector2i(rng.randi_range(3, COLUMNS - 4), rng.randi_range(3, ROWS - 4))
+	var radius := rng.randf_range(Tuning.RUIN_FLOOR_ZONE_RADIUS_MIN, Tuning.RUIN_FLOOR_ZONE_RADIUS_MAX)
+	for y in range(center.y - 5, center.y + 6):
+		for x in range(center.x - 5, center.x + 6):
+			var cell := Vector2i(x, y)
+			if cell_at(cell) != FLOOR or used.has(cell):
+				continue
+			var reach := Vector2(cell - center).length() / radius + rng.randf_range(-0.25, 0.25)
+			if reach > 1.0:
+				continue
+			var tile := _zone_tile(kind, reach, _in_lanes(cell), rng)
+			if tile != &"":
+				layer.set_cell(cell, 0, TileArt.coords(tile))
+
+
+func _zone_tile(kind: StringName, reach: float, in_lanes: bool, rng: RandomNumberGenerator) -> StringName:
+	var roll := rng.randf()
+	match kind:
+		&"worn":
+			if roll < 0.5:
+				return [&"floor_cracked_a", &"floor_cracked_b", &"floor_cracked_c"][rng.randi() % 3]
+			return &"floor_rubbled_a" if roll < 0.6 and not in_lanes else &""
+		&"mossy":
+			if roll < 0.6:
+				return [&"floor_moss_b", &"floor_moss_c", &"floor_moss"][rng.randi() % 3]
+			return &""
+		_:
+			if in_lanes:
+				return [&"floor_cracked_a", &"floor_cracked_c"][rng.randi() % 2] if roll < 0.4 else &""
+			if reach < 0.5 and roll < 0.7:
+				return [&"floor_debris_a", &"floor_debris_b"][rng.randi() % 2]
+			if roll < 0.55:
+				return [&"floor_broken_a", &"floor_broken_b", &"floor_broken_c", &"floor_rubbled_b"][rng.randi() % 4]
+			return &""
 
 
 ## Rock mass over the floor on every rock cell of the plan, and over the border cells the rock leans on.

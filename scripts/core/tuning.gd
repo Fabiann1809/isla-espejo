@@ -103,6 +103,8 @@ const SHADOWS_ENABLED := true
 const SHADOW_ALPHA := 0.28
 const SHADOW_WIDTH_FACTOR := 0.7
 const SHADOW_HEIGHT_FACTOR := 0.35
+## Shadow strength on the Ruinas' dark stone, where the normal one barely shows.
+const RUIN_SHADOW_ALPHA := 0.6
 
 ## Quiet life around the camera, at ground level (under every actor): fireflies drifting and leaves
 ## falling. Counts are particles alive at once (0 = off).
@@ -151,6 +153,15 @@ const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
 const RUIN_PLAYER_LIGHT_RADIUS := 64.0
 ## Seconds the shade (and the glow) take to grow when Nico enters a dark room and to fade when he leaves.
 const RUIN_DARK_FADE_SECONDS := 1.6
+## Floor variety of a ruin room (RuinShape._build_floor_detail): drift of darker/paler slabs (noise
+## frequency, threshold), big flagstones tried per room, and the patches of worn, mossy or broken floor.
+const RUIN_FLOOR_DRIFT_FREQUENCY := 0.11
+const RUIN_FLOOR_DIM_THRESHOLD := 0.18
+const RUIN_FLOOR_SLAB_TRIES := 14
+const RUIN_FLOOR_ZONES_MIN := 3
+const RUIN_FLOOR_ZONES_MAX := 5
+const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
+const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 
 # --- Special rooms and exits ---
 ## Decoration of the boss arena, the reward glade and the event camp (RoomDressing). False = off.
