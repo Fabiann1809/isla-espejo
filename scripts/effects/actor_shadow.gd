@@ -8,14 +8,18 @@ const NODE_NAME := "Shadow"
 static var _feet_cache := {}
 
 var size := Vector2(12, 4)
+var alpha := Tuning.SHADOW_ALPHA
 
 
 ## Adds a shadow to `actor` if it has none yet (and shadows are on).
-static func attach(actor: Node2D) -> void:
+## `alpha` < 0 uses Tuning.SHADOW_ALPHA (a dark floor needs a stronger shadow to ground the actor).
+static func attach(actor: Node2D, alpha := -1.0) -> void:
 	if not Tuning.SHADOWS_ENABLED or actor.has_node(NODE_NAME):
 		return
 	var shadow := ActorShadow.new()
 	shadow.name = NODE_NAME
+	if alpha >= 0.0:
+		shadow.alpha = alpha
 	var sprite := _sprite_of(actor)
 	var feet := Vector2(0, 7)
 	var width := 12.0
@@ -31,7 +35,7 @@ static func attach(actor: Node2D) -> void:
 
 func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, size.y / maxf(size.x, 0.01)))
-	draw_circle(Vector2.ZERO, size.x / 2.0, Color(0, 0, 0, Tuning.SHADOW_ALPHA))
+	draw_circle(Vector2.ZERO, size.x / 2.0, Color(0, 0, 0, alpha))
 
 
 static func _sprite_of(actor: Node) -> AnimatedSprite2D:

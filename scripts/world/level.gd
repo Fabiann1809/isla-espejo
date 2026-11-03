@@ -238,6 +238,9 @@ func _build_rooms(rng: RandomNumberGenerator) -> void:
 func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> void:
 	match cell.type:
 		RoomData.RoomType.COMBAT:
+			# Debug: `-- --no-enemies` walks the map empty (to look at the rooms).
+			if OS.get_cmdline_user_args().has("--no-enemies"):
+				return
 			if cell.coord == _guard_cell:
 				_spawn_at(room, scenario.miniboss_scene, room.center())
 				return
@@ -591,11 +594,14 @@ func _compute_bounds() -> void:
 
 
 func _add_shadows() -> void:
+	var alpha := -1.0
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		alpha = Tuning.RUIN_SHADOW_ALPHA
 	for node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("npcs"):
 		if _map.is_ancestor_of(node):
-			ActorShadow.attach(node)
+			ActorShadow.attach(node, alpha)
 	if player != null:
-		ActorShadow.attach(player)
+		ActorShadow.attach(player, alpha)
 ## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void.
 func _build_boundary() -> void:
 	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED 			or scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
