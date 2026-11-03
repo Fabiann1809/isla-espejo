@@ -13,6 +13,7 @@
   #status { text-align: center; font-size: 16px; padding: 4px 0 8px; min-height: 28px; }
   #status.ok { color: var(--accent); }
   #status.bad { color: #ff8a80; }
+  #status.tap { text-decoration: underline; cursor: pointer; }
   #pad { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--gutter); }
   #stick { position: relative; flex: none; width: min(42vw, 44vh, 220px); aspect-ratio: 1; border-radius: 50%;
     background: #1f2630; border: 2px solid #3a4656; touch-action: none; }
@@ -46,7 +47,9 @@
 <script>
 (function () {
   "use strict";
-  var MOVE_INTERVAL_MS = 50, PING_INTERVAL_MS = 1000, RETRY_MS = 2000;
+  // A busy reply (another phone is the controller) waits much longer before trying again, or for
+  // a tap on the status line, so a second phone does not knock on the PC every 2 s.
+  var MOVE_INTERVAL_MS = 50, PING_INTERVAL_MS = 1000, RETRY_MS = 2000, BUSY_RETRY_MS = 10000;
   var statusEl = document.getElementById("status");
   var ws = null, pingTimer = null, retryTimer = null, busy = false;
 
@@ -141,7 +144,7 @@
     setStatus("Esperando...");
     try {
       ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
-    } catch (_) { scheduleRetry(); return; }
+    } catch (_) { scheduleRetry(RETRY_MS); return; }
     var mine = ws;
     mine.onopen = function () {
       setStatus("Conectado", "ok");
@@ -157,12 +160,23 @@
       ws = null;
       if (pingTimer !== null) { clearInterval(pingTimer); pingTimer = null; }
       releaseAll();
-      if (!busy) setStatus("Desconectado, reconectando...", "bad");
-      scheduleRetry();
+      if (busy) {
+        setStatus("Mando ocupado, toca para reintentar", "bad tap");
+        scheduleRetry(BUSY_RETRY_MS);
+      } else {
+        setStatus("Desconectado, reconectando...", "bad");
+        scheduleRetry(RETRY_MS);
+      }
     };
     mine.onerror = function () { /* onclose follows */ };
   }
-  function scheduleRetry() { if (retryTimer === null) retryTimer = setTimeout(connect, RETRY_MS); }
+  function scheduleRetry(ms) { if (retryTimer === null) retryTimer = setTimeout(connect, ms); }
+  // Tapping the status line while turned away retries at once (only when no socket is open).
+  statusEl.addEventListener("click", function () {
+    if (!busy || ws !== null) return;
+    if (retryTimer !== null) { clearTimeout(retryTimer); retryTimer = null; }
+    connect();
+  });
 
   // ---- No zoom, no menus ----
   ["gesturestart", "gesturechange", "contextmenu", "selectstart", "dblclick"].forEach(function (n) {
