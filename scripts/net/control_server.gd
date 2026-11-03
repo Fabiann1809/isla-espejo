@@ -18,6 +18,12 @@ const WS_PATH := "/ws"
 const WS_GUID := "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 const SILENCE_TIMEOUT_MS := 5000
 const MAX_MESSAGES_PER_SECOND := 60
+## Every frame (ping, pong, binary included) counts here; above it the controller is closed.
+const MAX_FRAMES_PER_SECOND := 120
+## Bytes read from the controller per poll, so a flood cannot stall a frame.
+const MAX_READ_PER_POLL := 8192
+## Unsent bytes allowed for the controller before it counts as not reading and is cut.
+const MAX_CONTROLLER_BACKLOG := 4096
 const MAX_HEADER_BYTES := 8192
 const MAX_FRAME_PAYLOAD := 4096
 const MAX_PENDING := 8
@@ -41,18 +47,22 @@ const CLOSE_NORMAL := 1000
 const CLOSE_GOING_AWAY := 1001
 const CLOSE_PROTOCOL_ERROR := 1002
 const CLOSE_UNSUPPORTED := 1003
+const CLOSE_POLICY := 1008
 const CLOSE_TOO_BIG := 1009
 
 var _server: TCPServer = null
 var _port: int = 8080
 ## Connections still sending their HTTP request: {"peer", "buffer", "since"}.
 var _pending: Array[Dictionary] = []
-## Connections about to close: {"peer", "chunks" ([send_at_ms, bytes] still to send), "until"}.
+## Connections about to close: {"peer", "chunks" ([send_at_ms, bytes] still to send), "until", "deadline"}.
 var _closing: Array[Dictionary] = []
 var _controller: StreamPeerTCP = null
 var _controller_buffer := PackedByteArray()
 var _last_message_ms: int = 0
 var _rate_state: Dictionary = {}
+var _frame_state: Dictionary = {}
+## Bytes accepted by `_send` that the socket could not take yet, per peer.
+var _out_queues: Dictionary = {}
 
 
 func _init() -> void:
@@ -80,11 +90,12 @@ func stop() -> void:
 	if _controller != null:
 		_drop_controller(CLOSE_GOING_AWAY)
 	for entry: Dictionary in _pending:
-		(entry["peer"] as StreamPeerTCP).disconnect_from_host()
+		_close_peer(entry["peer"])
 	_pending.clear()
 	for entry: Dictionary in _closing:
-		(entry["peer"] as StreamPeerTCP).disconnect_from_host()
+		_close_peer(entry["peer"])
 	_closing.clear()
+	_out_queues.clear()
 	if _server != null:
 		_server.stop()
 		_server = null
@@ -253,36 +264,48 @@ static func handshake_response(key: String) -> PackedByteArray:
 
 # --- WebSocket framing (pure) ---
 
-## Decodes one client frame from the start of `buffer`.
-## {} = need more bytes; {"error": close_code} = invalid; else {"fin", "opcode", "payload", "size"}.
-static func decode_frame(buffer: PackedByteArray, max_payload: int = MAX_FRAME_PAYLOAD) -> Dictionary:
-	if buffer.size() < 2:
+## Decodes one client frame starting at byte `start` of `buffer` (no copy of the buffer).
+## {} = need more bytes; {"error": close_code} = invalid;
+## else {"fin", "opcode", "payload", "size"} where size is the frame's length in bytes.
+static func decode_frame(buffer: PackedByteArray, max_payload: int = MAX_FRAME_PAYLOAD, start: int = 0) -> Dictionary:
+	var available := buffer.size() - start
+	if available < 2:
 		return {}
-	var fin := (buffer[0] & 0x80) != 0
-	var opcode := buffer[0] & 0x0F
-	var length := buffer[1] & 0x7F
-	if (buffer[0] & 0x70) != 0 or (buffer[1] & 0x80) == 0:
+	var b0 := buffer[start]
+	var b1 := buffer[start + 1]
+	var fin := (b0 & 0x80) != 0
+	var opcode := b0 & 0x0F
+	var length := b1 & 0x7F
+	if (b0 & 0x70) != 0 or (b1 & 0x80) == 0:
 		return {"error": CLOSE_PROTOCOL_ERROR}  # Reserved bits set, or an unmasked client frame.
 	if opcode >= OPCODE_CLOSE and (not fin or length > 125):
 		return {"error": CLOSE_PROTOCOL_ERROR}
-	var offset := 2
+	var header := 2
 	if length == 126:
-		if buffer.size() < 4:
+		if available < 4:
 			return {}
-		length = (buffer[2] << 8) | buffer[3]
-		offset = 4
+		length = (buffer[start + 2] << 8) | buffer[start + 3]
+		header = 4
 	elif length == 127:
 		return {"error": CLOSE_TOO_BIG}  # 64-bit lengths are far beyond any controller message.
 	if length > max_payload:
 		return {"error": CLOSE_TOO_BIG}
-	if buffer.size() < offset + 4 + length:
+	if available < header + 4 + length:
 		return {}
-	var mask := buffer.slice(offset, offset + 4)
-	offset += 4
-	var payload := buffer.slice(offset, offset + length)
+	var mask_at := start + header
+	var payload := buffer.slice(mask_at + 4, mask_at + 4 + length)
 	for i in length:
-		payload[i] = payload[i] ^ mask[i % 4]
-	return {"fin": fin, "opcode": opcode, "payload": payload, "size": offset + length}
+		payload[i] = payload[i] ^ buffer[mask_at + i % 4]
+	return {"fin": fin, "opcode": opcode, "payload": payload, "size": header + 4 + length}
+
+
+## The controller protocol and the request head are plain ASCII; anything else is rejected
+## before decoding (UTF-8 decoding prints one engine error per bad byte).
+static func is_ascii(bytes: PackedByteArray) -> bool:
+	for byte in bytes:
+		if byte >= 0x80:
+			return false
+	return true
 
 
 ## Unmasked server frame (servers never mask).
@@ -366,23 +389,28 @@ func _poll_pending(now_ms: int) -> void:
 		peer.poll()
 		if peer.get_status() != StreamPeerTCP.STATUS_CONNECTED:
 			_pending.erase(entry)
+			_close_peer(peer)
 			continue
 		var buffer: PackedByteArray = entry["buffer"]
-		buffer.append_array(_read_available(peer))
+		buffer.append_array(_read_available(peer, MAX_HEADER_BYTES + 1 - buffer.size()))
 		entry["buffer"] = buffer
 		var end := find_header_end(buffer)
 		if end < 0:
 			if buffer.size() > MAX_HEADER_BYTES or now_ms - int(entry["since"]) > REQUEST_TIMEOUT_MS:
 				_pending.erase(entry)
-				_finish(peer, http_response("400 Bad Request", "text/plain", "Bad Request".to_utf8_buffer()), now_ms)
+				_finish(peer, _bad_request(), now_ms)
 			continue
 		_pending.erase(entry)
-		_handle_request(peer, parse_request(buffer.slice(0, end - 4).get_string_from_utf8()), buffer.slice(end), now_ms)
+		var head := buffer.slice(0, end - 4)
+		if not is_ascii(head):
+			_finish(peer, _bad_request(), now_ms)
+			continue
+		_handle_request(peer, parse_request(head.get_string_from_ascii()), buffer.slice(end), now_ms)
 
 
 func _handle_request(peer: StreamPeerTCP, request: Dictionary, rest: PackedByteArray, now_ms: int) -> void:
 	if request.is_empty():
-		_finish(peer, http_response("400 Bad Request", "text/plain", "Bad Request".to_utf8_buffer()), now_ms)
+		_finish(peer, _bad_request(), now_ms)
 	elif is_websocket_upgrade(request):
 		_accept_websocket(peer, header_value(request["headers"], "sec-websocket-key"), rest, now_ms)
 	elif request["method"] != "GET":
@@ -393,22 +421,29 @@ func _handle_request(peer: StreamPeerTCP, request: Dictionary, rest: PackedByteA
 		_finish(peer, http_response("404 Not Found", "text/plain", "Not Found".to_utf8_buffer()), now_ms)
 
 
+static func _bad_request() -> PackedByteArray:
+	return http_response("400 Bad Request", "text/plain", "Bad Request".to_utf8_buffer())
+
+
 func _accept_websocket(peer: StreamPeerTCP, key: String, rest: PackedByteArray, now_ms: int) -> void:
-	peer.put_data(handshake_response(key))
 	if _controller != null:
 		# D2: one controller at a time.
 		# Close code 1000: Godot's client rejects 1013 (try again later) as a protocol error.
-		_finish(peer, PackedByteArray(), now_ms, [
+		_finish(peer, handshake_response(key), now_ms, [
 			[now_ms + BUSY_STEP_MS, encode_text(JSON.stringify({"type": "busy"}))],
 			[now_ms + 2 * BUSY_STEP_MS, encode_close(CLOSE_NORMAL)],
 		])
 		controller_rejected.emit()
+		return
+	if not _send(peer, handshake_response(key)):
+		_close_peer(peer)
 		return
 	peer.set_no_delay(true)
 	_controller = peer
 	_controller_buffer = rest
 	_last_message_ms = now_ms
 	_rate_state = {}
+	_frame_state = {}
 	controller_connected.emit()
 
 
@@ -416,21 +451,29 @@ func _poll_controller(now_ms: int) -> void:
 	if _controller == null:
 		return
 	_controller.poll()
-	if _controller.get_status() != StreamPeerTCP.STATUS_CONNECTED:
+	if _controller.get_status() != StreamPeerTCP.STATUS_CONNECTED or not _flush(_controller):
 		_drop_controller(-1)
 		return
-	_controller_buffer.append_array(_read_available(_controller))
+	_controller_buffer.append_array(_read_available(_controller, MAX_READ_PER_POLL))
+	var offset := 0
 	while _controller != null:
-		var frame := decode_frame(_controller_buffer)
+		var frame := decode_frame(_controller_buffer, MAX_FRAME_PAYLOAD, offset)
 		if frame.is_empty():
 			break
 		if frame.has("error"):
 			_drop_controller(int(frame["error"]))
 			return
-		_controller_buffer = _controller_buffer.slice(int(frame["size"]))
+		offset += int(frame["size"])
 		_last_message_ms = now_ms
+		if not rate_allow(_frame_state, now_ms, MAX_FRAMES_PER_SECOND):
+			_drop_controller(CLOSE_POLICY)
+			return
 		_handle_frame(frame, now_ms)
-	if _controller != null and is_silent(_last_message_ms, now_ms):
+	if _controller == null:
+		return
+	if offset > 0:
+		_controller_buffer = _controller_buffer.slice(offset)
+	if is_silent(_last_message_ms, now_ms):
 		_drop_controller(CLOSE_GOING_AWAY)
 
 
@@ -442,19 +485,25 @@ func _handle_frame(frame: Dictionary, now_ms: int) -> void:
 			if not frame["fin"]:
 				_drop_controller(CLOSE_UNSUPPORTED)  # The phone page never fragments its tiny messages.
 				return
-			if not rate_allow(_rate_state, now_ms):
+			if not rate_allow(_rate_state, now_ms) or not is_ascii(payload):
 				return
-			var msg: Variant = parse_message(payload.get_string_from_utf8())
+			var msg: Variant = parse_message(payload.get_string_from_ascii())
 			if msg != null:
 				message_received.emit(msg)
 		OPCODE_CLOSE:
 			_drop_controller(CLOSE_NORMAL)
 		OPCODE_PING:
-			_controller.put_data(encode_frame(OPCODE_PONG, payload))
+			_send_to_controller(encode_frame(OPCODE_PONG, payload))
 		OPCODE_CONTINUATION:
 			_drop_controller(CLOSE_UNSUPPORTED)
 		_:
 			pass  # Binary and pong frames only count as signs of life.
+
+
+## A controller that stops reading is cut without a close frame (it would not read it either).
+func _send_to_controller(bytes: PackedByteArray) -> void:
+	if not _send(_controller, bytes) or _queued_bytes(_controller) > MAX_CONTROLLER_BACKLOG:
+		_drop_controller(-1)
 
 
 ## Closes the controller socket (sending a close frame unless `code` < 0) and tells listeners.
@@ -462,44 +511,87 @@ func _drop_controller(code: int) -> void:
 	var peer := _controller
 	_controller = null
 	_controller_buffer = PackedByteArray()
-	if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED and code >= 0:
+	if code >= 0 and peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
 		_finish(peer, encode_close(code), Time.get_ticks_msec())
 	else:
-		peer.disconnect_from_host()
+		_close_peer(peer)
 	controller_disconnected.emit()
 
 
 ## Sends `bytes` now and each later chunk ([send_at_ms, bytes]) at its time, then keeps
-## draining the peer for LINGER_MS before closing it.
+## draining the peer for LINGER_MS (and until everything queued went out) before closing it.
 func _finish(peer: StreamPeerTCP, bytes: PackedByteArray, now_ms: int, later: Array = []) -> void:
-	if not bytes.is_empty() and peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
-		peer.put_data(bytes)
+	if not _send(peer, bytes):
+		_close_peer(peer)
+		return
 	var last_ms := now_ms
 	for chunk: Array in later:
 		last_ms = maxi(last_ms, int(chunk[0]))
-	_closing.append({"peer": peer, "chunks": later.duplicate(), "until": last_ms + LINGER_MS})
+	_closing.append({"peer": peer, "chunks": later.duplicate(), "until": last_ms + LINGER_MS,
+		"deadline": last_ms + LINGER_MS + REQUEST_TIMEOUT_MS})
 
 
 func _poll_closing(now_ms: int) -> void:
 	for entry: Dictionary in _closing.duplicate():
 		var peer: StreamPeerTCP = entry["peer"]
 		peer.poll()
-		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
-			_read_available(peer)  # Drain so closing does not reset the connection.
+		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED and now_ms < int(entry["deadline"]):
+			_read_available(peer, MAX_READ_PER_POLL)  # Drain so closing does not reset the connection.
 			var chunks: Array = entry["chunks"]
-			while not chunks.is_empty() and now_ms >= int(chunks[0][0]):
-				peer.put_data(chunks.pop_front()[1])
-			if now_ms < int(entry["until"]):
+			var sent := _flush(peer)
+			while sent and not chunks.is_empty() and now_ms >= int(chunks[0][0]):
+				sent = _send(peer, chunks.pop_front()[1])
+			if sent and (now_ms < int(entry["until"]) or not chunks.is_empty() or _queued_bytes(peer) > 0):
 				continue
-		peer.disconnect_from_host()
+		_close_peer(peer)
 		_closing.erase(entry)
 
 
-func _read_available(peer: StreamPeerTCP) -> PackedByteArray:
-	var available := peer.get_available_bytes()
-	if available <= 0:
+## Non-blocking send: queues `bytes` behind anything still unsent for this peer and writes what
+## the socket takes now (`put_data` would block the game while a client is not reading).
+## False on a socket error.
+func _send(peer: StreamPeerTCP, bytes: PackedByteArray) -> bool:
+	if not bytes.is_empty():
+		var queue: PackedByteArray = _out_queues.get(peer, PackedByteArray())
+		_out_queues.erase(peer)  # Drop the dictionary's reference so the append does not copy.
+		queue.append_array(bytes)
+		_out_queues[peer] = queue
+	return _flush(peer)
+
+
+## Writes as much of the peer's queue as the socket accepts now. False on a socket error.
+func _flush(peer: StreamPeerTCP) -> bool:
+	if not _out_queues.has(peer):
+		return true
+	var queue: PackedByteArray = _out_queues[peer]
+	var result: Array = peer.put_partial_data(queue)
+	if result[0] != OK:
+		_out_queues.erase(peer)
+		return false
+	var sent: int = result[1]
+	if sent >= queue.size():
+		_out_queues.erase(peer)
+	elif sent > 0:
+		_out_queues[peer] = queue.slice(sent)
+	return true
+
+
+func _queued_bytes(peer: StreamPeerTCP) -> int:
+	if not _out_queues.has(peer):
+		return 0
+	return (_out_queues[peer] as PackedByteArray).size()
+
+
+func _close_peer(peer: StreamPeerTCP) -> void:
+	_out_queues.erase(peer)
+	peer.disconnect_from_host()
+
+
+func _read_available(peer: StreamPeerTCP, max_bytes: int) -> PackedByteArray:
+	var count := mini(peer.get_available_bytes(), max_bytes)
+	if count <= 0:
 		return PackedByteArray()
-	var result: Array = peer.get_partial_data(available)
+	var result: Array = peer.get_partial_data(count)
 	if result[0] != OK:
 		return PackedByteArray()
 	return result[1]

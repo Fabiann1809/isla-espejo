@@ -75,6 +75,33 @@ func _initialize() -> void:
 	_check(not server_script.rate_allow(state, 1999), "still limited before the window ends")
 	_check(server_script.rate_allow(state, 2000), "new window accepts again")
 
+	# Frame budget: every frame counts, 120 per second, separate from the 60 messages.
+	_check(server_script.MAX_FRAMES_PER_SECOND == 120, "frame budget is 120 per second")
+	var frame_state := {}
+	var frames_allowed := 0
+	for i in 200:
+		if server_script.rate_allow(frame_state, 5000 + i, server_script.MAX_FRAMES_PER_SECOND):
+			frames_allowed += 1
+	_check(frames_allowed == 120, "frame budget stops at 120 in one second")
+	_check(not server_script.rate_allow(frame_state, 5999, server_script.MAX_FRAMES_PER_SECOND), "frame budget still exceeded before the window ends")
+	_check(server_script.rate_allow(frame_state, 6000, server_script.MAX_FRAMES_PER_SECOND), "frame budget resets after one second")
+
+	# Frames decoded by offset, without copying the buffer per frame.
+	var pair := _masked_text_frame("{\"a\":1}", PackedByteArray([5, 6, 7, 8]))
+	var first_size := pair.size()
+	pair.append_array(_masked_text_frame("{\"b\":2}", PackedByteArray([1, 1, 1, 1])))
+	var second = server_script.decode_frame(pair, 4096, first_size)
+	_check(second.get("payload", PackedByteArray()).get_string_from_ascii() == "{\"b\":2}", "second frame decoded at its offset")
+	_check(second.get("size") == pair.size() - first_size, "size is the frame length, not the end offset")
+	_check(server_script.decode_frame(pair, 4096, pair.size() - 1).is_empty(), "one byte at the end waits for more")
+
+	# ASCII check: request heads and controller messages are plain ASCII.
+	_check(server_script.is_ascii("{\"type\":\"ping\"}".to_ascii_buffer()), "ASCII message accepted")
+	_check(server_script.is_ascii(PackedByteArray()), "empty bytes count as ASCII")
+	_check(not server_script.is_ascii(PackedByteArray([0x7B, 0xC3, 0xB1, 0x7D])), "UTF-8 bytes rejected")
+	_check(not server_script.is_ascii(PackedByteArray([0xFF])), "0xFF rejected")
+	_check(server_script.is_ascii(PackedByteArray([0x7F])), "0x7F is still ASCII")
+
 	# Heartbeat silence.
 	_check(not server_script.is_silent(1000, 5999), "4.999 s of silence keeps the controller")
 	_check(server_script.is_silent(1000, 6000), "5 s of silence drops the controller")
