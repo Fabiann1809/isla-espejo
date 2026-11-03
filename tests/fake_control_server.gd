@@ -6,6 +6,7 @@ var fake_running := false
 var fake_controller := false
 var start_calls := 0
 var stop_calls := 0
+var fake_urls := PackedStringArray(["http://192.168.1.20:8080/", "http://10.0.0.7:8080/"])
 
 
 func start(_port: int = 8080) -> Error:
@@ -31,4 +32,4 @@ func has_controller() -> bool:
 
 
 func get_urls() -> PackedStringArray:
-	return PackedStringArray(["http://192.168.1.20:8080/", "http://10.0.0.7:8080/"])
+	return fake_urls

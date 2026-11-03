@@ -28,7 +28,7 @@ func _initialize() -> void:
 	_check(panel.status_label.text == _text("controller_error"), "headless shows the error text")
 	_check(panel.visible, "panel is visible after open")
 
-	panel.show_url("http://192.168.1.20:8080/")
+	panel.show_urls(PackedStringArray(["http://192.168.1.20:8080/"]))
 	_check(panel.qr_rect.texture != null, "QR texture created for the URL")
 	_check(panel.url_label.text == "http://192.168.1.20:8080/", "URL shown as text")
 
@@ -111,6 +111,16 @@ func _initialize() -> void:
 	view.back_button.pressed.emit()
 	pause.options.controller_button.pressed.emit()
 	_check(rc.is_running() and view.qr_rect.texture != null, "reopening the panel starts it again")
+	# No address any more while a phone is attached: error text, but the phone is not dropped.
+	fake.fake_controller = true
+	fake.fake_urls = PackedStringArray()
+	var stops_before: int = fake.stop_calls
+	view.back_button.pressed.emit()
+	pause.options.controller_button.pressed.emit()
+	_check(view.status_label.text == _text("controller_error"), "no address shows the error text")
+	_check(rc.is_running() and rc.has_controller() and fake.stop_calls == stops_before,
+			"no address does not stop an attached phone")
+	fake.fake_urls = PackedStringArray(["http://192.168.1.20:8080/"])
 	pause.resume()
 	pause.queue_free()
 	await process_frame

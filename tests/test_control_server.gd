@@ -133,7 +133,8 @@ func _initialize() -> void:
 	_check(server_script.addresses_from_interfaces([wifi, wifi, "junk", {"name": "x", "addresses": 5}]) == PackedStringArray(["10.0.0.7"]),
 			"duplicates and malformed entries ignored")
 	for name in ["VMware Network Adapter VMnet8", "vboxnet0", "Hyper-V Virtual Ethernet Adapter", "docker0",
-			"TAP-Windows Adapter V9", "vEthernet (Default Switch)", "WSL", "lo Loopback"]:
+			"TAP-Windows Adapter V9", "vEthernet (Default Switch)", "WSL", "lo Loopback",
+			"virbr0", "vmnet1", "br-3f2a9c1d7e44", "Network Bridge"]:
 		_check(server_script.is_virtual_interface({"name": name}), "virtual interface: %s" % name)
 	for name in ["Wi-Fi", "Ethernet", "wlan0", "eth0", "en0", "Conexión de red inalámbrica"]:
 		_check(not server_script.is_virtual_interface({"name": "{GUID}", "friendly": name}), "real interface: %s" % name)

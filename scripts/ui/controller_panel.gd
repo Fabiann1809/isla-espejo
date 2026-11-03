@@ -52,8 +52,11 @@ func open() -> void:
 	show()
 	var error := RemoteControl.start()
 	var urls: PackedStringArray = RemoteControl.get_urls()
-	if error != OK or urls.is_empty():
+	if error != OK:
 		RemoteControl.stop()
+		_show_error()
+	elif urls.is_empty():
+		# No address to show (e.g. the Wi-Fi dropped): a phone already attached keeps playing.
 		_show_error()
 	else:
 		show_urls(urls)
@@ -88,11 +91,6 @@ func show_urls(urls: PackedStringArray) -> void:
 		_show_error()
 		return
 	qr_rect.texture = ImageTexture.create_from_image(image)
-
-
-## Shows one address as text and as a QR image.
-func show_url(url: String) -> void:
-	show_urls(PackedStringArray([url]))
 
 
 func _show_error() -> void:

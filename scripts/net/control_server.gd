@@ -38,6 +38,7 @@ const BUSY_STEP_MS := 150
 ## Lower-case pieces of interface names that mark a virtual adapter (its address goes last).
 const VIRTUAL_INTERFACE_MARKERS: Array[String] = [
 	"virtual", "vmware", "vbox", "hyper-v", "wsl", "docker", "loopback", "tap", "vethernet",
+	"virbr", "vmnet", "br-", "bridge",
 ]
 
 const OPCODE_CONTINUATION := 0x0
