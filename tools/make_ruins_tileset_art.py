@@ -896,6 +896,49 @@ def waterfall_base(frame):
     return img
 
 
+def rock_mass(seed, dark=False):
+    """Top view of a dense mass of rock: the fill of thick walls and of the cave around the map."""
+    rng = random.Random(seed)
+    img = blank()
+    for y in range(T):
+        for x in range(T):
+            img.putpixel((x, y), shade(ROCK_D, 0.8 + rng.uniform(-0.05, 0.1)))
+    caps = [(rng.uniform(1, 15), rng.uniform(1, 15), rng.uniform(3.2, 5.2)) for _ in range(6)]
+    caps.sort(key=lambda c: c[1])
+    for cx, cy, r in caps:
+        for y in range(T):
+            for x in range(T):
+                for ox in (-16, 0, 16):
+                    for oy in (-16, 0, 16):
+                        dx, dy = x + 0.5 - (cx + ox), y + 0.5 - (cy + oy)
+                        d = math.hypot(dx, dy)
+                        if d <= r:
+                            light = 1.0 - (dx * 0.45 + dy * 0.55) / r * 0.5
+                            c = mix(ROCK_3, ROCK_HI, max(0.0, min(1.0, light - 0.2)))
+                            if d > r - 1.1:
+                                c = shade(ROCK_1, 0.9)
+                            img.putpixel((x, y), shade(c, 0.6) if dark else c)
+    return img
+
+
+def shore_stone(seed, moss=False):
+    """A low rounded block: the row of stones that lines a river or the edge of a platform."""
+    rng = random.Random(seed)
+    img = blank()
+    d = ImageDraw.Draw(img)
+    w = rng.choice((12, 13, 14))
+    x0 = (16 - w) // 2
+    top = rng.choice((5, 6))
+    d.rounded_rectangle((x0, top, x0 + w - 1, 14), radius=3, fill=ROCK_2)
+    d.rounded_rectangle((x0, top, x0 + w - 1, top + 5), radius=3, fill=ROCK_4)
+    d.line((x0 + 2, top + 1, x0 + w - 4, top + 1), fill=ROCK_HI)
+    d.line((x0 + w - 3, top + 4, x0 + w - 2, 13), fill=ROCK_1)
+    if moss:
+        for _ in range(6):
+            put(img, rng.randrange(x0 + 1, x0 + w - 1), rng.randrange(top + 1, 12), rng.choice((MOSS_1, MOSS_2)))
+    return outline(img)
+
+
 # --- area patches over the normal floor ----------------------------------------------------------------------
 def tiled(tile):
     big = Image.new("RGBA", (3 * T, 3 * T))
@@ -982,6 +1025,16 @@ def build_tiles():
         add_tall("column_rock_%s" % "abcd"[i], rock_column(seed, moss=moss_a, lean=lean))
     for i, seed in enumerate((21, 22)):
         add_tall("column_dark_%s" % "ab"[i], rock_column(seed, dark=True))
+    for i, seed in enumerate((15, 16)):
+        big = rock_column(seed, height=48, moss=0.2 * i)
+        add("column_tall_%s_top" % "ab"[i], big.crop((0, 0, T, T)))
+        add("column_tall_%s_mid" % "ab"[i], big.crop((0, T, T, 2 * T)))
+        add("column_tall_%s_base" % "ab"[i], big.crop((0, 2 * T, T, 3 * T)))
+    for i in range(2):
+        add("rock_mass_%s" % "ab"[i], rock_mass(30 + i))
+    add("rock_mass_dark", rock_mass(33, dark=True))
+    for i in range(3):
+        add("shore_stone_%s" % "abc"[i], shore_stone(40 + i, moss=i == 2))
     add("stalagmite_a", stalagmite(1))
     add("stalagmite_b", stalagmite(2, moss=True))
     add("boulder_a", boulder(1))
@@ -1188,6 +1241,155 @@ def sample_room(coords, sheet, frame=0, scale=4):
     return room.resize((W * T * scale, H * T * scale), Image.NEAREST)
 
 
+def sample_map(coords, sheet, frame=0, scale=3):
+    """A 48x34 tile map built only from the sheet, laid out like the concept map: platforms at two
+    heights, a river with a bridge, a staircase through a cliff and an alcove with its own stairs."""
+    W, H = 48, 34
+    img = Image.new("RGBA", (W * T, H * T), (0, 0, 0, 255))
+    rng = random.Random(5)
+
+    def tile(name):
+        c, r = coords[name]
+        return sheet.crop((c * T, r * T, c * T + T, r * T + T))
+
+    def blit(name, x, y):
+        img.alpha_composite(tile(name), (x * T, y * T))
+
+    def inside(rect, x, y):
+        return rect[0] <= x < rect[2] and rect[1] <= y < rect[3]
+
+    for y in range(H):
+        for x in range(W):
+            blit(rng.choice(("rock_mass_a", "rock_mass_b", "rock_mass_dark")), x, y)
+
+    S = (18, 18, 38, 31)        # start platform (low)
+    L = (3, 13, 14, 31)         # west platform (low)
+    HI = (24, 5, 45, 16)        # high platform; its south edge is a cliff
+    A = (5, 6, 11, 11)          # alcove (mini room), high
+    RIVER = (14, 13, 18, 31)
+    areas = [S, L, HI, A]
+    for rect in areas:
+        for y in range(rect[1], rect[3]):
+            for x in range(rect[0], rect[2]):
+                name = rng.choice(("floor_a", "floor_a", "floor_a", "floor_b", "floor_crack", "floor_moss"))
+                if rect is A:
+                    name = "floor_worn"
+                blit(name, x, y)
+    # the cliff under the high platform and the alcove
+    for x in range(HI[0], HI[2]):
+        blit("wall_lip", x, 16)
+        blit("wall_face_moss" if x % 7 == 0 else "wall_face", x, 17)
+    for x in range(A[0], A[2]):
+        blit("wall_lip", x, 11)
+        blit("wall_face", x, 12)
+    # paths of worn stone
+    for x in range(20, 36):
+        blit("floor_worn", x, 24)
+    # river with its waterfall
+    for j in range(RIVER[3] - RIVER[1]):
+        for i in range(RIVER[2] - RIVER[0]):
+            k = (0 if j == 0 else 2 if j == RIVER[3] - RIVER[1] - 1 else 1) * 3 + (0 if i == 0 else 2 if i == RIVER[2] - RIVER[0] - 1 else 1)
+            name = "pond_%d" % k
+            if k == 4:
+                name = ("pond_4", "pond_center_b", "pond_center_c")[(frame + (i + j) % 2) % 3]
+            blit(name, RIVER[0] + i, RIVER[1] + j)
+    for x in (15, 16):
+        blit("waterfall_top", x, 10)
+        blit("waterfall_mid_" + "abc"[frame], x, 11)
+        blit("waterfall_base_" + "abc"[frame], x, 12)
+    # bridge across the river and shore stones along both banks
+    for x in range(13, 19):
+        blit("bridge_rail_h", x, 24)
+        blit("bridge_planks_h", x, 25)
+        blit("bridge_rail_h", x, 26)
+    for y in range(14, 31):
+        if 23 <= y <= 27:
+            continue
+        blit("shore_stone_" + "abc"[y % 3], 13, y)
+        blit("shore_stone_" + "abc"[(y + 1) % 3], 18, y)
+    # stairs: south to the high platform, and up into the alcove
+    for y in (16, 17):
+        blit("stairs_steps", 30, y)
+        blit("stairs_steps", 31, y)
+        blit("stairs_rail_l", 29, y)
+        blit("stairs_rail_r", 32, y)
+    for y in (11, 12):
+        blit("stairs_steps", 7, y)
+        blit("stairs_steps", 8, y)
+        blit("stairs_rail_l", 6, y)
+        blit("stairs_rail_r", 9, y)
+
+    # rocks around every platform: clusters of columns two deep, staggered, never in the openings
+    openings = [(29, 15, 33, 19), (6, 10, 10, 14), (13, 23, 19, 28), RIVER]
+    sprites = []
+    names = ["column_rock_a", "column_rock_b", "column_rock_c", "column_rock_d"]
+    tall = ["column_tall_a", "column_tall_b"]
+    for rect, open_south in ((S, False), (L, False), (HI, True), (A, True)):
+        x0, y0, x1, y1 = rect
+        for y in range(y0 - 2, y1 + 2):
+            for x in range(x0 - 2, x1 + 2):
+                if inside(rect, x, y):
+                    continue
+                near = min(max(x0 - x, x - (x1 - 1), 0) if y0 <= y < y1 else 99,
+                           max(y0 - y, y - (y1 - 1), 0) if x0 <= x < x1 else 99)
+                corner = max(max(x0 - x, x - (x1 - 1), 0), max(y0 - y, y - (y1 - 1), 0))
+                if corner > 2 or inside((x0 - 2, y0 - 2, x1 + 2, y1 + 2), x, y) is False:
+                    continue
+                if open_south and y >= y1 - 0 and y <= y1 + 1:
+                    continue
+                if any(inside(o, x, y) for o in openings) or any(inside(a, x, y) for a in areas if a is not rect):
+                    continue
+                if rect is S and y < y0 and inside((24, 5, 45, 18), x, y):
+                    continue
+                if corner == 2 and rng.random() < 0.3:
+                    continue
+                px = x * T + rng.choice((-6, -3, 0, 3, 6))
+                base = (y + 1) * T + rng.choice((-4, 0, 0, 4)) + (-3 if corner == 2 else 0)
+                kind = rng.choice(names + names + tall) if corner == 2 and rng.random() < 0.6 else rng.choice(names)
+                sprites.append((base, px, kind))
+    sprites.sort()
+    for base, px, kind in sprites:
+        if kind.startswith("column_tall"):
+            for part, off in (("top", 48), ("mid", 32), ("base", 16)):
+                img.alpha_composite(tile("%s_%s" % (kind, part)), (px, base - off))
+        else:
+            img.alpha_composite(tile(kind + "_top"), (px, base - 32))
+            img.alpha_composite(tile(kind + "_base"), (px, base - 16))
+
+    # decoration: lights, crystals, banners, chests, props, plants
+    def put_tall(name, x, y):
+        blit(name + "_top", x, y - 1)
+        blit(name + "_base", x, y)
+
+    put_tall("crystal", 7, 8)
+    blit("chest_closed", 9, 8)
+    blit("crate", 5, 7)
+    blit("crate", 5, 8)
+    blit("torch_" + "abc"[frame], 10, 7)
+    blit("brazier_" + "abc"[frame], 22, 22)
+    blit("torch_" + "abc"[(frame + 1) % 3], 28, 19)
+    blit("torch_" + "abc"[(frame + 2) % 3], 33, 19)
+    put_tall("banner_a", 30, 5)
+    put_tall("banner_b", 40, 5)
+    put_tall("pillar", 27, 9)
+    put_tall("pillar", 41, 9)
+    blit("brazier_" + "abc"[frame], 33, 8)
+    blit("chest_closed", 43, 8)
+    put_tall("crystal", 35, 10)
+    blit("floor_rune", 28, 27)
+    put_tall("stele", 36, 27)
+    blit("chest_closed", 20, 28)
+    blit("crystal_small_a" if frame != 1 else "crystal_small_a2", 6, 17)
+    blit("crystal_small_b" if frame != 2 else "crystal_small_b2", 11, 27)
+    for name, (x, y) in (("fern_a", (4, 22)), ("fern_blue", (3, 28)), ("mushroom_0", (12, 20)), ("mushroom_1", (22, 26)),
+                         ("mushroom_2", (36, 22)), ("glow_flower_0", (9, 19)), ("glow_flower_2", (32, 28)),
+                         ("moss_clump_a", (20, 25)), ("rubble_a", (35, 20)), ("bones", (5, 14)),
+                         ("boulder_a", (37, 12)), ("stalagmite_a", (25, 12)), ("boulder_small", (9, 24)),
+                         ("pillar_broken", (7, 15)), ("barrel", (26, 11)), ("crate", (26, 10))):
+        blit(name, x, y)
+    return img.resize((W * T * scale, H * T * scale), Image.NEAREST)
+
+
 def main():
     tiles, patterns = build_tiles()
     sheet, coords = write_sheet(tiles, patterns)
@@ -1195,9 +1397,9 @@ def main():
     if PREVIEW:
         os.makedirs(PREVIEW, exist_ok=True)
         contact_sheet(tiles).save(os.path.join(PREVIEW, "ruinas_hoja.png"))
-        sample_room(coords, sheet, 0).save(os.path.join(PREVIEW, "ruinas_sala.png"))
-        frames = [sample_room(coords, sheet, f, scale=2) for f in range(3)]
-        frames[0].save(os.path.join(PREVIEW, "ruinas_sala.gif"), save_all=True, append_images=frames[1:], duration=170, loop=0)
+        sample_map(coords, sheet, 0).save(os.path.join(PREVIEW, "ruinas_mapa.png"))
+        frames = [sample_map(coords, sheet, f, scale=2) for f in range(3)]
+        frames[0].save(os.path.join(PREVIEW, "ruinas_mapa.gif"), save_all=True, append_images=frames[1:], duration=170, loop=0)
 
 
 if __name__ == "__main__":

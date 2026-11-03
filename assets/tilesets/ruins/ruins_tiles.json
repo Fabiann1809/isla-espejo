@@ -266,305 +266,353 @@
    1,
    4
   ],
-  "stalagmite_a": [
+  "column_tall_a_top": [
    2,
+   4
+  ],
+  "column_tall_a_mid": [
+   3,
+   4
+  ],
+  "column_tall_a_base": [
+   4,
+   4
+  ],
+  "column_tall_b_top": [
+   5,
+   4
+  ],
+  "column_tall_b_mid": [
+   6,
+   4
+  ],
+  "column_tall_b_base": [
+   7,
+   4
+  ],
+  "rock_mass_a": [
+   8,
+   4
+  ],
+  "rock_mass_b": [
+   9,
+   4
+  ],
+  "rock_mass_dark": [
+   10,
+   4
+  ],
+  "shore_stone_a": [
+   11,
+   4
+  ],
+  "shore_stone_b": [
+   12,
+   4
+  ],
+  "shore_stone_c": [
+   13,
+   4
+  ],
+  "stalagmite_a": [
+   14,
    4
   ],
   "stalagmite_b": [
-   3,
+   15,
    4
   ],
   "boulder_a": [
-   4,
-   4
+   0,
+   5
   ],
   "boulder_b": [
-   5,
-   4
+   1,
+   5
   ],
   "boulder_small": [
-   6,
-   4
+   2,
+   5
   ],
   "boulder_small_moss": [
-   7,
-   4
+   3,
+   5
   ],
   "rubble_a": [
-   8,
-   4
+   4,
+   5
   ],
   "rubble_b": [
-   9,
-   4
+   5,
+   5
   ],
   "pebbles": [
-   10,
-   4
+   6,
+   5
   ],
   "bones": [
-   11,
-   4
+   7,
+   5
   ],
   "wall_face": [
-   12,
-   4
+   8,
+   5
   ],
   "wall_face_moss": [
-   13,
-   4
+   9,
+   5
   ],
   "wall_lip": [
-   14,
-   4
+   10,
+   5
   ],
   "wall_lip_moss": [
-   15,
-   4
+   11,
+   5
   ],
   "wall_side_l": [
-   0,
+   12,
    5
   ],
   "wall_side_r": [
-   1,
+   13,
    5
   ],
   "terrace_side_l": [
-   2,
+   14,
    5
   ],
   "terrace_side_r": [
-   3,
+   15,
    5
   ],
   "stairs_steps": [
-   4,
-   5
+   0,
+   6
   ],
   "stairs_steps_wood": [
-   5,
-   5
+   1,
+   6
   ],
   "stairs_steps_h": [
-   6,
-   5
+   2,
+   6
   ],
   "stairs_rail_l": [
-   7,
-   5
+   3,
+   6
   ],
   "stairs_rail_r": [
-   8,
-   5
+   4,
+   6
   ],
   "stairs_rail_t": [
-   9,
-   5
+   5,
+   6
   ],
   "stairs_rail_b": [
-   10,
-   5
+   6,
+   6
   ],
   "bridge_planks_h": [
-   11,
-   5
+   7,
+   6
   ],
   "bridge_planks_v": [
-   12,
-   5
+   8,
+   6
   ],
   "bridge_rail_h": [
-   13,
-   5
+   9,
+   6
   ],
   "bridge_rail_v": [
-   14,
-   5
+   10,
+   6
   ],
   "crystal_top": [
-   15,
-   5
+   11,
+   6
   ],
   "crystal_base": [
-   0,
+   12,
    6
   ],
   "crystal_top_b": [
-   1,
+   13,
    6
   ],
   "crystal_small_a": [
-   2,
+   14,
    6
   ],
   "crystal_small_a2": [
-   3,
+   15,
    6
   ],
   "crystal_small_b": [
-   4,
-   6
+   0,
+   7
   ],
   "crystal_small_b2": [
-   5,
-   6
+   1,
+   7
   ],
   "torch_a": [
-   6,
-   6
+   2,
+   7
   ],
   "torch_b": [
-   7,
-   6
+   3,
+   7
   ],
   "torch_c": [
-   8,
-   6
+   4,
+   7
   ],
   "brazier_a": [
-   9,
-   6
+   5,
+   7
   ],
   "brazier_b": [
-   10,
-   6
+   6,
+   7
   ],
   "brazier_c": [
-   11,
-   6
+   7,
+   7
   ],
   "banner_a_top": [
-   12,
-   6
+   8,
+   7
   ],
   "banner_a_base": [
-   13,
-   6
+   9,
+   7
   ],
   "banner_b_top": [
-   14,
-   6
+   10,
+   7
   ],
   "banner_b_base": [
-   15,
-   6
+   11,
+   7
   ],
   "chest_closed": [
-   0,
+   12,
    7
   ],
   "chest_open": [
-   1,
-   7
-  ],
-  "crate": [
-   2,
-   7
-  ],
-  "barrel": [
-   3,
-   7
-  ],
-  "pillar_top": [
-   4,
-   7
-  ],
-  "pillar_base": [
-   5,
-   7
-  ],
-  "pillar_broken": [
-   6,
-   7
-  ],
-  "stele_top": [
-   7,
-   7
-  ],
-  "stele_base": [
-   8,
-   7
-  ],
-  "stele_small": [
-   9,
-   7
-  ],
-  "fern_a": [
-   10,
-   7
-  ],
-  "fern_b": [
-   11,
-   7
-  ],
-  "fern_blue": [
-   12,
-   7
-  ],
-  "moss_clump_a": [
    13,
    7
   ],
-  "moss_clump_b": [
+  "crate": [
    14,
    7
   ],
-  "mushroom_0": [
+  "barrel": [
    15,
    7
   ],
-  "mushroom_1": [
+  "pillar_top": [
    0,
    8
   ],
-  "mushroom_2": [
+  "pillar_base": [
    1,
    8
   ],
-  "mushroom_3": [
+  "pillar_broken": [
    2,
    8
   ],
-  "glow_flower_0": [
+  "stele_top": [
    3,
    8
   ],
-  "glow_flower_1": [
+  "stele_base": [
    4,
    8
   ],
-  "glow_flower_2": [
+  "stele_small": [
    5,
    8
   ],
-  "waterfall_top": [
+  "fern_a": [
    6,
    8
   ],
-  "waterfall_mid_a": [
+  "fern_b": [
    7,
    8
   ],
-  "waterfall_mid_b": [
+  "fern_blue": [
    8,
    8
   ],
-  "waterfall_mid_c": [
+  "moss_clump_a": [
    9,
    8
   ],
-  "waterfall_base_a": [
+  "moss_clump_b": [
    10,
    8
   ],
-  "waterfall_base_b": [
+  "mushroom_0": [
    11,
    8
   ],
-  "waterfall_base_c": [
+  "mushroom_1": [
    12,
    8
+  ],
+  "mushroom_2": [
+   13,
+   8
+  ],
+  "mushroom_3": [
+   14,
+   8
+  ],
+  "glow_flower_0": [
+   15,
+   8
+  ],
+  "glow_flower_1": [
+   0,
+   9
+  ],
+  "glow_flower_2": [
+   1,
+   9
+  ],
+  "waterfall_top": [
+   2,
+   9
+  ],
+  "waterfall_mid_a": [
+   3,
+   9
+  ],
+  "waterfall_mid_b": [
+   4,
+   9
+  ],
+  "waterfall_mid_c": [
+   5,
+   9
+  ],
+  "waterfall_base_a": [
+   6,
+   9
+  ],
+  "waterfall_base_b": [
+   7,
+   9
+  ],
+  "waterfall_base_c": [
+   8,
+   9
   ]
  },
  "patterns": {
