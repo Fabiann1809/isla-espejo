@@ -101,6 +101,7 @@ const ANIM_SPEED_MAX := 2.0
 
 func _ready() -> void:
 	add_to_group("player")
+	Heights.set_level(self, Heights.LOW)
 	_hurtbox.invulnerability_check = is_invulnerable
 	_hurtbox.hit.connect(_on_hurtbox_hit)
 	health.changed.connect(func(current: int, maximum: int) -> void:
@@ -415,6 +416,7 @@ func _fire() -> void:
 		var arrow: Arrow = weapon.projectile_scene.instantiate()
 		var angle := _arrow_spread * (i - (count - 1) / 2.0)
 		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, attack_damage)
+		arrow.height_level = Heights.level_of(self)
 		if i == (count - 1) / 2:
 			arrow.hit_landed.connect(_on_arrow_hit)
 		arrow.blocked.connect(func(at: Vector2) -> void: Events.arrow_blocked.emit(at))

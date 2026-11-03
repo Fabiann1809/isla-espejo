@@ -23,6 +23,8 @@ var _velocity := Vector2.ZERO
 var _damage := 1
 var _range_left := 200.0
 var _angle := 0.0
+## Height level of the shooter: the arrow only stops at what blocks that level (see Heights).
+var height_level := Heights.LOW
 
 @onready var _art: Sprite2D = $Art
 @onready var _hitbox: Hitbox = $Hitbox
@@ -46,6 +48,7 @@ func _ready() -> void:
 	_hitbox.damage = _damage
 	_hitbox.hit_landed.connect(_on_hit_landed)
 	_hitbox.activate()
+	Heights.set_projectile_level(_wall_sensor, height_level)
 	_wall_sensor.body_entered.connect(func(_body: Node2D) -> void:
 		blocked.emit(global_position)
 		_end_with_impact())

@@ -94,6 +94,7 @@ var _status_tinted := false
 
 func _ready() -> void:
 	add_to_group("enemies")
+	Heights.set_level(self, Heights.level_of(self))
 	if data == null:
 		push_error("Enemy '%s' has no EnemyData assigned." % name)
 		data = EnemyData.new()
