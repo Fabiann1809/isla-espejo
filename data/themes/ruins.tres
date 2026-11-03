@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RoomTheme" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_theme.gd" id="1_ehlfu"]
+[ext_resource type="Resource" path="res://data/tilesets/ruins.tres" id="2_iou61"]
+
+[resource]
+script = ExtResource("1_ehlfu")
+tileset = ExtResource("2_iou61")
+floor_variants = Array[StringName]([&"floor_b", &"floor_crack", &"floor_moss"])
+floor_variant_chance = 0.12
+decor_tiles = Array[StringName]([&"pebbles", &"moss_clump_a", &"moss_clump_b", &"rubble_a", &"rubble_b"])
+decor_chance = 0.025
+wall_style = 1

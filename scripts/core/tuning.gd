@@ -75,6 +75,13 @@ const DETAIL_FOOT_LIFT := 3.0
 const WALL_TREE_STEP := 18.0
 const WALL_TREE_JITTER := 2.0
 const WALL_TREE_BACK_ROW := 9.0
+## Rock columns on the walls of the rooms and corridors of the Ruinas: distance between them, how far
+## each one wanders from its place (px), how far behind the top wall's front row its back row stands,
+## and the share of taller columns.
+const ROCK_WALL_STEP := 11.0
+const ROCK_WALL_JITTER := 3.0
+const ROCK_WALL_BACK_ROW := 8.0
+const ROCK_WALL_TALL_CHANCE := 0.25
 ## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
 ## narrower than the picture, and its smallest and largest size (px).
 const PROP_FOOT_INSET := 2.0

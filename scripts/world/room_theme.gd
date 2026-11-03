@@ -29,6 +29,12 @@ const GROUND_FX_Z := -1
 @export var forest_art_details := false
 
 
+enum WallStyle { TREES, ROCKS }
+## How the walls of rooms and corridors are drawn and what fills the space around the map: rows of
+## trees over a forest, or clusters of rock columns over solid rock (the Ruinas).
+@export var wall_style := WallStyle.TREES
+
+
 ## Makes this theme's pack the one TileArt draws with (Level does it before building a map).
 func activate() -> void:
 	TileArt.use_profile(tileset)

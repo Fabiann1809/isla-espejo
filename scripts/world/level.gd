@@ -352,11 +352,27 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 	var layer := scenario.theme.new_layer(parent, "Corridor%d" % number)
 	scenario.theme.fill(layer, _cells(floor_rect), scenario.theme.path_tile)
 	for wall in walls:
-		if scenario.theme.forest_art_details:
+		if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+			_plant_corridor_rocks(parent, wall)
+		elif scenario.theme.forest_art_details:
 			_plant_corridor_trees(parent, wall)
 		else:
 			scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
 	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+
+
+## A corridor wall as a row of rock columns, like the rooms' walls (y-sorted with the actors).
+func _plant_corridor_rocks(parent: Node, wall: Rect2) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([current_seed, wall.position])
+	var feet: Array[Vector2]
+	if wall.size.x > wall.size.y:
+		feet = RockWall.feet_along(Vector2(wall.position.x, wall.end.y - 1.0), Vector2(wall.end.x, wall.end.y - 1.0), rng)
+	else:
+		var x := wall.get_center().x
+		feet = RockWall.feet_along(Vector2(x, wall.position.y), Vector2(x, wall.end.y), rng)
+	for foot in feet:
+		parent.add_child(RockWall.column(foot, rng))
 
 
 ## A corridor wall as a row of trees, like the rooms' walls (y-sorted with the actors).
@@ -386,6 +402,9 @@ func _build_backdrop() -> void:
 	for rect in _corridor_walls:
 		_mark(taken, _cells(rect))
 	var area := _cells(bounds).grow(Tuning.BACKDROP_MARGIN_TILES)
+	if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		RockBackdrop.build(_map, area, walkable, current_seed)
+		return
 	ForestBackdrop.build(_map, area, walkable, taken, current_seed)
 	if scenario.theme.forest_art_details:
 		_build_forest_shade(area)
@@ -517,7 +536,7 @@ func _add_shadows() -> void:
 		ActorShadow.attach(player)
 ## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void.
 func _build_boundary() -> void:
-	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED:
+	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED 			or scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		return
 	var boundary_script = load("res://scripts/world/forest_boundary.gd")
 	if boundary_script == null:

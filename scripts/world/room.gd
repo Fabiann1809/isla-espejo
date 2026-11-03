@@ -225,12 +225,14 @@ func _build_themed_floor() -> void:
 				ground.set_cell(cell, 0, TileArt.coords(theme.path_tile))
 				patch_layer.erase_cell(cell)
 				decor.erase_cell(cell)
-			elif not theme.forest_art_details:
+			elif not theme.forest_art_details and theme.wall_style != RoomTheme.WallStyle.ROCKS:
 				border.set_cell(cell, 0, TileArt.coords(theme.border_tile))
 	_add_detail_groups(decor, rng)
 	_paint_door_paths(ground, decor, patch_layer)
 	if theme.forest_art_details:
 		_swap_details_for_art(decor, rng)
+	if theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		_plant_rock_wall(rng)
 
 
 ## A few small natural groups of ground details: mushrooms, stones, flowers, a stump with mushrooms.
@@ -312,6 +314,31 @@ func _plant_tree_wall(rng: RandomNumberGenerator) -> void:
 		singles.append_array(TreeWall.feet_along(Vector2(x, TILE * 2.0), Vector2(x, size.y - TILE), rng))
 	for foot in _on_wall(singles):
 		trees.add_child(TreeWall.tree(foot, rng))
+
+
+## The room's walls as clusters of rock columns standing on the border (the walls keep their own
+## collision): two staggered rows on top (painted into one picture, nobody walks behind them) and
+## single columns, y-sorted with the actors, on the sides and at the bottom.
+func _plant_rock_wall(rng: RandomNumberGenerator) -> void:
+	var rocks := Node2D.new()
+	rocks.name = "WallRocks"
+	rocks.y_sort_enabled = true
+	add_child(rocks)
+	var size := Vector2(size_tiles * TILE)
+	var front := TILE - 1.0
+	var back := front - Tuning.ROCK_WALL_BACK_ROW
+	var top: Array[Vector2] = _on_wall(RockWall.feet_along(Vector2(0, front), Vector2(size.x, front), rng))
+	var shifted := Vector2(Tuning.ROCK_WALL_STEP / 2.0, 0)
+	top.append_array(_on_wall(RockWall.feet_along(Vector2(0, back) + shifted, Vector2(size.x, back), rng)))
+	var row := RockWall.baked_row(top, rng)
+	row.name = "TopRow"
+	rocks.add_child(row)
+	var singles: Array[Vector2] = []
+	singles.append_array(RockWall.feet_along(Vector2(0, size.y - 1.0), Vector2(size.x, size.y - 1.0), rng))
+	for x in [TILE / 2.0, size.x - TILE / 2.0]:
+		singles.append_array(RockWall.feet_along(Vector2(x, TILE * 2.0), Vector2(x, size.y - TILE), rng))
+	for foot in _on_wall(singles):
+		rocks.add_child(RockWall.column(foot, rng))
 
 
 ## The feet that stand on the wall (not in a door's gap).
