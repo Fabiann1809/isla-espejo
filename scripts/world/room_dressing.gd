@@ -19,6 +19,9 @@ static var _pixel: Texture2D
 static func dress(room: Room) -> void:
 	if not Tuning.ROOM_DRESSING_ENABLED or room.theme == null or room.data == null:
 		return
+	# The Ruinas dress their special rooms with their own props (see RuinProp), not with the forest's.
+	if room.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(["dressing", Vector2i(room.position)])
 	match room.data.type:

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/ruins/falls.tscn" id="1_7styh"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_hgxdq"]
+
+[resource]
+script = ExtResource("2_hgxdq")
+id = &"ruins_falls"
+scene = ExtResource("1_7styh")
+weight = 0.8
+tags = Array[StringName]([&"watch"])
+min_enemies = 3
+max_enemies = 5
