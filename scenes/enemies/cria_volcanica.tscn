@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/cria_volcanica.tres" id="2"]
+
+[sub_resource type="RectangleShape2D" id="body"]
+size = Vector2(8, 6)
+
+[sub_resource type="RectangleShape2D" id="hurt"]
+size = Vector2(12, 10)
+
+[sub_resource type="RectangleShape2D" id="bite"]
+size = Vector2(12, 10)
+
+[node name="CriaVolcanica" instance=ExtResource("1")]
+data = ExtResource("2")
+
+[node name="Body" parent="." index="1"]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="CollisionShape2D" parent="." index="2"]
+position = Vector2(0, 1)
+shape = SubResource("body")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -1)
+shape = SubResource("hurt")
+
+[node name="Telegraph" parent="AttackPivot" index="0"]
+offset_left = 3.0
+offset_top = -5.0
+offset_right = 15.0
+offset_bottom = 5.0
+
+[node name="CollisionShape2D" parent="AttackPivot/Hitbox" index="0"]
+position = Vector2(9, 0)
+shape = SubResource("bite")

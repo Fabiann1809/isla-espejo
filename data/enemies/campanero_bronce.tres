@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="BronzeBellRingerData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/campanero_bronce/campanero_bronce_ring.png" id="1_kcc03"]
+[ext_resource type="Script" path="res://scripts/enemies/campanero_bronce_data.gd" id="2_ahaju"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/campanero_bronce_frames.tres" id="3_yrq3m"]
+
+[resource]
+script = ExtResource("2_ahaju")
+ring_art = ExtResource("1_kcc03")
+id = &"campanero_bronce"
+display_name = "Campanero de bronce"
+placeholder_color = Color(0.72, 0.5, 0.22, 1)
+sprite_frames = ExtResource("3_yrq3m")
+sprite_offset = Vector2(0, -14)
+max_health = 8
+move_speed = 18.0
+chase_speed = 28.0
+detection_range = 160.0
+lose_range = 250.0
+attack_range = 70.0
+attack_windup = 0.8
+attack_time = 0.2
+attack_cooldown = 2.6
+hurt_time = 0.2
+knockback_speed = 80.0
+knockback_resistance = 0.6
+attack_armor = true
+patrol_radius = 30.0
+patrol_wait = 2.0

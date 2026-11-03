@@ -28,6 +28,9 @@ const RUN_EXIT_SPEED := 2.0
 ## Limits of the walk/run playback speed relative to the speed the cycle was drawn for.
 const ANIM_SPEED_MIN := 0.5
 const ANIM_SPEED_MAX := 2.0
+## Tints of the statuses allies give: a magic shield (hits blocked) and a frenzy.
+const SHIELD_TINT := Color(0.7, 0.95, 1.4)
+const FRENZY_TINT := Color(1.4, 0.75, 0.6)
 
 @export var data: EnemyData
 ## Shows the current state above the enemy (debugging aid).
@@ -65,6 +68,14 @@ var _hurt_time_left := 0.0
 var _root_left := 0.0
 var _slow_left := 0.0
 var _slow_factor := 1.0
+## Shielded by an ally (the Custodio del sello): hits are blocked while it lasts.
+var _shield_left := 0.0
+## Frenzy (a Máscara parásita on it): faster, and its attacks come back sooner.
+var _frenzy_left := 0.0
+var _frenzy_speed := 1.0
+var _frenzy_rate := 1.0
+## A Máscara parásita rides it (see set_masked).
+var _masked := false
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var _hurtbox: Hurtbox = $Hurtbox
@@ -101,9 +112,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_attack_cooldown_left = maxf(_attack_cooldown_left - delta, 0.0)
+	_frenzy_left = maxf(_frenzy_left - delta, 0.0)
+	_attack_cooldown_left = maxf(_attack_cooldown_left - delta * (_frenzy_rate if _frenzy_left > 0.0 else 1.0), 0.0)
 	_root_left = maxf(_root_left - delta, 0.0)
 	_slow_left = maxf(_slow_left - delta, 0.0)
+	_shield_left = maxf(_shield_left - delta, 0.0)
 	_update_awareness(delta)
 
 	match state:
@@ -176,6 +189,45 @@ func apply_knockback(push: Vector2) -> void:
 	state = State.HURT
 	_hurt_time_left = data.hurt_time
 	velocity = push * (1.0 - data.knockback_resistance)
+
+
+## Status effects allies give (temple enemies): a shield that blocks every hit for `duration`
+## seconds, and a frenzy that multiplies speed by `speed_factor` and makes attack cooldowns run
+## `cooldown_rate` times faster.
+func apply_shield(duration: float) -> void:
+	if state != State.DEAD:
+		_shield_left = maxf(_shield_left, duration)
+
+
+func is_shielded() -> bool:
+	return _shield_left > 0.0
+
+
+func apply_frenzy(speed_factor: float, cooldown_rate: float, duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_frenzy_speed = speed_factor
+	_frenzy_rate = cooldown_rate
+	_frenzy_left = maxf(_frenzy_left, duration)
+
+
+func end_frenzy() -> void:
+	_frenzy_left = 0.0
+
+
+func is_frenzied() -> bool:
+	return _frenzy_left > 0.0
+
+
+## Called by a Máscara parásita when it starts (true) or stops (false) riding this enemy. Does
+## nothing else here: an enemy with its own boost while masked overrides it (calling super) or reads
+## is_masked() where it uses the boosted value.
+func set_masked(on: bool) -> void:
+	_masked = on
+
+
+func is_masked() -> bool:
+	return _masked
 
 
 func is_rooted() -> bool:
@@ -388,7 +440,7 @@ func _debug_log(message: String) -> void:
 
 
 func _speed_scale() -> float:
-	return speed_multiplier * (_slow_factor if _slow_left > 0.0 else 1.0)
+	return speed_multiplier * (_slow_factor if _slow_left > 0.0 else 1.0) 			* (_frenzy_speed if _frenzy_left > 0.0 else 1.0)
 
 
 ## How visible a node is (1 = normal). The player lowers it with the Sombra skill.
@@ -400,11 +452,17 @@ func _visibility_of(node: Node) -> float:
 func _update_status_tint_target() -> void:
 	if state == State.DEAD:
 		return
-	if _root_left > 0.0:
+	if _shield_left > 0.0:
+		_tint_target().modulate = SHIELD_TINT
+		_status_tinted = true
+	elif _root_left > 0.0:
 		_tint_target().modulate = Color(0.6, 1.0, 0.6)
 		_status_tinted = true
 	elif _slow_left > 0.0:
 		_tint_target().modulate = Color(0.6, 0.75, 1.0)
+		_status_tinted = true
+	elif _frenzy_left > 0.0:
+		_tint_target().modulate = FRENZY_TINT
 		_status_tinted = true
 	elif _status_tinted or _sprite == null:
 		# A sprite is only reset after a status tint, so the hit flash is not cut short.
@@ -440,6 +498,10 @@ func _choose_patrol_point() -> void:
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 	if state == State.DEAD:
+		return
+	if _shield_left > 0.0:
+		_flash_hit_only()
+		Events.arrow_blocked.emit(global_position)
 		return
 	Events.enemy_damaged.emit(self, damage)
 	health.take_damage(damage, from_position)

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SunEyeData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/ojo_sol/ojo_sol_aim.png" id="1_v6id7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ojo_sol/ojo_sol_beam.png" id="2_4rvgy"]
+[ext_resource type="Script" path="res://scripts/enemies/ojo_sol_data.gd" id="3_d73wc"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ojo_sol/ojo_sol_spin.png" id="4_jpuea"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/ojo_sol_frames.tres" id="5_r1qfc"]
+
+[resource]
+script = ExtResource("3_d73wc")
+beam_art = ExtResource("2_4rvgy")
+aim_art = ExtResource("1_v6id7")
+spin_art = ExtResource("4_jpuea")
+id = &"ojo_sol"
+display_name = "Ojo del sol"
+placeholder_color = Color(0.95, 0.6, 0.15, 1)
+sprite_frames = ExtResource("5_r1qfc")
+sprite_offset = Vector2(0, -14)
+max_health = 6
+move_speed = 22.0
+chase_speed = 30.0
+detection_range = 300.0
+lose_range = 400.0
+attack_range = 300.0
+attack_windup = 1.1
+attack_time = 2.0
+attack_cooldown = 2.4
+hurt_time = 0.2
+knockback_speed = 90.0
+knockback_resistance = 0.3
+patrol_radius = 30.0
+patrol_wait = 1.8

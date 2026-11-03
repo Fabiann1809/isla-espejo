@@ -63,6 +63,14 @@ var _buff_left := 0.0
 var _buff_id := StringName()
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
+## Pulled by an enemy (a chain): dragged toward `_pull_to` at `_pull_speed` for a while. A dodge
+## breaks free.
+var _pull_to := Vector2.ZERO
+var _pull_speed := 0.0
+var _pull_left := 0.0
+## Slowed by an enemy (a burning trail): walking speed multiplied by `_slow_factor` for a while.
+var _slow_factor := 1.0
+var _slow_left := 0.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
@@ -75,6 +83,8 @@ var _shot_pending := false
 
 ## How long the walk pose is kept after the movement stops for a tick (key ghosting, a graze).
 const MOVE_HOLD := 0.1
+## A pull ends this close to its anchor (px).
+const PULL_ARRIVE := 14.0
 const DEFAULT_WEAPON := "res://data/weapons/bow.tres"
 ## State tints: strong ones for art without its own animation, soft ones over the dash, hurt and
 ## death animations.
@@ -118,6 +128,8 @@ func _physics_process(delta: float) -> void:
 			_end_arrow_buff()
 
 	_interact_block_left = maxf(_interact_block_left - delta, 0.0)
+	_slow_left = maxf(_slow_left - delta, 0.0)
+	_pull_left = maxf(_pull_left - delta, 0.0)
 	_move_dir = Vector2.ZERO if _locked else Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if _move_dir != Vector2.ZERO and state in [State.IDLE, State.MOVE]:
 		facing = _move_dir.normalized()
@@ -134,6 +146,13 @@ func _physics_process(delta: float) -> void:
 		State.DEAD:
 			velocity = Vector2.ZERO
 
+	# Also while hurt: the chain that catches him also hits him, and its knockback must not win.
+	if _pull_left > 0.0 and state in [State.IDLE, State.MOVE, State.ATTACK, State.HURT]:
+		var to_anchor := _pull_to - global_position
+		if to_anchor.length() <= PULL_ARRIVE:
+			_pull_left = 0.0
+		else:
+			velocity = to_anchor.normalized() * _pull_speed
 	move_and_slide()
 	_update_interaction()
 	_update_visuals(delta)
@@ -186,6 +205,33 @@ func end_stealth() -> void:
 	_stealth_left = 0.0
 	visibility = 1.0
 	Events.player_stealth_changed.emit(false)
+
+
+## Drags the player toward `toward` (world position) at `pull_speed` for up to `duration` seconds,
+## or until close to it. Nico cannot walk meanwhile, but a dodge breaks free.
+func apply_pull(toward: Vector2, pull_speed: float, duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_pull_to = toward
+	_pull_speed = pull_speed
+	_pull_left = duration
+
+
+func is_pulled() -> bool:
+	return _pull_left > 0.0
+
+
+## Multiplies the walking speed by `factor` (0.5 = half as fast) for `duration` seconds; overlapping
+## slows keep the strongest.
+func apply_slow(factor: float, duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_slow_factor = factor if _slow_left <= 0.0 else minf(_slow_factor, factor)
+	_slow_left = maxf(_slow_left, duration)
+
+
+func is_slowed() -> bool:
+	return _slow_left > 0.0
 
 
 func add_gold(amount: int) -> void:
@@ -294,7 +340,7 @@ func _on_arrow_hit(hurtbox: Hurtbox) -> void:
 
 
 func _process_free(_delta: float) -> void:
-	velocity = _move_dir * speed
+	velocity = _move_dir * speed * (_slow_factor if _slow_left > 0.0 else 1.0)
 	state = State.MOVE if _move_dir != Vector2.ZERO else State.IDLE
 
 	if _locked:
@@ -306,6 +352,7 @@ func _process_free(_delta: float) -> void:
 
 
 func _start_dash() -> void:
+	_pull_left = 0.0
 	_action_dir = facing
 	_dash_cooldown_left = dash_cooldown
 	_enter_state(State.DASH, dash_time)

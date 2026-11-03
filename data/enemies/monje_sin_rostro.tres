@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="FacelessMonkData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/monje_sin_rostro_orb.tscn" id="1_2jat0"]
+[ext_resource type="Script" path="res://scripts/enemies/monje_sin_rostro_data.gd" id="2_h8l0o"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/monje_sin_rostro_frames.tres" id="3_gcr0t"]
+[ext_resource type="Texture2D" path="res://assets/sprites/monje_sin_rostro/monje_sin_rostro_symbol.png" id="4_chtvu"]
+
+[resource]
+script = ExtResource("2_h8l0o")
+symbol_art = ExtResource("4_chtvu")
+projectile_scene = ExtResource("1_2jat0")
+shot_tint = Color(1, 1, 1, 1)
+id = &"monje_sin_rostro"
+display_name = "Monje sin rostro"
+placeholder_color = Color(0.55, 0.3, 0.7, 1)
+sprite_frames = ExtResource("3_gcr0t")
+sprite_offset = Vector2(0, -30)
+max_health = 5
+move_speed = 26.0
+chase_speed = 36.0
+detection_range = 180.0
+lose_range = 270.0
+attack_range = 190.0
+attack_windup = 0.45
+attack_time = 0.2
+attack_cooldown = 2.2
+hurt_time = 0.2
+knockback_speed = 110.0
+patrol_radius = 40.0
+patrol_wait = 1.5

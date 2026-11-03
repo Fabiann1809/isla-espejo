@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CarvingSpiderData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/arana_talladora/arana_talladora_crack.png" id="1_8wmaj"]
+[ext_resource type="Texture2D" path="res://assets/sprites/arana_talladora/arana_talladora_pit.png" id="2_dmkh1"]
+[ext_resource type="Script" path="res://scripts/enemies/arana_talladora_data.gd" id="3_s67ht"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/arana_talladora_frames.tres" id="4_381g4"]
+
+[resource]
+script = ExtResource("3_s67ht")
+pit_art = ExtResource("2_dmkh1")
+crack_art = ExtResource("1_8wmaj")
+id = &"arana_talladora"
+display_name = "Araña talladora"
+placeholder_color = Color(0.7, 0.32, 0.15, 1)
+sprite_frames = ExtResource("4_381g4")
+sprite_offset = Vector2(0, -6)
+max_health = 5
+move_speed = 50.0
+chase_speed = 100.0
+detection_range = 170.0
+lose_range = 260.0
+attack_range = 120.0
+attack_windup = 0.5
+attack_time = 0.2
+attack_cooldown = 2.4
+hurt_time = 0.2
+knockback_speed = 140.0
+patrol_radius = 80.0
+patrol_wait = 0.5

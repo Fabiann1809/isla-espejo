@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SootMantaData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/manta_hollin_data.gd" id="1_b7h88"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/manta_hollin_frames.tres" id="2_0b1qc"]
+
+[resource]
+script = ExtResource("1_b7h88")
+id = &"manta_hollin"
+display_name = "Manta de hollín"
+placeholder_color = Color(0.95, 0.45, 0.15, 1)
+sprite_frames = ExtResource("2_0b1qc")
+sprite_offset = Vector2(0, -1)
+max_health = 6
+move_speed = 45.0
+chase_speed = 95.0
+detection_range = 170.0
+lose_range = 280.0
+attack_windup = 0.55
+attack_cooldown = 1.6
+hurt_time = 0.2
+knockback_speed = 140.0
+patrol_radius = 80.0
+patrol_wait = 0.6

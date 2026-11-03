@@ -1,0 +1,46 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/orb.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/acolito_brasero/acolito_brasero_orb.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="flame_0"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="flame_1"]
+atlas = ExtResource("2")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="flame_2"]
+atlas = ExtResource("2")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="flame_3"]
+atlas = ExtResource("2")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="frames"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("flame_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("flame_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("flame_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("flame_3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]
+
+[node name="AcolitoBrasero_Orb" instance=ExtResource("1")]
+
+[node name="Art" parent="." index="0"]
+position = Vector2(0, -1)
+sprite_frames = SubResource("frames")

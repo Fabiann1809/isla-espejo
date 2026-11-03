@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ObsidianSentinelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/centinela_obsidiana_data.gd" id="1_mvfq5"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/centinela_obsidiana_frames.tres" id="2_4xxoj"]
+
+[resource]
+script = ExtResource("1_mvfq5")
+id = &"centinela_obsidiana"
+display_name = "Centinela de obsidiana"
+placeholder_color = Color(0.16, 0.13, 0.2, 1)
+sprite_frames = ExtResource("2_4xxoj")
+sprite_offset = Vector2(0, -16)
+max_health = 6
+move_speed = 22.0
+chase_speed = 34.0
+detection_range = 150.0
+lose_range = 240.0
+attack_range = 24.0
+attack_windup = 0.6
+attack_time = 0.2
+attack_cooldown = 1.4
+hurt_time = 0.25
+knockback_speed = 90.0
+knockback_resistance = 0.5
+attack_armor = true
+patrol_radius = 40.0
+patrol_wait = 1.5
