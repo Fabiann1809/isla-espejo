@@ -2,16 +2,13 @@ extends SceneTree
 ## Writes the Vasija poseída's data (data/enemies/vasija_poseida.tres) and the creature it releases:
 ## the Espíritu de la vasija (data/enemies/espiritu_vasija.tres, a plain EnemyData) with its
 ## SpriteFrames (data/enemies/espiritu_vasija_frames.tres), cut here from the fire spirit that leaps
-## out of the vase (its own strip, made by tools/make_temple_enemy_art.py from the pack's attack). The vase's own SpriteFrames come from
-## tools/make_temple_enemy_frames.gd; the scenes are hand-written.
+## out of the vase (its own strip, drawn by tools/make_vasija_poseida_art.py). The vase's own
+## SpriteFrames come from tools/make_temple_enemy_frames.gd; the scenes are hand-written.
 ## Run: godot --headless --path . --script res://tools/make_vasija_poseida.gd
 
 const SPIRIT_STRIP := "res://assets/sprites/vasija_poseida/vasija_poseida_spirit.png"
-## The vase's art cells are 96 px; the spirit's strip has its two flame frames.
-const CELL := 96
-const SPIRIT_CELLS := [0, 1]
-## The part of a cell around the spirit (it is centered in it).
-const SPIRIT_REGION := Rect2(16, 56, 64, 40)
+## The spirit's strip: 32 px cells, 4 flicker frames, 2 attack (gather, lunge), 1 hurt, 3 death.
+const SPIRIT_CELL := 32
 const SPIRIT_FRAMES_PATH := "res://data/enemies/espiritu_vasija_frames.tres"
 const SPIRIT_DATA_PATH := "res://data/enemies/espiritu_vasija.tres"
 
@@ -30,7 +27,9 @@ func _vase_data() -> PossessedVaseData:
 	data.display_name = "Vasija poseída"
 	data.placeholder_color = Color(0.75, 0.4, 0.15)
 	data.sprite_frames = load("res://data/enemies/vasija_poseida_frames.tres")
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_vasija_poseida_art.py with the foot on row 50: it
+	# sits a few pixels below the pot's center.
+	data.sprite_offset = Vector2(0, -12)
 	# A hit breaks it whatever its health; the creature inside is the fight.
 	data.max_health = 3
 	data.move_speed = 0.0
@@ -85,25 +84,26 @@ func _spirit_data() -> EnemyData:
 	return data
 
 
-## The spirit is the same two flame frames in every animation, at different speeds.
+## The spirit flickers in place to idle and move, gathers and lunges to strike (the lunge falls at
+## the attack's hit, 70% of its windup + strike) and bursts into embers when it dies.
 func _spirit_frames() -> SpriteFrames:
 	var strip: Texture2D = load(SPIRIT_STRIP)
 	var cells: Array[AtlasTexture] = []
-	for cell: int in SPIRIT_CELLS:
+	for cell in strip.get_width() / SPIRIT_CELL:
 		var texture := AtlasTexture.new()
 		texture.atlas = strip
-		texture.region = Rect2(SPIRIT_REGION.position + Vector2(cell * CELL, 0), SPIRIT_REGION.size)
+		texture.region = Rect2(cell * SPIRIT_CELL, 0, SPIRIT_CELL, SPIRIT_CELL)
 		cells.append(texture)
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
 	# name: [speed, loop, frame order]
 	var animations := {
-		&"idle": [6.0, true, [0, 1]],
-		&"walk": [8.0, true, [0, 1]],
-		&"run": [12.0, true, [0, 1]],
-		&"attack": [12.0, false, [0, 1, 0, 1]],
-		&"hurt": [9.0, false, [1, 0]],
-		&"death": [8.0, false, [0, 1, 0]],
+		&"idle": [8.0, true, [0, 1, 2, 3]],
+		&"walk": [10.0, true, [0, 1, 2, 3]],
+		&"run": [14.0, true, [0, 1, 2, 3]],
+		&"attack": [12.0, false, [0, 4, 4, 4, 5, 5, 1]],
+		&"hurt": [9.0, false, [6, 0]],
+		&"death": [8.0, false, [7, 8, 9]],
 	}
 	for anim: StringName in animations:
 		var spec: Array = animations[anim]

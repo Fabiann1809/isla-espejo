@@ -1,6 +1,7 @@
 extends SceneTree
 ## Writes the Salamandra de cristal's CrystalSalamanderData (data/enemies/salamandra_cristal.tres).
-## Its SpriteFrames come from tools/make_temple_enemy_frames.gd; the scene
+## Its SpriteFrames come from tools/make_temple_enemy_frames.gd, the art of its crystal and patch from
+## tools/make_salamandra_cristal_art.py; the scene
 ## scenes/enemies/salamandra_cristal.tscn is hand-written.
 ## Run: godot --headless --path . --script res://tools/make_salamandra_cristal.gd
 
@@ -40,14 +41,19 @@ func _initialize() -> void:
 	data.crystal_size = 3.0
 	data.muzzle_distance = 8.0
 	data.crystal_color = Color(1.0, 0.8, 0.35)
+	data.crystal_art = load("res://assets/sprites/salamandra_cristal/salamandra_cristal_crystal.png")
+	data.crystal_art_fps = 12.0
 	data.warning_color = Color(1.0, 0.55, 0.2)
 	data.hazard_radius = 12.0
-	data.hazard_lifetime = 4.5
+	data.hazard_max = 6
+	data.hazard_spacing = 30.0
+	data.hazard_cool_time = 0.8
 	data.hazard_damage = 1
 	data.hazard_tick = 0.5
 	data.hazard_slow_factor = 0.8
 	data.hazard_slow_time = 0.6
 	data.hazard_color = Color(1.0, 0.72, 0.3, 0.6)
+	data.hazard_art = load("res://assets/sprites/salamandra_cristal/salamandra_cristal_patch.png")
 	ResourceSaver.save(data, "res://data/enemies/salamandra_cristal.tres")
 	print("salamandra_cristal written")
 	quit()

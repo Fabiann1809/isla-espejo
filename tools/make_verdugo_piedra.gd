@@ -35,6 +35,9 @@ func _initialize() -> void:
 	data.wave_time = 0.75
 	data.wave_band = 12.0
 	data.wave_damage = 2
+	data.wave_art = load("res://assets/sprites/verdugo_piedra/verdugo_piedra_wave.png")
+	data.wave_art_radius = 110.0
+	data.masked_wave_max_radius = 150.0
 	ResourceSaver.save(data, "res://data/enemies/verdugo_piedra.tres")
 	print("verdugo_piedra written")
 	quit()

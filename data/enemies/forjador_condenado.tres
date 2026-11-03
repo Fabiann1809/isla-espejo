@@ -1,15 +1,17 @@
 [gd_resource type="Resource" script_class="DoomedForgerData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/forjador_condenado_data.gd" id="1_qm6io"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/forjador_condenado_frames.tres" id="2_kfa82"]
+[ext_resource type="Texture2D" path="res://assets/sprites/forjador_condenado/forjador_condenado_block.png" id="1_kfa82"]
+[ext_resource type="Script" path="res://scripts/enemies/forjador_condenado_data.gd" id="2_1pbe6"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/forjador_condenado_frames.tres" id="3_tta1t"]
 
 [resource]
-script = ExtResource("1_qm6io")
+script = ExtResource("2_1pbe6")
+block_art = ExtResource("1_kfa82")
 id = &"forjador_condenado"
 display_name = "Forjador condenado"
 placeholder_color = Color(0.55, 0.3, 0.2, 1)
-sprite_frames = ExtResource("2_kfa82")
-sprite_offset = Vector2(0, -30)
+sprite_frames = ExtResource("3_tta1t")
+sprite_offset = Vector2(0, -15)
 max_health = 7
 move_speed = 22.0
 chase_speed = 34.0

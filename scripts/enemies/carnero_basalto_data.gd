@@ -18,6 +18,9 @@ extends EnemyData
 ## Width of the lane drawn on the ground during the windup (px).
 @export var lane_width := 18.0
 @export var lane_color := Color(1.0, 0.45, 0.2)
+## Drawn lane (tools/make_carnero_basalto_art.py): a strip of 18 px tiles, start, middle, middle
+## and end, three times (marked, filled, filled and flickering). Without it the lane is plain shapes.
+@export var lane_art: Texture2D
 
 @export_group("Stun stars")
 @export var star_count := 3

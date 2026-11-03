@@ -17,6 +17,44 @@ const SAW_SPIN := 18.0
 const BLINK_RATE := 10.0
 const SAW_TEETH := 8
 
+## Layouts of the drawn art (tools/make_relojero_trampas_art.py), each a strip of equal cells.
+## Spikes: 24 px cells around a 16 px plate.
+const SPIKES_ART_PLATE := 16.0
+const SPIKES_READY := 0
+const SPIKES_WARN := 1  # and 2, blinking
+const SPIKES_RISE := 3
+const SPIKES_UP := 4  # and 5, flickering
+const SPIKES_DORMANT := 6
+const SPIKES_FRAMES := 7
+## How long the spikes show half out before they stand.
+const SPIKES_RISE_TIME := 0.06
+## Saw: 16 px cells of a blade of radius 7: four of its spin, the warning, dormant.
+const SAW_ART_RADIUS := 7.0
+const SAW_SPIN_FRAMES := 4
+const SAW_WARN := 4
+const SAW_DORMANT := 5
+const SAW_FRAMES := 6
+const SAW_ART_FPS := 20.0
+## Track: two cells (normal, dormant) of a 56 px track lying along x.
+const TRACK_ART_LENGTH := 56.0
+const TRACK_FRAMES := 2
+## Fire: cells pointing along x with the nozzle at FIRE_ART_ORIGIN_X: the spout (normal, warning,
+## dormant), the warning line (bright, dim) and the jet (56 x 12) flickering in four.
+const FIRE_ART_ORIGIN_X := 4.0
+const FIRE_ART_LENGTH := 56.0
+const FIRE_ART_WIDTH := 12.0
+const FIRE_SPOUT := 0
+const FIRE_SPOUT_WARN := 1
+const FIRE_SPOUT_DORMANT := 2
+const FIRE_WARN := 3  # and 4, blinking
+const FIRE_JET := 5
+const FIRE_JET_FRAMES := 4
+const FIRE_FRAMES := 9
+## Nozzle base: normal, warning, dormant.
+const NOZZLE_FRAMES := 3
+## Flicker of the spikes and the jet.
+const ART_FPS := 12.0
+
 var kind: Kind = Kind.SPIKES
 var phase: Phase = Phase.READY
 ## The saw's track and the jet's aim.
@@ -34,6 +72,12 @@ var metal_color := Color.LIGHT_GRAY
 var warn_color := Color.YELLOW
 var fire_color := Color.ORANGE
 var dormant_color := Color.DARK_GRAY
+## Drawn art; without it the trap is drawn with plain shapes.
+var spikes_art: Texture2D
+var saw_art: Texture2D
+var track_art: Texture2D
+var fire_art: Texture2D
+var nozzle_art: Texture2D
 
 var _phase_left := 0.0
 var _time := 0.0
@@ -79,6 +123,11 @@ static func create(trap_kind: Kind, spot: Vector2, aim: Vector2, data: TrapClock
 	trap.warn_color = data.trap_warn_color
 	trap.fire_color = data.fire_color
 	trap.dormant_color = data.dormant_color
+	trap.spikes_art = data.spikes_art
+	trap.saw_art = data.saw_art
+	trap.track_art = data.track_art
+	trap.fire_art = data.fire_art
+	trap.nozzle_art = data.nozzle_art
 	return trap
 
 
@@ -173,11 +222,84 @@ func _draw() -> void:
 	var blink := phase == Phase.WARNING and fmod(_time * BLINK_RATE, 1.0) < 0.5
 	match kind:
 		Kind.SPIKES:
-			_draw_spikes(blink)
+			if spikes_art != null:
+				_draw_spikes_art(blink)
+			else:
+				_draw_spikes(blink)
 		Kind.SAW:
-			_draw_saw(blink)
+			if saw_art != null and track_art != null:
+				_draw_saw_art(blink)
+			else:
+				_draw_saw(blink)
 		Kind.FIRE:
-			_draw_fire(blink)
+			if fire_art != null and nozzle_art != null:
+				_draw_fire_art(blink)
+			else:
+				_draw_fire(blink)
+
+
+## Draws `frame` of a strip of `frames` equal cells into `rect`.
+func _draw_cell(art: Texture2D, frames: int, frame: int, rect: Rect2) -> void:
+	var cell := Vector2(art.get_width() / float(frames), art.get_height())
+	draw_texture_rect_region(art, rect, Rect2(Vector2(cell.x * frame, 0.0), cell))
+
+
+## The plate's art is drawn for a 16 px plate; another size scales it.
+func _draw_spikes_art(blink: bool) -> void:
+	var frame := SPIKES_READY
+	match phase:
+		Phase.WARNING:
+			frame = SPIKES_WARN if blink else SPIKES_WARN + 1
+		Phase.ACTIVE:
+			if active_time - _phase_left < SPIKES_RISE_TIME:
+				frame = SPIKES_RISE
+			else:
+				frame = SPIKES_UP + int(_time * ART_FPS) % 2
+		Phase.DORMANT:
+			frame = SPIKES_DORMANT
+	var size := spikes_art.get_height() * spikes_size / SPIKES_ART_PLATE
+	_draw_cell(spikes_art, SPIKES_FRAMES, frame, Rect2(-Vector2.ONE * size / 2.0, Vector2.ONE * size))
+
+
+## The track lies along `direction` (the art is drawn along x); the blade is round, so it is drawn
+## upright and spins through its frames.
+func _draw_saw_art(blink: bool) -> void:
+	var track_cell := Vector2(track_art.get_width() / float(TRACK_FRAMES), track_art.get_height())
+	track_cell.x *= track_length / TRACK_ART_LENGTH
+	draw_set_transform(Vector2.ZERO, direction.angle())
+	_draw_cell(track_art, TRACK_FRAMES, 1 if phase == Phase.DORMANT else 0, Rect2(-track_cell / 2.0, track_cell))
+	draw_set_transform(Vector2.ZERO)
+	var frame := 0
+	match phase:
+		Phase.ACTIVE:
+			frame = int(_time * SAW_ART_FPS) % SAW_SPIN_FRAMES
+		Phase.WARNING:
+			frame = SAW_WARN if blink else 0
+		Phase.DORMANT:
+			frame = SAW_DORMANT
+	var size := saw_art.get_height() * saw_radius / SAW_ART_RADIUS
+	_draw_cell(saw_art, SAW_FRAMES, frame, Rect2(_saw_point(_saw_at) - Vector2.ONE * size / 2.0, Vector2.ONE * size))
+
+
+## The base sits upright; the spout, the warning line and the jet point along `direction` (the art
+## points along x), the jet stretched to `fire_length` x `fire_width`.
+func _draw_fire_art(blink: bool) -> void:
+	var dormant := phase == Phase.DORMANT
+	var base := float(nozzle_art.get_height())
+	var base_frame := 2 if dormant else (1 if blink else 0)
+	_draw_cell(nozzle_art, NOZZLE_FRAMES, base_frame, Rect2(-Vector2.ONE * base / 2.0, Vector2.ONE * base))
+	var cell := Vector2(fire_art.get_width() / float(FIRE_FRAMES), fire_art.get_height())
+	var plain := Rect2(Vector2(-FIRE_ART_ORIGIN_X, -cell.y / 2.0), cell)
+	draw_set_transform(Vector2.ZERO, direction.angle())
+	if phase == Phase.WARNING:
+		_draw_cell(fire_art, FIRE_FRAMES, FIRE_WARN if blink else FIRE_WARN + 1, plain)
+	elif phase == Phase.ACTIVE:
+		var stretch := Vector2(fire_length / FIRE_ART_LENGTH, fire_width / FIRE_ART_WIDTH)
+		var frame := FIRE_JET + int(_time * ART_FPS) % FIRE_JET_FRAMES
+		_draw_cell(fire_art, FIRE_FRAMES, frame, Rect2(plain.position * stretch, cell * stretch))
+	var spout := FIRE_SPOUT_DORMANT if dormant else (FIRE_SPOUT_WARN if blink else FIRE_SPOUT)
+	_draw_cell(fire_art, FIRE_FRAMES, spout, plain)
+	draw_set_transform(Vector2.ZERO)
 
 
 func _draw_spikes(blink: bool) -> void:

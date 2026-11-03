@@ -30,3 +30,7 @@ extends EnemyData
 @export var link_width := 1.0
 @export var link_alpha := 0.6
 @export var ally_ring_radius := 10.0
+## The golden dome drawn over each shielded ally (a strip of square cells: SealGuardian.DOME_RISE
+## that raise it, DOME_HOLD that loop while it holds, DOME_FADE that let it go); without it only
+## the ally's tint shows the shield.
+@export var dome_art: Texture2D

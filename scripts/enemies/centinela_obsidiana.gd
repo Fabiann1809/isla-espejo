@@ -3,6 +3,7 @@ extends Enemy
 ## Centinela de obsidiana: a slow, sturdy warrior whose black shield stops every hit that comes from
 ## its front arc (no damage, a white flash). It turns toward the player at a limited rate, so Nico
 ## can circle around it and strike its back, and it lowers the shield for a moment after each swing.
+## Ridden by a Máscara parásita its shield also covers its sides and it turns faster.
 ## Everything tunable lives in its ObsidianSentinelData.
 
 var _sentinel: ObsidianSentinelData
@@ -35,7 +36,17 @@ func shield_covers(point: Vector2) -> bool:
 	var to_point := point - global_position
 	if to_point.is_zero_approx():
 		return false
-	return absf(facing.angle_to(to_point)) <= deg_to_rad(_sentinel.shield_arc) / 2.0
+	return absf(facing.angle_to(to_point)) <= deg_to_rad(shield_arc()) / 2.0
+
+
+## Width (degrees) of the arc the shield covers now: wider while a mask rides it.
+func shield_arc() -> float:
+	return _sentinel.masked_shield_arc if is_masked() else _sentinel.shield_arc
+
+
+## How fast (degrees per second) it turns now: faster while a mask rides it.
+func turn_rate() -> float:
+	return _sentinel.masked_turn_rate if is_masked() else _sentinel.turn_rate
 
 
 # --- Behaviour ---------------------------------------------------------------------------------
@@ -86,7 +97,7 @@ func _block() -> void:
 func _turn_toward(direction: Vector2, delta: float) -> void:
 	if direction.is_zero_approx():
 		return
-	var step := deg_to_rad(_sentinel.turn_rate) * _speed_scale() * delta
+	var step := deg_to_rad(turn_rate()) * _speed_scale() * delta
 	facing = facing.rotated(clampf(facing.angle_to(direction), -step, step)).normalized()
 
 

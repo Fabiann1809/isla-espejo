@@ -11,7 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Manta de hollín"
 	data.placeholder_color = Color(0.95, 0.45, 0.15)
 	data.sprite_frames = load("res://data/enemies/manta_hollin_frames.tres")
-	data.sprite_offset = Vector2(0, -8)
+	# 64x64 cells, its art drawn by tools/make_manta_hollin_art.py with its chin's tip on row 39:
+	# at rest (no flying height) that tip sits on its shadow.
+	data.sprite_offset = Vector2(0, -1)
 	data.max_health = 6
 	data.move_speed = 45.0
 	data.chase_speed = 95.0

@@ -83,6 +83,28 @@ func _initialize() -> void:
 	_executioner.apply_knockback(Vector2(200, 0))
 	_check(_executioner.velocity.length() <= 200.0 * (1.0 - data.knockback_resistance) + 0.5,
 			"a push barely moves it (%.0f px/s)" % _executioner.velocity.length())
+
+	# --- Masked (a Máscara parásita rides it): the wave reaches past its normal max radius
+	_check(_executioner.wave_max_radius() == data.wave_max_radius, "unmasked, its wave has its normal reach")
+	_executioner.set_masked(true)
+	_check(_executioner.wave_max_radius() > data.wave_max_radius,
+			"masked, its wave reaches farther (%.0f px)" % _executioner.wave_max_radius())
+	_player.health.heal(_player.health.max_health)
+	var beyond: float = data.wave_max_radius + 25.0
+	await _next_slam(Vector2(beyond, 0))
+	health_before = _player.health.current
+	await _until(func() -> bool: return _executioner.wave_radius() >= 0.0, 120)
+	max_seen = 0.0
+	var age := 0
+	while _executioner.wave_radius() >= 0.0 and age < 120:
+		max_seen = maxf(max_seen, _executioner.wave_radius())
+		age += 1
+		await physics_frame
+	_check(max_seen > data.wave_max_radius + 20.0, "masked, the ring grows past its normal max radius (%.0f px)" % max_seen)
+	_check(_player.health.current == health_before - data.wave_damage,
+			"and hurts Nico beyond it (%d -> %d)" % [health_before, _player.health.current])
+	_executioner.set_masked(false)
+	_check(_executioner.wave_max_radius() == data.wave_max_radius, "without the mask its wave is back to normal")
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 

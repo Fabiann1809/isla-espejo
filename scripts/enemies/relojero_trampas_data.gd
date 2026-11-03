@@ -55,3 +55,10 @@ extends EnemyData
 @export var trap_warn_color := Color(1.0, 0.75, 0.25)
 @export var fire_color := Color(1.0, 0.45, 0.1, 0.85)
 @export var dormant_color := Color(0.4, 0.38, 0.38)
+## Drawn art of the traps (strips by tools/make_relojero_trampas_art.py; layouts in ClockTrap).
+## A trap without its art falls back to the plain shapes in the colors above.
+@export var spikes_art: Texture2D
+@export var saw_art: Texture2D
+@export var track_art: Texture2D
+@export var fire_art: Texture2D
+@export var nozzle_art: Texture2D

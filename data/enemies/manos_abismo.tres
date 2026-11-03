@@ -1,15 +1,21 @@
 [gd_resource type="Resource" script_class="AbyssHandsData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/manos_abismo_data.gd" id="1_665pt"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/manos_abismo_frames.tres" id="2_nuj36"]
+[ext_resource type="Texture2D" path="res://assets/sprites/manos_abismo/manos_abismo_arm.png" id="1_v67cw"]
+[ext_resource type="Texture2D" path="res://assets/sprites/manos_abismo/manos_abismo_pool.png" id="2_1oyct"]
+[ext_resource type="Script" path="res://scripts/enemies/manos_abismo_data.gd" id="3_d6hgg"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/manos_abismo_frames.tres" id="4_8b6vs"]
+[ext_resource type="Texture2D" path="res://assets/sprites/manos_abismo/manos_abismo_warning.png" id="5_5go16"]
 
 [resource]
-script = ExtResource("1_665pt")
+script = ExtResource("3_d6hgg")
+warning_art = ExtResource("5_5go16")
+pool_art = ExtResource("2_1oyct")
+arm_art = ExtResource("1_v67cw")
 id = &"manos_abismo"
 display_name = "Manos del abismo"
 placeholder_color = Color(0.75, 0.25, 0.08, 1)
-sprite_frames = ExtResource("2_nuj36")
-sprite_offset = Vector2(0, -30)
+sprite_frames = ExtResource("4_8b6vs")
+sprite_offset = Vector2(0, -14)
 max_health = 5
 move_speed = 60.0
 chase_speed = 60.0

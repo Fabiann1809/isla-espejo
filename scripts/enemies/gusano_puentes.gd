@@ -30,6 +30,8 @@ var _phase_left := 0.0
 var _burrow_clock := 0.0
 var _last_position := Vector2.ZERO
 var _ripple: Ripple
+## Which part of its trip out the sprite is playing (rise, lunge, rest, dive), so each starts once.
+var _shown: StringName = &""
 
 
 func _ready() -> void:
@@ -44,6 +46,7 @@ func _ready() -> void:
 	_ripple.name = "Ripple"
 	_ripple.color = _worm.ripple_color
 	_ripple.radius = _worm.ripple_radius
+	_ripple.art = _worm.ripple_art
 	add_child(_ripple)
 	_set_head_out(false)
 
@@ -284,8 +287,7 @@ func _ensure_segments() -> void:
 	if not _segments.is_empty() or get_parent() == null:
 		return
 	for i in _worm.segment_count:
-		var weight := float(i) / maxf(_worm.segment_count - 1, 1)
-		var segment := WormSegment.create(_worm, lerpf(_worm.segment_scale, _worm.segment_tail_scale, weight))
+		var segment := WormSegment.create(_worm, i)
 		segment.hurtbox.invulnerability_check = func() -> bool: return not is_out()
 		segment.hurtbox.hit.connect(_on_hurtbox_hit)
 		get_parent().add_child(segment)
@@ -316,29 +318,74 @@ func _motion_of(node: Node2D) -> Vector2:
 
 # --- Animation ---------------------------------------------------------------------------------
 
-## Burrowed there is nothing to animate; out, it bursts with `special`, rests with `idle` and is hurt
-## with `hurt` (the base picks that one).
+## Burrowed there is nothing to animate. The trip out is drawn in three parts: `special` breaks the
+## ground and raises it over its hole during the warning (it stays put there, still unhittable),
+## `attack` is the lunge, stretched over the surge, and `idle` the rest; diving, `special` plays
+## backwards over the time the body takes to flow into the hole. Out of an attack the base picks
+## (`hurt` when hit).
 func _update_animation() -> void:
 	if _sprite == null or state == State.DEAD:
 		return
-	_sprite.visible = is_out()
-	if not is_out() or state != State.ATTACK:
-		if is_out():
-			super()
+	var emerging := state == State.ATTACK and phase in [Phase.RISING, Phase.SINKING]
+	_sprite.visible = is_out() or emerging
+	if not _sprite.visible:
+		_shown = &""
 		return
-	if absf(facing.x) > 0.1:
+	if state != State.ATTACK:
+		_shown = &""
+		super()
+		return
+	var shown: StringName = &"rest"
+	match phase:
+		Phase.RISING:
+			shown = &"rise"
+		Phase.SURGING:
+			shown = &"lunge"
+		Phase.SINKING:
+			shown = &"dive"
+		Phase.RESTING:
+			# A surge cut short by a wall still finishes its lunge before resting.
+			if _shown == &"lunge" and _sprite.is_playing():
+				shown = &"lunge"
+	if phase == Phase.RISING and _target_is_valid():
+		# It does not know its aim yet: it rises facing Nico, whom it will surge at.
+		var to_target := target.global_position.x - global_position.x
+		if absf(to_target) > 0.1:
+			_sprite.flip_h = to_target < 0.0
+	elif absf(facing.x) > 0.1:
 		_sprite.flip_h = facing.x < 0.0
-	var wanted: StringName = &"special" if phase == Phase.SURGING else &"idle"
-	if _sprite.animation != wanted:
-		_sprite.play(wanted)
-		_sprite.speed_scale = 1.0
+	if shown == _shown:
+		return
+	_shown = shown
+	match shown:
+		&"rise":
+			_play_over(&"special", _worm.emerge_windup)
+		&"lunge":
+			_play_over(&"attack", _worm.surge_distance / maxf(_worm.surge_speed * _speed_scale(), 1.0))
+		&"dive":
+			var left := _trail_length + _worm.segment_count * _worm.segment_spacing - _flow
+			_play_over(&"special", left / maxf(_worm.surge_speed * _speed_scale(), 1.0), true)
+		_:
+			_sprite.play(&"idle")
+			_sprite.speed_scale = 1.0
 
 
-## The ground stirring over the worm: rings that spread and fade, drawn on the ground.
+## Plays `anim` once so that it lasts `span` seconds (backwards: from its last frame to its first).
+func _play_over(anim: StringName, span: float, backwards := false) -> void:
+	if backwards:
+		_sprite.play_backwards(anim)
+	else:
+		_sprite.play(anim)
+	_sprite.speed_scale = _animation_length(anim) / maxf(span, 0.05)
+
+
+## The ground stirring over the worm: rings that spread and fade, drawn on the ground (its pixel art
+## when it has one: one ripple cycle per pass over the strip).
 class Ripple extends Node2D:
 	var color := Color.ORANGE
 	var radius := 9.0
 	var speed := 1.0
+	var art: Texture2D
 	var _time := 0.0
 
 	func _ready() -> void:
@@ -349,6 +396,13 @@ class Ripple extends Node2D:
 		queue_redraw()
 
 	func _draw() -> void:
+		if art != null:
+			var cell := float(art.get_height())
+			var count := maxi(int(art.get_width() / cell), 1)
+			var frame := int(fmod(_time, 1.0) * count) % count
+			draw_texture_rect_region(art, Rect2(-cell / 2.0, -cell / 2.0, cell, cell),
+					Rect2(frame * cell, 0.0, cell, cell))
+			return
 		for i in RIPPLE_RINGS:
 			var progress := fmod(_time + float(i) / RIPPLE_RINGS, 1.0)
 			var ring := color

@@ -10,10 +10,19 @@ enum Cast { WINDUP, RECOVER }
 
 ## Turns (radians) tried, in order, when the straight way back would leave the room or hit a wall.
 const RETREAT_TURNS: Array[float] = [0.0, PI / 4.0, -PI / 4.0, PI / 2.0, -PI / 2.0]
-## The falling ball's look: a soft halo (px wider than the ball) and a bright core.
+## The falling ball's look without art: a soft halo (px wider than the ball) and a bright core.
 const BALL_GLOW := 1.0
 const BALL_GLOW_ALPHA := 0.5
 const BALL_CORE_SCALE := 0.5
+## Layout of its art strips (see tools/make_oraculo_ceniza_art.py).
+const BALL_CENTER := Vector2(12, 17)
+const BALL_FPS := 12.0
+const SEAL_OPEN_FRAMES := 3
+const SEAL_FPS := 10.0
+## Radius of the seal's ring in its art: it is scaled to the strike's radius (1:1 at 22 px).
+const SEAL_ART_RADIUS := 22.0
+## Where the landing is centered in a burst cell (its blast also has a 22 px radius).
+const BURST_CENTER := Vector2(32, 40)
 
 var cast_step: Cast = Cast.WINDUP
 
@@ -25,6 +34,9 @@ var _ball: Node2D
 var _ball_center := Vector2.ZERO
 var _ball_age := 0.0
 var _mark: Node2D
+var _seal: Node2D
+var _burst: Node2D
+var _burst_age := 0.0
 var _impact: Hitbox
 var _impact_left := 0.0
 
@@ -41,11 +53,16 @@ func _physics_process(delta: float) -> void:
 	super(delta)
 	_update_fireball(delta)
 	_update_impact(delta)
+	_update_burst(delta)
 
 
 func _exit_tree() -> void:
 	_clear_fireball()
 	_clear_impact()
+	# Its zone frees itself, but nobody would animate the art left on it.
+	if is_instance_valid(_burst):
+		_burst.queue_free()
+	_burst = null
 
 
 ## Where the current fireball will land (world), or null when none is falling.
@@ -125,6 +142,7 @@ func _launch(spot: Vector2) -> void:
 	_ball_center = spot
 	_ball_age = 0.0
 	_mark = SkillZone.circle(_to_parent_local(spot), _oracle.strike_radius, _oracle.mark_color, _oracle.fall_time)
+	_seal = _art_on_zone(_mark, _oracle.seal_art, "SealArt", _draw_seal)
 	get_parent().add_child(_mark)
 	# The ball is y-sorted with the actors at the spot it falls on, and drawn up in the air.
 	_ball = Node2D.new()
@@ -139,6 +157,8 @@ func _update_fireball(delta: float) -> void:
 		return
 	_ball_age += delta
 	_ball.queue_redraw()
+	if is_instance_valid(_seal):
+		_seal.queue_redraw()
 	if _ball_age >= _oracle.fall_time:
 		var spot := _ball_center
 		_clear_fireball()
@@ -150,7 +170,12 @@ func _land(spot: Vector2) -> void:
 	var parent := get_parent()
 	if parent == null:
 		return
-	parent.add_child(SkillZone.circle(_to_parent_local(spot), _oracle.strike_radius, _oracle.ball_color, _oracle.burst_time))
+	var burst := SkillZone.circle(_to_parent_local(spot), _oracle.strike_radius, _oracle.ball_color, _oracle.burst_time)
+	if is_instance_valid(_burst):
+		_burst.queue_free()
+	_burst = _art_on_zone(burst, _oracle.burst_art, "BurstArt", _draw_burst)
+	_burst_age = 0.0
+	parent.add_child(burst)
 	_impact = Hitbox.new()
 	_impact.name = "AshImpact"
 	_impact.collision_layer = 1 << 4
@@ -175,6 +200,14 @@ func _update_impact(delta: float) -> void:
 		_clear_impact()
 
 
+func _update_burst(delta: float) -> void:
+	if not is_instance_valid(_burst):
+		_burst = null
+		return
+	_burst_age += delta
+	_burst.queue_redraw()
+
+
 func _clear_fireball() -> void:
 	if is_instance_valid(_ball):
 		_ball.queue_free()
@@ -182,6 +215,7 @@ func _clear_fireball() -> void:
 		_mark.queue_free()
 	_ball = null
 	_mark = null
+	_seal = null
 
 
 func _clear_impact() -> void:
@@ -190,11 +224,61 @@ func _clear_impact() -> void:
 	_impact = null
 
 
+## Puts `art` on a warning zone: the zone keeps its timing, size and ground layer (and frees itself)
+## but its own circle is hidden, since the art is the warning now. Null when there is no art.
+func _art_on_zone(zone: Node2D, art: Texture2D, art_name: String, drawer: Callable) -> Node2D:
+	if art == null:
+		return null
+	zone.self_modulate = Color(1, 1, 1, 0)
+	var canvas := Node2D.new()
+	canvas.name = art_name
+	canvas.draw.connect(drawer.bind(canvas))
+	zone.add_child(canvas)
+	return canvas
+
+
+## Frame `index` of a strip of square cells, drawn into `rect`.
+func _draw_cell(canvas: Node2D, art: Texture2D, index: int, rect: Rect2) -> void:
+	var cell := float(art.get_height())
+	canvas.draw_texture_rect_region(art, rect, Rect2(index * cell, 0.0, cell, cell))
+
+
+func _cell_count(art: Texture2D) -> int:
+	return maxi(int(float(art.get_width()) / maxf(art.get_height(), 1.0)), 1)
+
+
+## The seal opens, then burns in a loop until the ball lands.
+func _draw_seal(canvas: Node2D) -> void:
+	var art := _oracle.seal_art
+	var count := _cell_count(art)
+	var index := int(_ball_age * SEAL_FPS)
+	if index >= SEAL_OPEN_FRAMES:
+		index = SEAL_OPEN_FRAMES + (index - SEAL_OPEN_FRAMES) % maxi(count - SEAL_OPEN_FRAMES, 1)
+	var size := art.get_height() * _oracle.strike_radius / SEAL_ART_RADIUS
+	_draw_cell(canvas, art, mini(index, count - 1), Rect2(-Vector2(size, size) / 2.0, Vector2(size, size)))
+
+
+## The burst plays once over `burst_time`.
+func _draw_burst(canvas: Node2D) -> void:
+	var art := _oracle.burst_art
+	var count := _cell_count(art)
+	var index := mini(int(_burst_age / maxf(_oracle.burst_time, 0.01) * count), count - 1)
+	var scale_by := _oracle.strike_radius / SEAL_ART_RADIUS
+	var cell := float(art.get_height()) * scale_by
+	_draw_cell(canvas, art, index, Rect2(-BURST_CENTER * scale_by, Vector2(cell, cell)))
+
+
 func _draw_ball(canvas: Node2D) -> void:
 	var progress := clampf(_ball_age / maxf(_oracle.fall_time, 0.01), 0.0, 1.0)
 	# Falls faster and faster, like something dropped.
 	var height := _oracle.fall_height * (1.0 - progress * progress)
 	var at := Vector2(0.0, -height)
+	if _oracle.ball_art != null:
+		var art := _oracle.ball_art
+		var cell := float(art.get_height())
+		var index := int(_ball_age * BALL_FPS) % _cell_count(art)
+		_draw_cell(canvas, art, index, Rect2((at - BALL_CENTER).round(), Vector2(cell, cell)))
+		return
 	canvas.draw_circle(at, _oracle.ball_radius + BALL_GLOW, Color(_oracle.ball_color, BALL_GLOW_ALPHA))
 	canvas.draw_circle(at, _oracle.ball_radius, _oracle.ball_color)
 	canvas.draw_circle(at, _oracle.ball_radius * BALL_CORE_SCALE, _oracle.ball_core_color)

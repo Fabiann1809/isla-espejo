@@ -11,8 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Relojero de trampas"
 	data.placeholder_color = Color(0.6, 0.42, 0.25)
 	data.sprite_frames = load("res://data/enemies/relojero_trampas_frames.tres")
-	# 96x96 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_relojero_trampas_art.py with the feet on row 52:
+	# they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -14)
 	data.max_health = 4
 	# Quick little legs: it keeps away while its traps do the work.
 	data.move_speed = 40.0
@@ -56,6 +57,12 @@ func _initialize() -> void:
 	data.trap_warn_color = Color(1.0, 0.75, 0.25)
 	data.fire_color = Color(1.0, 0.45, 0.1, 0.85)
 	data.dormant_color = Color(0.4, 0.38, 0.38)
+	var art := "res://assets/sprites/relojero_trampas/relojero_trampas_%s.png"
+	data.spikes_art = load(art % "spikes")
+	data.saw_art = load(art % "saw")
+	data.track_art = load(art % "track")
+	data.fire_art = load(art % "fire")
+	data.nozzle_art = load(art % "nozzle")
 	ResourceSaver.save(data, "res://data/enemies/relojero_trampas.tres")
 	print("relojero_trampas written")
 	quit()

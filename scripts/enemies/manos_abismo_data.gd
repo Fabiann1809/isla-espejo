@@ -37,3 +37,12 @@ extends EnemyData
 @export var arm_edge_color := Color(1.0, 0.5, 0.12)
 @export var pool_radius := 11.0
 @export var pool_color := Color(1.0, 0.45, 0.1, 0.75)
+## Pixel art drawn instead of those shapes (null keeps the shapes): the warning's strip (its frames
+## spread over the warning), the pool's strip (a loop) and one tile of the arm, repeated along it
+## and as tall as the arm plus its edge.
+@export var warning_art: Texture2D
+@export var warning_frames := 8
+@export var pool_art: Texture2D
+@export var pool_frames := 6
+@export var pool_fps := 5.0
+@export var arm_art: Texture2D

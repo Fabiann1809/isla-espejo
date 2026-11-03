@@ -54,6 +54,8 @@ func _initialize() -> void:
 	await _frames(3)
 	_check(first.is_frenzied() and first._speed_scale() > 1.2, "its host is in a frenzy (speed x%.2f)" % first._speed_scale())
 	_check(not second.is_frenzied(), "the other enemy is not")
+	_check(first.is_masked(), "riding tells its host it is masked (Enemy.set_masked(true))")
+	_check(not second.is_masked(), "the other enemy is not masked")
 	var sprite: Node2D = mask.get_node("Sprite")
 	_check(mask.global_position.y > first.global_position.y and sprite.global_position.y < first.global_position.y - 10.0,
 			"it sits on its host's head, drawn over it")
@@ -75,6 +77,7 @@ func _initialize() -> void:
 	first.health.take_damage(first.health.max_health, _player.global_position)
 	await _frames(2)
 	_check(not mask.is_riding() and mask.is_fleeing(), "when its host dies the mask jumps off and flees")
+	_check(not is_instance_valid(first) or not first.is_masked(), "jumping off unmasks the old host (set_masked(false))")
 	await create_timer(mask.data.flee_time * 0.8).timeout
 	_check(mask.global_position.distance_to(_player.global_position) > before + 20.0, "away from Nico")
 	mask_hp = mask.health.current
@@ -88,11 +91,12 @@ func _initialize() -> void:
 			break
 	_check(mask.is_riding() and mask.host() == second, "it looks for another host and rides it")
 	await _frames(2)
-	_check(second.is_frenzied(), "the new host is in a frenzy")
+	_check(second.is_frenzied() and second.is_masked(), "the new host is in a frenzy and masked")
 
 	# --- With no host left it bites Nico by itself.
 	second.health.take_damage(second.health.max_health, _player.global_position)
 	await _frames(2)
+	_check(not is_instance_valid(second) or not second.is_masked(), "and is unmasked when it dies")
 	_player.global_position = mask.global_position + Vector2(0, 50)
 	var hp: int = _player.health.current
 	var bit := false

@@ -1,13 +1,9 @@
 extends SceneTree
 ## Writes the bridge worm's data (data/enemies/gusano_puentes.tres, a BridgeWormData). Its art is
-## data/enemies/gusano_puentes_frames.tres (tools/make_temple_enemy_frames.gd); the picture of one
-## body piece is cut here from the first idle frame (a chunk of its back, rounded off) and stored in
-## the data. The scene scenes/enemies/gusano_puentes.tscn is hand-written.
+## data/enemies/gusano_puentes_frames.tres (tools/make_temple_enemy_frames.gd); the pictures of its
+## body pieces and of its ripple are strips drawn by tools/make_gusano_puentes_art.py.
+## The scene scenes/enemies/gusano_puentes.tscn is hand-written.
 ## Run: godot --headless --path . --script res://tools/make_gusano_puentes.gd
-
-const IDLE_STRIP := "res://assets/sprites/gusano_puentes/gusano_puentes_idle.png"
-## One ring of the body in the first idle frame (64x64 cells), clear of the head.
-const SEGMENT_REGION := Rect2i(16, 30, 20, 18)
 
 
 func _initialize() -> void:
@@ -16,8 +12,11 @@ func _initialize() -> void:
 	data.display_name = "Gusano de los puentes"
 	data.placeholder_color = Color(0.85, 0.35, 0.15)
 	data.sprite_frames = load("res://data/enemies/gusano_puentes_frames.tres")
+	# 64x64 cells, its art drawn by tools/make_gusano_puentes_art.py with the pool's surface (its
+	# feet) on row 54: they sit a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -16)
-	data.segment_texture = _segment_texture()
+	data.segment_texture = load("res://assets/sprites/gusano_puentes/gusano_puentes_segment.png")
+	data.ripple_art = load("res://assets/sprites/gusano_puentes/gusano_puentes_ripple.png")
 	data.max_health = 8
 	data.move_speed = 40.0
 	data.burrow_speed = 85.0
@@ -47,17 +46,3 @@ func _initialize() -> void:
 	print("gusano_puentes written")
 	quit()
 
-
-## The chunk of back with the corners outside an ellipse cleared, so a piece reads as a round
-## body ring instead of a cut rectangle. Read straight from the PNG (headless runs have no GPU).
-func _segment_texture() -> Texture2D:
-	var strip := Image.load_from_file(ProjectSettings.globalize_path(IDLE_STRIP))
-	var piece := strip.get_region(SEGMENT_REGION)
-	piece.convert(Image.FORMAT_RGBA8)
-	var half := Vector2(piece.get_size()) / 2.0
-	for y in piece.get_height():
-		for x in piece.get_width():
-			var d := (Vector2(x, y) + Vector2(0.5, 0.5) - half) / half
-			if d.length_squared() > 1.0:
-				piece.set_pixel(x, y, Color(0, 0, 0, 0))
-	return ImageTexture.create_from_image(piece)

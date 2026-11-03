@@ -22,6 +22,8 @@ const RING_SEGMENTS := 48
 const RING_FILL_ALPHA := 0.35
 const RING_EDGE_ALPHA := 0.9
 const RING_EDGE_LIGHTEN := 0.3
+## Radius (px) of the last cell of `ring_art`: the art is scaled if the data's max radius differs.
+const RING_ART_RADIUS := 120.0
 
 var toll_step: Toll = Toll.WINDUP
 
@@ -157,6 +159,9 @@ func _draw_ring(ring: Ring) -> void:
 	if not is_instance_valid(canvas):
 		return
 	var progress := clampf(ring.age / maxf(_ringer.ring_time, 0.01), 0.0, 1.0)
+	if _ringer.ring_art != null:
+		_draw_ring_art(canvas, ring)
+		return
 	var fade := 1.0 - progress * RING_FADE
 	var band := _ringer.ring_band
 	var middle := maxf(ring.radius - band / 2.0, 1.0)
@@ -165,6 +170,17 @@ func _draw_ring(ring: Ring) -> void:
 	canvas.draw_arc(Vector2.ZERO, middle, 0.0, TAU, RING_SEGMENTS, Color(_ringer.ring_color, RING_FILL_ALPHA * fade), band)
 	canvas.draw_arc(Vector2.ZERO, ring.radius, 0.0, TAU, RING_SEGMENTS,
 			Color(_ringer.ring_color.lightened(RING_EDGE_LIGHTEN), RING_EDGE_ALPHA * fade), 2.0)
+
+
+## The drawn ring: the cell whose radius is nearest to the ring's (it cools as it grows).
+func _draw_ring_art(canvas: Node2D, ring: Ring) -> void:
+	var art := _ringer.ring_art
+	var cell := float(art.get_height())
+	var frames := floori(art.get_width() / cell)
+	var frame := clampi(roundi(ring.radius / maxf(_ringer.ring_max_radius, 1.0) * (frames - 1)), 0, frames - 1)
+	var size := cell * _ringer.ring_max_radius / RING_ART_RADIUS
+	canvas.draw_texture_rect_region(art, Rect2(-size / 2.0, -size / 2.0, size, size),
+			Rect2(frame * cell, 0.0, cell, cell))
 
 
 ## Rings and warnings are children of the room, which in a generated map is not at the origin.

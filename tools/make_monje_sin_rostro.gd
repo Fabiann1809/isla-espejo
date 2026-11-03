@@ -1,7 +1,9 @@
 extends SceneTree
 ## Writes the Monje sin rostro's FacelessMonkData (data/enemies/monje_sin_rostro.tres). Its
-## SpriteFrames (96x96 cells) are data/enemies/monje_sin_rostro_frames.tres; the scene
-## scenes/enemies/monje_sin_rostro.tscn is hand-written. Its shots are orb.tscn tinted violet.
+## SpriteFrames come from tools/make_temple_enemy_frames.gd; the scene
+## scenes/enemies/monje_sin_rostro.tscn is hand-written. Its body is the pack's art, scaled by
+## tools/make_temple_enemy_art.py; its comet-like shots (scenes/enemies/monje_sin_rostro_orb.tscn)
+## and its floor symbols are drawn by tools/make_monje_sin_rostro_art.py.
 ## Run: godot --headless --path . --script res://tools/make_monje_sin_rostro.gd
 
 
@@ -34,6 +36,8 @@ func _initialize() -> void:
 	data.symbol_clearance = 12.0
 	data.symbol_tries = 80
 	data.symbol_radius = 10.0
+	data.symbol_art = load("res://assets/sprites/monje_sin_rostro/monje_sin_rostro_symbol.png")
+	data.symbol_warning_fps = 10.0
 	data.vanish_time = 0.35
 	data.hidden_time = 0.55
 	data.appear_time = 0.25
@@ -43,10 +47,12 @@ func _initialize() -> void:
 	data.recover_time = 0.5
 	data.shot_count = 3
 	data.shot_spread = 45.0
-	data.projectile_scene = load("res://scenes/enemies/orb.tscn")
+	data.projectile_scene = load("res://scenes/enemies/monje_sin_rostro_orb.tscn")
 	data.projectile_speed = 95.0
 	data.projectile_range = 220.0
 	data.muzzle_distance = 10.0
+	# Its own art is already violet.
+	data.shot_tint = Color.WHITE
 	ResourceSaver.save(data, "res://data/enemies/monje_sin_rostro.tres")
 	print("monje_sin_rostro written")
 	quit()

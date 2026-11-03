@@ -1,6 +1,6 @@
 extends SceneTree
 ## Caracol de escoria test: it is slow and sturdy (a hit barely pushes it), it leaves a burning
-## trail of evenly spaced patches along its way that hurt and slow Nico and fade after a few
+## trail of evenly spaced patches along its way that hurt and slow Nico and fade after several
 ## seconds, and its bite hurts.
 ## Run: godot --headless --path . --script res://tests/test_caracol_escoria.gd
 
@@ -42,6 +42,7 @@ func _burning_trail() -> void:
 	var start := ARENA + Vector2(100, 0)
 	var snail = _spawn(start)
 	var spacing: float = snail.data.trail_spacing
+	var lifetime: float = snail.data.trail_lifetime
 	await create_timer(3.0).timeout
 	var patches := get_nodes_in_group(&"ground_hazards")
 	_check(patches.size() >= 3, "the snail leaves a trail behind it (%d patches)" % patches.size())
@@ -50,6 +51,10 @@ func _burning_trail() -> void:
 		var gap: float = patches[i].global_position.distance_to(patches[i - 1].global_position)
 		even = even and absf(gap - spacing) < 3.0
 	_check(even, "the patches are about %.0f px apart" % spacing)
+	var drawn := not patches.is_empty()
+	for patch in patches:
+		drawn = drawn and patch.art != null
+	_check(drawn, "the patches use the drawn lava art")
 	var behind := not patches.is_empty()
 	for patch in patches:
 		behind = behind and patch.global_position.distance_to(snail.global_position) \
@@ -68,8 +73,12 @@ func _burning_trail() -> void:
 	await create_timer(first.tick + 0.1).timeout
 	_check(_player.is_slowed() and is_equal_approx(_player._slow_factor, 0.55), "and slows him (x%.2f)" % _player._slow_factor)
 	_player.global_position = ARENA + Vector2(0, 80)
-	await create_timer(1.5).timeout
-	_check(not is_instance_valid(first), "the oldest patch has faded after a few seconds")
+	# About 3.7 s have passed since the snail spawned; the first patch dropped within its first
+	# 1.5 s of crawling and the last one before it was freed at 3 s.
+	_check(lifetime >= 6.0, "the trail lasts long (%.1f s per patch)" % lifetime)
+	_check(is_instance_valid(first), "the oldest patch still burns a few seconds later")
+	await create_timer(lifetime - 2.0).timeout
+	_check(not is_instance_valid(first), "the oldest patch has faded after %.0f s" % lifetime)
 	await create_timer(3.0).timeout
 	_check(get_nodes_in_group(&"ground_hazards").is_empty(), "the whole trail fades away")
 

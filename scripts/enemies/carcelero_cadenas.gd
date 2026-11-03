@@ -3,7 +3,8 @@ extends Enemy
 ## Carcelero de cadenas: when Nico keeps his distance it aims (a line shows where), throws a chain
 ## that flies out up to its range and, if its tip catches him, drags him close and follows up with
 ## its normal melee swing. A wall stops the chain; a dodge (i-frames) lets it pass through and also
-## breaks the drag. Everything tunable lives in its ChainJailerData.
+## breaks the drag. Ridden by a Máscara parásita its chain reaches farther and drags harder.
+## Everything tunable lives in its ChainJailerData.
 
 enum ChainStep { NONE, AIM, OUT, BACK, RECOVER }
 
@@ -20,6 +21,8 @@ var _victim: Node2D = null
 var _chain_hitbox: Hitbox
 var _chain_line: Line2D
 var _aim_line: Line2D
+## The hook drawn on the chain's tip (null without art).
+var _hook: Sprite2D
 
 
 func _ready() -> void:
@@ -42,6 +45,16 @@ func _physics_process(delta: float) -> void:
 ## True while the chain is out or being aimed (tests and the animation read it).
 func is_throwing() -> bool:
 	return _chain_step != ChainStep.NONE
+
+
+## How far the chain flies now: farther while a Máscara parásita rides it.
+func chain_range() -> float:
+	return _jailer.masked_chain_range if is_masked() else _jailer.chain_range
+
+
+## How fast a caught Nico is dragged now: harder while a Máscara parásita rides it.
+func pull_speed() -> float:
+	return _jailer.masked_pull_speed if is_masked() else _jailer.pull_speed
 
 
 func _process_chase(delta: float) -> void:
@@ -73,7 +86,7 @@ func _process_attack(delta: float) -> void:
 func _can_throw() -> bool:
 	var distance := global_position.distance_to(target.global_position)
 	return _chain_cooldown_left == 0.0 and _attack_cooldown_left == 0.0 \
-			and distance > _jailer.chain_min_range and distance <= _jailer.chain_range and can_see(target)
+			and distance > _jailer.chain_min_range and distance <= chain_range() and can_see(target)
 
 
 func _start_throw() -> void:
@@ -101,7 +114,7 @@ func _process_aim() -> void:
 func _throw() -> void:
 	_chain_step = ChainStep.OUT
 	_aim_line.hide()
-	_chain_line.show()
+	_show_chain(true)
 	_tip = 0.0
 	_reach = _clear_reach()
 	_chain_hitbox.damage = ceili(_jailer.chain_damage * damage_multiplier)
@@ -121,7 +134,7 @@ func _on_chain_hit(hurtbox: Hurtbox) -> void:
 	var victim := (hurtbox.owner if hurtbox.owner != null else hurtbox.get_parent()) as Node2D
 	if victim != null and victim.has_method("apply_pull"):
 		_victim = victim
-		victim.apply_pull(global_position, _jailer.pull_speed, _jailer.pull_time)
+		victim.apply_pull(global_position, pull_speed(), _jailer.pull_time)
 	_start_retract()
 
 
@@ -143,7 +156,7 @@ func _process_back(delta: float) -> void:
 	if _tip <= 0.0 and not _dragging():
 		_chain_step = ChainStep.RECOVER
 		_step_left = _jailer.chain_recover
-		_chain_line.hide()
+		_show_chain(false)
 
 
 func _end_throw() -> void:
@@ -164,7 +177,7 @@ func _drop_chain() -> void:
 	_chain_cooldown_left = _jailer.chain_cooldown
 	_victim = null
 	_chain_hitbox.deactivate()
-	_chain_line.hide()
+	_show_chain(false)
 	_aim_line.hide()
 
 
@@ -177,10 +190,10 @@ func _dragging() -> bool:
 func _clear_reach() -> float:
 	var from := _hand()
 	var query := PhysicsRayQueryParameters2D.create(
-			from, from + _aim * _jailer.chain_range, 1 << (WORLD_LAYER - 1))
+			from, from + _aim * chain_range(), 1 << (WORLD_LAYER - 1))
 	query.exclude = [get_rid()]
 	var hit := get_world_2d().direct_space_state.intersect_ray(query)
-	return from.distance_to(hit.position) if not hit.is_empty() else _jailer.chain_range
+	return from.distance_to(hit.position) if not hit.is_empty() else chain_range()
 
 
 ## Where the chain leaves the body, in world coordinates.
@@ -207,7 +220,22 @@ func _build_chain() -> void:
 	_chain_line.width = _jailer.chain_width
 	_chain_line.default_color = _jailer.chain_color
 	_chain_line.hide()
+	if _jailer.chain_art != null:
+		# The links' tile repeats along the line one texel per pixel: the width is the tile's height.
+		_chain_line.texture = _jailer.chain_art
+		_chain_line.texture_mode = Line2D.LINE_TEXTURE_TILE
+		_chain_line.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		_chain_line.width = _jailer.chain_art.get_height()
+		_chain_line.default_color = Color.WHITE
 	add_child(_chain_line)
+	if _jailer.hook_art != null:
+		_hook = Sprite2D.new()
+		_hook.name = "ChainHook"
+		_hook.texture = _jailer.hook_art
+		var cells := float(_jailer.hook_art.get_width()) / maxf(_jailer.hook_art.get_height(), 1.0)
+		_hook.hframes = maxi(int(cells), 1)
+		_hook.hide()
+		add_child(_hook)
 	_chain_hitbox = Hitbox.new()
 	_chain_hitbox.name = "ChainHitbox"
 	_chain_hitbox.collision_layer = 1 << 4
@@ -230,6 +258,17 @@ func _update_lines() -> void:
 	var tip := hand + _aim * maxf(_tip, 0.0)
 	_chain_line.points = PackedVector2Array([hand, tip])
 	_chain_hitbox.position = tip
+	if _hook != null:
+		# Centered on the tip like the hitbox; the art is symmetric, so turning it is enough.
+		_hook.position = tip
+		_hook.rotation = _aim.angle()
+		_hook.frame = int(Time.get_ticks_msec() / 1000.0 * _jailer.hook_fps) % _hook.hframes
+
+
+func _show_chain(shown: bool) -> void:
+	_chain_line.visible = shown
+	if _hook != null:
+		_hook.visible = shown
 
 
 ## The throw plays `special` (aim and toss over the windup and the flight); the swing keeps `attack`.
@@ -242,5 +281,5 @@ func _update_animation() -> void:
 	if _sprite.animation != &"special":
 		_sprite.play(&"special")
 		_anim_held = 0.0
-		var span := _jailer.chain_windup + _jailer.chain_range / maxf(_jailer.chain_speed, 1.0)
+		var span := _jailer.chain_windup + chain_range() / maxf(_jailer.chain_speed, 1.0)
 		_sprite.speed_scale = _animation_length(&"special") / maxf(span, 0.05)

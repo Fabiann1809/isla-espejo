@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/reina_volcanica.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/reina_volcanica.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="body"]
+size = Vector2(16, 10)
+
+[sub_resource type="RectangleShape2D" id="flying_hurt"]
+size = Vector2(24, 34)
+
+[sub_resource type="RectangleShape2D" id="sting"]
+size = Vector2(18, 14)
+
+[node name="ReinaVolcanica" instance=ExtResource("1")]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("3")
+data = ExtResource("2")
+
+[node name="Body" parent="." index="1"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+
+[node name="CollisionShape2D" parent="." index="2"]
+shape = SubResource("body")
+
+[node name="CollisionShape2D" parent="Hurtbox" index="0"]
+position = Vector2(0, -13)
+shape = SubResource("flying_hurt")
+
+[node name="Telegraph" parent="AttackPivot" index="0"]
+offset_left = 4.0
+offset_top = -6.0
+offset_right = 19.0
+offset_bottom = 6.0
+
+[node name="CollisionShape2D" parent="AttackPivot/Hitbox" index="0"]
+position = Vector2(10, 0)
+shape = SubResource("sting")

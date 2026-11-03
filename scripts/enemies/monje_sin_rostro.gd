@@ -13,6 +13,8 @@ const BLOCKING_MASK := (1 << (WORLD_LAYER - 1)) | (1 << (WATER_LAYER - 1))
 const GLYPH_CORNERS := 3
 const GLYPH_SCALE := 0.75
 const INNER_RING_SCALE := 0.5
+## Frames of each loop in the drawn symbol's strip: resting, then warned.
+const SYMBOL_ART_FRAMES := 4
 
 var step: Step = Step.VANISH
 
@@ -194,6 +196,8 @@ func _fire() -> void:
 		orb.setup(direction, _monk.projectile_speed, _monk.projectile_range,
 				ceili(data.attack_damage * damage_multiplier))
 		orb.position = position + direction * _monk.muzzle_distance
+		# Its comet tail streams behind it; the round hitbox does not care.
+		orb.rotation = direction.angle()
 		orb.modulate = _monk.shot_tint
 		get_parent().add_child(orb)
 
@@ -242,6 +246,9 @@ func _fade_symbols() -> void:
 
 
 func _draw_symbols() -> void:
+	if _monk.symbol_art != null:
+		_draw_symbol_art()
+		return
 	var pulse := 0.5 + 0.5 * sin(_glow_clock * TAU * _monk.symbol_pulse_rate)
 	var radius := _monk.symbol_radius
 	for i in _symbols.size():
@@ -259,6 +266,19 @@ func _draw_symbols() -> void:
 		for corner in GLYPH_CORNERS + 1:
 			glyph.append(at + Vector2.UP.rotated(TAU * corner / GLYPH_CORNERS) * size * GLYPH_SCALE)
 		_symbol_art.draw_polyline(glyph, Color(color, 0.7), 1.0)
+
+
+## The drawn symbols: the resting loop spans one glow pulse, the warned one flickers faster.
+func _draw_symbol_art() -> void:
+	var art := _monk.symbol_art
+	var cell := float(art.get_height())
+	var rest := int(_glow_clock * _monk.symbol_pulse_rate * SYMBOL_ART_FRAMES) % SYMBOL_ART_FRAMES
+	var warned_frame := SYMBOL_ART_FRAMES + int(_glow_clock * _monk.symbol_warning_fps) % SYMBOL_ART_FRAMES
+	for i in _symbols.size():
+		var at := _symbol_art.to_local(_symbols[i]).round()
+		var frame := warned_frame if i == _warned_symbol else rest
+		_symbol_art.draw_texture_rect_region(art, Rect2(at - Vector2(cell, cell) / 2.0, Vector2(cell, cell)),
+				Rect2(frame * cell, 0.0, cell, cell))
 
 
 # --- Animation ---------------------------------------------------------------------------------

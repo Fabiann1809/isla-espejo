@@ -11,7 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Carnero de basalto"
 	data.placeholder_color = Color(0.3, 0.27, 0.28)
 	data.sprite_frames = load("res://data/enemies/carnero_basalto_frames.tres")
-	data.sprite_offset = Vector2(0, -8)
+	# 64x64 cells, its art drawn by tools/make_carnero_basalto_art.py with the hooves on row 44:
+	# they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -6)
 	data.max_health = 7
 	data.move_speed = 30.0
 	data.chase_speed = 40.0
@@ -34,6 +36,7 @@ func _initialize() -> void:
 	data.charge_recover = 0.5
 	data.stun_time = 1.6
 	data.lane_width = 18.0
+	data.lane_art = load("res://assets/sprites/carnero_basalto/carnero_basalto_lane.png")
 	ResourceSaver.save(data, "res://data/enemies/carnero_basalto.tres")
 	print("carnero_basalto written")
 	quit()

@@ -1,15 +1,17 @@
 [gd_resource type="Resource" script_class="SlagSnailData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/caracol_escoria_data.gd" id="1_ipbfy"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/caracol_escoria_frames.tres" id="2_pu7ru"]
+[ext_resource type="Script" path="res://scripts/enemies/caracol_escoria_data.gd" id="1_pu7ru"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/caracol_escoria_frames.tres" id="2_1xj5o"]
+[ext_resource type="Texture2D" path="res://assets/sprites/caracol_escoria/caracol_escoria_trail.png" id="3_fskes"]
 
 [resource]
-script = ExtResource("1_ipbfy")
+script = ExtResource("1_pu7ru")
+trail_art = ExtResource("3_fskes")
 id = &"caracol_escoria"
 display_name = "Caracol de escoria"
 placeholder_color = Color(0.45, 0.3, 0.25, 1)
-sprite_frames = ExtResource("2_pu7ru")
-sprite_offset = Vector2(0, -5)
+sprite_frames = ExtResource("2_1xj5o")
+sprite_offset = Vector2(0, -15)
 max_health = 14
 move_speed = 12.0
 chase_speed = 20.0

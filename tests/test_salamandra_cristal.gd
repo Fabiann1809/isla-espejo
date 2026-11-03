@@ -1,11 +1,14 @@
 extends SceneTree
 ## Salamandra de cristal test: it lobs a crystal at where Nico stands (a warning circle marks the
-## landing during the flight), the crystal leaves a patch that hurts and slows and stays a few
-## seconds after the salamander is gone, and both its patrol and its repositioning keep to the
-## edges of its room.
+## landing during the flight), the crystal leaves a patch that hurts and slows and burns for as long
+## as the salamander lives; with its patches at the maximum it spits no more, no two patches are
+## too close, and when it leaves or dies they go out. Both its patrol and its repositioning keep to
+## the edges of its room.
 ## Run: godot --headless --path . --script res://tests/test_salamandra_cristal.gd
 
 const ARENA := Vector2(300, 180)
+## How long a patch lasted before they stopped going out by themselves.
+const OLD_LIFETIME := 4.5
 
 var _ok := true
 var _room: Node
@@ -14,7 +17,7 @@ var _scene: PackedScene
 
 
 func _initialize() -> void:
-	create_timer(60.0).timeout.connect(func() -> void:
+	create_timer(90.0).timeout.connect(func() -> void:
 		printerr("TIMEOUT")
 		quit(1))
 	await process_frame
@@ -31,6 +34,7 @@ func _initialize() -> void:
 	_check(salamander.data is CrystalSalamanderData, "the salamander uses a CrystalSalamanderData")
 	salamander.free()
 	await _spit_leaves_a_patch()
+	await _patch_limit_and_death()
 	await _keeps_to_the_edges()
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
@@ -40,7 +44,6 @@ func _spit_leaves_a_patch() -> void:
 	_player.global_position = ARENA
 	var salamander = _spawn(ARENA + Vector2(110, 0))
 	var hp: int = _player.health.current
-	var lifetime: float = salamander.data.hazard_lifetime
 	var warning: Node2D = null
 	var saw_special := false
 	for i in 240:
@@ -61,16 +64,69 @@ func _spit_leaves_a_patch() -> void:
 		if hazard != null:
 			break
 	_check(hazard != null and hazard.global_position.distance_to(ARENA) < 2.0, "the crystal lands on the warned spot")
-	salamander.queue_free()
 	await _frames(4)
 	_check(_player.health.current == hp - 1, "the hot crystals hurt Nico (%d -> %d)" % [hp, _player.health.current])
 	_check(_player.is_slowed(), "and slow him")
-	# Off the patch, or it would keep hurting him until the end.
+	# Off the patch; it goes on spitting at him, so keep him alive.
 	_player.global_position = ARENA + Vector2(0, 80)
-	await create_timer(2.0).timeout
-	_check(is_instance_valid(hazard), "the crystals stay on the ground after the salamander is gone")
-	await create_timer(lifetime).timeout
-	_check(not is_instance_valid(hazard), "and fade away after a few seconds")
+	await _wait_healing(OLD_LIFETIME + 1.0)
+	_check(is_instance_valid(hazard) and not hazard.is_expiring(),
+			"the patch still burns long after its old %.1f s" % OLD_LIFETIME)
+	# It leaves (its room or the arena changes): its patches go out, also those still in the air.
+	var cool: float = salamander.data.hazard_cool_time + salamander.data.flight_time
+	var patches: Array = salamander.patches()
+	salamander.queue_free()
+	await _frames(2)
+	var all_out := not patches.is_empty()
+	for patch in patches:
+		all_out = all_out and (not is_instance_valid(patch) or patch.is_expiring())
+	_check(all_out, "when the salamander leaves its patches go out (%d)" % patches.size())
+	await create_timer(cool + 0.4).timeout
+	_check(get_nodes_in_group(&"ground_hazards").is_empty(), "and they are gone after cooling down")
+
+
+func _patch_limit_and_death() -> void:
+	_player.global_position = ARENA
+	var salamander = _spawn(ARENA + Vector2(110, 0))
+	salamander.data.hazard_max = 3
+	salamander.data.attack_cooldown = 0.3
+	var spacing: float = salamander.data.hazard_spacing
+	var timer := create_timer(15.0)
+	while salamander.patches().size() < 3 and timer.time_left > 0.0:
+		await physics_frame
+		_player.health.heal(_player.health.max_health)
+	# Let the last crystal land.
+	await _wait_healing(salamander.data.flight_time + 0.2)
+	var landed := get_nodes_in_group(&"ground_hazards")
+	_check(landed.size() == 3, "it spits up to its maximum of patches (%d)" % landed.size())
+	var spaced := true
+	for i in landed.size():
+		for j in range(i + 1, landed.size()):
+			spaced = spaced and landed[i].global_position.distance_to(landed[j].global_position) >= spacing - 0.5
+	_check(spaced, "no two patches lie closer than %.0f px, though Nico stood still" % spacing)
+	var attacked := false
+	var full := create_timer(3.0)
+	while full.time_left > 0.0:
+		await physics_frame
+		_player.health.heal(_player.health.max_health)
+		attacked = attacked or salamander.state == salamander.State.ATTACK
+	_check(not attacked and get_nodes_in_group(&"ground_hazards").size() == 3,
+			"with its patches at the maximum it spits no more")
+	# Even a spit forced on it throws nothing.
+	salamander._spit()
+	await _frames(2)
+	_check(salamander.patches().size() == 3 and _find(func(node: Node) -> bool: return node is Polygon2D) == null,
+			"one crystal more leaves no patch")
+	var cool: float = salamander.data.hazard_cool_time
+	salamander.health.take_damage(salamander.health.max_health, _player.global_position)
+	await _frames(1)
+	var all_out := true
+	for patch in landed:
+		all_out = all_out and patch.is_expiring()
+	_check(all_out, "when the salamander dies its patches go out")
+	await create_timer(cool + 0.4).timeout
+	_check(get_nodes_in_group(&"ground_hazards").is_empty(), "and they are gone after cooling down")
+	await _frames(30)
 
 
 func _keeps_to_the_edges() -> void:
@@ -109,6 +165,14 @@ func _keeps_to_the_edges() -> void:
 	_check(spots_on_edge, "while hunting it repositions along the edges (%d spots)" % spots.size())
 	salamander.queue_free()
 	await _frames(2)
+
+
+## Waits `seconds` keeping Nico alive: the salamander keeps spitting at him meanwhile.
+func _wait_healing(seconds: float) -> void:
+	var timer := create_timer(seconds)
+	while timer.time_left > 0.0:
+		await physics_frame
+		_player.health.heal(_player.health.max_health)
 
 
 func _on_edge(point: Vector2, inside: Rect2) -> bool:

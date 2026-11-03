@@ -1,15 +1,17 @@
 [gd_resource type="Resource" script_class="BasaltRamData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/carnero_basalto_data.gd" id="1_fykgi"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/carnero_basalto_frames.tres" id="2_fuf6w"]
+[ext_resource type="Texture2D" path="res://assets/sprites/carnero_basalto/carnero_basalto_lane.png" id="1_fuf6w"]
+[ext_resource type="Script" path="res://scripts/enemies/carnero_basalto_data.gd" id="2_168n4"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/carnero_basalto_frames.tres" id="3_i4eca"]
 
 [resource]
-script = ExtResource("1_fykgi")
+script = ExtResource("2_168n4")
+lane_art = ExtResource("1_fuf6w")
 id = &"carnero_basalto"
 display_name = "Carnero de basalto"
 placeholder_color = Color(0.3, 0.27, 0.28, 1)
-sprite_frames = ExtResource("2_fuf6w")
-sprite_offset = Vector2(0, -8)
+sprite_frames = ExtResource("3_i4eca")
+sprite_offset = Vector2(0, -6)
 max_health = 7
 move_speed = 30.0
 chase_speed = 40.0

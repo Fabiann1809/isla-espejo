@@ -42,3 +42,6 @@ extends EnemyData
 @export var hot_color := Color(1.0, 0.5, 0.15)
 @export var cold_color := Color(0.27, 0.25, 0.27)
 @export var edge_color := Color(1.0, 0.85, 0.4)
+## Pixel-art strip of the block (IronBlock.art; drawn for the default 22x14 block, 14 px tall). Empty
+## draws the plain rectangles in the colors above.
+@export var block_art: Texture2D

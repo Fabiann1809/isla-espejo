@@ -15,6 +15,17 @@ const ENEMY_LAYER := 3
 const ENEMY_ATTACK_LAYER := 5
 const WATER_LAYER := 7
 const SHATTER_TIME := 0.35
+## Frames of `art` (square cells, footprint centered on ART_ORIGIN of each cell), drawn by
+## tools/make_forjador_condenado_art.py for the default 22x14 block, 14 px tall.
+const ART_ORIGIN := Vector2(24, 30)
+const ART_SHADOW := 0
+const ART_SHADOW_FRAMES := 4
+const ART_FALLING := 4
+const ART_IMPACT := 5
+const ART_HEAT := 6
+const ART_HEAT_FRAMES := 5
+const ART_SHARDS := 11
+const ART_SHARD_FRAMES := 4
 
 var phase: Phase = Phase.FALLING
 var size := Vector2(22, 14)
@@ -30,6 +41,8 @@ var cool_time := 3.0
 var hot_color := Color.ORANGE
 var cold_color := Color.DIM_GRAY
 var edge_color := Color.YELLOW
+## Optional pixel-art strip instead of the plain rectangles (see the ART_* frames).
+var art: Texture2D
 
 var _phase_left := 0.0
 var _age := 0.0
@@ -55,6 +68,7 @@ static func create(spot: Vector2, data: DoomedForgerData, hit_damage: int) -> Ir
 	block.hot_color = data.hot_color
 	block.cold_color = data.cold_color
 	block.edge_color = data.edge_color
+	block.art = data.block_art
 	return block
 
 
@@ -128,6 +142,9 @@ static func _rect_shape(extent: Vector2) -> CollisionShape2D:
 
 
 func _draw() -> void:
+	if art != null:
+		_draw_art()
+		return
 	match phase:
 		Phase.FALLING:
 			var progress := 1.0 - clampf(_phase_left / maxf(fall_time, 0.001), 0.0, 1.0)
@@ -138,6 +155,34 @@ func _draw() -> void:
 			_draw_box(0.0, clampf(1.0 - _age / maxf(cool_time, 0.001), 0.0, 1.0), fade)
 		Phase.SHATTERED:
 			_draw_shards(1.0 - clampf(_phase_left / SHATTER_TIME, 0.0, 1.0))
+
+
+## Same phases and timing as the plain drawing, with frames of `art` picked by time.
+func _draw_art() -> void:
+	match phase:
+		Phase.FALLING:
+			var progress := 1.0 - clampf(_phase_left / maxf(fall_time, 0.001), 0.0, 1.0)
+			_draw_art_frame(ART_SHADOW + mini(ART_SHADOW_FRAMES - 1, int(progress * ART_SHADOW_FRAMES)),
+					0.0, 0.35 * progress)
+			# Whole pixels, so the falling block stays as crisp as the standing one.
+			_draw_art_frame(ART_FALLING, roundf(-fall_height * (1.0 - progress * progress)), 1.0)
+		Phase.SOLID:
+			var fade := clampf((lifetime - _age) / maxf(fade_time, 0.001), 0.0, 1.0)
+			var frame := ART_IMPACT
+			if _age >= impact_time:
+				var cooled := clampf(_age / maxf(cool_time, 0.001), 0.0, 1.0)
+				frame = ART_HEAT + mini(ART_HEAT_FRAMES - 1, int(cooled * ART_HEAT_FRAMES))
+			_draw_art_frame(frame, 0.0, fade)
+		Phase.SHATTERED:
+			var progress := 1.0 - clampf(_phase_left / SHATTER_TIME, 0.0, 1.0)
+			_draw_art_frame(ART_SHARDS + mini(ART_SHARD_FRAMES - 1, int(progress * ART_SHARD_FRAMES)),
+					0.0, 1.0)
+
+
+func _draw_art_frame(frame: int, lift: float, alpha: float) -> void:
+	var cell := float(art.get_height())
+	draw_texture_rect_region(art, Rect2(-ART_ORIGIN + Vector2(0.0, lift), Vector2(cell, cell)),
+			Rect2(frame * cell, 0.0, cell, cell), Color(1.0, 1.0, 1.0, alpha))
 
 
 func _draw_shadow(progress: float) -> void:

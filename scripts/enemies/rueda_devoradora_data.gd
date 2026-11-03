@@ -27,6 +27,6 @@ extends EnemyData
 ## Radius of the stone (px): how much it turns per pixel rolled.
 @export var wheel_radius := 13.0
 ## How far below the frame's center the hub of the wheel is (px); the sprite spins around it.
-@export var hub_offset := 22.0
+@export var hub_offset := 6.0
 ## Seconds the launch frames (special) show at the start of a burst, before it spins.
 @export var launch_time := 0.25

@@ -1,15 +1,17 @@
 [gd_resource type="Resource" script_class="SealGuardianData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/custodio_sello_data.gd" id="1_xp6rq"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/custodio_sello_frames.tres" id="2_nv8w8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/custodio_sello/custodio_sello_dome.png" id="1_nv8w8"]
+[ext_resource type="Script" path="res://scripts/enemies/custodio_sello_data.gd" id="2_hnyih"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/custodio_sello_frames.tres" id="3_etnui"]
 
 [resource]
-script = ExtResource("1_xp6rq")
+script = ExtResource("2_hnyih")
+dome_art = ExtResource("1_nv8w8")
 id = &"custodio_sello"
 display_name = "Custodio del sello"
 placeholder_color = Color(0.85, 0.55, 0.25, 1)
-sprite_frames = ExtResource("2_nv8w8")
-sprite_offset = Vector2(0, -30)
+sprite_frames = ExtResource("3_etnui")
+sprite_offset = Vector2(0, -14)
 max_health = 6
 move_speed = 22.0
 chase_speed = 34.0

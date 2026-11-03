@@ -2,7 +2,8 @@ class_name ParasiteMask
 extends Enemy
 ## Máscara parásita: a floating mask that flies to the nearest other living enemy of its room and
 ## rides its head, sending it into a frenzy (Enemy.apply_frenzy: faster, attacks come back sooner)
-## for as long as it rides. While it rides it cannot be hit (its hurtbox is off, arrows fly on to the
+## for as long as it rides; it also tells the host it is masked (Enemy.set_masked), so some enemies
+## boost their own mechanic too. While it rides it cannot be hit (its hurtbox is off, arrows fly on to the
 ## host): kill the host first. When the host dies the mask jumps off, flees from Nico for a moment
 ## (it can be hit now) and then looks for another host; with none left it bites Nico by itself
 ## (the base melee attack, weak). Its body flies: it only stops at walls and never blocks anyone.
@@ -129,6 +130,8 @@ func _attach() -> void:
 	state = State.IDLE
 	_host.set_meta(RIDER_META, self)
 	_host.died.connect(_on_host_died, CONNECT_ONE_SHOT)
+	# Some hosts get their own boost on top of the frenzy (Enemy.set_masked).
+	_host.set_masked(true)
 	_hurt_shape.set_deferred("disabled", true)
 	_set_shadow_visible(false)
 	Events.enemy_attacked.emit(self, &"summon")
@@ -161,6 +164,7 @@ func _detach() -> void:
 		if _host.died.is_connected(_on_host_died):
 			_host.died.disconnect(_on_host_died)
 		_host.end_frenzy()
+		_host.set_masked(false)
 	_host = null
 	if state == State.DEAD:
 		return

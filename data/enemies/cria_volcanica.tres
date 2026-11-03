@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_xuxvy"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/salamandra_cristal_frames.tres" id="2_hmk2h"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/cria_volcanica_frames.tres" id="2_hmk2h"]
 
 [resource]
 script = ExtResource("1_xuxvy")
@@ -9,8 +9,7 @@ id = &"cria_volcanica"
 display_name = "Cría volcánica"
 placeholder_color = Color(1, 0.5, 0.25, 1)
 sprite_frames = ExtResource("2_hmk2h")
-sprite_scale = 0.75
-sprite_offset = Vector2(0, -10)
+sprite_offset = Vector2(0, -4)
 max_health = 1
 move_speed = 50.0
 chase_speed = 100.0

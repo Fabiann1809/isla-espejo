@@ -32,6 +32,7 @@ func _initialize() -> void:
 	await _fan_of_fire()
 	await _backs_away()
 	await _stays_in_its_room()
+	await _masked_fan()
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
@@ -100,6 +101,30 @@ func _stays_in_its_room() -> void:
 		fired = fired or not _find_orbs().is_empty()
 	_check(inside, "backing away never takes it out of its room (%s)" % acolyte.global_position)
 	_check(fired, "cornered, it fires anyway")
+	await _free(acolyte)
+
+
+## Ridden by a Máscara parásita (Enemy.set_masked) its fan has more flames and is wider; without
+## the mask, back to normal.
+func _masked_fan() -> void:
+	_reset_player(ARENA)
+	var acolyte = _spawn(ARENA + Vector2(120, 0))
+	var data = acolyte.data
+	_check(acolyte.fan_count() == data.fan_count and acolyte.fan_angle() == data.fan_angle,
+			"unmasked, its fan is the normal one")
+	acolyte.set_masked(true)
+	_check(acolyte.fan_count() > data.fan_count and acolyte.fan_angle() > data.fan_angle,
+			"masked, its fan has more flames (%d) and is wider (%.0f deg)" % [acolyte.fan_count(), acolyte.fan_angle()])
+	var flames: Array = []
+	for i in 200:
+		await physics_frame
+		flames = _find_orbs()
+		if not flames.is_empty():
+			break
+	_check(flames.size() == data.masked_fan_count, "masked, it fires %d flames at once (%d)" % [data.masked_fan_count, flames.size()])
+	acolyte.set_masked(false)
+	_check(acolyte.fan_count() == data.fan_count and acolyte.fan_angle() == data.fan_angle,
+			"without the mask its fan is back to normal")
 	await _free(acolyte)
 
 

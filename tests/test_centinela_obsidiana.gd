@@ -78,8 +78,42 @@ func _initialize() -> void:
 	await _frames(12)
 	_check(sentinel.health.current == hp - 1, "a frontal arrow gets through the lowered shield (%d -> %d)" % [hp, sentinel.health.current])
 	_check(_blocked == 1, "and is not counted as a block")
+	sentinel.queue_free()
+	_player.global_position = FAR
+	await _frames(2)
+	await _masked_shield()
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
+
+
+## Ridden by a Máscara parásita (Enemy.set_masked) its shield also covers its sides and it turns
+## faster; without the mask both are back to normal.
+func _masked_shield() -> void:
+	var sentinel = _spawn(Vector2(200, 200), Vector2.RIGHT)
+	await _frames(2)
+	var data = sentinel.data
+	var side: Vector2 = sentinel.global_position + Vector2.RIGHT.rotated(deg_to_rad(105.0)) * 40.0
+	var back: Vector2 = sentinel.global_position + Vector2.LEFT * 40.0
+	sentinel.facing = Vector2.RIGHT
+	_check(not sentinel.shield_covers(side), "unmasked, a hit from its side (105 deg) misses the shield")
+	sentinel.set_masked(true)
+	sentinel.facing = Vector2.RIGHT
+	_check(sentinel.is_masked() and sentinel.shield_arc() > data.shield_arc and sentinel.turn_rate() > data.turn_rate,
+			"masked, its shield is wider (%.0f deg) and it turns faster (%.0f deg/s)" % [sentinel.shield_arc(), sentinel.turn_rate()])
+	_check(sentinel.shield_covers(side), "masked, the shield covers its side too")
+	_check(not sentinel.shield_covers(back), "but its back stays open")
+	var hp: int = sentinel.health.current
+	_shoot(side + Vector2.RIGHT.rotated(deg_to_rad(105.0)) * 30.0, -Vector2.RIGHT.rotated(deg_to_rad(105.0)))
+	sentinel.facing = Vector2.RIGHT
+	await _frames(20)
+	_check(sentinel.health.current == hp, "a real arrow from its side is blocked while masked (%d -> %d)" % [hp, sentinel.health.current])
+	sentinel.set_masked(false)
+	sentinel.facing = Vector2.RIGHT
+	_check(not sentinel.is_masked() and sentinel.shield_arc() == data.shield_arc and sentinel.turn_rate() == data.turn_rate,
+			"without the mask its shield and turning are back to normal")
+	_check(not sentinel.shield_covers(side), "and its side is open again")
+	sentinel.queue_free()
+	await _frames(2)
 
 
 func _spawn(at: Vector2, facing: Vector2) -> Node2D:

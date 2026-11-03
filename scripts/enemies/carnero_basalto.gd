@@ -7,6 +7,14 @@ extends Enemy
 ## Everything tunable lives in its BasaltRamData.
 
 enum Charge { WINDUP, RUSH, STUNNED, RECOVER }
+## Rows of tiles in BasaltRamData.lane_art.
+enum LaneTiles { MARKED, FILLED, HOT }
+
+## Length of one lane tile along the lane (px).
+const LANE_TILE := 18.0
+## Past this much of the windup the filled lane flickers, this many times a second.
+const LANE_FLICKER_FROM := 0.6
+const LANE_FLICKER_FPS := 8.0
 
 ## Bodies a charge crashes into (and the lane stops at): world and ponds.
 const BLOCKING_MASK := (1 << (WORLD_LAYER - 1)) | (1 << (WATER_LAYER - 1))
@@ -166,11 +174,40 @@ func _clear_lane() -> void:
 ## It fills in as the windup runs out, so the player reads how soon the charge comes.
 func _draw_lane(canvas: Node2D) -> void:
 	var progress := 1.0 - clampf(_step_left / maxf(_ram.charge_windup, 0.01), 0.0, 1.0)
+	if _ram.lane_art != null:
+		_draw_lane_tiles(canvas, LaneTiles.MARKED, _lane_length)
+		# The filled part flickers once the charge is close.
+		var elapsed := _ram.charge_windup - _step_left
+		var hot := progress > LANE_FLICKER_FROM and int(elapsed * LANE_FLICKER_FPS) % 2 == 0
+		_draw_lane_tiles(canvas, LaneTiles.HOT if hot else LaneTiles.FILLED, _lane_length * progress)
+		return
 	var half := _ram.lane_width / 2.0
 	var area := Rect2(0.0, -half, _lane_length, _ram.lane_width)
 	canvas.draw_rect(area, Color(_ram.lane_color, 0.12 + 0.2 * progress))
 	canvas.draw_rect(Rect2(0.0, -half, _lane_length * progress, _ram.lane_width), Color(_ram.lane_color, 0.25))
 	canvas.draw_rect(area, Color(_ram.lane_color, 0.8), false, 1.0)
+
+
+## Lays the lane's tiles from the ram up to `upto` px: a start tile, middle tiles taking turns, and
+## the end tile always at the lane's end (the last middle tile is cut short to meet it).
+func _draw_lane_tiles(canvas: Node2D, row: LaneTiles, upto: float) -> void:
+	var art := _ram.lane_art
+	var half := _ram.lane_width / 2.0
+	var end_start := maxf(_lane_length - LANE_TILE, 0.0)
+	var x := 0.0
+	var i := 0
+	while x < upto:
+		var tile := 3 if x >= end_start else (0 if i == 0 else 1 + i % 2)
+		var width := LANE_TILE if tile == 3 else minf(LANE_TILE, end_start - x)
+		width = minf(width, upto - x)
+		if width <= 0.0:
+			break
+		var source := Rect2((row * 4 + tile) * LANE_TILE, 0.0, width, art.get_height())
+		canvas.draw_texture_rect_region(art, Rect2(x, -half, width, _ram.lane_width), source)
+		x += width
+		i += 1
+		if tile == 3:
+			break
 
 
 func _draw_stars() -> void:

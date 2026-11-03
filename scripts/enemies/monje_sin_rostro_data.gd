@@ -21,6 +21,10 @@ extends EnemyData
 @export var symbol_warning_color := Color(1.0, 0.55, 0.95)
 ## Pulses per second of the symbols' glow.
 @export var symbol_pulse_rate := 0.8
+## Drawn symbol (tools/make_monje_sin_rostro_art.py): a strip of square cells, 4 resting (one pulse)
+## then 4 warned, looping at `symbol_warning_fps`. Without it the symbol is drawn with shapes.
+@export var symbol_art: Texture2D
+@export var symbol_warning_fps := 10.0
 
 @export_group("Teleport")
 ## Fade out (still hittable), time gone (cannot be hit; the destination flares), fade in.

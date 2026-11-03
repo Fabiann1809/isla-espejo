@@ -40,3 +40,7 @@ extends EnemyData
 @export var rim_color := Color(0.85, 0.3, 0.08, 0.9)
 ## Width of the crack that runs from the spider's drill to each patch while it cracks.
 @export var crack_trail_width := 1.0
+## Drawn patch and crack (tools/make_arana_talladora_art.py); without them the patch is drawn
+## with plain shapes in the colors above.
+@export var pit_art: Texture2D
+@export var crack_art: Texture2D

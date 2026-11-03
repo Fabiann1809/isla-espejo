@@ -22,3 +22,6 @@ extends EnemyData
 @export var ring_band := 10.0
 @export var ring_damage := 1
 @export var ring_color := Color(1.0, 0.8, 0.35)
+## Pixel art of the ring (tools/make_campanero_bronce_art.py): square cells drawn at growing radii,
+## the last one at the art's full radius; without it the ring is drawn in `ring_color`.
+@export var ring_art: Texture2D

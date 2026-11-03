@@ -30,42 +30,29 @@ SOURCE_CELL = 128
 ANIMATIONS = ["idle", "walk", "attack", "special", "hurt", "death"]
 ## Enemy id -> scale of the art (0.5 = a 64 px cell, about Nico's size; the Verdugo is huge).
 ENEMIES = {
-    # Their figures are drawn 75-90 px tall: scaled to about Nico's height (28 px); the sentinel, the
-    # worm and the executioner (a huge enemy) stay bigger.
+    # Their figures are drawn 75-90 px tall: scaled to about Nico's height (28 px); the sentinel and
+    # the executioner (a huge enemy) stay bigger. After this tool, run tools/make_verdugo_piedra_art.py
+    # (it rebuilds the executioner's strips and redraws its walking legs) and
+    # tools/make_salamandra_cristal_art.py (it cleans the halo off the salamander's death).
     "centinela_obsidiana": 0.5,
     "carcelero_cadenas": 0.375,
     "acolito_brasero": 0.375,
     "verdugo_piedra": 0.625,
     "duelista_maldito": 0.375,
     "salamandra_cristal": 0.375,
-    "gusano_puentes": 0.5,
-    # The volcanic beasts are enlarged x2 in their pack (2x2 pixel blocks).
-    "caracol_escoria": 0.25,
-    "carnero_basalto": 0.3125,
-    "manta_hollin": 0.3125,
-    # The second pack draws its figures smaller inside the cell: 0.75 brings them to Nico's size.
-    "arana_talladora": 0.75,
-    "baldosa_hambrienta": 0.5,
-    "campanero_bronce": 0.75,
-    "custodio_sello": 0.75,
-    "forjador_condenado": 0.75,
-    "manos_abismo": 0.75,
-    "mascara_parasita": 0.5,
+    # The faceless monk: its redrawn art read worse than the pack's, which the team prefers.
     "monje_sin_rostro": 0.75,
-    "nucleo_cria": 0.75,
-    "ojo_sol": 0.75,
-    "oraculo_ceniza": 0.75,
-    "relojero_trampas": 0.75,
-    "rueda_devoradora": 0.75,
-    "vasija_poseida": 0.75,
+    # Every other temple enemy came out blurred at its scale: each is drawn at game size by its own
+    # tools/make_<id>_art.py instead (the slag snail first, then the worm, the ram, the soot ray,
+    # the second pack's other thirteen and the brood core's cria_volcanica). Their pack strips stay in
+    # `source/` as the reference those tools follow.
 }
 BEASTS = {
     "salamandra_cristal": "Salamandra_de_Cristal",
-    "gusano_puentes": "Gusano_de_los_Puentes",
-    "caracol_escoria": "Caracol_de_Escoria",
-    "carnero_basalto": "Carnero_de_Basalto",
-    "manta_hollin": "Manta_de_Hollin",
 }
+## `--second` copies this pack's strips into `source/`: the monk is still scaled from them, the rest
+## keep them as the reference their art tools follow (so FRAMES, CUT_ABOVE and SPIRIT below only
+## matter for the monk and for one that comes back).
 SECOND_PACK = [
     "arana_talladora", "baldosa_hambrienta", "campanero_bronce", "custodio_sello",
     "forjador_condenado", "manos_abismo", "mascara_parasita", "monje_sin_rostro", "nucleo_cria",
@@ -146,6 +133,19 @@ CUT_ABOVE = {
     ("relojero_trampas", "death"): 79,
 }
 
+
+## Scraps of a neighbouring frame left inside a cell: (enemy, animation) -> {frame: [boxes in game
+## px, (x0, y0, x1, y1)]} cleared after scaling.
+CLEARED = {
+    ("carcelero_cadenas", "special"): {4: [(4, 26, 5, 29)]},
+    ("acolito_brasero", "attack"): {2: [(33, 40, 35, 41)], 3: [(27, 39, 35, 41)], 6: [(9, 20, 11, 24)]},
+    ("acolito_brasero", "special"): {6: [(8, 20, 9, 24)]},
+}
+## Frames the pack drew higher than the rest, so the figure hops: (enemy, animation) -> {frame: game
+## px to lower it}.
+LOWERED = {
+    ("duelista_maldito", "attack"): {0: 5, 1: 5, 6: 5},
+}
 
 def copy_sources(pack):
     for enemy in ENEMIES:
@@ -251,17 +251,14 @@ def picked_strip(enemy, anim, frames):
 
 
 def scale_frame(frame, cell):
+    # Pillow already weighs colors by alpha when it resizes RGBA, so an edge pixel keeps the
+    # figure's color (premultiplying by hand first and dividing by alpha after whitened the border).
     small = frame.resize((cell, cell), Image.BOX)
     pixels = small.load()
     for y in range(cell):
         for x in range(cell):
             r, g, b, a = pixels[x, y]
-            if a < ALPHA_CUT:
-                pixels[x, y] = (0, 0, 0, 0)
-            else:
-                # Undo the darkening of edge pixels averaged with transparent ones.
-                k = 255.0 / a
-                pixels[x, y] = (min(255, int(r * k)), min(255, int(g * k)), min(255, int(b * k)), 255)
+            pixels[x, y] = (0, 0, 0, 0) if a < ALPHA_CUT else (r, g, b, 255)
     return small
 
 
@@ -290,7 +287,6 @@ def held_strip(strip, frames):
 def scaled_strip(enemy, anim, strip, cell, scraps):
     """The strip with each frame cleaned and scaled to `cell`; counts the pieces cleared in `scraps`."""
     count = strip.width // SOURCE_CELL
-    # Average in premultiplied space so transparent pixels do not bleed black into the edges.
     out = Image.new("RGBA", (cell * count, cell), (0, 0, 0, 0))
     for i in range(count):
         frame = strip.crop((i * SOURCE_CELL, 0, (i + 1) * SOURCE_CELL, SOURCE_CELL))
@@ -300,14 +296,15 @@ def scaled_strip(enemy, anim, strip, cell, scraps):
             scraps[0] += drop_scrap_strips(frame)
         if (enemy, anim) in CUT_ABOVE:
             frame.paste((0, 0, 0, 0), (0, 0, SOURCE_CELL, CUT_ABOVE[(enemy, anim)]))
-        premultiplied = Image.new("RGBA", frame.size)
-        src = frame.load()
-        dst = premultiplied.load()
-        for y in range(frame.height):
-            for x in range(frame.width):
-                r, g, b, a = src[x, y]
-                dst[x, y] = (r * a // 255, g * a // 255, b * a // 255, a)
-        out.paste(scale_frame(premultiplied, cell), (i * cell, 0))
+        small = scale_frame(frame, cell)
+        for box in CLEARED.get((enemy, anim), {}).get(i, []):
+            small.paste((0, 0, 0, 0), box)
+        drop = LOWERED.get((enemy, anim), {}).get(i, 0)
+        if drop:
+            lowered = Image.new("RGBA", small.size, (0, 0, 0, 0))
+            lowered.paste(small, (0, drop))
+            small = lowered
+        out.paste(small, (i * cell, 0))
     return out
 
 

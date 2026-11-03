@@ -36,6 +36,9 @@ func _initialize() -> void:
 	data.lunge_speed = 250.0
 	data.lunge_time = 0.24
 	data.lunge_recover = 0.5
+	data.masked_lunge_time = 0.36
+	data.masked_dodge_chance = 0.85
+	data.masked_dodge_cooldown = 1.4
 	ResourceSaver.save(data, "res://data/enemies/duelista_maldito.tres")
 	print("duelista_maldito written")
 	quit()

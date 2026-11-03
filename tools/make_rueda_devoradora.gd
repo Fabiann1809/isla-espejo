@@ -10,7 +10,9 @@ func _initialize() -> void:
 	data.display_name = "Rueda devoradora"
 	data.placeholder_color = Color(0.55, 0.4, 0.3)
 	data.sprite_frames = load("res://data/enemies/rueda_devoradora_frames.tres")
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_rueda_devoradora_art.py with the lowest teeth on row
+	# 51: they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -13)
 	data.max_health = 6
 	data.move_speed = 25.0
 	data.chase_speed = 35.0
@@ -36,7 +38,8 @@ func _initialize() -> void:
 	data.aim_bias = 0.35
 	data.min_leave = 0.3
 	data.wheel_radius = 13.0
-	data.hub_offset = 22.0
+	# The hub is at (32, 38) of its 64x64 cells: the sprite spins around it.
+	data.hub_offset = 6.0
 	data.launch_time = 0.25
 	ResourceSaver.save(data, "res://data/enemies/rueda_devoradora.tres")
 	print("rueda_devoradora written")

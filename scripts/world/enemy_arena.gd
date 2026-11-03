@@ -30,6 +30,7 @@ const ENEMIES := [
 	"res://scenes/enemies/vasija_poseida.tscn",
 	"res://scenes/enemies/relojero_trampas.tscn",
 	"res://scenes/enemies/nucleo_cria.tscn",
+	"res://scenes/enemies/reina_volcanica.tscn",
 ]
 ## Enemies that work on other enemies (the mask rides one, the seal guardian shields them) come with
 ## company: these scenes stand at both sides of them.

@@ -1,14 +1,18 @@
 [gd_resource type="Resource" script_class="ChainJailerData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/carcelero_cadenas_data.gd" id="1_5ojmm"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/carcelero_cadenas_frames.tres" id="2_crhlo"]
+[ext_resource type="Texture2D" path="res://assets/sprites/carcelero_cadenas/carcelero_cadenas_chain.png" id="1_gt0y6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/carcelero_cadenas/carcelero_cadenas_hook.png" id="2_csx8o"]
+[ext_resource type="Script" path="res://scripts/enemies/carcelero_cadenas_data.gd" id="3_7p2rv"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/carcelero_cadenas_frames.tres" id="4_37jgt"]
 
 [resource]
-script = ExtResource("1_5ojmm")
+script = ExtResource("3_7p2rv")
+chain_art = ExtResource("1_gt0y6")
+hook_art = ExtResource("2_csx8o")
 id = &"carcelero_cadenas"
 display_name = "Carcelero de cadenas"
 placeholder_color = Color(0.62, 0.22, 0.16, 1)
-sprite_frames = ExtResource("2_crhlo")
+sprite_frames = ExtResource("4_37jgt")
 sprite_offset = Vector2(0, -11)
 max_health = 6
 move_speed = 30.0

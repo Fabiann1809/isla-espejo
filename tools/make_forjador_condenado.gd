@@ -11,8 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Forjador condenado"
 	data.placeholder_color = Color(0.55, 0.3, 0.2)
 	data.sprite_frames = load("res://data/enemies/forjador_condenado_frames.tres")
-	# 96x96 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_forjador_condenado_art.py with the lava pool under its
+	# feet ending on row 53: they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -15)
 	data.max_health = 7
 	# A slow, heavy smith: the blocks do the chasing.
 	data.move_speed = 22.0
@@ -52,6 +53,7 @@ func _initialize() -> void:
 	data.hot_color = Color(1.0, 0.5, 0.15)
 	data.cold_color = Color(0.27, 0.25, 0.27)
 	data.edge_color = Color(1.0, 0.85, 0.4)
+	data.block_art = load("res://assets/sprites/forjador_condenado/forjador_condenado_block.png")
 	ResourceSaver.save(data, "res://data/enemies/forjador_condenado.tres")
 	print("forjador_condenado written")
 	quit()

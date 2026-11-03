@@ -3,7 +3,8 @@ extends Enemy
 ## Duelista maldito: an agile skeleton. A sensor on the player-attack layer watches Nico's arrows;
 ## when one is coming straight at it, with some chance (and not again until its cooldown is over)
 ## it sidesteps across the arrow's line and answers with a lunge: a fast dash at Nico with its blade
-## out. Otherwise it fights with the plain melee slash.
+## out. Otherwise it fights with the plain melee slash. Ridden by a Máscara parásita it lunges
+## farther and sidesteps more often.
 ## Everything tunable lives in its CursedDuelistData.
 
 enum Maneuver { NONE, DODGE, LUNGE_WINDUP, LUNGE, RECOVER }
@@ -39,6 +40,20 @@ func _physics_process(delta: float) -> void:
 	# A hit, a push or a lost target ended the attack state: the maneuver ends with it.
 	if state != State.ATTACK:
 		maneuver = Maneuver.NONE
+
+
+## Its lunge (seconds of dash: longer reaches farther) and its sidestep chance and cooldown now:
+## all boosted while a Máscara parásita rides it.
+func lunge_time() -> float:
+	return _duelist.masked_lunge_time if is_masked() else _duelist.lunge_time
+
+
+func dodge_chance() -> float:
+	return _duelist.masked_dodge_chance if is_masked() else _duelist.dodge_chance
+
+
+func dodge_cooldown() -> float:
+	return _duelist.masked_dodge_cooldown if is_masked() else _duelist.dodge_cooldown
 
 
 func _build_sensor() -> void:
@@ -77,7 +92,7 @@ func _consider_dodge(at: Vector2, flight: Vector2) -> void:
 	var to_me := global_position - at
 	if to_me.dot(flight) <= 0.0 or absf(flight.cross(to_me)) > _duelist.arrow_lane_width:
 		return
-	if not _can_dodge() or randf() >= _duelist.dodge_chance:
+	if not _can_dodge() or randf() >= dodge_chance():
 		return
 	# Away from the arrow's line; if right on it, either side (the one that stays in its room).
 	var off_line := to_me - flight * to_me.dot(flight)
@@ -93,7 +108,7 @@ func _can_dodge() -> bool:
 
 
 func _start_dodge(side: Vector2, toward_shooter: Vector2) -> void:
-	_dodge_cooldown_left = _duelist.dodge_cooldown
+	_dodge_cooldown_left = dodge_cooldown()
 	_hitbox.deactivate()
 	_telegraph.hide()
 	facing = toward_shooter
@@ -164,7 +179,7 @@ func _start_lunge() -> void:
 	_hitbox.activate()
 	Events.enemy_attacked.emit(self, &"melee")
 	maneuver = Maneuver.LUNGE
-	_maneuver_left = _duelist.lunge_time
+	_maneuver_left = lunge_time()
 
 
 ## The sidestep is a quick run; the lunge (windup and dash) is the `special` slash-dash, which holds
@@ -181,6 +196,6 @@ func _update_animation() -> void:
 	_sprite.play(wanted)
 	_anim_held = 0.0
 	if wanted == &"special":
-		_sprite.speed_scale = _animation_length(wanted) / maxf(_duelist.lunge_windup + _duelist.lunge_time, 0.05)
+		_sprite.speed_scale = _animation_length(wanted) / maxf(_duelist.lunge_windup + lunge_time(), 0.05)
 	else:
 		_sprite.speed_scale = ANIM_SPEED_MAX

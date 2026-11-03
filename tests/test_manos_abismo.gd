@@ -32,7 +32,8 @@ func _initialize() -> void:
 	_player.health.set_max_health(50)
 	_player.global_position = NEAR_EDGE
 	_scene = load("res://scenes/enemies/manos_abismo.tscn")
-	_zone_script = load("res://scripts/skills/skill_zone.gd")
+	# Its warning is a SkillZone drawn with its own pixel art.
+	_zone_script = load("res://scripts/enemies/manos_abismo_warning.gd")
 
 	var hand = _spawn(HOME.get_center() + Vector2(-60, -40))
 	var frames: SpriteFrames = hand.data.sprite_frames

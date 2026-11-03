@@ -19,8 +19,9 @@ var _hurt_shape: CollisionShape2D
 var _art: Sprite2D
 
 
-## A hidden piece, ready to be added to the worm's room.
-static func create(data: BridgeWormData, art_scale: float) -> WormSegment:
+## A hidden piece, ready to be added to the worm's room; `piece` counts from the head (its picture
+## is that cell of the data's strip).
+static func create(data: BridgeWormData, piece: int) -> WormSegment:
 	var segment := WormSegment.new()
 	segment.name = "WormSegment"
 	segment.collision_layer = 1 << (ENEMY_LAYER - 1)
@@ -47,8 +48,11 @@ static func create(data: BridgeWormData, art_scale: float) -> WormSegment:
 
 	segment._art = Sprite2D.new()
 	segment._art.texture = data.segment_texture
+	if data.segment_texture != null:
+		var cell := maxf(data.segment_texture.get_height(), 1.0)
+		segment._art.hframes = maxi(floori(data.segment_texture.get_width() / cell), 1)
+		segment._art.frame = mini(piece, segment._art.hframes - 1)
 	segment._art.position = data.segment_offset
-	segment._art.scale = Vector2.ONE * art_scale
 	segment._art.modulate = data.segment_tint
 	segment.add_child(segment._art)
 	segment.set_out(false, 0)

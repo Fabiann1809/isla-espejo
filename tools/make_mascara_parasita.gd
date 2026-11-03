@@ -1,6 +1,7 @@
 extends SceneTree
 ## Writes the Máscara parásita's ParasiteMaskData (data/enemies/mascara_parasita.tres). Its
-## SpriteFrames come from tools/make_temple_enemy_frames.gd; the scene
+## SpriteFrames come from tools/make_temple_enemy_frames.gd (its art is drawn by
+## tools/make_mascara_parasita_art.py); the scene
 ## scenes/enemies/mascara_parasita.tscn is hand-written.
 ## Run: godot --headless --path . --script res://tools/make_mascara_parasita.gd
 
@@ -11,8 +12,9 @@ func _initialize() -> void:
 	data.display_name = "Máscara parásita"
 	data.placeholder_color = Color(0.62, 0.25, 0.75)
 	data.sprite_frames = load("res://data/enemies/mascara_parasita_frames.tres")
-	# 64x64 cells: the mask floats a little above its body's center.
-	data.sprite_offset = Vector2(0, -18)
+	# 64x64 cells, its art drawn by tools/make_mascara_parasita_art.py: it floats, the lowest tip of
+	# its tentacles on row 50 (where its shadow goes), a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -12)
 	data.max_health = 4
 	data.move_speed = 40.0
 	data.chase_speed = 70.0

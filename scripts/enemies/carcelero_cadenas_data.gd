@@ -28,6 +28,11 @@ extends EnemyData
 @export var pull_speed := 240.0
 @export var pull_time := 1.1
 
+@export_group("Masked")
+## While a Máscara parásita rides it (on top of the frenzy): a longer chain that drags harder.
+@export var masked_chain_range := 170.0
+@export var masked_pull_speed := 340.0
+
 @export_group("Chain look")
 @export var chain_width := 2.0
 @export var chain_color := Color(0.62, 0.6, 0.58)
@@ -35,3 +40,9 @@ extends EnemyData
 @export var aim_color := Color(1.0, 0.45, 0.2, 0.55)
 ## Where the chain leaves the body, relative to the jailer's center (facing right; flipped left).
 @export var hand_offset := Vector2(6, -6)
+## Pixel art of the chain (tools/make_carcelero_cadenas_art.py): one tile of links repeated along
+## it (its height is the chain's width), and the hook on its tip, frames of its gleam side by side
+## in square cells, pointing right. Without them it is a plain line of `chain_width`.
+@export var chain_art: Texture2D
+@export var hook_art: Texture2D
+@export var hook_fps := 8.0

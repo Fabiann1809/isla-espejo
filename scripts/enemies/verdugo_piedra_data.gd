@@ -19,3 +19,12 @@ extends EnemyData
 @export var wave_band := 12.0
 @export var wave_damage := 2
 @export var wave_color := Color(1.0, 0.55, 0.2)
+## Pixel-art strip of the ring (one frame per radius, drawn by tools/make_verdugo_piedra_art.py for a
+## `wave_art_radius` ring). Empty draws the plain arcs in `wave_color`.
+@export var wave_art: Texture2D
+@export var wave_art_radius := 110.0
+
+@export_group("Masked")
+## While a Máscara parásita rides it (on top of the frenzy) its shockwave reaches this far, in the
+## same `wave_time`, so it also runs faster.
+@export var masked_wave_max_radius := 150.0

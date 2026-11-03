@@ -3,7 +3,8 @@ extends Enemy
 ## Verdugo de piedra: huge, slow and hard to push. When Nico gets close it raises its hammer (a
 ## warning circle at its feet), smashes the ground and releases a shockwave: a ring that grows from
 ## the hammer to its max radius and hurts Nico once when its band passes over him. Walking away
-## does not outrun it; dashing through it does (Nico is invulnerable while dashing).
+## does not outrun it; dashing through it does (Nico is invulnerable while dashing). Ridden by a
+## Máscara parásita its wave reaches farther in the same time (so it is faster too).
 ## Everything tunable lives in its StoneExecutionerData.
 
 var _executioner: StoneExecutionerData
@@ -13,6 +14,8 @@ var _wave: Node2D
 var _wave_center := Vector2.ZERO
 var _wave_age := 0.0
 var _wave_radius := 0.0
+## How far this wave grows (fixed at the slam, so a mask jumping off mid-wave does not shrink it).
+var _wave_max := 0.0
 var _wave_landed := false
 
 
@@ -41,6 +44,11 @@ func _exit_tree() -> void:
 ## Current radius of the shockwave, or -1 when there is none.
 func wave_radius() -> float:
 	return _wave_radius if _wave != null else -1.0
+
+
+## How far its next shockwave reaches: farther (and so faster) while a Máscara parásita rides it.
+func wave_max_radius() -> float:
+	return _executioner.masked_wave_max_radius if is_masked() else _executioner.wave_max_radius
 
 
 # --- Behaviour ---------------------------------------------------------------------------------
@@ -78,6 +86,7 @@ func _slam() -> void:
 	_wave_center = global_position
 	_wave_age = 0.0
 	_wave_radius = 0.0
+	_wave_max = wave_max_radius()
 	_wave_landed = false
 	_wave = Node2D.new()
 	_wave.name = "Shockwave"
@@ -93,7 +102,7 @@ func _update_wave(delta: float) -> void:
 		return
 	_wave_age += delta
 	var previous := _wave_radius
-	_wave_radius = _executioner.wave_max_radius * clampf(_wave_age / maxf(_executioner.wave_time, 0.01), 0.0, 1.0)
+	_wave_radius = _wave_max * clampf(_wave_age / maxf(_executioner.wave_time, 0.01), 0.0, 1.0)
 	if not _wave_landed:
 		_hurt_player_in_band(previous, _wave_radius)
 	_wave.queue_redraw()
@@ -124,12 +133,28 @@ func _end_wave() -> void:
 func _draw_wave(canvas: Node2D) -> void:
 	var progress := clampf(_wave_age / maxf(_executioner.wave_time, 0.01), 0.0, 1.0)
 	var fade := 1.0 - progress * 0.7
+	if _executioner.wave_art != null:
+		_draw_wave_art(canvas, fade)
+		return
 	var band := _executioner.wave_band
 	var middle := maxf(_wave_radius - band / 2.0, 1.0)
 	if Tuning.ZONE_OUTLINE_ALPHA > 0.0:
 		canvas.draw_arc(Vector2.ZERO, _wave_radius, 0.0, TAU, 48, Color(0, 0, 0, Tuning.ZONE_OUTLINE_ALPHA * fade), 2.0)
 	canvas.draw_arc(Vector2.ZERO, middle, 0.0, TAU, 48, Color(_executioner.wave_color, 0.35 * fade), band)
 	canvas.draw_arc(Vector2.ZERO, _wave_radius, 0.0, TAU, 48, Color(_executioner.wave_color.lightened(0.3), 0.9 * fade), 2.0)
+
+
+## Frame k of the strip is the ring at k / (frames - 1) of its full radius: the nearest one to the
+## current radius is shown, so the drawn front never strays from the band that hurts.
+func _draw_wave_art(canvas: Node2D, fade: float) -> void:
+	var art := _executioner.wave_art
+	var cell := float(art.get_height())
+	var frames := int(art.get_width() / cell)
+	var frame := clampi(roundi(_wave_radius / maxf(_wave_max, 1.0) * (frames - 1)), 0, frames - 1)
+	# Scaled when this wave's radius differs from the one the art was drawn for (tuned, or masked).
+	var size := cell * _wave_max / maxf(_executioner.wave_art_radius, 1.0)
+	canvas.draw_texture_rect_region(art, Rect2(-size / 2.0, -size / 2.0, size, size),
+			Rect2(frame * cell, 0.0, cell, cell), Color(1.0, 1.0, 1.0, fade))
 
 
 ## Rings and warnings are children of the room, which in a generated map is not at the origin.

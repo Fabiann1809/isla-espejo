@@ -13,6 +13,7 @@ enum Phase { UNDER, RISING, REACHING, HOLDING, RETRACTING, RESTING, SINKING }
 ## player.apply_pull lets go as soon as Nico is near its anchor: a hold whose hand is closer than this
 ## anchors this far away instead (the pull speed is meant to be about 0, so only the hold matters).
 const HOLD_ANCHOR_MIN := 32.0
+const GrabWarning := preload("res://scripts/enemies/manos_abismo_warning.gd")
 
 var phase: Phase = Phase.UNDER
 
@@ -113,8 +114,15 @@ func _start_attack() -> void:
 		facing = (target.global_position - _anchor).normalized()
 	var parent := get_parent() as Node2D
 	if parent != null:
-		parent.add_child(SkillZone.circle(parent.to_local(_anchor), _hands.warning_radius,
-				_hands.warning_color, data.attack_windup))
+		var warning := GrabWarning.new()
+		warning.shape = SkillZone.Shape.CIRCLE
+		warning.position = parent.to_local(_anchor)
+		warning.radius = _hands.warning_radius
+		warning.color = _hands.warning_color
+		warning.lifetime = data.attack_windup
+		warning.art = _hands.warning_art
+		warning.art_frames = maxi(_hands.warning_frames, 1)
+		parent.add_child(warning)
 
 
 func _process_attack(delta: float) -> void:
@@ -272,12 +280,24 @@ func _build_arm() -> void:
 	_arm.width = _hands.arm_width
 	_arm.default_color = _hands.arm_color
 	_arm.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	if _hands.arm_art != null:
+		# The tile spans the arm and its glowing edge, so the edge line is not needed.
+		_arm.width = _hands.arm_width + 2.0
+		_arm.texture = _hands.arm_art
+		_arm.texture_mode = Line2D.LINE_TEXTURE_TILE
+		_arm.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		_arm.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_arm.default_color = Color.WHITE
+		_arm.begin_cap_mode = Line2D.LINE_CAP_NONE
 	add_child(_arm)
 	move_child(_arm, 1)
 	_pool = Pool.new()
 	_pool.name = "Pool"
 	_pool.radius = _hands.pool_radius
 	_pool.color = _hands.pool_color
+	_pool.art = _hands.pool_art
+	_pool.art_frames = maxi(_hands.pool_frames, 1)
+	_pool.art_fps = _hands.pool_fps
 	add_child(_pool)
 	_grab = Hitbox.new()
 	_grab.name = "GrabHitbox"
@@ -298,7 +318,7 @@ func _build_arm() -> void:
 func _update_arm() -> void:
 	var stretched := state != State.DEAD and _reach_out > 1.0 and phase != Phase.UNDER
 	_arm.visible = stretched
-	_arm_edge.visible = stretched
+	_arm_edge.visible = stretched and _hands.arm_art == null
 	if stretched:
 		var points := PackedVector2Array([to_local(_anchor), _hands.hand_offset])
 		_arm.points = points
@@ -343,10 +363,17 @@ func _update_animation() -> void:
 			_sprite.play(&"idle")
 
 
-## The molten pool the arm comes out of, lying on the ground.
+## The molten pool the arm comes out of, lying on the ground: its looping strip, or shapes without
+## one.
 class Pool extends Node2D:
+	## Radius (px) its strip is drawn at; other radii scale it.
+	const ART_RADIUS := 11.0
+
 	var radius := 10.0
 	var color := Color.ORANGE
+	var art: Texture2D
+	var art_frames := 1
+	var art_fps := 5.0
 	var _time := 0.0
 
 	func _ready() -> void:
@@ -359,6 +386,13 @@ class Pool extends Node2D:
 		queue_redraw()
 
 	func _draw() -> void:
+		if art != null:
+			var cell := float(art.get_height())
+			var frame := int(_time * art_fps) % art_frames
+			var size := cell * radius / ART_RADIUS
+			draw_texture_rect_region(art, Rect2(-size / 2.0, -size / 2.0, size, size),
+					Rect2(frame * cell, 0, cell, cell))
+			return
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.5))
 		draw_circle(Vector2.ZERO, radius, Color(0.08, 0.03, 0.02, 0.85))
 		var glow := 0.75 + 0.25 * sin(_time * 5.0)

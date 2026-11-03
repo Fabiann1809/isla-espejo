@@ -20,6 +20,9 @@ extends EnemyData
 ## Rings of the ripple that betrays it under the ground.
 @export var ripple_color := Color(1.0, 0.55, 0.2)
 @export var ripple_radius := 9.0
+## Optional drawn ripple instead of the rings: a strip of square cells that loop once per ripple
+## cycle (drawn by tools/make_gusano_puentes_art.py for a `ripple_radius` of 9).
+@export var ripple_art: Texture2D
 
 @export_group("Emerge")
 ## Warning before it bursts out: a circle on the ground where it is.
@@ -44,10 +47,8 @@ extends EnemyData
 ## Radius of the solid part and of the hurting area (a little larger, so pressing against it hurts).
 @export var segment_body_radius := 7.0
 @export var segment_hit_radius := 10.0
-## Art of one piece (cut from the worm's own art by tools/make_gusano_puentes.gd).
+## Art of the pieces: a strip of square cells, one per piece from the head to the tail (thinner);
+## pieces past the last cell reuse it. Drawn by tools/make_gusano_puentes_art.py.
 @export var segment_texture: Texture2D
 @export var segment_offset := Vector2(0, -8)
-## Scale of the first piece and of the last one (the tail is thinner); the others are in between.
-@export var segment_scale := 0.8
-@export var segment_tail_scale := 0.55
-@export var segment_tint := Color(0.92, 0.85, 0.85)
+@export var segment_tint := Color.WHITE

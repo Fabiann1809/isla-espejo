@@ -3,6 +3,7 @@ extends Shooter
 ## Acólito del brasero: a masked priest that plants itself and fires a fan of flames at Nico, and
 ## keeps its distance: when he comes closer than its preferred distance it backs away (never out of
 ## its room), until it is cornered or has been backing away for too long, and then it fires anyway.
+## Ridden by a Máscara parásita its fan has more flames and is wider.
 ## Everything tunable lives in its BrazierAcolyteData.
 
 ## Turns (radians) tried, in order, when the straight way back would leave the room or hit a wall.
@@ -23,6 +24,15 @@ func _ready() -> void:
 ## True while it is backing away from Nico (tests read it).
 func is_retreating() -> bool:
 	return state == State.CHASE and _retreat_time > 0.0
+
+
+## Flames per shot and the fan's width (degrees) now: more and wider while a mask rides it.
+func fan_count() -> int:
+	return _acolyte.masked_fan_count if is_masked() else _acolyte.fan_count
+
+
+func fan_angle() -> float:
+	return _acolyte.masked_fan_angle if is_masked() else _acolyte.fan_angle
 
 
 func _process_chase(delta: float) -> void:
@@ -56,8 +66,8 @@ func _fire() -> void:
 	if _shooter.projectile_scene == null or get_parent() == null:
 		return
 	Events.enemy_attacked.emit(self, &"shot")
-	var count := maxi(_acolyte.fan_count, 1)
-	var spread := deg_to_rad(_acolyte.fan_angle)
+	var count := maxi(fan_count(), 1)
+	var spread := deg_to_rad(fan_angle())
 	for i in count:
 		var along := 0.5 if count == 1 else float(i) / float(count - 1)
 		var direction := facing.rotated(lerpf(-spread / 2.0, spread / 2.0, along))

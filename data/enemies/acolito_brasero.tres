@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BrazierAcolyteData" format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/enemies/orb.tscn" id="1_hf7lo"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/acolito_brasero_orb.tscn" id="1_hf7lo"]
 [ext_resource type="Script" path="res://scripts/enemies/acolito_brasero_data.gd" id="2_i8qu8"]
 [ext_resource type="SpriteFrames" path="res://data/enemies/acolito_brasero_frames.tres" id="3_3uhqb"]
 

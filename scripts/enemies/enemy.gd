@@ -74,6 +74,8 @@ var _shield_left := 0.0
 var _frenzy_left := 0.0
 var _frenzy_speed := 1.0
 var _frenzy_rate := 1.0
+## A Máscara parásita rides it (see set_masked).
+var _masked := false
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var _hurtbox: Hurtbox = $Hurtbox
@@ -215,6 +217,17 @@ func end_frenzy() -> void:
 
 func is_frenzied() -> bool:
 	return _frenzy_left > 0.0
+
+
+## Called by a Máscara parásita when it starts (true) or stops (false) riding this enemy. Does
+## nothing else here: an enemy with its own boost while masked overrides it (calling super) or reads
+## is_masked() where it uses the boosted value.
+func set_masked(on: bool) -> void:
+	_masked = on
+
+
+func is_masked() -> bool:
+	return _masked
 
 
 func is_rooted() -> bool:

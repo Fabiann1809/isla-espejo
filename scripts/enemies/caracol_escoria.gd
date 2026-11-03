@@ -40,4 +40,7 @@ func _leave_trail() -> void:
 	patch.tick = _snail.trail_tick
 	patch.slow_factor = _snail.trail_slow_factor
 	patch.slow_time = _snail.trail_slow_time
+	patch.art = _snail.trail_art
+	# mirrored at random so a long trail does not repeat one patch
+	patch.art_flip = randf() < 0.5
 	parent.add_child(patch)

@@ -11,7 +11,7 @@ func _initialize() -> void:
 	data.display_name = "Carcelero de cadenas"
 	data.placeholder_color = Color(0.62, 0.22, 0.16)
 	data.sprite_frames = load("res://data/enemies/carcelero_cadenas_frames.tres")
-	# 64x64 cells: the feet sit a few pixels below the body's center.
+	# 48x48 cells: the feet sit a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -11)
 	data.max_health = 6
 	data.move_speed = 30.0
@@ -41,6 +41,12 @@ func _initialize() -> void:
 	data.chain_recover = 0.25
 	data.pull_speed = 240.0
 	data.pull_time = 1.1
+	data.masked_chain_range = 170.0
+	data.masked_pull_speed = 340.0
+	# The chain's links and hook, drawn by tools/make_carcelero_cadenas_art.py.
+	data.chain_art = load("res://assets/sprites/carcelero_cadenas/carcelero_cadenas_chain.png")
+	data.hook_art = load("res://assets/sprites/carcelero_cadenas/carcelero_cadenas_hook.png")
+	data.hook_fps = 8.0
 	ResourceSaver.save(data, "res://data/enemies/carcelero_cadenas.tres")
 	print("carcelero_cadenas written")
 	quit()

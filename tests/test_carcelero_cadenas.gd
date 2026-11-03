@@ -32,6 +32,7 @@ func _initialize() -> void:
 	await _catch_and_follow_up()
 	await _sidestep_dodges()
 	await _hit_drops_chain()
+	await _masked_chain()
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
@@ -114,6 +115,35 @@ func _hit_drops_chain() -> void:
 	_check(not jailer.is_throwing() and not jailer.get_node("ChainAim").visible
 			and not jailer.get_node("Chain").visible, "a hit while aiming drops the chain")
 	await _free(jailer)
+
+
+## Ridden by a Máscara parásita (Enemy.set_masked) its chain reaches farther and drags harder: it
+## throws at Nico from beyond its normal range and catches him; without the mask, back to normal.
+func _masked_chain() -> void:
+	_reset_player(ARENA)
+	var jailer = _spawn(ARENA + Vector2(150, 0))
+	var data = jailer.data
+	_check(jailer.chain_range() == data.chain_range and jailer.pull_speed() == data.pull_speed,
+			"unmasked, its chain has its normal range and pull")
+	jailer.set_masked(true)
+	_check(jailer.chain_range() > data.chain_range and jailer.pull_speed() > data.pull_speed,
+			"masked, its chain reaches farther (%.0f px) and drags harder (%.0f px/s)" % [jailer.chain_range(), jailer.pull_speed()])
+	var thrown_from := 0.0
+	var pull_speed := 0.0
+	for i in 150:
+		await physics_frame
+		if jailer.is_throwing() and thrown_from == 0.0:
+			thrown_from = jailer.global_position.distance_to(_player.global_position)
+		if _player.is_pulled():
+			pull_speed = _player._pull_speed
+			break
+	_check(thrown_from > data.chain_range + 5.0, "masked, it throws from beyond its normal range (%.0f px)" % thrown_from)
+	_check(is_equal_approx(pull_speed, data.masked_pull_speed), "and drags the caught Nico harder (%.0f px/s)" % pull_speed)
+	jailer.set_masked(false)
+	_check(jailer.chain_range() == data.chain_range and jailer.pull_speed() == data.pull_speed,
+			"without the mask its chain is back to normal")
+	await _free(jailer)
+	_player.apply_pull(_player.global_position, 0.0, 0.0)
 
 
 func _reset_player(at: Vector2) -> void:

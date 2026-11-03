@@ -1,18 +1,52 @@
 [gd_resource type="Resource" script_class="BroodCoreData" format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/enemies/cria_volcanica.tscn" id="1_5bxhk"]
-[ext_resource type="Script" path="res://scripts/enemies/nucleo_cria_data.gd" id="2_gxrv4"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/nucleo_cria_frames.tres" id="3_yydsl"]
+[ext_resource type="Texture2D" path="res://assets/sprites/nucleo_cria/nucleo_cria_blast.png" id="1_udrul"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/cria_volcanica.tscn" id="2_h42cv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/nucleo_cria/nucleo_cria_queen_ring.png" id="3_nkbk1"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/reina_volcanica.tscn" id="4_4vqos"]
+[ext_resource type="Script" path="res://scripts/enemies/nucleo_cria_data.gd" id="5_7j4jk"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/nucleo_cria_frames.tres" id="6_idgrw"]
+[ext_resource type="Script" path="res://scripts/enemies/brood_stage.gd" id="7_kmnha"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/nucleo_cria_s2_frames.tres" id="8_uo5wy"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/nucleo_cria_s3_frames.tres" id="9_6cfdg"]
+[ext_resource type="Texture2D" path="res://assets/sprites/nucleo_cria/nucleo_cria_warning.png" id="10_ucspj"]
+
+[sub_resource type="Resource" id="Resource_uthwi"]
+script = ExtResource("7_kmnha")
+sprite_frames = ExtResource("8_uo5wy")
+energy_bonus = 4
+spawn_interval = 3.6
+max_brood = 4
+brood_speed = 1.2
+brood_cooldown = 0.7
+brood_tint = Color(1.3, 0.8, 0.7, 1)
+
+[sub_resource type="Resource" id="Resource_r5nl7"]
+script = ExtResource("7_kmnha")
+health_below = 0.33
+sprite_frames = ExtResource("9_6cfdg")
+energy_bonus = 5
+spawn_interval = 2.8
+max_brood = 4
+brood_speed = 1.4
+brood_damage = 2.0
+brood_cooldown = 0.5
+brood_tint = Color(1.6, 0.6, 0.5, 1)
 
 [resource]
-script = ExtResource("2_gxrv4")
-brood_scene = ExtResource("1_5bxhk")
+script = ExtResource("5_7j4jk")
+brood_scene = ExtResource("2_h42cv")
+stages = Array[ExtResource("7_kmnha")]([SubResource("Resource_uthwi"), SubResource("Resource_r5nl7")])
+queen_scene = ExtResource("4_4vqos")
+queen_ring_art = ExtResource("3_nkbk1")
+warning_art = ExtResource("10_ucspj")
+blast_art = ExtResource("1_udrul")
 id = &"nucleo_cria"
 display_name = "Núcleo de cría"
 placeholder_color = Color(0.9, 0.4, 0.1, 1)
-sprite_frames = ExtResource("3_yydsl")
-sprite_offset = Vector2(0, -30)
-max_health = 12
+sprite_frames = ExtResource("6_idgrw")
+sprite_offset = Vector2(0, -20)
+max_health = 22
 move_speed = 0.0
 chase_speed = 0.0
 detection_range = 200.0

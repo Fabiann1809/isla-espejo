@@ -6,6 +6,17 @@ extends Enemy
 ## The shields are renewed in short pieces while the guardian lives and the ally stays close, so
 ## killing it (or luring the ally away) ends them almost at once: it is the one to defeat first.
 ## Up close it only has a weak swing. Everything tunable lives in its SealGuardianData.
+## Each shielded ally carries a golden dome (`dome_art`) that rises, holds and fades with its shield.
+
+## Layout of `dome_art`: frames that raise the dome, that loop while it holds, that let it go.
+const DOME_RISE := 3
+const DOME_HOLD := 4
+const DOME_FADE := 2
+const DOME_FPS := 10.0
+## The dome's base sits this far under the middle of its cell; an enemy's feet are about 6 px
+## under its origin, so the base goes there.
+const DOME_BASE_BELOW_CENTER := 16.0
+const ENEMY_FEET_Y := 6.0
 
 var _guardian: SealGuardianData
 var _sealing := false
@@ -14,6 +25,8 @@ var _seal_cooldown_left := 0.0
 var _shielded := {}
 var _seal_ring: SkillZone
 var _links: Node2D
+## Ally -> its dome: {sprite, age, fade} (`fade` < 0 while the shield holds).
+var _domes := {}
 
 
 func _ready() -> void:
@@ -37,6 +50,7 @@ func _physics_process(delta: float) -> void:
 	if _sealing and state != State.ATTACK:
 		_cancel_seal()
 	_keep_shields(delta)
+	_update_domes(delta)
 	_links.queue_redraw()
 
 
@@ -135,6 +149,57 @@ func _keep_shields(delta: float) -> void:
 			(ally as Enemy).apply_shield(minf(_guardian.shield_refresh, left))
 		else:
 			_shielded.erase(ally)
+
+
+## Lays a dome over each newly shielded ally, plays it, and lets it fade when its shield goes.
+func _update_domes(delta: float) -> void:
+	if _guardian.dome_art == null:
+		return
+	for ally: Variant in _shielded:
+		if not _domes.has(ally) and is_instance_valid(ally):
+			_domes[ally] = {"sprite": _make_dome(ally as Node2D), "age": 0.0, "fade": -1.0}
+	for ally: Variant in _domes.keys():
+		var dome: Dictionary = _domes[ally]
+		# Checked untyped first: an ally freed with its dome leaves freed instances, which a typed
+		# variable refuses.
+		if not is_instance_valid(ally) or not is_instance_valid(dome["sprite"]):
+			_domes.erase(ally)
+			continue
+		var sprite: Sprite2D = dome["sprite"]
+		dome["age"] += delta
+		if dome["fade"] < 0.0 and not _shielded.has(ally):
+			dome["fade"] = 0.0
+		if dome["fade"] >= 0.0:
+			dome["fade"] += delta
+			if dome["fade"] >= DOME_FADE / DOME_FPS:
+				sprite.queue_free()
+				_domes.erase(ally)
+				continue
+			sprite.frame = DOME_RISE + DOME_HOLD + mini(int(dome["fade"] * DOME_FPS), DOME_FADE - 1)
+		elif dome["age"] < DOME_RISE / DOME_FPS:
+			sprite.frame = int(dome["age"] * DOME_FPS)
+		else:
+			sprite.frame = DOME_RISE + int((dome["age"] - DOME_RISE / DOME_FPS) * DOME_FPS) % DOME_HOLD
+
+
+## The dome is a child of the ally so it follows it and sorts with it, drawn over its sprite.
+func _make_dome(ally: Node2D) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.name = "SealDome"
+	sprite.texture = _guardian.dome_art
+	sprite.hframes = DOME_RISE + DOME_HOLD + DOME_FADE
+	sprite.position = Vector2(0.0, ENEMY_FEET_Y - DOME_BASE_BELOW_CENTER)
+	ally.add_child(sprite)
+	return sprite
+
+
+func _exit_tree() -> void:
+	# Its domes live on its allies: they go with it.
+	for ally: Variant in _domes:
+		var sprite: Variant = _domes[ally]["sprite"]
+		if is_instance_valid(sprite):
+			(sprite as Node).queue_free()
+	_domes.clear()
 
 
 func _allies_within(radius: float) -> Array[Enemy]:

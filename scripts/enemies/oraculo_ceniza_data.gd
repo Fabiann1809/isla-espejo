@@ -28,6 +28,15 @@ extends EnemyData
 ## Pause after the cast before it moves again.
 @export var recover_time := 0.6
 
+@export_group("Fireball art")
+## Pixel art (tools/make_oraculo_ceniza_art.py), strips of square cells: the falling ball (looping,
+## its center at the oracle script's BALL_CENTER), the seal that marks the spot (opening frames,
+## then a burning loop; its ring has the strike's radius) and the burst of the landing (played once
+## over `burst_time`). Without them they are drawn as circles.
+@export var ball_art: Texture2D
+@export var seal_art: Texture2D
+@export var burst_art: Texture2D
+
 @export_group("Keeping its distance")
 ## Closer than this it backs away; farther than `approach_distance` it walks toward Nico.
 @export var preferred_distance := 100.0

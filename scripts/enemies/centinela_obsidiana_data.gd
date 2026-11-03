@@ -15,3 +15,9 @@ extends EnemyData
 @export var turn_rate := 110.0
 ## It only starts a swing when the player is within this angle (degrees) of where it faces.
 @export var swing_aim_angle := 35.0
+
+@export_group("Masked")
+## While a Máscara parásita rides it (on top of the frenzy): the shield covers the front and both
+## sides, and it turns faster, so only its back stays open.
+@export_range(1.0, 360.0) var masked_shield_arc := 240.0
+@export var masked_turn_rate := 170.0

@@ -11,7 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Baldosa hambrienta"
 	data.placeholder_color = Color(0.45, 0.3, 0.22)
 	data.sprite_frames = load("res://data/enemies/baldosa_hambrienta_frames.tres")
-	data.sprite_offset = Vector2(0, -18)
+	# 64x64 cells, its art drawn by tools/make_baldosa_hambrienta_art.py with the front's last row on
+	# row 50: the tile's base sits a few pixels below its center.
+	data.sprite_offset = Vector2(0, -12)
 	data.max_health = 4
 	# It only crawls once revealed, and never more than a tile.
 	data.move_speed = 14.0

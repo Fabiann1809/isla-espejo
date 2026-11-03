@@ -11,8 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Custodio del sello"
 	data.placeholder_color = Color(0.85, 0.55, 0.25)
 	data.sprite_frames = load("res://data/enemies/custodio_sello_frames.tres")
-	# 96x96 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_custodio_sello_art.py with the feet on row 52:
+	# they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -14)
 	data.max_health = 6
 	# Slow: it keeps behind its allies instead of hunting Nico.
 	data.move_speed = 22.0
@@ -41,6 +42,7 @@ func _initialize() -> void:
 	data.link_width = 1.0
 	data.link_alpha = 0.6
 	data.ally_ring_radius = 10.0
+	data.dome_art = load("res://assets/sprites/custodio_sello/custodio_sello_dome.png")
 	ResourceSaver.save(data, "res://data/enemies/custodio_sello.tres")
 	print("custodio_sello written")
 	quit()

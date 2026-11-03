@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="VolcanicQueenData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/cria_volcanica.tscn" id="1_gwbfe"]
+[ext_resource type="Script" path="res://scripts/enemies/reina_volcanica_data.gd" id="2_hf3l2"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/reina_volcanica_frames.tres" id="3_mc6u0"]
+
+[resource]
+script = ExtResource("2_hf3l2")
+brood_scene = ExtResource("1_gwbfe")
+id = &"reina_volcanica"
+display_name = "Reina volcánica"
+placeholder_color = Color(0.95, 0.4, 0.12, 1)
+sprite_frames = ExtResource("3_mc6u0")
+sprite_offset = Vector2(0, -19)
+max_health = 20
+chase_speed = 62.0
+detection_range = 200.0
+lose_range = 320.0
+attack_range = 56.0
+attack_windup = 0.6
+attack_time = 0.2
+attack_cooldown = 1.4
+hurt_time = 0.15
+knockback_speed = 90.0
+knockback_resistance = 0.4
+attack_armor = true
+patrol_radius = 50.0
+drop_multiplier = 3.0

@@ -11,8 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Araña talladora"
 	data.placeholder_color = Color(0.7, 0.32, 0.15)
 	data.sprite_frames = load("res://data/enemies/arana_talladora_frames.tres")
-	# 96x96 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_arana_talladora_art.py with the feet on row 44:
+	# they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -6)
 	data.max_health = 5
 	# It scuttles fast between drills.
 	data.move_speed = 50.0
@@ -49,6 +50,8 @@ func _initialize() -> void:
 	data.pit_color = Color(0.06, 0.03, 0.03, 0.95)
 	data.rim_color = Color(0.85, 0.3, 0.08, 0.9)
 	data.crack_trail_width = 1.0
+	data.pit_art = load("res://assets/sprites/arana_talladora/arana_talladora_pit.png")
+	data.crack_art = load("res://assets/sprites/arana_talladora/arana_talladora_crack.png")
 	ResourceSaver.save(data, "res://data/enemies/arana_talladora.tres")
 	print("arana_talladora written")
 	quit()

@@ -1,15 +1,25 @@
 [gd_resource type="Resource" script_class="TrapClockmakerData" format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/relojero_trampas_data.gd" id="1_d1uxe"]
-[ext_resource type="SpriteFrames" path="res://data/enemies/relojero_trampas_frames.tres" id="2_1rb84"]
+[ext_resource type="Texture2D" path="res://assets/sprites/relojero_trampas/relojero_trampas_fire.png" id="1_604hv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/relojero_trampas/relojero_trampas_nozzle.png" id="2_kj8dj"]
+[ext_resource type="Texture2D" path="res://assets/sprites/relojero_trampas/relojero_trampas_saw.png" id="3_5f1wb"]
+[ext_resource type="Script" path="res://scripts/enemies/relojero_trampas_data.gd" id="4_duuj2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/relojero_trampas/relojero_trampas_spikes.png" id="5_w8ecj"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/relojero_trampas_frames.tres" id="6_f6dk0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/relojero_trampas/relojero_trampas_track.png" id="7_tolr8"]
 
 [resource]
-script = ExtResource("1_d1uxe")
+script = ExtResource("4_duuj2")
+spikes_art = ExtResource("5_w8ecj")
+saw_art = ExtResource("3_5f1wb")
+track_art = ExtResource("7_tolr8")
+fire_art = ExtResource("1_604hv")
+nozzle_art = ExtResource("2_kj8dj")
 id = &"relojero_trampas"
 display_name = "Relojero de trampas"
 placeholder_color = Color(0.6, 0.42, 0.25, 1)
-sprite_frames = ExtResource("2_1rb84")
-sprite_offset = Vector2(0, -30)
+sprite_frames = ExtResource("6_f6dk0")
+sprite_offset = Vector2(0, -14)
 max_health = 4
 chase_speed = 85.0
 detection_range = 200.0

@@ -1,7 +1,7 @@
 extends SceneTree
 ## Writes the Oráculo de ceniza's AshOracleData (data/enemies/oraculo_ceniza.tres). Its SpriteFrames
-## (96x96 cells) are data/enemies/oraculo_ceniza_frames.tres; the scene
-## scenes/enemies/oraculo_ceniza.tscn is hand-written.
+## (64x64 cells, drawn by tools/make_oraculo_ceniza_art.py) are data/enemies/oraculo_ceniza_frames.tres;
+## the scene scenes/enemies/oraculo_ceniza.tscn is hand-written.
 ## Run: godot --headless --path . --script res://tools/make_oraculo_ceniza.gd
 
 
@@ -11,8 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Oráculo de ceniza"
 	data.placeholder_color = Color(0.7, 0.22, 0.12)
 	data.sprite_frames = load("res://data/enemies/oraculo_ceniza_frames.tres")
-	# 96x96 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_oraculo_ceniza_art.py with the feet on row 50:
+	# they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -12)
 	data.max_health = 5
 	data.move_speed = 24.0
 	data.chase_speed = 34.0
@@ -37,6 +38,10 @@ func _initialize() -> void:
 	data.impact_time = 0.12
 	data.burst_time = 0.3
 	data.recover_time = 0.6
+	# The falling ball, the seal that marks its spot and the burst, by the same art tool.
+	data.ball_art = load("res://assets/sprites/oraculo_ceniza/oraculo_ceniza_ball.png")
+	data.seal_art = load("res://assets/sprites/oraculo_ceniza/oraculo_ceniza_seal.png")
+	data.burst_art = load("res://assets/sprites/oraculo_ceniza/oraculo_ceniza_burst.png")
 	data.preferred_distance = 100.0
 	data.approach_distance = 150.0
 	data.retreat_speed = 42.0

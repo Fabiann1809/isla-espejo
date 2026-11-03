@@ -22,3 +22,10 @@ extends EnemyData
 @export var lunge_speed := 250.0
 @export var lunge_time := 0.24
 @export var lunge_recover := 0.5
+
+@export_group("Masked")
+## While a Máscara parásita rides it (on top of the frenzy): the lunge dashes longer (it reaches
+## farther at the same speed) and it sidesteps arrows more often.
+@export var masked_lunge_time := 0.36
+@export_range(0.0, 1.0) var masked_dodge_chance := 0.85
+@export var masked_dodge_cooldown := 1.4

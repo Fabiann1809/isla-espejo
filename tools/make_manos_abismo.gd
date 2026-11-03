@@ -12,8 +12,9 @@ func _initialize() -> void:
 	data.display_name = "Manos del abismo"
 	data.placeholder_color = Color(0.75, 0.25, 0.08)
 	data.sprite_frames = load("res://data/enemies/manos_abismo_frames.tres")
-	# 96x96 cells: the hand's base sits a few pixels below its center.
-	data.sprite_offset = Vector2(0, -30)
+	# 64x64 cells, its art drawn by tools/make_manos_abismo_art.py with the splash's last row on
+	# row 52: the hand's base sits a few pixels below its center.
+	data.sprite_offset = Vector2(0, -14)
 	data.max_health = 5
 	# It moves only under the ground, back to its spot when Nico leaves.
 	data.move_speed = 60.0
@@ -52,6 +53,12 @@ func _initialize() -> void:
 	data.arm_edge_color = Color(1.0, 0.5, 0.12)
 	data.pool_radius = 11.0
 	data.pool_color = Color(1.0, 0.45, 0.1, 0.75)
+	data.warning_art = load("res://assets/sprites/manos_abismo/manos_abismo_warning.png")
+	data.warning_frames = 8
+	data.pool_art = load("res://assets/sprites/manos_abismo/manos_abismo_pool.png")
+	data.pool_frames = 6
+	data.pool_fps = 5.0
+	data.arm_art = load("res://assets/sprites/manos_abismo/manos_abismo_arm.png")
 	ResourceSaver.save(data, "res://data/enemies/manos_abismo.tres")
 	print("manos_abismo written")
 	quit()

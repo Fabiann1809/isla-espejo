@@ -33,6 +33,8 @@ func _initialize() -> void:
 	data.block_pose_time = 0.3
 	data.turn_rate = 110.0
 	data.swing_aim_angle = 35.0
+	data.masked_shield_arc = 240.0
+	data.masked_turn_rate = 170.0
 	ResourceSaver.save(data, "res://data/enemies/centinela_obsidiana.tres")
 	print("centinela_obsidiana written")
 	quit()

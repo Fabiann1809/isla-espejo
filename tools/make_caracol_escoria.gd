@@ -11,8 +11,9 @@ func _initialize() -> void:
 	data.display_name = "Caracol de escoria"
 	data.placeholder_color = Color(0.45, 0.3, 0.25)
 	data.sprite_frames = load("res://data/enemies/caracol_escoria_frames.tres")
-	# 64x64 cells: the feet sit a few pixels below the body's center.
-	data.sprite_offset = Vector2(0, -5)
+	# 64x64 cells, its art drawn by tools/make_caracol_escoria_art.py with the feet (the last row
+	# of the lava pool it sits in) on row 53: they sit a few pixels below the body's center.
+	data.sprite_offset = Vector2(0, -15)
 	# Very sturdy: lots of health, barely pushed, and a hit never cuts its bite short.
 	data.max_health = 14
 	data.knockback_resistance = 0.85
@@ -32,12 +33,15 @@ func _initialize() -> void:
 	data.hurt_time = 0.12
 	data.trail_spacing = 14.0
 	data.trail_radius = 9.0
-	data.trail_lifetime = 4.0
+	# Each patch burns for 8 s, so at its chase speed the trail behind it stays about 11 patches
+	# (~160 px) long.
+	data.trail_lifetime = 8.0
 	data.trail_damage = 1
 	data.trail_tick = 0.5
 	data.trail_slow_factor = 0.55
 	data.trail_slow_time = 0.6
 	data.trail_color = Color(0.95, 0.38, 0.08, 0.6)
+	data.trail_art = load("res://assets/sprites/caracol_escoria/caracol_escoria_trail.png")
 	ResourceSaver.save(data, "res://data/enemies/caracol_escoria.tres")
 	print("caracol_escoria written")
 	quit()

@@ -1,7 +1,8 @@
 extends SceneTree
 ## Builds the SpriteFrames of the temple enemies (island 3), `data/enemies/<id>_frames.tres`, from the
-## strips made by tools/make_temple_enemy_art.py (`assets/sprites/<id>/<id>_<animation>.png`, square
-## cells). Animations: idle, walk, run (the walk), attack, special, hurt and death, facing right.
+## strips drawn by each enemy's tools/make_<id>_art.py (`assets/sprites/<id>/<id>_<animation>.png`,
+## square cells; cria_volcanica and reina_volcanica are the nucleo_cria's brood and queen).
+## Animations: idle, walk, run (the walk), attack, special, hurt and death, facing right.
 ## Each enemy's EnemyData is written by its own tool (tools/make_<id>.gd).
 ## Run: godot --headless --path . --script res://tools/make_temple_enemy_frames.gd
 
@@ -13,6 +14,7 @@ const ENEMIES := [
 	&"arana_talladora", &"baldosa_hambrienta", &"campanero_bronce", &"custodio_sello",
 	&"forjador_condenado", &"manos_abismo", &"mascara_parasita", &"monje_sin_rostro", &"nucleo_cria",
 	&"ojo_sol", &"oraculo_ceniza", &"relojero_trampas", &"rueda_devoradora", &"vasija_poseida",
+	&"cria_volcanica", &"reina_volcanica",
 ]
 ## animation -> [strip, frames per second, loops]
 const ANIMATIONS := {
