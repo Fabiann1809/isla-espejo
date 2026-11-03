@@ -635,13 +635,43 @@ def spike_trap(out):
     return img
 
 
+def platform_floor(seed, rune=False):
+    """The top of a raised platform: one big bevelled slab per tile in a paler, lilac stone, so the dais
+    reads at once against the cave's small bricks."""
+    rng = random.Random(seed)
+    img = blank()
+    noise = value_noise(rng, T, T, 5)
+    base = mix(FLOOR_3, FLOOR_HI, 0.55)
+    for y in range(T):
+        for x in range(T):
+            c = shade(base, 1.0 + (noise[y][x] - 0.5) * 0.14 + rng.uniform(-0.02, 0.02))
+            if x == 0 or y == 0:
+                c = shade(base, 1.22)
+            elif x == T - 1 or y == T - 1:
+                c = shade(base, 0.66)
+            elif x == 1 or y == 1:
+                c = shade(c, 1.08)
+            elif x == T - 2 or y == T - 2:
+                c = shade(c, 0.86)
+            img.putpixel((x, y), c)
+    if rng.random() < 0.5:
+        crack_over(img, rng, branch=False)
+    if rune:
+        for dx, dy in ((0, -3), (0, 3), (-3, 0), (3, 0), (0, -2), (0, 2), (-2, 0), (2, 0)):
+            put(img, 7 + dx, 7 + dy, GLOW)
+        put(img, 7, 7, GLOW_2)
+        put(img, 8, 8, GLOW_2)
+    return img
+
+
 def terrace_top(seed=4):
     """The back edge of a platform seen from above: a dark rim, then a lighter stone lip."""
-    img = floor_tile(seed, tones=(FLOOR_2, FLOOR_3, FLOOR_3), wear=0.3)
+    img = platform_floor(seed)
     for x in range(T):
         img.putpixel((x, 0), OUTLINE)
         img.putpixel((x, 1), ROCK_D)
         img.putpixel((x, 2), shade(FLOOR_1, 0.85))
+        img.putpixel((x, 3), shade(FLOOR_HI, 1.1))
     return img
 
 
@@ -655,7 +685,7 @@ def terrace_side(side, seed=3):
             if near < 2:
                 img.putpixel((x, y), OUTLINE if near == 0 else shade(ROCK_D, 1.2))
             elif near < 5:
-                c = FLOOR_3 if near == 2 else mix(FLOOR_2, FLOOR_1, (near - 3) / 2)
+                c = FLOOR_HI if near == 2 else mix(FLOOR_3, FLOOR_2, (near - 3) / 2)
                 if y % 8 == 7:
                     c = JOINT
                 img.putpixel((x, y), shade(c, 1.0 + rng.uniform(-0.03, 0.03)))
@@ -888,6 +918,258 @@ def floor_symbol(big=True):
                 put(img, x, y, line if i % 3 else dark)
         put(img, 7, 7, GLOW)
         put(img, 8, 8, GLOW)
+    return img
+
+
+# --- bigger story pieces, after the catalog of details (statues, altar, banners, urns, vines) -----------------
+def statue_big(seed, kind="orb"):
+    """A statue 2 tiles wide and 3 high (32x48): a hooded figure on a stepped plinth with a glowing rune.
+    kind: 'orb' holds a crystal orb in both hands, 'monk' folds its hands, 'broken' lost its head and arm."""
+    rng = random.Random(seed)
+    img = blank(32, 48)
+    cols = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
+    noise = value_noise(rng, 32, 48, 4)
+    # stepped plinth
+    for y in range(36, 48):
+        for x in range(2, 30):
+            low = y >= 43
+            if not low and not 5 <= x <= 26:
+                continue
+            u = (x - (2 if low else 5)) / (27.0 if low else 21.0)
+            c = shade(cols[min(3, int(u * 4))], 0.92 + (noise[y][x] - 0.5) * 0.25)
+            if y in (36, 43):
+                c = shade(FLOOR_HI, 1.0)
+            elif y in (37, 44):
+                c = shade(ROCK_2, 0.72)
+            img.putpixel((x, y), c)
+    # engraved rune panel on the plinth
+    for y in range(38, 42):
+        for x in range(11, 21):
+            if x in (11, 20) or y in (38, 41):
+                put(img, x, y, shade(ROCK_2, 0.65))
+    for x, y in ((15, 39), (16, 39), (15, 40), (16, 40)):
+        put(img, x, y, GLOW if (x + y) % 2 else GLOW_2)
+    # the figure
+    top = 14 if kind == "broken" else 2
+    for y in range(top, 36):
+        t = (y - 2) / 33.0
+        if y < 15:
+            half = 5.2 * math.sqrt(max(0.0, 1.0 - ((y - 9.5) / 7.5) ** 2)) + 0.5
+        elif y < 22:
+            half = 5.5 + (y - 15) * 0.5
+        else:
+            half = 9.0 + (y - 22) * 0.18 + (1.2 if y > 31 else 0.0)
+        for x in range(32):
+            u = (x + 0.5 - 16.0) / max(0.5, half)
+            if abs(u) <= 1.0:
+                c = cols[min(3, int((u + 1.0) * 2.0))]
+                c = shade(c, 1.0 + (noise[y][x] - 0.5) * 0.35 - t * 0.12)
+                if y >= 15 and (x - 16) % 5 == 0 and y % 7 != 0:
+                    c = shade(c, 0.78)  # folds of the robe
+                if 6 <= y <= 13 and kind != "broken" and abs(x + 0.5 - 16.0) <= 2.9:
+                    c = ROCK_D if y >= 7 else shade(c, 0.7)
+                if y >= 17 and abs(u) > 0.88:
+                    c = shade(c, 0.8)
+                img.putpixel((x, y), c)
+    if kind == "orb":
+        for y in range(22, 31):
+            for x in range(9, 24):
+                if abs(x - 16) <= 7 - abs(y - 26) * 0.4 and 22 <= y <= 29:
+                    img.putpixel((x, y), shade(ROCK_4, 1.08 if y < 25 else 0.85))
+        for y in range(19, 27):
+            for x in range(12, 21):
+                d = math.hypot(x + 0.5 - 16.0, y + 0.5 - 22.5)
+                if d <= 3.6:
+                    img.putpixel((x, y), CRY_HI if d < 1.3 else (CRY_2 if d < 2.4 else CRY_1))
+    elif kind == "monk":
+        for y in range(23, 31):
+            for x in range(11, 22):
+                if abs(x - 16) <= 5.5 - abs(y - 26) * 0.35:
+                    img.putpixel((x, y), shade(ROCK_3, 1.1 if y < 26 else 0.8))
+        for x in range(13, 19):
+            put(img, x, 26, ROCK_D)
+    else:
+        # snapped off at the chest, with stones at its foot
+        for x in range(32):
+            jag = 14 + rng.choice((0, 0, 1, 2, -1))
+            if img.getpixel((x, jag + 1))[3]:
+                put(img, x, jag + 1, shade(FLOOR_HI, 0.95))
+        for _ in range(7):
+            sx, sy = rng.choice((rng.randrange(2, 7), rng.randrange(25, 30))), rng.randrange(40, 46)
+            for dx in (0, 1, 2):
+                put(img, sx + dx, sy, rng.choice((ROCK_4, ROCK_3)))
+    # moss on the plinth and a trailing vine
+    for _ in range(18):
+        x, y = rng.randrange(3, 29), rng.randrange(34, 47)
+        if img.getpixel((x, y))[3]:
+            img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
+    vx = 22
+    for y in range(18 if kind != "broken" else 15, 36):
+        vx += rng.choice((-1, 0, 0, 1))
+        for off in ((0, 1) if y % 3 == 0 else (0,)):
+            if img.getpixel((vx + off, y))[3]:
+                img.putpixel((vx + off, y), rng.choice((MOSS_1, MOSS_2)))
+    return outline(img)
+
+
+def altar_crystal():
+    """A stone altar holding a blue crystal (32x32; the crystal's glow comes from a light)."""
+    img = blank(32, 32)
+    cols = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
+    for y in range(16, 31):
+        for x in range(3, 29):
+            u = (x - 3) / 25.0
+            c = shade(cols[min(3, int(u * 4))], 0.95)
+            if y == 16:
+                c = shade(FLOOR_HI, 1.05)
+            elif y in (17, 22, 27):
+                c = shade(ROCK_2, 0.7)
+            if 9 <= x <= 22 and 19 <= y <= 25 and (x in (9, 22) or y in (19, 25)):
+                c = mix(c, GLOW, 0.4) if (x + y) % 2 == 0 else shade(c, 0.8)
+            img.putpixel((x, y), c)
+    # the crystal: a tall faceted shard with two small ones
+    shards = ((16, 15, 4.2, 13), (11, 15, 2.6, 7), (21, 15, 2.6, 8))
+    for cx, base, half, height in shards:
+        for y in range(base - height, base + 1):
+            w = half * (1.0 - abs((y - (base - height * 0.35)) / (height * 0.75)))
+            for x in range(32):
+                u = (x + 0.5 - cx) / max(0.4, w)
+                if w > 0.4 and abs(u) <= 1.0:
+                    img.putpixel((x, y), CRY_HI if u < -0.4 else (CRY_2 if u < 0.2 else CRY_1))
+    for tx, ty in ((4, 18), (5, 28), (26, 20)):
+        for dx in (0, 1):
+            put(img, tx + dx, ty, MOSS_1)
+    return outline(img)
+
+
+def blue_banner():
+    """A blue banner with a pale snowflake, gold rod (16x32)."""
+    img = blank(16, 32)
+    d = ImageDraw.Draw(img)
+    d.rectangle((2, 1, 13, 3), fill=WOOD_1)
+    d.line((2, 1, 13, 1), fill=WOOD_HI)
+    for x in (2, 13):
+        d.rectangle((x - 1, 0, x, 4), fill=GOLD_1)
+    for y in range(4, 30):
+        for x in range(3, 13):
+            if y > 25 and (x * 3 + y) % 5 < (y - 25):
+                continue
+            img.putpixel((x, y), CRY_1 if x < 6 else (CRY_D if x < 10 else shade(CRY_D, 0.7)))
+    flake = ((8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15), (5, 12), (6, 12), (7, 12), (9, 12), (10, 12),
+             (11, 12), (6, 10), (10, 14), (10, 10), (6, 14))
+    for p in flake:
+        img.putpixel(p, CRY_HI)
+    return outline(img)
+
+
+def urn(kind):
+    """Dark two-handled urn (0) or a short squat jar with a lid (1)."""
+    img = blank()
+    shades = (WOOD_2, WOOD_1, WOOD_D, shade(WOOD_D, 0.6))
+    for y in range(2, 15):
+        if kind == 0:
+            half = 2.0 if y < 4 else 2.6 + 3.2 * math.sin(min(1.0, (y - 3) / 9.0) * math.pi * 0.7)
+            half = half if y < 13 else max(2.4, half - (y - 12) * 1.1)
+        else:
+            half = 5.2 if 5 <= y <= 12 else (3.4 if y in (3, 4) else (3.0 if y < 3 else max(2.5, 5.2 - (y - 12) * 1.2)))
+        for x in range(16):
+            u = (x + 0.5 - 8.0) / max(0.4, half)
+            if abs(u) <= 1.0:
+                c = shades[min(3, int((u + 1.0) * 2.0))]
+                if y in (4, 9):
+                    c = shade(c, 0.75)
+                img.putpixel((x, y), c)
+    if kind == 0:
+        for y in (5, 6, 7, 8):
+            put(img, 2 if y in (6, 7) else 3, y, WOOD_2)
+            put(img, 13 if y in (6, 7) else 12, y, WOOD_1)
+    else:
+        for x in range(5, 11):
+            put(img, x, 3, GOLD_1)
+    return outline(img)
+
+
+def skull_decal():
+    img = blank()
+    for y in range(4, 13):
+        for x in range(3, 13):
+            if ((x + 0.5 - 8) / 5.0) ** 2 + ((y + 0.5 - 7.5) / 3.8) ** 2 <= 1.0 or (y >= 10 and 6 <= x <= 9):
+                img.putpixel((x, y), BONE if y < 10 or x in (6, 9) else shade(BONE, 0.8))
+    for p in ((5, 7), (6, 7), (9, 7), (10, 7), (5, 8), (10, 8), (8, 9), (7, 9)):
+        put(img, p[0], p[1], OUTLINE)
+    return outline(img)
+
+
+def sword_decal():
+    img = blank()
+    for i in range(12):
+        put(img, 2 + i, 13 - i, ROCK_HI if i % 5 else FLOOR_HI)
+        put(img, 3 + i, 13 - i, ROCK_3)
+    for dx, dy in ((12, 3), (11, 2), (13, 4), (10, 1)):
+        put(img, dx, dy, GOLD_1)
+    return outline(img)
+
+
+def gravestone(variant):
+    """A rounded tombstone with a carved cross or a glowing rune."""
+    img = blank()
+    for y in range(3, 15):
+        for x in range(3, 13):
+            if y < 6 and ((x + 0.5 - 8) / 5.0) ** 2 + ((y + 0.5 - 6) / 3.0) ** 2 > 1.0:
+                continue
+            u = (x - 3) / 9.0
+            img.putpixel((x, y), (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)[min(3, int(u * 4))] if y < 13 else shade(ROCK_2, 0.8))
+    if variant == 0:
+        for p in ((8, 6), (8, 7), (8, 8), (8, 9), (7, 7), (9, 7)):
+            put(img, p[0], p[1], ROCK_D)
+    else:
+        for p in ((7, 6), (8, 6), (7, 7), (8, 8), (8, 9), (7, 9)):
+            put(img, p[0], p[1], GLOW)
+    for p in ((4, 12), (5, 13), (11, 13)):
+        put(img, p[0], p[1], MOSS_1)
+    return outline(img)
+
+
+def vine_hang(seed):
+    """Vines hanging from the top edge of a tile, with leaves (drawn over a platform's lip)."""
+    rng = random.Random(seed)
+    img = blank()
+    for x in range(1, 16, 3):
+        length = rng.randrange(6, 15)
+        wob = x
+        for y in range(0, length):
+            wob += rng.choice((-1, 0, 0, 0, 1)) if y % 2 else 0
+            wob = max(0, min(15, wob))
+            put(img, wob, y, MOSS_D if y % 3 else MOSS_1)
+            if y % 3 == 1:
+                put(img, min(15, wob + 1), y, MOSS_2)
+                put(img, max(0, wob - 1), y + 1, MOSS_1)
+        put(img, wob, length, MOSS_HI)
+    return img
+
+
+def wall_under_gap(seed):
+    """The lower row of a platform's front between two legs: the wall's last bricks with a ragged hanging
+    edge and nothing below it (the floor shows, in shadow), so the platform seems to float."""
+    rng = random.Random(seed)
+    base = wall_face(seed)
+    img = blank()
+    edge = [7 + rng.choice((0, 0, 1, 1, 2)) for _ in range(T)]
+    for x in range(T):
+        for y in range(T):
+            if y <= edge[x]:
+                img.putpixel((x, y), shade(base.getpixel((x, y)), 0.85 - 0.03 * y))
+        put(img, x, edge[x], OUTLINE)
+    for x in range(T):
+        put(img, x, edge[x] - 1, shade(ROCK_D, 1.1))
+    return img
+
+
+def under_shadow():
+    img = blank()
+    for y in range(T):
+        for x in range(T):
+            put(img, x, y, (3, 4, 16, int(185 - y * 7)))
     return img
 
 
@@ -1524,6 +1806,9 @@ def build_tiles():
 
     # floor variety: tone shifts, cracks, big flagstones, holes, fallen stones (kept at the end of the
     # sheet so the coordinates of every older tile stay the same)
+    add("platform_a", platform_floor(111))
+    add("platform_b", platform_floor(112))
+    add("platform_rune", platform_floor(113, rune=True))
     add("terrace_corner_l", over(terrace_top(), terrace_side("l")))
     add("terrace_corner_r", over(terrace_top(), terrace_side("r")))
     for side in "lr":
@@ -1534,6 +1819,26 @@ def build_tiles():
     add("wall_arch_face", wall_arch())
     for name, img in shadow_tiles():
         add(name, img)
+    for k, (seed, kind) in enumerate(((95, "orb"), (96, "monk"), (97, "broken"))):
+        big = statue_big(seed, kind)
+        for row in range(3):
+            for col in range(2):
+                add("statue_big_%s_%d%d" % ("abc"[k], row, col), big.crop((col * T, row * T, col * T + T, row * T + T)))
+    altar = altar_crystal()
+    for name, box in (("tl", (0, 0)), ("tr", (16, 0)), ("bl", (0, 16)), ("br", (16, 16))):
+        add("altar_%s" % name, altar.crop((box[0], box[1], box[0] + T, box[1] + T)))
+    add_tall("banner_blue", blue_banner())
+    add("urn_a", urn(0))
+    add("urn_b", urn(1))
+    add("skull", skull_decal())
+    add("sword_fallen", sword_decal())
+    add("gravestone_a", gravestone(0))
+    add("gravestone_b", gravestone(1))
+    add("vine_hang_a", vine_hang(1))
+    add("vine_hang_b", vine_hang(2))
+    add("wall_under_a", wall_under_gap(12))
+    add("wall_under_b", wall_under_gap(13))
+    add("shadow_under", under_shadow())
     add_tall("statue_a", statue(91))
     add_tall("statue_b", statue(92, broken=True))
     for k in range(3):

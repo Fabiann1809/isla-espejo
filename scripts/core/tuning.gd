@@ -157,6 +157,8 @@ const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
 const RUIN_PLAYER_LIGHT_RADIUS := 64.0
 ## Seconds the shade (and the glow) take to grow when Nico enters a dark room and to fade when he leaves.
 const RUIN_DARK_FADE_SECONDS := 1.6
+## Chance that a platform's front tile carries hanging vines.
+const RUIN_PLATFORM_VINE_CHANCE := 0.45
 ## Floor variety of a ruin room (RuinShape._build_floor_detail): drift of darker/paler slabs (noise
 ## frequency, threshold), big flagstones tried per room, and the patches of worn, mossy or broken floor.
 const RUIN_FLOOR_DRIFT_FREQUENCY := 0.11

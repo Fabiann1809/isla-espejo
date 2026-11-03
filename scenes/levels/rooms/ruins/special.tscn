@@ -88,21 +88,33 @@ script = ExtResource("2")
 kind = 2
 
 [node name="Prop13" type="Node2D" parent="."]
-position = Vector2(16, 192)
+position = Vector2(64, 176)
 script = ExtResource("2")
 kind = 17
+size_tiles = Vector2i(2, 1)
 
 [node name="Prop14" type="Node2D" parent="."]
-position = Vector2(96, 80)
+position = Vector2(368, 176)
 script = ExtResource("2")
 kind = 17
+size_tiles = Vector2i(2, 1)
 
 [node name="Prop15" type="Node2D" parent="."]
-position = Vector2(32, 256)
+position = Vector2(416, 224)
 script = ExtResource("2")
 kind = 18
 
 [node name="Prop16" type="Node2D" parent="."]
+position = Vector2(144, 96)
+script = ExtResource("2")
+kind = 18
+
+[node name="Prop17" type="Node2D" parent="."]
+position = Vector2(240, 16)
+script = ExtResource("2")
+kind = 8
+
+[node name="Prop18" type="Node2D" parent="."]
 position = Vector2(208, 112)
 script = ExtResource("2")
 kind = 20

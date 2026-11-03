@@ -14,7 +14,7 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
@@ -38,6 +38,8 @@ const BLOCK_LOW_BITS := 1 << (Heights.BLOCK_LOW_LAYER - 1)
 const BLOCK_HIGH_BITS := 1 << (Heights.BLOCK_HIGH_LAYER - 1)
 ## How far outside a terrace its edge keeps the high actors in (px).
 const EDGE_THICKNESS := 8.0
+## How much of a platform's underside row stays open (nothing blocks it), so its shadow shows.
+const UNDERSIDE_GAP := 6.0
 ## Where the blocking part of a single prop stands inside its tile, by kind.
 const FOOTS := {
 	Kind.STALAGMITE: Rect2(4, 9, 8, 6),
@@ -47,6 +49,9 @@ const FOOTS := {
 	Kind.CRATE: Rect2(2, 5, 12, 10),
 	Kind.BARREL: Rect2(3, 4, 10, 10),
 	Kind.VASE: Rect2(4, 5, 8, 9),
+	Kind.GRAVE: Rect2(3, 6, 10, 9),
+	Kind.STATUE: Rect2(3, 4, 26, 11),
+	Kind.ALTAR: Rect2(3, 16, 26, 15),
 }
 const TALL_FOOT := Rect2(3, 22, 10, 8)
 
@@ -84,7 +89,7 @@ func _build() -> void:
 		Kind.TORCH:
 			add_child(_animated([&"torch_a", &"torch_b", &"torch_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.BANNER:
-			_tall([&"banner_a", &"banner_b"][rng.randi_range(0, 1)], false)
+			_tall([&"banner_a", &"banner_b", &"banner_blue"][rng.randi_range(0, 2)], false)
 		Kind.CRATE:
 			add_child(TileArt.sprite(&"crate"))
 		Kind.BARREL:
@@ -100,13 +105,17 @@ func _build() -> void:
 		Kind.SPIKES:
 			_spikes()
 		Kind.STATUE:
-			_tall([&"statue_a", &"statue_b"][rng.randi_range(0, 1)])
+			_statue(rng)
 		Kind.VASE:
-			add_child(TileArt.sprite([&"vase_a", &"vase_b", &"vase_c"][rng.randi_range(0, 2)]))
+			add_child(TileArt.sprite([&"vase_a", &"vase_b", &"vase_c", &"urn_a", &"urn_b"][rng.randi_range(0, 4)]))
 		Kind.ARMOR:
-			add_child(TileArt.sprite([&"armor_fallen_a", &"armor_fallen_b"][rng.randi_range(0, 1)]))
+			add_child(TileArt.sprite([&"armor_fallen_a", &"armor_fallen_b", &"skull", &"sword_fallen"][rng.randi_range(0, 3)]))
 		Kind.SYMBOL:
 			_symbol()
+		Kind.ALTAR:
+			_altar()
+		Kind.GRAVE:
+			add_child(TileArt.sprite([&"gravestone_a", &"gravestone_b"][rng.randi_range(0, 1)]))
 	if FOOTS.has(kind):
 		_collide(FOOTS[kind])
 	match kind:
@@ -119,7 +128,7 @@ func _build() -> void:
 
 
 func _footprint_height() -> float:
-	if kind in [Kind.PILLAR, Kind.CRYSTAL, Kind.STELE, Kind.BANNER, Kind.STATUE]:
+	if kind in [Kind.PILLAR, Kind.CRYSTAL, Kind.STELE, Kind.BANNER, Kind.ALTAR]:
 		return TileArt.TILE * 2.0
 	if kind == Kind.ROCKS:
 		return TileArt.TILE * size_tiles.y
@@ -166,6 +175,23 @@ func _light(color: Color, radius: float, at: Vector2) -> void:
 ## A tile that cycles through `frames` (see RuinAnim).
 func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
 	return RuinAnim.sprite(frames, fps, at)
+
+
+## A statue two tiles wide and three high standing on its plinth: `position` is the plinth's left tile, the
+## figure rises two tiles above it. Its base blocks.
+func _statue(rng: RandomNumberGenerator) -> void:
+	var variant: String = ["a", "b", "c"][rng.randi_range(0, 2)]
+	for row in 3:
+		for col in 2:
+			add_child(TileArt.sprite(StringName("statue_big_%s_%d%d" % [variant, row, col]),
+					Vector2(col, row - 2) * TileArt.TILE))
+
+
+## A stone altar with a blue crystal (2x2 tiles, blocking its lower part) and a cold glow.
+func _altar() -> void:
+	for i in 4:
+		add_child(TileArt.sprite(StringName("altar_" + ["tl", "tr", "bl", "br"][i]), Vector2(i % 2, i / 2) * TileArt.TILE))
+	_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS, Vector2(16, 8))
 
 
 ## An engraved symbol on the floor: a ring of four tiles (2x2), or a small lozenge (1x1). No collision.
@@ -257,9 +283,13 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 	var tile := float(TileArt.TILE)
 	var stairs_x := w / 2 - 1
 	_terrace_shadows(walled, w, h, stairs_x)
-	for y in h - 2:
+	# Rows: the surface (h - 3), the lip with the top of the wall (h - 3 is its first row), the wall (h - 2) and
+	# the underside (h - 1): legs between hanging, ragged bricks, so the slab seems to float over its shadow.
+	for y in h - 3:
 		for x in w:
-			var surface: StringName = &"floor_worn"
+			var surface: StringName = [&"platform_a", &"platform_b"][rng.randi_range(0, 1)] if not walled else &"floor_worn"
+			if not walled and x == w / 2 and y == (h - 3) / 2:
+				surface = &"platform_rune"
 			if not walled and y == 0 and x == 0:
 				surface = &"terrace_corner_l"
 			elif not walled and y == 0 and x == w - 1:
@@ -274,41 +304,52 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 	for x in w:
 		var near_stairs := x >= stairs_x - 1 and x <= stairs_x + 2
 		var lip: StringName = &"wall_lip_moss" if rng.randf() < 0.2 else &"wall_lip"
-		var face: StringName = &"wall_face_moss" if rng.randf() < 0.2 else &"wall_face"
+		var wall: StringName = &"wall_face_moss" if rng.randf() < 0.2 else &"wall_face"
+		var face: StringName = [&"wall_under_a", &"wall_under_b"][rng.randi_range(0, 1)]
 		if x == stairs_x - 1:
 			lip = &"stairs_rail_l"
+			wall = &"stairs_rail_l"
 			face = &"stairs_rail_l"
 		elif x == stairs_x + 2:
 			lip = &"stairs_rail_r"
+			wall = &"stairs_rail_r"
 			face = &"stairs_rail_r"
 		elif near_stairs:
 			lip = &"stairs_steps"
+			wall = &"stairs_steps"
 			face = &"stairs_steps"
 		elif x == 0 or x == w - 1:
 			var side := "l" if x == 0 else "r"
 			lip = StringName("terrace_post_%s_lip" % side)
-			face = StringName("terrace_post_%s_face" % side)
+			wall = StringName("terrace_post_%s_face" % side)
+			face = wall
 		elif x % 4 == 2:
 			lip = &"wall_support_lip"
+			wall = &"wall_support_face"
 			face = &"wall_support_face"
-		elif x % 4 == 0 and rng.randf() < 0.7:
-			face = &"wall_arch_face"
-		add_child(TileArt.sprite(lip, Vector2(x, h - 2) * tile))
+		add_child(TileArt.sprite(lip, Vector2(x, h - 3) * tile))
+		add_child(TileArt.sprite(wall, Vector2(x, h - 2) * tile))
 		add_child(TileArt.sprite(face, Vector2(x, h - 1) * tile))
+		if not near_stairs and x % 4 != 2 and 0 < x and x < w - 1 and rng.randf() < Tuning.RUIN_PLATFORM_VINE_CHANCE:
+			add_child(TileArt.sprite([&"vine_hang_a", &"vine_hang_b"][rng.randi_range(0, 1)], Vector2(x, h - 3) * tile + Vector2(0, 5)))
+	if not walled:
+		_corner_posts(w)
 	var size := Vector2(w, h) * tile
 	var gap_left := (stairs_x - 1) * tile
 	var gap_right := (stairs_x + 3) * tile
-	var face_top := (h - 2) * tile
+	var face_top := (h - 3) * tile
+	# The underside hangs 6 px short of its row: nothing blocks where the floor shows beneath it.
+	var face_height := size.y - face_top - UNDERSIDE_GAP
 	# The footprint: low actors cannot enter, except by the stairs.
 	_collide(Rect2(0, 0, size.x, face_top), BLOCK_LOW_BITS)
-	_collide(Rect2(0, face_top, gap_left, size.y - face_top), BLOCK_LOW_BITS)
-	_collide(Rect2(gap_right, face_top, size.x - gap_right, size.y - face_top), BLOCK_LOW_BITS)
+	_collide(Rect2(0, face_top, gap_left, face_height), BLOCK_LOW_BITS)
+	_collide(Rect2(gap_right, face_top, size.x - gap_right, face_height), BLOCK_LOW_BITS)
 	# The parapets of the stairs stop everybody.
 	_collide(Rect2(gap_left, face_top, tile, size.y - face_top), WORLD_BITS)
 	_collide(Rect2(gap_right - tile, face_top, tile, size.y - face_top), WORLD_BITS)
 	# The edge: high actors stay on the surface and the stairs.
-	_collide(Rect2(0, face_top, gap_left, size.y - face_top), BLOCK_HIGH_BITS)
-	_collide(Rect2(gap_right, face_top, size.x - gap_right, size.y - face_top), BLOCK_HIGH_BITS)
+	_collide(Rect2(0, face_top, gap_left, face_height), BLOCK_HIGH_BITS)
+	_collide(Rect2(gap_right, face_top, size.x - gap_right, face_height), BLOCK_HIGH_BITS)
 	_collide(Rect2(-EDGE_THICKNESS, -EDGE_THICKNESS, size.x + EDGE_THICKNESS * 2.0, EDGE_THICKNESS), BLOCK_HIGH_BITS)
 	_collide(Rect2(-EDGE_THICKNESS, 0, EDGE_THICKNESS, face_top), BLOCK_HIGH_BITS)
 	_collide(Rect2(size.x, 0, EDGE_THICKNESS, face_top), BLOCK_HIGH_BITS)
@@ -318,11 +359,21 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 	zone.direction = Vector2.UP
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(tile * 2.0, tile * 2.0)
+	rectangle.size = Vector2(tile * 2.0, tile * 3.0)
 	shape.shape = rectangle
 	zone.add_child(shape)
-	zone.position = Vector2(stairs_x * tile + tile, face_top + tile)
+	zone.position = Vector2(stairs_x * tile + tile, face_top + tile * 1.5)
 	add_child(zone)
+
+
+## Tall corner posts at the two back corners of an open platform, rising above its edge like the columns
+## of the concept sheet; they stop high actors too.
+func _corner_posts(w: int) -> void:
+	var tile := float(TileArt.TILE)
+	for x in [0, w - 1]:
+		add_child(TileArt.sprite(&"pillar_top", Vector2(x, -1) * tile))
+		add_child(TileArt.sprite(&"pillar_base", Vector2(x, 0) * tile))
+		_collide(Rect2(x * tile, 0, tile, tile), BLOCK_HIGH_BITS)
 
 
 ## The soft shadow a platform throws on the floor: under its face (not under the stairs, where Nico walks),
@@ -331,6 +382,7 @@ func _terrace_shadows(walled: bool, w: int, h: int, stairs_x: int) -> void:
 	var tile := float(TileArt.TILE)
 	for x in w:
 		if x < stairs_x - 1 or x > stairs_x + 2:
+			add_child(TileArt.sprite(&"shadow_under", Vector2(x, h - 1) * tile))
 			add_child(TileArt.sprite(&"shadow_s", Vector2(x, h) * tile))
 	add_child(TileArt.sprite(&"shadow_sw", Vector2(-1, h) * tile))
 	add_child(TileArt.sprite(&"shadow_se", Vector2(w, h) * tile))
@@ -350,12 +402,12 @@ func _rock_walls(rng: RandomNumberGenerator, w: int, h: int) -> void:
 	add_child(walls)
 	var feet: Array[Vector2] = RockWall.feet_along(Vector2(0, tile - 1.0), Vector2(w * tile, tile - 1.0), rng)
 	for x in [tile / 2.0, w * tile - tile / 2.0]:
-		feet.append_array(RockWall.feet_along(Vector2(x, tile * 1.5), Vector2(x, (h - 2) * tile), rng))
+		feet.append_array(RockWall.feet_along(Vector2(x, tile * 1.5), Vector2(x, (h - 3) * tile), rng))
 	for foot in feet:
 		walls.add_child(RockWall.column(foot, rng))
 	_collide(Rect2(0, 0, w * tile, tile), WORLD_BITS)
-	_collide(Rect2(0, 0, tile, (h - 2) * tile), WORLD_BITS)
-	_collide(Rect2((w - 1) * tile, 0, tile, (h - 2) * tile), WORLD_BITS)
+	_collide(Rect2(0, 0, tile, (h - 3) * tile), WORLD_BITS)
+	_collide(Rect2((w - 1) * tile, 0, tile, (h - 3) * tile), WORLD_BITS)
 
 
 ## Collision on `layer_bits` (world by default, see Heights for the level layers).

@@ -34,10 +34,10 @@ LANE_ROWS = range(7, 11)
 CENTER = (14, 8)
 
 # RuinProp.Kind values (keep in sync with scripts/world/ruin_prop.gd)
-ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL = range(21)
-SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, STATUE, VASE}
-TALL = {PILLAR, CRYSTAL, STELE, BANNER, STATUE}
-AREAS = {ROCKS, TERRACE, ALCOVE, SYMBOL}
+ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE = range(23)
+SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, STATUE, VASE, ALTAR, GRAVE}
+TALL = {PILLAR, CRYSTAL, STELE, BANNER}
+AREAS = {ROCKS, TERRACE, ALCOVE, SYMBOL, STATUE, ALTAR}
 PLATFORMS = {TERRACE, ALCOVE}
 
 
@@ -295,7 +295,7 @@ class Room:
             return True
         return False
 
-    def scatter(self, kind, count, near_rock=None, min_dist=4, margin=1, region=None, tries=500):
+    def scatter(self, kind, count, near_rock=None, min_dist=4, margin=1, region=None, tries=500, size=None):
         """Props at free floor cells chosen by the room's seed: near a rock edge (True), away from
         every wall (False) or anywhere (None); never closer than `min_dist` to another of their kind."""
         placed = []
@@ -312,7 +312,7 @@ class Room:
                 continue
             if any(math.hypot(x - px, y - py) < min_dist for px, py in placed):
                 continue
-            if self.put(kind, x, y, margin=margin):
+            if self.put(kind, x, y, size=size, margin=margin):
                 placed.append((x, y))
         return placed
 
@@ -445,14 +445,19 @@ class Room:
             f.write("\n".join(text))
 
 
-def story(room, statues=0, vases=0, armor=0, symbol=None):
-    """The old temple's leftovers, few and off the lanes: statues and vases against the rock, fallen armor
-    on the floor and an engraved symbol (placed near `symbol`, a tile)."""
-    room.scatter(STATUE, statues, near_rock=True, min_dist=8)
+def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0):
+    """The old temple's leftovers, few and off the lanes: big statues in the open, vases against the rock,
+    fallen armor and graves, an engraved symbol (placed near `symbol`), an altar (near `altar`), banners on
+    the top wall."""
+    room.scatter(STATUE, statues, near_rock=False, min_dist=9, margin=1, size=(2, 1))
     room.scatter(VASE, vases, near_rock=True, min_dist=4, margin=0)
     room.scatter(ARMOR, armor, near_rock=None, min_dist=6, margin=1)
+    room.scatter(GRAVE, graves, near_rock=True, min_dist=3, margin=1)
+    room.scatter(BANNER, banners, near_rock=True, min_dist=6, margin=0, region=(2, 1, 27, 3))
     if symbol:
         room.put_near(SYMBOL, symbol, size=(2, 2), radius=3)
+    if altar:
+        room.put_near(ALTAR, altar, size=(2, 2), radius=3)
 
 
 def lit(room, crystals, torches, braziers=0):
@@ -476,7 +481,7 @@ lit(r, 4, 3)
 r.scatter(STELE, 2, near_rock=True, min_dist=10)
 r.scatter(BOULDER, 3, min_dist=5)
 r.scatter(STALAGMITE, 3, min_dist=5)
-story(r, statues=1, vases=2, armor=1)
+story(r, statues=2, vases=3, armor=2, banners=2)
 r.finish()
 
 # --- Boss (raised): a round arena in the rock, ringed by pillars, crystals and braziers ------------------------
@@ -496,7 +501,7 @@ r.scatter(BOULDER, 2, min_dist=6)
 for x in range(3, 27):
     if r.g[1][x] == "." and r.g[0][x] == "#" or (r.g[2][x] == "." and r.g[1][x] == "#"):
         pass
-story(r, statues=4, armor=2, symbol=(14, 8))
+story(r, statues=4, armor=3, symbol=(14, 8), banners=3)
 r.finish()
 
 # --- Combat: two winding rivers crossed by bridges on the way to the doors ------------------------------------------
@@ -512,7 +517,7 @@ lit(r, 4, 4)
 r.scatter(STALAGMITE, 4, near_rock=False, min_dist=5)
 r.scatter(BOULDER, 2, min_dist=5)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=2, armor=1)
+story(r, statues=1, vases=3, armor=2, graves=1)
 r.finish()
 
 # --- Combat (ambush): blocks of rock leave narrow passages, enemies jump out of them ----------------------------------
@@ -526,15 +531,15 @@ r.scatter(STALAGMITE, 5, min_dist=4)
 for cell in r.scatter(SPIKES, 3, near_rock=False, min_dist=6, margin=2):
     pass
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, vases=1, armor=2)
+story(r, vases=2, armor=3, graves=2)
 r.finish()
 
 # --- Combat: two raised platforms with their stairs on the south side ------------------------------------------------
 r = Room("terraces", "RuinsTerraces")
 r.edge_blobs(10, size=(2.0, 4.0))
 r.islands([(14.5, 13.5)], radius=(1.0, 1.6))
-r.platform(TERRACE, 2, 2, (10, 5))
-r.platform(TERRACE, 18, 2, (10, 5))
+r.platform(TERRACE, 2, 1, (10, 7))
+r.platform(TERRACE, 18, 1, (10, 7))
 r.smooth(1)
 r.nook(CRYSTAL)
 r.connect()
@@ -543,7 +548,7 @@ r.scatter(PILLAR, 2, near_rock=False, min_dist=8, region=(2, 11, 27, 16))
 r.scatter(BARREL, 1, region=(10, 3, 12, 6))
 r.scatter(CRATE, 1, region=(10, 3, 12, 6))
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=2, symbol=(13, 13))
+story(r, statues=2, vases=3, symbol=(13, 13), banners=2)
 r.finish()
 
 # --- Combat (raised): a wide plateau with pillars and braziers ---------------------------------------------------------
@@ -559,7 +564,7 @@ r.scatter(BRAZIER, 4, near_rock=False, min_dist=7)
 r.scatter(BOULDER, 3, min_dist=5)
 r.scatter(STALAGMITE, 3, min_dist=5)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=2, vases=1, symbol=(13, 8))
+story(r, statues=2, vases=2, symbol=(13, 8), graves=1, banners=2)
 r.finish()
 
 # --- Combat (watch): two waterfalls feed pools in a cave; enemies stand guard around them -------------------------
@@ -586,7 +591,7 @@ r.scatter(BOULDER, 3, near_rock=False, min_dist=5)
 r.scatter(STALAGMITE, 3, min_dist=5)
 r.scatter(SPIKES, 3, near_rock=False, min_dist=6, margin=2)
 r.spawns = {"EnemySpawns": r.spawn_points(7)}
-story(r, statues=1, armor=1)
+story(r, statues=2, armor=2, vases=2)
 r.finish()
 
 # --- Event: the Viajera's camp ---------------------------------------------------------------------------------------------------
@@ -604,13 +609,13 @@ r.put_near(BARREL, (24, 13))
 r.scatter(STELE, 2, near_rock=True, min_dist=8)
 r.scatter(BOULDER, 2, min_dist=5)
 r.spawns = {"NpcSpawn": [r.marker_near((7, 6))]}
-story(r, statues=1, vases=2, symbol=(10, 12))
+story(r, statues=1, vases=3, symbol=(10, 12), graves=1, banners=2)
 r.finish()
 
 # --- Reward: an alcove (a small room) with the chest, reached by its own stairs --------------------------------------
 r = Room("reward", "RuinsReward")
 r.edge_blobs(10, size=(2.0, 4.0))
-r.platform(ALCOVE, 2, 2, (8, 5))
+r.platform(ALCOVE, 2, 1, (8, 7))
 r.smooth(1)
 r.nook(CRYSTAL)
 r.connect()
@@ -618,7 +623,7 @@ lit(r, 3, 2, 1)
 r.scatter(PILLAR, 1, near_rock=False, min_dist=8, region=(18, 2, 27, 6))
 r.scatter(STALAGMITE, 3, min_dist=5)
 r.spawns = {"ChestSpawn": [(88, 56)]}
-story(r, statues=1, vases=3)
+story(r, statues=2, vases=4, banners=2)
 r.finish()
 
 # --- Special: a shrine of crystals around the middle -----------------------------------------------------------------------
@@ -635,7 +640,7 @@ for wanted in ((11, 6), (18, 6), (11, 11), (18, 11)):
 r.scatter(STELE, 2, near_rock=True, min_dist=8)
 r.scatter(BOULDER, 2, min_dist=5)
 r.spawns = {"SpecialSpawn": [(240, 144)]}
-story(r, statues=2, vases=1, symbol=(13, 7))
+story(r, statues=2, vases=2, symbol=(13, 7), altar=(13, 4), banners=2)
 r.finish()
 
 print("ruins rooms written and validated")
