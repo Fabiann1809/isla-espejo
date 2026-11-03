@@ -131,9 +131,7 @@
   // Whatever is held is let go when the socket is gone (the server also does this on its side).
   function releaseAll() {
     if (stickId !== null) releaseStick();
-    Object.keys(held).forEach(function (n) {
-      var h = held[n]; delete held[n]; h.el.classList.remove("on");
-    });
+    Object.keys(held).forEach(release);
   }
 
   // ---- Connection ----
