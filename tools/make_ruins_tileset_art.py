@@ -242,47 +242,76 @@ def dist_to_edge(mask, x, y, inside):
     return 5
 
 
-def water_area(frame, seed=7):
-    """Water with a luminous shore on stone. `frame` (0..2) moves the shimmer."""
-    rng = random.Random(seed)
+def water_painters(tiles, frame):
+    """The two painters of water on stone over a `tiles` x `tiles` canvas: what the water looks like
+    inside (a shore glow, a lighter band, deep water with a shimmer) and the stone around it with a
+    soft glow on its edge. `frame` (0..2) moves the shimmer."""
     floor = floor_tile(11)
-    floor_big = Image.new("RGBA", (3 * T, 3 * T))
-    for r in range(3):
-        for c in range(3):
+    floor_big = Image.new("RGBA", (tiles * T, tiles * T))
+    for r in range(tiles):
+        for c in range(tiles):
             floor_big.paste(floor, (c * T, r * T))
-    noise = value_noise(random.Random(5), 3 * T + 6, 3 * T + 6, 4)
+    noise = value_noise(random.Random(5), tiles * T + 6, tiles * T + 6, 4)
 
     def inner(x, y, mask):
         d = dist_to_edge(mask, x, y, True)
         n = noise[y + frame * 2][x + frame]
         if d == 1:
-            return GLOW
+            return mix(WATER_3, GLOW, 0.75)
         if d == 2:
-            return mix(WATER_3, GLOW, 0.4)
+            return mix(WATER_2, WATER_3, 0.6)
         if d == 3:
-            return WATER_3
-        c = mix(WATER_1, WATER_2, n)
-        if d >= 5 and n > 0.72:
-            c = mix(c, WATER_3, 0.6)
+            return WATER_2
+        c = mix(WATER_D, WATER_1, 0.35 + 0.65 * n)
+        if d >= 5 and n > 0.74:
+            c = mix(c, WATER_2, 0.7)
         return c
 
     def outer(x, y, mask):
         base = floor_big.getpixel((x, y))
         d = dist_to_edge(mask, x, y, False)
         if d == 1:
-            return mix(base[:3] + (255,), GLOW, 0.5)
+            return mix(base[:3] + (255,), GLOW, 0.4)
         if d == 2:
-            return mix(base[:3] + (255,), WATER_2, 0.25)
+            return mix(base[:3] + (255,), WATER_2, 0.2)
         return base
 
+    return inner, outer
+
+
+def water_area(frame, seed=7):
+    """Water with a luminous shore on stone (3x3 tiles). `frame` (0..2) moves the shimmer."""
+    inner, outer = water_painters(3, frame)
     img, mask = make_area(inner, outer)
-    # sparkles that move from frame to frame
     spark = random.Random(100 + frame)
     for _ in range(6):
         x, y = spark.randrange(8, 40), spark.randrange(8, 40)
         if mask[y][x] and dist_to_edge(mask, x, y, True) >= 4:
             img.putpixel((x, y), GLOW_2)
     return img
+
+
+def water_inner_corners(inset=3, radius=5.0):
+    """The four inner corners of an irregular river (SE, SW, NE, NW: the diagonal that is NOT water): the
+    tile of a water cell whose diagonal neighbour is stone, with a rounded bite of stone in that corner."""
+    size = 4 * T
+    inner, outer = water_painters(4, 0)
+    corner = 2 * T - inset
+    mask = [[True] * size for _ in range(size)]
+    for y in range(size):
+        for x in range(size):
+            px, py = x + 0.5, y + 0.5
+            if px >= corner and py >= corner:
+                cx, cy = max(px, corner + radius), max(py, corner + radius)
+                if math.hypot(px - cx, py - cy) <= radius:
+                    mask[y][x] = False
+    img = Image.new("RGBA", (size, size))
+    for y in range(size):
+        for x in range(size):
+            img.putpixel((x, y), inner(x, y, mask) if mask[y][x] else outer(x, y, mask))
+    se = img.crop((T, T, 2 * T, 2 * T))
+    return [se, se.transpose(Image.FLIP_LEFT_RIGHT), se.transpose(Image.FLIP_TOP_BOTTOM),
+            se.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM)]
 
 
 def patch_area(inner_tones, outer_fn_seed, edge_light, joint, moss=0.0, seed=21):
@@ -524,13 +553,22 @@ def terrace_side(side, seed=3):
 
 # --- stairs and bridges -------------------------------------------------------------------------------------
 def stairs_steps(wood=False):
+    """Four steps, each with a bright edge, a tread and a dark riser, so a staircase reads at a glance
+    against the flat floor around it."""
     img = blank()
+    edge = rgb("#b4b8dc") if not wood else WOOD_HI
+    tread = FLOOR_HI if not wood else WOOD_2
+    mid = FLOOR_2 if not wood else WOOD_1
+    riser = rgb("#171c30") if not wood else WOOD_D
     for i in range(4):
         y0 = i * 4
+        rows = (edge, tread, mid, riser)
         for y in range(4):
             for x in range(T):
-                base = (FLOOR_3, FLOOR_2, FLOOR_1, JOINT)[y] if not wood else (WOOD_HI, WOOD_2, WOOD_1, WOOD_D)[y]
-                img.putpixel((x, y0 + y), shade(base, 0.82 + 0.06 * i))
+                c = rows[y]
+                if y in (1, 2):
+                    c = shade(c, 1.0 + ((x * 7 + i * 3) % 5 - 2) * 0.015)
+                img.putpixel((x, y0 + y), shade(c, 1.0 - 0.07 * i))
     return img
 
 
@@ -1027,6 +1065,11 @@ def build_tiles():
     patterns["pond"] = names
     add("pond_center_b", slice9(ponds[1])[4])
     add("pond_center_c", slice9(ponds[2])[4])
+    names = []
+    for i, tile in enumerate(water_inner_corners()):
+        add("pond_inner_%d" % i, tile)
+        names.append("pond_inner_%d" % i)
+    patterns["pond_inner"] = names
 
     base_floor = floor_tile(1)
     path = patch_over(floor_tile(7, tones=(FLOOR_3, FLOOR_3, FLOOR_HI), wear=0.3), base_floor, FLOOR_HI)

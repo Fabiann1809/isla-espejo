@@ -153,22 +153,9 @@ func _light(color: Color, radius: float, at: Vector2) -> void:
 	tween.tween_property(glow, "modulate", color, seconds)
 
 
-## A tile that cycles through `frames` (names in the profile), starting at a random frame so a row of
-## them does not blink together.
+## A tile that cycles through `frames` (see RuinAnim).
 func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
-	var sprite := AnimatedSprite2D.new()
-	var sprite_frames := SpriteFrames.new()
-	sprite_frames.set_animation_speed(&"default", fps)
-	for frame_name in frames:
-		sprite_frames.add_frame(&"default", TileArt.tile(frame_name))
-	sprite.sprite_frames = sprite_frames
-	sprite.centered = false
-	sprite.position = at
-	sprite.scale = Vector2.ONE * TileArt.draw_scale()
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.frame = randi() % frames.size()
-	sprite.play()
-	return sprite
+	return RuinAnim.sprite(frames, fps, at)
 
 
 ## An outcrop of rock columns that fills the footprint (rows staggered every 8 px, like the walls).

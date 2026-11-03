@@ -1,114 +1,106 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
 [ext_resource type="Script" path="res://scripts/world/ruin_prop.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/world/ruin_shape.gd" id="3"]
 
 [node name="RuinsStart" instance=ExtResource("1")]
 
+[node name="Shape" type="Node2D" parent="."]
+script = ExtResource("3")
+rows = "##############################
+###########..........#########
+##########...........#########
+#########............####...##
+########............#####..###
+########............#####.####
+###.####..................####
+#............................#
+#............................#
+#............................#
+#............................#
+#....###..............########
+###..###.............#########
+####................##########
+####...............###########
+#####..............###########
+#####.............############
+##############################"
+
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(32, 32)
+position = Vector2(400, 64)
 script = ExtResource("2")
-size_tiles = Vector2i(4, 2)
+kind = 4
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(384, 32)
+position = Vector2(320, 176)
 script = ExtResource("2")
-size_tiles = Vector2i(4, 2)
+kind = 4
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(32, 208)
+position = Vector2(144, 48)
 script = ExtResource("2")
-size_tiles = Vector2i(4, 2)
+kind = 4
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(384, 208)
+position = Vector2(80, 208)
 script = ExtResource("2")
-size_tiles = Vector2i(4, 2)
+kind = 4
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(128, 64)
+position = Vector2(176, 32)
 script = ExtResource("2")
-kind = 4
+kind = 7
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(336, 64)
+position = Vector2(368, 96)
 script = ExtResource("2")
-kind = 4
+kind = 7
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(128, 192)
+position = Vector2(112, 256)
 script = ExtResource("2")
-kind = 4
+kind = 7
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(336, 192)
+position = Vector2(304, 80)
 script = ExtResource("2")
-kind = 4
+kind = 5
 
 [node name="Prop9" type="Node2D" parent="."]
-position = Vector2(176, 48)
+position = Vector2(128, 192)
 script = ExtResource("2")
-kind = 7
+kind = 5
 
 [node name="Prop10" type="Node2D" parent="."]
-position = Vector2(288, 48)
+position = Vector2(176, 192)
 script = ExtResource("2")
-kind = 7
+kind = 2
 
 [node name="Prop11" type="Node2D" parent="."]
-position = Vector2(96, 80)
+position = Vector2(176, 64)
 script = ExtResource("2")
-kind = 5
+kind = 2
 
 [node name="Prop12" type="Node2D" parent="."]
-position = Vector2(368, 80)
+position = Vector2(320, 32)
 script = ExtResource("2")
-kind = 5
+kind = 2
 
 [node name="Prop13" type="Node2D" parent="."]
-position = Vector2(176, 224)
+position = Vector2(288, 16)
 script = ExtResource("2")
-kind = 2
+kind = 1
 
 [node name="Prop14" type="Node2D" parent="."]
-position = Vector2(288, 224)
+position = Vector2(176, 240)
 script = ExtResource("2")
-kind = 2
+kind = 1
 
 [node name="Prop15" type="Node2D" parent="."]
-position = Vector2(80, 176)
+position = Vector2(16, 176)
 script = ExtResource("2")
 kind = 1
-
-[node name="Prop16" type="Node2D" parent="."]
-position = Vector2(384, 176)
-script = ExtResource("2")
-kind = 1
-
-[node name="Prop17" type="Node2D" parent="."]
-position = Vector2(128, 16)
-script = ExtResource("2")
-size_tiles = Vector2i(2, 1)
-
-[node name="Prop18" type="Node2D" parent="."]
-position = Vector2(160, 256)
-script = ExtResource("2")
-size_tiles = Vector2i(2, 1)
-
-[node name="Prop19" type="Node2D" parent="."]
-position = Vector2(320, 240)
-script = ExtResource("2")
-size_tiles = Vector2i(2, 2)
-
-[node name="Prop20" type="Node2D" parent="."]
-position = Vector2(32, 256)
-script = ExtResource("2")
-size_tiles = Vector2i(2, 1)
-
-[node name="Prop21" type="Node2D" parent="."]
-position = Vector2(336, 16)
-script = ExtResource("2")
-size_tiles = Vector2i(2, 1)
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 position = Vector2(240, 144)

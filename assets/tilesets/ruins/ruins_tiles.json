@@ -78,552 +78,568 @@
    2,
    1
   ],
-  "path_patch_0": [
+  "pond_inner_0": [
    3,
+   1
+  ],
+  "pond_inner_1": [
+   4,
+   1
+  ],
+  "pond_inner_2": [
+   5,
+   1
+  ],
+  "pond_inner_3": [
+   6,
+   1
+  ],
+  "path_patch_0": [
+   7,
    1
   ],
   "path_patch_1": [
-   4,
+   8,
    1
   ],
   "path_patch_2": [
-   5,
+   9,
    1
   ],
   "path_patch_3": [
-   6,
+   10,
    1
   ],
   "path_patch_4": [
-   7,
+   11,
    1
   ],
   "path_patch_5": [
-   8,
+   12,
    1
   ],
   "path_patch_6": [
-   9,
+   13,
    1
   ],
   "path_patch_7": [
-   10,
+   14,
    1
   ],
   "path_patch_8": [
-   11,
+   15,
    1
   ],
   "moss_patch_0": [
-   12,
-   1
+   0,
+   2
   ],
   "moss_patch_1": [
-   13,
-   1
+   1,
+   2
   ],
   "moss_patch_2": [
-   14,
-   1
+   2,
+   2
   ],
   "moss_patch_3": [
-   15,
-   1
+   3,
+   2
   ],
   "moss_patch_4": [
-   0,
+   4,
    2
   ],
   "moss_patch_5": [
-   1,
+   5,
    2
   ],
   "moss_patch_6": [
-   2,
+   6,
    2
   ],
   "moss_patch_7": [
-   3,
+   7,
    2
   ],
   "moss_patch_8": [
-   4,
+   8,
    2
   ],
   "stone_floor_0": [
-   5,
+   9,
    2
   ],
   "stone_floor_1": [
-   6,
+   10,
    2
   ],
   "stone_floor_2": [
-   7,
+   11,
    2
   ],
   "stone_floor_3": [
-   8,
+   12,
    2
   ],
   "stone_floor_4": [
-   9,
+   13,
    2
   ],
   "stone_floor_5": [
-   10,
+   14,
    2
   ],
   "stone_floor_6": [
-   11,
+   15,
    2
   ],
   "stone_floor_7": [
-   12,
-   2
+   0,
+   3
   ],
   "stone_floor_8": [
-   13,
-   2
+   1,
+   3
   ],
   "path_patch_inner_0": [
-   14,
-   2
+   2,
+   3
   ],
   "path_patch_inner_1": [
-   15,
-   2
+   3,
+   3
   ],
   "path_patch_inner_2": [
-   0,
+   4,
    3
   ],
   "path_patch_inner_3": [
-   1,
+   5,
    3
   ],
   "moss_patch_inner_0": [
-   2,
+   6,
    3
   ],
   "moss_patch_inner_1": [
-   3,
+   7,
    3
   ],
   "moss_patch_inner_2": [
-   4,
+   8,
    3
   ],
   "moss_patch_inner_3": [
-   5,
+   9,
    3
   ],
   "column_rock_a_top": [
-   6,
+   10,
    3
   ],
   "column_rock_a_base": [
-   7,
+   11,
    3
   ],
   "column_rock_b_top": [
-   8,
+   12,
    3
   ],
   "column_rock_b_base": [
-   9,
+   13,
    3
   ],
   "column_rock_c_top": [
-   10,
+   14,
    3
   ],
   "column_rock_c_base": [
-   11,
+   15,
    3
   ],
   "column_rock_d_top": [
-   12,
-   3
+   0,
+   4
   ],
   "column_rock_d_base": [
-   13,
-   3
+   1,
+   4
   ],
   "column_dark_a_top": [
-   14,
-   3
+   2,
+   4
   ],
   "column_dark_a_base": [
-   15,
-   3
+   3,
+   4
   ],
   "column_dark_b_top": [
-   0,
+   4,
    4
   ],
   "column_dark_b_base": [
-   1,
+   5,
    4
   ],
   "column_tall_a_top": [
-   2,
+   6,
    4
   ],
   "column_tall_a_mid": [
-   3,
+   7,
    4
   ],
   "column_tall_a_base": [
-   4,
+   8,
    4
   ],
   "column_tall_b_top": [
-   5,
+   9,
    4
   ],
   "column_tall_b_mid": [
-   6,
+   10,
    4
   ],
   "column_tall_b_base": [
-   7,
+   11,
    4
   ],
   "rock_mass_a": [
-   8,
+   12,
    4
   ],
   "rock_mass_b": [
-   9,
+   13,
    4
   ],
   "rock_mass_dark": [
-   10,
+   14,
    4
   ],
   "shore_stone_a": [
-   11,
+   15,
    4
   ],
   "shore_stone_b": [
-   12,
-   4
+   0,
+   5
   ],
   "shore_stone_c": [
-   13,
-   4
+   1,
+   5
   ],
   "stalagmite_a": [
-   14,
-   4
+   2,
+   5
   ],
   "stalagmite_b": [
-   15,
-   4
+   3,
+   5
   ],
   "boulder_a": [
-   0,
+   4,
    5
   ],
   "boulder_b": [
-   1,
+   5,
    5
   ],
   "boulder_small": [
-   2,
+   6,
    5
   ],
   "boulder_small_moss": [
-   3,
+   7,
    5
   ],
   "rubble_a": [
-   4,
+   8,
    5
   ],
   "rubble_b": [
-   5,
+   9,
    5
   ],
   "pebbles": [
-   6,
+   10,
    5
   ],
   "bones": [
-   7,
+   11,
    5
   ],
   "wall_face": [
-   8,
+   12,
    5
   ],
   "wall_face_moss": [
-   9,
+   13,
    5
   ],
   "wall_lip": [
-   10,
+   14,
    5
   ],
   "wall_lip_moss": [
-   11,
+   15,
    5
   ],
   "wall_side_l": [
-   12,
-   5
+   0,
+   6
   ],
   "wall_side_r": [
-   13,
-   5
+   1,
+   6
   ],
   "terrace_side_l": [
-   14,
-   5
+   2,
+   6
   ],
   "terrace_side_r": [
-   15,
-   5
+   3,
+   6
   ],
   "stairs_steps": [
-   0,
+   4,
    6
   ],
   "stairs_steps_wood": [
-   1,
+   5,
    6
   ],
   "stairs_steps_h": [
-   2,
+   6,
    6
   ],
   "stairs_rail_l": [
-   3,
+   7,
    6
   ],
   "stairs_rail_r": [
-   4,
+   8,
    6
   ],
   "stairs_rail_t": [
-   5,
+   9,
    6
   ],
   "stairs_rail_b": [
-   6,
+   10,
    6
   ],
   "bridge_planks_h": [
-   7,
+   11,
    6
   ],
   "bridge_planks_v": [
-   8,
+   12,
    6
   ],
   "bridge_rail_h": [
-   9,
+   13,
    6
   ],
   "bridge_rail_v": [
-   10,
+   14,
    6
   ],
   "crystal_top": [
-   11,
+   15,
    6
   ],
   "crystal_base": [
-   12,
-   6
+   0,
+   7
   ],
   "crystal_top_b": [
-   13,
-   6
+   1,
+   7
   ],
   "crystal_small_a": [
-   14,
-   6
+   2,
+   7
   ],
   "crystal_small_a2": [
-   15,
-   6
+   3,
+   7
   ],
   "crystal_small_b": [
-   0,
+   4,
    7
   ],
   "crystal_small_b2": [
-   1,
+   5,
    7
   ],
   "torch_a": [
-   2,
+   6,
    7
   ],
   "torch_b": [
-   3,
+   7,
    7
   ],
   "torch_c": [
-   4,
+   8,
    7
   ],
   "brazier_a": [
-   5,
+   9,
    7
   ],
   "brazier_b": [
-   6,
+   10,
    7
   ],
   "brazier_c": [
-   7,
+   11,
    7
   ],
   "banner_a_top": [
-   8,
+   12,
    7
   ],
   "banner_a_base": [
-   9,
+   13,
    7
   ],
   "banner_b_top": [
-   10,
+   14,
    7
   ],
   "banner_b_base": [
-   11,
+   15,
    7
   ],
   "chest_closed": [
-   12,
-   7
+   0,
+   8
   ],
   "chest_open": [
-   13,
-   7
+   1,
+   8
   ],
   "crate": [
-   14,
-   7
+   2,
+   8
   ],
   "barrel": [
-   15,
-   7
+   3,
+   8
   ],
   "pillar_top": [
-   0,
+   4,
    8
   ],
   "pillar_base": [
-   1,
+   5,
    8
   ],
   "pillar_broken": [
-   2,
+   6,
    8
   ],
   "stele_top": [
-   3,
+   7,
    8
   ],
   "stele_base": [
-   4,
+   8,
    8
   ],
   "stele_small": [
-   5,
+   9,
    8
   ],
   "fern_a": [
-   6,
+   10,
    8
   ],
   "fern_b": [
-   7,
+   11,
    8
   ],
   "fern_blue": [
-   8,
-   8
-  ],
-  "moss_clump_a": [
-   9,
-   8
-  ],
-  "moss_clump_b": [
-   10,
-   8
-  ],
-  "mushroom_0": [
-   11,
-   8
-  ],
-  "mushroom_1": [
    12,
    8
   ],
-  "mushroom_2": [
+  "moss_clump_a": [
    13,
    8
   ],
-  "mushroom_3": [
+  "moss_clump_b": [
    14,
    8
   ],
-  "glow_flower_0": [
+  "mushroom_0": [
    15,
    8
   ],
-  "glow_flower_1": [
+  "mushroom_1": [
    0,
    9
   ],
-  "glow_flower_2": [
+  "mushroom_2": [
    1,
    9
   ],
-  "waterfall_top": [
+  "mushroom_3": [
    2,
    9
   ],
-  "waterfall_mid_a": [
+  "glow_flower_0": [
    3,
    9
   ],
-  "waterfall_mid_b": [
+  "glow_flower_1": [
    4,
    9
   ],
-  "waterfall_mid_c": [
+  "glow_flower_2": [
    5,
    9
   ],
-  "waterfall_base_a": [
+  "waterfall_top": [
    6,
    9
   ],
-  "waterfall_base_b": [
+  "waterfall_mid_a": [
    7,
    9
   ],
-  "waterfall_base_c": [
+  "waterfall_mid_b": [
    8,
    9
   ],
-  "terrace_top": [
+  "waterfall_mid_c": [
    9,
    9
   ],
-  "spike_trap_off": [
+  "waterfall_base_a": [
    10,
    9
   ],
-  "spike_trap_on": [
+  "waterfall_base_b": [
    11,
+   9
+  ],
+  "waterfall_base_c": [
+   12,
+   9
+  ],
+  "terrace_top": [
+   13,
+   9
+  ],
+  "spike_trap_off": [
+   14,
+   9
+  ],
+  "spike_trap_on": [
+   15,
    9
   ]
  },
@@ -666,7 +682,7 @@
     1
    ]
   ],
-  "path_patch": [
+  "pond_inner": [
    [
     3,
     1
@@ -682,7 +698,9 @@
    [
     6,
     1
-   ],
+   ]
+  ],
+  "path_patch": [
    [
     7,
     1
@@ -701,27 +719,27 @@
    ],
    [
     11,
+    1
+   ],
+   [
+    12,
+    1
+   ],
+   [
+    13,
+    1
+   ],
+   [
+    14,
+    1
+   ],
+   [
+    15,
     1
    ]
   ],
   "moss_patch": [
    [
-    12,
-    1
-   ],
-   [
-    13,
-    1
-   ],
-   [
-    14,
-    1
-   ],
-   [
-    15,
-    1
-   ],
-   [
     0,
     2
    ],
@@ -740,9 +758,7 @@
    [
     4,
     2
-   ]
-  ],
-  "stone_floor": [
+   ],
    [
     5,
     2
@@ -758,7 +774,9 @@
    [
     8,
     2
-   ],
+   ]
+  ],
+  "stone_floor": [
    [
     9,
     2
@@ -778,9 +796,7 @@
    [
     13,
     2
-   ]
-  ],
-  "path_patch_inner": [
+   ],
    [
     14,
     2
@@ -798,7 +814,7 @@
     3
    ]
   ],
-  "moss_patch_inner": [
+  "path_patch_inner": [
    [
     2,
     3
@@ -813,6 +829,24 @@
    ],
    [
     5,
+    3
+   ]
+  ],
+  "moss_patch_inner": [
+   [
+    6,
+    3
+   ],
+   [
+    7,
+    3
+   ],
+   [
+    8,
+    3
+   ],
+   [
+    9,
     3
    ]
   ]

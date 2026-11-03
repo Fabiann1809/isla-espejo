@@ -133,6 +133,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Alturas reales (decidido: dos niveles, bajo y alto, con escaleras): capas físicas `block_low`/`block_high`, ayudante `Heights`, `StairZone`, nivel en jugador, enemigos y proyectiles; las salas planas (bosque) no cambian (`tests/test_heights.gd`)
 - [x] Tileset de ruinas y cuevas: perfil `data/tilesets/` dibujado a 16x16 con `tools/make_ruins_*_art.py` (suelo de losas, muros y columnas de roca, agua con orilla, cascadas, puentes, escaleras, cristales, antorchas, runas), con vista previa antes de usarlo
 - [x] Piezas de sala nuevas (`RuinProp`): terraza, alcoba (mini sala con su escalera), puente sobre el río, cascada, columnas, cristales, estelas, braseros, antorchas, estandartes y racimos de roca (`tests/test_ruin_props.gd`)
+- [x] Salas con forma de cueva irregular (`RuinShape`: plano en texto con roca, suelo, río, puente y cascada), ríos con curvas y pasillos de escalera con parapetos y antorchas (`tests/test_ruin_shape.gd`)
 - [x] Salas del escenario (pasadizos, agua, zonas oscuras): 10 diseños (inicio, jefe, 5 de combate de los que 2 oscuros, evento, recompensa y especial) con `tools/make_ruins_rooms.py`, y `data/scenarios/ruins.tres`
 - [x] Oscuridad por sala (capa de sombra con luces de cristales y antorchas) y animación sencilla (cascadas, llamas, cristales, destellos del agua), con sus valores e interruptores en `Tuning`
 - [x] Enemigos del escenario colocados (Bestia de la niebla, Sombra errante y Murciélago, con sus pesos en `ruins.tres`)

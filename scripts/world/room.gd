@@ -335,6 +335,7 @@ func _plant_rock_wall(rng: RandomNumberGenerator) -> void:
 	var top: Array[Vector2] = _on_wall(RockWall.feet_along(Vector2(0, front), Vector2(size.x, front), rng))
 	var shifted := Vector2(Tuning.ROCK_WALL_STEP / 2.0, 0)
 	top.append_array(_on_wall(RockWall.feet_along(Vector2(0, back) + shifted, Vector2(size.x, back), rng)))
+	top = _without_hidden(top)
 	var row := RockWall.baked_row(top, rng)
 	row.name = "TopRow"
 	rocks.add_child(row)
@@ -342,8 +343,17 @@ func _plant_rock_wall(rng: RandomNumberGenerator) -> void:
 	singles.append_array(RockWall.feet_along(Vector2(0, size.y - 1.0), Vector2(size.x, size.y - 1.0), rng))
 	for x in [TILE / 2.0, size.x - TILE / 2.0]:
 		singles.append_array(RockWall.feet_along(Vector2(x, TILE * 2.0), Vector2(x, size.y - TILE), rng))
-	for foot in _on_wall(singles):
+	for foot in _without_hidden(_on_wall(singles)):
 		rocks.add_child(RockWall.column(foot, rng))
+
+
+## Drops the feet of wall columns where the room's plan lets the rock lean on the wall (RuinShape).
+func _without_hidden(feet: Array[Vector2]) -> Array[Vector2]:
+	var shape := get_node_or_null("Shape") as RuinShape
+	if shape == null:
+		return feet
+	return feet.filter(func(foot: Vector2) -> bool:
+		return not shape.hides_wall_at(Vector2i(foot / TILE).clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)))
 
 
 ## The feet that stand on the wall (not in a door's gap).

@@ -105,6 +105,12 @@ func _initialize() -> void:
 			cells.append(_cell(cell))
 		profile.patterns[role] = cells
 		profile.patterns[StringName(pattern_name)] = cells
+	# Every pattern of the sheet is also kept under its own name (the river's inner corners...).
+	for pattern_name: String in sheet_patterns:
+		var cells: Array[Vector2i] = []
+		for cell in sheet_patterns[pattern_name]:
+			cells.append(_cell(cell))
+		profile.patterns[StringName(pattern_name)] = cells
 	if not missing.is_empty():
 		printerr("The ruins sheet lacks: %s" % [missing])
 		quit(1)

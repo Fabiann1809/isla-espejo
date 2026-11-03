@@ -349,14 +349,46 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 	if from_height == to_height:
 		return
 	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
-	var steps: StringName = &"stairs_steps" if dir == Vector2i.DOWN else &"stairs_steps_h"
+	var vertical := dir == Vector2i.DOWN
+	var steps: StringName = &"stairs_steps" if vertical else &"stairs_steps_h"
+	var tile := float(TileArt.TILE)
 	var stairs := Node2D.new()
 	stairs.name = "Stairs%d" % parent.get_child_count()
 	stairs.z_index = RoomTheme.FLOOR_Z
 	parent.add_child(stairs)
-	for cell_y in range(int(floor_rect.position.y), int(floor_rect.end.y), TileArt.TILE):
-		for cell_x in range(int(floor_rect.position.x), int(floor_rect.end.x), TileArt.TILE):
-			stairs.add_child(TileArt.sprite(steps, Vector2(cell_x, cell_y)))
+	# The staircase fills the corridor between two stone parapets (the outermost cells of its width).
+	var cells_x := int(floor_rect.size.x / tile)
+	var cells_y := int(floor_rect.size.y / tile)
+	for iy in cells_y:
+		for ix in cells_x:
+			var edge_first := ix == 0 if vertical else iy == 0
+			var edge_last := ix == cells_x - 1 if vertical else iy == cells_y - 1
+			var role := steps
+			if edge_first:
+				role = &"stairs_rail_l" if vertical else &"stairs_rail_t"
+			elif edge_last:
+				role = &"stairs_rail_r" if vertical else &"stairs_rail_b"
+			stairs.add_child(TileArt.sprite(role, floor_rect.position + Vector2(ix, iy) * tile))
+	# The parapets stop everybody and leave a staircase two cells wide.
+	var rail_rects: Array[Rect2] = []
+	if vertical:
+		rail_rects.append(Rect2(floor_rect.position, Vector2(tile, floor_rect.size.y)))
+		rail_rects.append(Rect2(floor_rect.position + Vector2(floor_rect.size.x - tile, 0), Vector2(tile, floor_rect.size.y)))
+	else:
+		rail_rects.append(Rect2(floor_rect.position, Vector2(floor_rect.size.x, tile)))
+		rail_rects.append(Rect2(floor_rect.position + Vector2(0, floor_rect.size.y - tile), Vector2(floor_rect.size.x, tile)))
+	WallBuilder.add_walls(parent, rail_rects, WallBuilder.WALL_COLOR, false)
+	# A torch on each parapet at the top of the stairs, so the way up is lit.
+	for rail in rail_rects:
+		var torch := RuinProp.new()
+		torch.kind = RuinProp.Kind.TORCH
+		var top: Vector2
+		if vertical:
+			top = Vector2(rail.position.x, floor_rect.position.y if uphill.y < 0.0 else floor_rect.end.y - tile)
+		else:
+			top = Vector2(floor_rect.position.x if uphill.x < 0.0 else floor_rect.end.x - tile, rail.position.y)
+		torch.position = top
+		parent.add_child(torch)
 	var zone := StairZone.new()
 	zone.direction = uphill
 	var shape := CollisionShape2D.new()
