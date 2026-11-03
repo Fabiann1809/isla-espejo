@@ -82,6 +82,10 @@ const ROCK_WALL_STEP := 11.0
 const ROCK_WALL_JITTER := 3.0
 const ROCK_WALL_BACK_ROW := 8.0
 const ROCK_WALL_TALL_CHANCE := 0.25
+## Share of the wall's columns that are snapped off, slim or fat (the rest are the plain and tall ones).
+const ROCK_WALL_BROKEN_CHANCE := 0.12
+const ROCK_WALL_THIN_CHANCE := 0.16
+const ROCK_WALL_FAT_CHANCE := 0.08
 ## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
 ## narrower than the picture, and its smallest and largest size (px).
 const PROP_FOOT_INSET := 2.0

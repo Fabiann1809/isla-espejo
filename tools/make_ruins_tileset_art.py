@@ -462,7 +462,7 @@ def inner_corners(area_img, mask_fn=None):
 
 
 # --- rock columns, boulders, walls ----------------------------------------------------------------------
-def rock_column(seed, height=32, moss=0.0, dark=False, lean=0):
+def rock_column(seed, height=32, moss=0.0, dark=False, lean=0, wide=None, broken=0, outlined=True):
     """A column of rock (the cliff 'pillars' of the concept sheet): a light rounded cap, a body of
     three or four vertical facets with cracks, a flared foot. 16 wide; `height` 32 gives a top tile
     and a base tile."""
@@ -470,7 +470,7 @@ def rock_column(seed, height=32, moss=0.0, dark=False, lean=0):
     img = blank(16, height)
     noise = value_noise(rng, 16, height, 3)
     cap_h = 10
-    wide = 7.2 + rng.uniform(-0.3, 0.3)
+    wide = (7.2 if wide is None else wide) + rng.uniform(-0.3, 0.3)
     mask = {}
     for y in range(height):
         if y < cap_h:
@@ -512,7 +512,23 @@ def rock_column(seed, height=32, moss=0.0, dark=False, lean=0):
             for x in range(16):
                 if (x, y) in mask and noise[y][(x + 5) % 16] > 1.0 - moss * (y - (height - 10)) / 9:
                     img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
-    return outline(img)
+    if broken:
+        # snapped off at `broken` px from the top: a jagged lit break and stones at its foot
+        cut = broken
+        for x in range(16):
+            top = cut + rng.choice((-2, -1, 0, 0, 1, 2))
+            for y in range(top):
+                img.putpixel((x, y), CLEAR)
+            if img.getpixel((x, top))[3]:
+                img.putpixel((x, top), FLOOR_HI)
+            if img.getpixel((x, top + 1))[3]:
+                img.putpixel((x, top + 1), shade(ROCK_HI, 0.8))
+        for _ in range(3):
+            sx, sy = rng.choice((rng.randrange(0, 3), rng.randrange(13, 16))), rng.randrange(height - 3, height)
+            for dx in (0, 1):
+                if not img.getpixel((min(15, sx + dx), sy))[3]:
+                    img.putpixel((min(15, sx + dx), sy), rng.choice((ROCK_4, ROCK_3)))
+    return outline(img) if outlined else img
 
 
 def stalagmite(seed, moss=False):
@@ -644,6 +660,96 @@ def terrace_side(side, seed=3):
                     c = JOINT
                 img.putpixel((x, y), shade(c, 1.0 + rng.uniform(-0.03, 0.03)))
     return img
+
+
+def _block(img, x0, x1, y0, y1, cap_rows):
+    """A chunky stone block: a lit top face of `cap_rows`, then a front lit on its left, dark on its
+    right, with a joint every five rows; outlined."""
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            u = (x - x0) / max(1, x1 - x0)
+            if y - y0 < cap_rows:
+                c = mix(FLOOR_HI, FLOOR_3, (y - y0) / max(1, cap_rows) * 0.8)
+                if y == y0:
+                    c = shade(FLOOR_HI, 1.1)
+            else:
+                c = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)[min(3, int(u * 4))]
+                c = shade(c, 0.95 - (y - y0) * 0.004)
+                if (y - y0 - cap_rows) % 5 == 4:
+                    c = shade(ROCK_2, 0.7)
+            img.putpixel((x, y), c)
+    for y in range(y0 - 1, y1 + 2):
+        for x in range(x0 - 1, x1 + 2):
+            inside = x0 <= x <= x1 and y0 <= y <= y1
+            if not inside and 0 <= x < T and 0 <= y < T:
+                if x0 - 1 <= x <= x1 + 1 and y0 - 1 <= y <= y1 + 1 and img.getpixel((x, y))[3] == 0 or (
+                        y == y1 + 1 and not inside):
+                    img.putpixel((x, y), OUTLINE)
+    return img
+
+
+def terrace_post(side, lip):
+    """The corner post of a platform's front: its cap on the lip row, its body on the face row."""
+    base = wall_face(7 if lip else 8, top_lip=lip)
+    img = base.copy()
+    _block(img, 0, 11, 0 if lip else 0, 15, 6 if lip else 0)
+    if not lip:
+        for y in range(16):
+            for x in range(0, 12):
+                if y % 5 == 4:
+                    img.putpixel((x, y), shade(ROCK_2, 0.7))
+        for y in range(16):
+            img.putpixel((0, y), OUTLINE)
+            img.putpixel((11, y), shade(ROCK_D, 0.9))
+    return img if side == "l" else img.transpose(Image.FLIP_LEFT_RIGHT)
+
+
+def terrace_support(lip):
+    """A slim pillar standing in the middle of the face under a platform (a post on the lip row)."""
+    img = wall_face(9 if lip else 10, top_lip=lip)
+    _block(img, 5, 10, 1 if lip else 0, 15, 5 if lip else 0)
+    if not lip:
+        for y in range(16):
+            img.putpixel((4, y), OUTLINE)
+            img.putpixel((11, y), shade(ROCK_D, 0.9))
+    return img
+
+
+def wall_arch():
+    """The face of a platform with a dark arched recess (the hollow under it)."""
+    img = wall_face(11)
+    for y in range(2, 16):
+        for x in range(3, 13):
+            inside = y >= 5 or ((x - 7.5) ** 2 / 20.0 + (y - 5) ** 2 / 9.0 <= 1.0)
+            if inside:
+                img.putpixel((x, y), OUTLINE if y == 2 or x in (3, 12) else shade(ROCK_D, 0.8 if y > 8 else 1.0))
+    for x in range(4, 12):
+        img.putpixel((x, 3 if 5 <= x <= 10 else 4), shade(ROCK_HI, 0.55))
+    return img
+
+
+def shadow_tiles():
+    """Soft shadows cast on the floor by a platform: below it (s), to its sides (w, e), and at its two
+    lower corners (sw, se); the darkest edge is the one that touches the platform."""
+    color = (4, 6, 22)
+    strength = 120
+
+    def tile(fn):
+        img = blank()
+        for y in range(T):
+            for x in range(T):
+                a = max(0.0, min(1.0, fn(x + 0.5, y + 0.5)))
+                if a > 0:
+                    img.putpixel((x, y), color + (int(strength * a * a),))
+        return img
+
+    return [
+        ("shadow_s", tile(lambda x, y: 1.0 - y / T)),
+        ("shadow_w", tile(lambda x, y: x / T)),
+        ("shadow_e", tile(lambda x, y: 1.0 - x / T)),
+        ("shadow_sw", tile(lambda x, y: 1.0 - math.hypot(T - x, y) / T)),
+        ("shadow_se", tile(lambda x, y: 1.0 - math.hypot(x, y) / T)),
+    ]
 
 
 # --- stairs and bridges -------------------------------------------------------------------------------------
@@ -1241,6 +1347,12 @@ def build_tiles():
         add("torch_%s" % "abc"[f], torch_stand(f))
     for f in range(3):
         add("brazier_%s" % "abc"[f], brazier(f))
+    # columns of other widths and states (RockWall picks them now and then)
+    for i, seed in enumerate((81, 82)):
+        add_tall("column_thin_%s" % "ab"[i], rock_column(seed, wide=4.6, moss=0.3 * i))
+    add_tall("column_fat_a", rock_column(83, wide=8.0))
+    for i, (seed, cut) in enumerate(((84, 8), (85, 13))):
+        add_tall("column_broken_%s" % "ab"[i], rock_column(seed, broken=cut, moss=0.4 * i))
     add_tall("banner_a", banner())
     add_tall("banner_b", banner(torn=True))
     add("chest_closed", chest())
@@ -1273,6 +1385,16 @@ def build_tiles():
 
     # floor variety: tone shifts, cracks, big flagstones, holes, fallen stones (kept at the end of the
     # sheet so the coordinates of every older tile stay the same)
+    add("terrace_corner_l", over(terrace_top(), terrace_side("l")))
+    add("terrace_corner_r", over(terrace_top(), terrace_side("r")))
+    for side in "lr":
+        add("terrace_post_%s_lip" % side, terrace_post(side, True))
+        add("terrace_post_%s_face" % side, terrace_post(side, False))
+    add("wall_support_lip", terrace_support(True))
+    add("wall_support_face", terrace_support(False))
+    add("wall_arch_face", wall_arch())
+    for name, img in shadow_tiles():
+        add(name, img)
     add("floor_dim_a", floor_tile(51, tones=(FLOOR_D, FLOOR_1, FLOOR_1)))
     add("floor_dim_b", floor_tile(52, tones=(FLOOR_D, FLOOR_1, FLOOR_2), wear=0.3))
     add("floor_pale_a", floor_tile(53, tones=(FLOOR_2, FLOOR_3, FLOOR_HI)))

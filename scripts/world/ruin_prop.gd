@@ -236,10 +236,15 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 	var h := size_tiles.y
 	var tile := float(TileArt.TILE)
 	var stairs_x := w / 2 - 1
+	_terrace_shadows(walled, w, h, stairs_x)
 	for y in h - 2:
 		for x in w:
 			var surface: StringName = &"floor_worn"
-			if not walled and y == 0:
+			if not walled and y == 0 and x == 0:
+				surface = &"terrace_corner_l"
+			elif not walled and y == 0 and x == w - 1:
+				surface = &"terrace_corner_r"
+			elif not walled and y == 0:
 				surface = &"terrace_top"
 			elif not walled and x == 0:
 				surface = &"terrace_side_l"
@@ -259,6 +264,15 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 		elif near_stairs:
 			lip = &"stairs_steps"
 			face = &"stairs_steps"
+		elif x == 0 or x == w - 1:
+			var side := "l" if x == 0 else "r"
+			lip = StringName("terrace_post_%s_lip" % side)
+			face = StringName("terrace_post_%s_face" % side)
+		elif x % 4 == 2:
+			lip = &"wall_support_lip"
+			face = &"wall_support_face"
+		elif x % 4 == 0 and rng.randf() < 0.7:
+			face = &"wall_arch_face"
 		add_child(TileArt.sprite(lip, Vector2(x, h - 2) * tile))
 		add_child(TileArt.sprite(face, Vector2(x, h - 1) * tile))
 	var size := Vector2(w, h) * tile
@@ -289,6 +303,22 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 	zone.add_child(shape)
 	zone.position = Vector2(stairs_x * tile + tile, face_top + tile)
 	add_child(zone)
+
+
+## The soft shadow a platform throws on the floor: under its face (not under the stairs, where Nico walks),
+## along its open sides and at its two lower corners. Drawn first, so it lies under the platform's pieces.
+func _terrace_shadows(walled: bool, w: int, h: int, stairs_x: int) -> void:
+	var tile := float(TileArt.TILE)
+	for x in w:
+		if x < stairs_x - 1 or x > stairs_x + 2:
+			add_child(TileArt.sprite(&"shadow_s", Vector2(x, h) * tile))
+	add_child(TileArt.sprite(&"shadow_sw", Vector2(-1, h) * tile))
+	add_child(TileArt.sprite(&"shadow_se", Vector2(w, h) * tile))
+	if walled:
+		return
+	for y in range(1, h):
+		add_child(TileArt.sprite(&"shadow_w", Vector2(-1, y) * tile))
+		add_child(TileArt.sprite(&"shadow_e", Vector2(w, y) * tile))
 
 
 ## Rock columns on the back and the sides of an alcove, standing on its border (solid for everybody).

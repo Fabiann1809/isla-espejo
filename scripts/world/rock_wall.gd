@@ -8,6 +8,10 @@ extends RefCounted
 ## the taller ones with a `<name>_mid` (48 px).
 const COLUMNS: Array[StringName] = [&"column_rock_a", &"column_rock_b", &"column_rock_c", &"column_rock_d"]
 const TALL_COLUMNS: Array[StringName] = [&"column_tall_a", &"column_tall_b"]
+## Now and then a column of another width or state, so the walls have no rhythm.
+const THIN_COLUMNS: Array[StringName] = [&"column_thin_a", &"column_thin_b"]
+const FAT_COLUMNS: Array[StringName] = [&"column_fat_a"]
+const BROKEN_COLUMNS: Array[StringName] = [&"column_broken_a", &"column_broken_b"]
 
 ## Column name -> its painted picture, per profile (a column is two or three tiles put together).
 static var _images := {}
@@ -35,6 +39,15 @@ static func image(column: StringName) -> Image:
 
 
 static func pick(rng: RandomNumberGenerator) -> StringName:
+	var roll := rng.randf()
+	var profile_has := TileArt.profile().tiles.has(&"column_thin_a_top")
+	if profile_has:
+		if roll < Tuning.ROCK_WALL_BROKEN_CHANCE:
+			return BROKEN_COLUMNS[rng.randi_range(0, BROKEN_COLUMNS.size() - 1)]
+		if roll < Tuning.ROCK_WALL_BROKEN_CHANCE + Tuning.ROCK_WALL_THIN_CHANCE:
+			return THIN_COLUMNS[rng.randi_range(0, THIN_COLUMNS.size() - 1)]
+		if roll < Tuning.ROCK_WALL_BROKEN_CHANCE + Tuning.ROCK_WALL_THIN_CHANCE + Tuning.ROCK_WALL_FAT_CHANCE:
+			return FAT_COLUMNS[0]
 	if rng.randf() < Tuning.ROCK_WALL_TALL_CHANCE:
 		return TALL_COLUMNS[rng.randi_range(0, TALL_COLUMNS.size() - 1)]
 	return COLUMNS[rng.randi_range(0, COLUMNS.size() - 1)]

@@ -498,261 +498,357 @@
    11,
    7
   ],
-  "banner_a_top": [
+  "column_thin_a_top": [
    12,
    7
   ],
-  "banner_a_base": [
+  "column_thin_a_base": [
    13,
    7
   ],
-  "banner_b_top": [
+  "column_thin_b_top": [
    14,
    7
   ],
-  "banner_b_base": [
+  "column_thin_b_base": [
    15,
    7
   ],
-  "chest_closed": [
+  "column_fat_a_top": [
    0,
+   8
+  ],
+  "column_fat_a_base": [
+   1,
+   8
+  ],
+  "column_broken_a_top": [
+   2,
+   8
+  ],
+  "column_broken_a_base": [
+   3,
+   8
+  ],
+  "column_broken_b_top": [
+   4,
+   8
+  ],
+  "column_broken_b_base": [
+   5,
+   8
+  ],
+  "banner_a_top": [
+   6,
+   8
+  ],
+  "banner_a_base": [
+   7,
+   8
+  ],
+  "banner_b_top": [
+   8,
+   8
+  ],
+  "banner_b_base": [
+   9,
+   8
+  ],
+  "chest_closed": [
+   10,
    8
   ],
   "chest_open": [
-   1,
+   11,
    8
   ],
   "crate": [
-   2,
+   12,
    8
   ],
   "barrel": [
-   3,
+   13,
    8
   ],
   "pillar_top": [
-   4,
+   14,
    8
   ],
   "pillar_base": [
-   5,
+   15,
    8
   ],
   "pillar_broken": [
-   6,
-   8
+   0,
+   9
   ],
   "stele_top": [
-   7,
-   8
+   1,
+   9
   ],
   "stele_base": [
-   8,
-   8
+   2,
+   9
   ],
   "stele_small": [
-   9,
-   8
+   3,
+   9
   ],
   "fern_a": [
-   10,
-   8
+   4,
+   9
   ],
   "fern_b": [
-   11,
-   8
+   5,
+   9
   ],
   "fern_blue": [
-   12,
-   8
+   6,
+   9
   ],
   "moss_clump_a": [
-   13,
-   8
+   7,
+   9
   ],
   "moss_clump_b": [
-   14,
-   8
+   8,
+   9
   ],
   "mushroom_0": [
-   15,
-   8
+   9,
+   9
   ],
   "mushroom_1": [
-   0,
+   10,
    9
   ],
   "mushroom_2": [
-   1,
+   11,
    9
   ],
   "mushroom_3": [
-   2,
+   12,
    9
   ],
   "glow_flower_0": [
-   3,
+   13,
    9
   ],
   "glow_flower_1": [
-   4,
+   14,
    9
   ],
   "glow_flower_2": [
-   5,
+   15,
    9
   ],
   "waterfall_top": [
-   6,
-   9
+   0,
+   10
   ],
   "waterfall_mid_a": [
-   7,
-   9
+   1,
+   10
   ],
   "waterfall_mid_b": [
-   8,
-   9
+   2,
+   10
   ],
   "waterfall_mid_c": [
-   9,
-   9
+   3,
+   10
   ],
   "waterfall_base_a": [
-   10,
-   9
+   4,
+   10
   ],
   "waterfall_base_b": [
-   11,
-   9
+   5,
+   10
   ],
   "waterfall_base_c": [
-   12,
-   9
+   6,
+   10
   ],
   "terrace_top": [
-   13,
-   9
-  ],
-  "spike_trap_off": [
-   14,
-   9
-  ],
-  "spike_trap_on": [
-   15,
-   9
-  ],
-  "floor_dim_a": [
-   0,
-   10
-  ],
-  "floor_dim_b": [
-   1,
-   10
-  ],
-  "floor_pale_a": [
-   2,
-   10
-  ],
-  "floor_pale_b": [
-   3,
-   10
-  ],
-  "floor_cracked_a": [
-   4,
-   10
-  ],
-  "floor_cracked_b": [
-   5,
-   10
-  ],
-  "floor_cracked_c": [
-   6,
-   10
-  ],
-  "floor_moss_b": [
    7,
    10
   ],
-  "floor_moss_c": [
+  "spike_trap_off": [
    8,
    10
   ],
-  "floor_broken_a": [
+  "spike_trap_on": [
    9,
    10
   ],
-  "floor_broken_b": [
+  "terrace_corner_l": [
    10,
    10
   ],
-  "floor_broken_c": [
+  "terrace_corner_r": [
    11,
    10
   ],
-  "floor_debris_a": [
+  "terrace_post_l_lip": [
    12,
    10
   ],
-  "floor_debris_b": [
+  "terrace_post_l_face": [
    13,
    10
   ],
-  "floor_rubbled_a": [
+  "terrace_post_r_lip": [
    14,
    10
   ],
-  "floor_rubbled_b": [
+  "terrace_post_r_face": [
    15,
    10
   ],
-  "floor_slab_a_tl": [
+  "wall_support_lip": [
    0,
    11
   ],
-  "floor_slab_a_tr": [
+  "wall_support_face": [
    1,
    11
   ],
-  "floor_slab_a_bl": [
+  "wall_arch_face": [
    2,
    11
   ],
-  "floor_slab_a_br": [
+  "shadow_s": [
    3,
    11
   ],
-  "floor_slab_b_tl": [
+  "shadow_w": [
    4,
    11
   ],
-  "floor_slab_b_tr": [
+  "shadow_e": [
    5,
    11
   ],
-  "floor_slab_b_bl": [
+  "shadow_sw": [
    6,
    11
   ],
-  "floor_slab_b_br": [
+  "shadow_se": [
    7,
    11
   ],
-  "floor_slab_c_tl": [
+  "floor_dim_a": [
    8,
    11
   ],
-  "floor_slab_c_tr": [
+  "floor_dim_b": [
    9,
    11
   ],
-  "floor_slab_c_bl": [
+  "floor_pale_a": [
    10,
    11
   ],
-  "floor_slab_c_br": [
+  "floor_pale_b": [
    11,
    11
+  ],
+  "floor_cracked_a": [
+   12,
+   11
+  ],
+  "floor_cracked_b": [
+   13,
+   11
+  ],
+  "floor_cracked_c": [
+   14,
+   11
+  ],
+  "floor_moss_b": [
+   15,
+   11
+  ],
+  "floor_moss_c": [
+   0,
+   12
+  ],
+  "floor_broken_a": [
+   1,
+   12
+  ],
+  "floor_broken_b": [
+   2,
+   12
+  ],
+  "floor_broken_c": [
+   3,
+   12
+  ],
+  "floor_debris_a": [
+   4,
+   12
+  ],
+  "floor_debris_b": [
+   5,
+   12
+  ],
+  "floor_rubbled_a": [
+   6,
+   12
+  ],
+  "floor_rubbled_b": [
+   7,
+   12
+  ],
+  "floor_slab_a_tl": [
+   8,
+   12
+  ],
+  "floor_slab_a_tr": [
+   9,
+   12
+  ],
+  "floor_slab_a_bl": [
+   10,
+   12
+  ],
+  "floor_slab_a_br": [
+   11,
+   12
+  ],
+  "floor_slab_b_tl": [
+   12,
+   12
+  ],
+  "floor_slab_b_tr": [
+   13,
+   12
+  ],
+  "floor_slab_b_bl": [
+   14,
+   12
+  ],
+  "floor_slab_b_br": [
+   15,
+   12
+  ],
+  "floor_slab_c_tl": [
+   0,
+   13
+  ],
+  "floor_slab_c_tr": [
+   1,
+   13
+  ],
+  "floor_slab_c_bl": [
+   2,
+   13
+  ],
+  "floor_slab_c_br": [
+   3,
+   13
   ]
  },
  "patterns": {
