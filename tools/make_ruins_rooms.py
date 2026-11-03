@@ -62,6 +62,7 @@ class Room:
         self.spawns = {}
         self.player_spawn = None
         self.reserved = set()   # cells that must stay floor (lanes, stairs fronts)
+        self.nooks = set()      # cells of the optional side spaces (no enemy spawns there)
         self.lanes()
 
     # --- the plan ------------------------------------------------------------------------------------------------
@@ -128,6 +129,81 @@ class Room:
                     elif self.g[y][x] == "#" and rock <= 2 and self.inside(x, y):
                         nxt[y][x] = "."
             self.g = nxt
+
+    def ridge(self, x0, y0, x1, y1, thick=2.0, gaps=()):
+        """A wall of rock along a line, two cells thick and a little crooked, with a gap of `width` cells
+        centered on each (x, y) in `gaps` (the lanes are gaps too: reserved cells are never filled).
+        It splits a hall into a main way and a side band, with passages of different widths."""
+        steps = int(max(abs(x1 - x0), abs(y1 - y0))) + 1
+        wobble = 0.0
+        for i in range(steps + 1):
+            t = i / max(1, steps)
+            x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+            wobble = max(-0.9, min(0.9, wobble + self.rng.uniform(-0.45, 0.45)))
+            if abs(x1 - x0) >= abs(y1 - y0):
+                y += wobble
+            else:
+                x += wobble
+            if any(abs(x - gx) <= gw / 2.0 and abs(y - gy) <= gw / 2.0 for gx, gy, gw in gaps):
+                continue
+            self.blob(x, y, thick / 2.0 + 0.45, thick / 2.0 + 0.45, rough=0.15)
+
+    def nook(self, kind=None, radius=1.8, reach=(3, 7)):
+        """An optional side space: a small pocket carved into a mass of rock, joined to the room by a
+        neck two cells wide, with a prop at its far end. Done after smooth() so it keeps its shape."""
+        best = self._nook_spots(radius, reach)
+        if not best:
+            # no mass of rock big enough: heap one up in a corner that holds no platform, then look again
+            corners = [(5, 4), (24, 4), (5, 13), (24, 13)]
+            self.rng.shuffle(corners)
+            for cx, cy in corners:
+                if any(p[0] in PLATFORMS and p[1] - 6 <= cx <= p[1] + p[3][0] + 6 and p[2] - 5 <= cy <= p[2] + p[3][1] + 5 for p in self.props):
+                    continue
+                if any(self.g[cy + dy][cx + dx] in "~=rw" for dx in range(-6, 7) for dy in range(-5, 6) if 0 <= cy + dy < ROWS and 0 <= cx + dx < COLUMNS):
+                    continue
+                saved = [row[:] for row in self.g]
+                self.blob(cx, cy, 5.6, 4.6, char="#", rough=0.15)
+                best = self._nook_spots(radius, reach)
+                if best:
+                    break
+                self.g = saved
+        if not best:
+            return False
+        x, y, near = self.rng.choice(best)
+        self._carve_nook(x, y, near, radius, kind)
+        return True
+
+    def _nook_spots(self, radius, reach):
+        floor = self.cells()
+        best = []
+        for y in range(3, ROWS - 3):
+            for x in range(3, COLUMNS - 3):
+                span = int(radius + 1)
+                box = [(x + dx, y + dy) for dx in range(-span, span + 1) for dy in range(-span, span + 1)]
+                if not all(0 <= bx < COLUMNS and 0 <= by < ROWS and self.g[by][bx] == "#" and (bx, by) not in self.reserved for bx, by in box):
+                    continue
+                near = min(floor, key=lambda c: math.hypot(c[0] - x, c[1] - y))
+                dist = math.hypot(near[0] - x, near[1] - y)
+                if reach[0] + span <= dist <= reach[1] + span and (near[0], near[1]) not in self.reserved:
+                    best.append((x, y, near))
+        return best
+
+    def _carve_nook(self, x, y, near, radius, kind):
+        self.blob(x, y, radius, radius, char=".", only_on="#", rough=0.2)
+        steps = int(math.hypot(near[0] - x, near[1] - y)) + 1
+        for i in range(steps + 1):
+            t = i / steps
+            cx, cy = round(x + (near[0] - x) * t), round(y + (near[1] - y) * t)
+            for ox, oy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+                tx, ty = cx + ox, cy + oy
+                if self.inside(tx, ty) and self.g[ty][tx] == "#":
+                    self.g[ty][tx] = "."
+        pocket = {(cx, cy) for cx in range(x - 3, x + 4) for cy in range(y - 3, y + 4)
+                  if self.inside(cx, cy) and self.g[cy][cx] == "." and math.hypot(cx - x, cy - y) <= radius + 1.2}
+        self.nooks |= pocket
+        if kind is not None:
+            far = max(pocket, key=lambda c: math.hypot(c[0] - near[0], c[1] - near[1]))
+            self.put_near(kind, far, radius=1)
 
     def walkable(self, x, y):
         return self.g[y][x] in ".="
@@ -278,9 +354,9 @@ class Room:
 
     def spawn_points(self, count, avoid_edge=2):
         """Enemy spots spread over the room (farthest point first), away from rock and water."""
-        candidates = [(x, y) for x, y in self.cells() if not self.near(x, y, "#~wr=", avoid_edge) and (x, y) not in self.occupied()]
+        candidates = [(x, y) for x, y in self.cells() if not self.near(x, y, "#~wr=", avoid_edge) and (x, y) not in self.occupied() and (x, y) not in self.nooks]
         if not candidates:
-            candidates = [(x, y) for x, y in self.cells() if (x, y) not in self.occupied()]
+            candidates = [(x, y) for x, y in self.cells() if (x, y) not in self.occupied() and (x, y) not in self.nooks]
         chosen = [self.rng.choice(candidates)]
         while len(chosen) < count and len(chosen) < len(candidates):
             best = max(candidates, key=lambda c: min(math.hypot(c[0] - o[0], c[1] - o[1]) for o in chosen))
@@ -382,6 +458,8 @@ r = Room("start", "RuinsStart")
 r.edge_blobs(10)
 r.islands([(6, 5), (23, 5), (6, 12), (23, 12)])
 r.smooth()
+r.ridge(3, 14, 26, 14, gaps=[(21, 14, 2)])
+r.nook(CRATE)
 r.connect()
 r.player_spawn = (240, 144)
 lit(r, 4, 3)
@@ -416,6 +494,7 @@ r.river(6.5, 0.4)
 r.river(23.5, 2.6)
 r.smooth(1)
 r.thin_water()
+r.nook(BARREL)
 r.connect()
 lit(r, 4, 4)
 r.scatter(STALAGMITE, 4, near_rock=False, min_dist=5)
@@ -443,6 +522,7 @@ r.islands([(14.5, 13.5)], radius=(1.0, 1.6))
 r.platform(TERRACE, 2, 2, (10, 5))
 r.platform(TERRACE, 18, 2, (10, 5))
 r.smooth(1)
+r.nook(CRYSTAL)
 r.connect()
 lit(r, 3, 2, 1)
 r.scatter(PILLAR, 2, near_rock=False, min_dist=8, region=(2, 11, 27, 16))
@@ -456,6 +536,8 @@ r = Room("plateau", "RuinsPlateau", raised=True)
 r.edge_blobs(8, size=(1.8, 3.6))
 r.islands([(8, 5), (21, 5), (8, 12), (21, 12)], radius=(1.0, 1.8))
 r.smooth()
+r.ridge(10, 2, 10, 16, gaps=[(10, 5, 2), (10, 13, 3)])
+r.nook(BRAZIER)
 r.connect()
 r.scatter(PILLAR, 4, near_rock=False, min_dist=6)
 r.scatter(BRAZIER, 4, near_rock=False, min_dist=7)
@@ -481,6 +563,7 @@ for fall_x, pool in ((4, (5.0, 7.0)), (24, (25.0, 7.0))):
             r.g[4][x] = "~"
 r.smooth(1)
 r.thin_water()
+r.nook(CRATE)
 r.connect()
 lit(r, 4, 3)
 r.scatter(BOULDER, 3, near_rock=False, min_dist=5)
@@ -494,6 +577,7 @@ r = Room("event", "RuinsEvent")
 r.edge_blobs(8, size=(1.8, 3.6))
 r.islands([(7, 5), (23, 13)], radius=(1.0, 1.8))
 r.smooth()
+r.nook(BARREL)
 r.connect()
 r.scatter(BRAZIER, 2, near_rock=False, min_dist=7)
 lit(r, 2, 3)
@@ -510,6 +594,7 @@ r = Room("reward", "RuinsReward")
 r.edge_blobs(10, size=(2.0, 4.0))
 r.platform(ALCOVE, 2, 2, (8, 5))
 r.smooth(1)
+r.nook(CRYSTAL)
 r.connect()
 lit(r, 3, 2, 1)
 r.scatter(PILLAR, 1, near_rock=False, min_dist=8, region=(18, 2, 27, 6))
@@ -521,6 +606,8 @@ r.finish()
 r = Room("special", "RuinsSpecial")
 r.edge_blobs(10, size=(2.0, 4.2))
 r.smooth()
+r.ridge(3, 3, 26, 3, gaps=[(8, 3, 2)])
+r.nook(STELE)
 r.connect()
 for wanted in ((8, 4), (21, 4), (8, 12), (21, 12)):
     r.put_near(CRYSTAL, wanted, radius=4)

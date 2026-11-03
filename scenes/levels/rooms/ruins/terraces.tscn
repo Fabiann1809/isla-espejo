@@ -40,12 +40,12 @@ kind = 13
 size_tiles = Vector2i(10, 5)
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(16, 240)
+position = Vector2(48, 240)
 script = ExtResource("2")
 kind = 4
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(384, 240)
+position = Vector2(448, 208)
 script = ExtResource("2")
 kind = 4
 
@@ -55,46 +55,46 @@ script = ExtResource("2")
 kind = 4
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(352, 208)
+position = Vector2(304, 192)
 script = ExtResource("2")
 kind = 7
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(448, 240)
+position = Vector2(384, 256)
 script = ExtResource("2")
 kind = 7
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(144, 208)
+position = Vector2(144, 224)
 script = ExtResource("2")
 kind = 6
 
 [node name="Prop9" type="Node2D" parent="."]
-position = Vector2(80, 208)
+position = Vector2(368, 176)
 script = ExtResource("2")
 kind = 3
 
 [node name="Prop10" type="Node2D" parent="."]
-position = Vector2(384, 192)
+position = Vector2(80, 192)
 script = ExtResource("2")
 kind = 3
 
 [node name="EnemySpawns" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(248, 72)
+position = Vector2(264, 72)
 
 [node name="P2" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(104, 232)
+position = Vector2(88, 232)
 
 [node name="P3" type="Marker2D" parent="EnemySpawns"]
 position = Vector2(408, 200)
 
 [node name="P4" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(232, 200)
+position = Vector2(232, 216)
 
 [node name="P5" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(72, 120)
+position = Vector2(136, 120)
 
 [node name="P6" type="Marker2D" parent="EnemySpawns"]
 position = Vector2(344, 120)
