@@ -12,6 +12,9 @@ enum RoomType { START, COMBAT, EVENT, REWARD, SPECIAL, BOSS }
 @export var weight := 1.0
 ## Free-form labels the AI director can weight (e.g. "ambush", "watch").
 @export var tags: Array[StringName] = []
+## Height level of the whole room (0 = ground, 1 = raised; see Heights). A corridor between rooms of
+## different height is a staircase. A raised room has no water, terraces or alcoves of its own.
+@export_range(0, 1) var height := 0
 
 @export_group("Enemies")
 @export var min_enemies := 2

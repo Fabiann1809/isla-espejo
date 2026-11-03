@@ -33,6 +33,8 @@ var open_doors: Array[Vector2i] = []
 var visited := false
 var player_inside := false
 var enemies_alive := 0
+## Height level of the room (see Heights): its enemies are born on it.
+var height := Heights.LOW
 
 var _had_enemies := false
 
@@ -41,6 +43,7 @@ var _had_enemies := false
 func setup(room_data: RoomData, doors: Array[Vector2i]) -> void:
 	data = room_data
 	open_doors = doors
+	height = room_data.height if room_data != null else Heights.LOW
 
 
 func _ready() -> void:

@@ -327,6 +327,7 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 
 	if scenario.theme != null:
 		_paint_corridor(parent, floor_rect, walls)
+		_dress_stairs(parent, floor_rect, coord, dir)
 		return
 	var floor_visual := ColorRect.new()
 	floor_visual.color = CORRIDOR_COLOR
@@ -336,6 +337,35 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 	floor_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(floor_visual)
 	WallBuilder.add_walls(parent, walls)
+
+
+## A corridor between rooms of different height is a staircase: steps on its floor and a StairZone
+## that changes the level of whoever crosses it, in the direction from the low room to the high one.
+func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector2i) -> void:
+	if scenario.theme.wall_style != RoomTheme.WallStyle.ROCKS:
+		return
+	var from_height := layout.get_cell(coord).room_data.height
+	var to_height := layout.get_cell(coord + dir).room_data.height
+	if from_height == to_height:
+		return
+	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
+	var steps: StringName = &"stairs_steps" if dir == Vector2i.DOWN else &"stairs_steps_h"
+	var stairs := Node2D.new()
+	stairs.name = "Stairs%d" % parent.get_child_count()
+	stairs.z_index = RoomTheme.FLOOR_Z
+	parent.add_child(stairs)
+	for cell_y in range(int(floor_rect.position.y), int(floor_rect.end.y), TileArt.TILE):
+		for cell_x in range(int(floor_rect.position.x), int(floor_rect.end.x), TileArt.TILE):
+			stairs.add_child(TileArt.sprite(steps, Vector2(cell_x, cell_y)))
+	var zone := StairZone.new()
+	zone.direction = uphill
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = floor_rect.size
+	shape.shape = rectangle
+	zone.add_child(shape)
+	zone.position = floor_rect.get_center()
+	parent.add_child(zone)
 
 
 ## A themed corridor: path tiles on the floor and the border tile (trees) along its walls.
