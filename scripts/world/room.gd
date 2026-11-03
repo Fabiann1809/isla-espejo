@@ -32,6 +32,7 @@ var theme: RoomTheme
 var open_doors: Array[Vector2i] = []
 var visited := false
 var player_inside := false
+var _darkness_tween: Tween
 var enemies_alive := 0
 ## Height level of the room (see Heights): its enemies are born on it.
 var height := Heights.LOW
@@ -456,6 +457,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	_set_player_light(body, true)
+	_fade_darkness(true)
 	player_inside = true
 	visited = true
 	Events.room_entered.emit(self)
@@ -465,6 +467,7 @@ func _on_body_exited(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	_set_player_light(body, false)
+	_fade_darkness(false)
 	player_inside = false
 	Events.room_exited.emit(self)
 
@@ -480,7 +483,20 @@ func _build_darkness() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shade.z_as_relative = false
 	shade.z_index = Tuning.RUIN_DARK_Z
+	# Seen from outside the room looks lit; the shade grows when Nico steps in (see _fade_darkness).
+	shade.modulate.a = 0.0
 	add_child(shade)
+
+
+## Fades the shade in while the player is inside and out when he leaves, so no dark room clashes with the lit ones.
+func _fade_darkness(inside: bool) -> void:
+	var shade := get_node_or_null("Darkness")
+	if shade == null:
+		return
+	if _darkness_tween != null:
+		_darkness_tween.kill()
+	_darkness_tween = create_tween()
+	_darkness_tween.tween_property(shade, "modulate:a", 1.0 if inside else 0.0, Tuning.RUIN_DARK_FADE_SECONDS)
 
 
 ## While the player is in a dark room a soft glow follows him, so he is never lost in the shade.
@@ -497,3 +513,5 @@ func _set_player_light(player: Node, on: bool) -> void:
 		glow.z_as_relative = false
 		glow.z_index = Tuning.RUIN_LIGHT_Z
 		player.add_child(glow)
+		glow.modulate.a = 0.0
+		glow.create_tween().tween_property(glow, "modulate:a", Tuning.RUIN_PLAYER_LIGHT.a, Tuning.RUIN_DARK_FADE_SECONDS)

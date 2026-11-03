@@ -149,6 +149,8 @@ const RUIN_LIGHT_Z := 5
 const RUIN_DARK_SHADE := Color(0.02, 0.04, 0.12, 0.52)
 const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
 const RUIN_PLAYER_LIGHT_RADIUS := 64.0
+## Seconds the shade (and the glow) take to grow when Nico enters a dark room and to fade when he leaves.
+const RUIN_DARK_FADE_SECONDS := 1.6
 
 # --- Special rooms and exits ---
 ## Decoration of the boss arena, the reward glade and the event camp (RoomDressing). False = off.
