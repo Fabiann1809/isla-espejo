@@ -14,7 +14,7 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
@@ -24,7 +24,8 @@ enum Kind {
 @export var horizontal := true
 
 ## Props that are part of the ground: drawn with the floor, never over an actor.
-const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER, Kind.SPIKES]
+const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER, Kind.SPIKES,
+		Kind.ARMOR, Kind.SYMBOL]
 const WORLD_BITS := 1
 const WATER_BITS := 1 << (Heights.WATER_LAYER - 1)
 ## Water stops bodies a little inside its picture, so the shore is walkable.
@@ -45,6 +46,7 @@ const FOOTS := {
 	Kind.TORCH: Rect2(5, 11, 6, 4),
 	Kind.CRATE: Rect2(2, 5, 12, 10),
 	Kind.BARREL: Rect2(3, 4, 10, 10),
+	Kind.VASE: Rect2(4, 5, 8, 9),
 }
 const TALL_FOOT := Rect2(3, 22, 10, 8)
 
@@ -97,6 +99,14 @@ func _build() -> void:
 			_river()
 		Kind.SPIKES:
 			_spikes()
+		Kind.STATUE:
+			_tall([&"statue_a", &"statue_b"][rng.randi_range(0, 1)])
+		Kind.VASE:
+			add_child(TileArt.sprite([&"vase_a", &"vase_b", &"vase_c"][rng.randi_range(0, 2)]))
+		Kind.ARMOR:
+			add_child(TileArt.sprite([&"armor_fallen_a", &"armor_fallen_b"][rng.randi_range(0, 1)]))
+		Kind.SYMBOL:
+			_symbol()
 	if FOOTS.has(kind):
 		_collide(FOOTS[kind])
 	match kind:
@@ -109,7 +119,7 @@ func _build() -> void:
 
 
 func _footprint_height() -> float:
-	if kind in [Kind.PILLAR, Kind.CRYSTAL, Kind.STELE, Kind.BANNER]:
+	if kind in [Kind.PILLAR, Kind.CRYSTAL, Kind.STELE, Kind.BANNER, Kind.STATUE]:
 		return TileArt.TILE * 2.0
 	if kind == Kind.ROCKS:
 		return TileArt.TILE * size_tiles.y
@@ -156,6 +166,16 @@ func _light(color: Color, radius: float, at: Vector2) -> void:
 ## A tile that cycles through `frames` (see RuinAnim).
 func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
 	return RuinAnim.sprite(frames, fps, at)
+
+
+## An engraved symbol on the floor: a ring of four tiles (2x2), or a small lozenge (1x1). No collision.
+func _symbol() -> void:
+	if size_tiles == Vector2i.ONE:
+		add_child(TileArt.sprite(&"floor_symbol_small"))
+		return
+	for i in 4:
+		var part := StringName("floor_symbol_" + ["tl", "tr", "bl", "br"][i])
+		add_child(TileArt.sprite(part, Vector2(i % 2, i / 2) * TileArt.TILE))
 
 
 ## An outcrop of rock columns that fills the footprint (rows staggered every 8 px, like the walls).

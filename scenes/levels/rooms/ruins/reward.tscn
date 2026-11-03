@@ -83,6 +83,26 @@ position = Vector2(384, 256)
 script = ExtResource("2")
 kind = 1
 
+[node name="Prop12" type="Node2D" parent="."]
+position = Vector2(448, 48)
+script = ExtResource("2")
+kind = 17
+
+[node name="Prop13" type="Node2D" parent="."]
+position = Vector2(304, 208)
+script = ExtResource("2")
+kind = 18
+
+[node name="Prop14" type="Node2D" parent="."]
+position = Vector2(64, 16)
+script = ExtResource("2")
+kind = 18
+
+[node name="Prop15" type="Node2D" parent="."]
+position = Vector2(176, 208)
+script = ExtResource("2")
+kind = 18
+
 [node name="ChestSpawn" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="ChestSpawn"]

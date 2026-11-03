@@ -87,6 +87,27 @@ position = Vector2(176, 256)
 script = ExtResource("2")
 kind = 2
 
+[node name="Prop13" type="Node2D" parent="."]
+position = Vector2(16, 192)
+script = ExtResource("2")
+kind = 17
+
+[node name="Prop14" type="Node2D" parent="."]
+position = Vector2(96, 80)
+script = ExtResource("2")
+kind = 17
+
+[node name="Prop15" type="Node2D" parent="."]
+position = Vector2(32, 256)
+script = ExtResource("2")
+kind = 18
+
+[node name="Prop16" type="Node2D" parent="."]
+position = Vector2(208, 112)
+script = ExtResource("2")
+kind = 20
+size_tiles = Vector2i(2, 2)
+
 [node name="SpecialSpawn" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="SpecialSpawn"]

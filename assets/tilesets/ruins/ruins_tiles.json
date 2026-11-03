@@ -738,117 +738,173 @@
    7,
    11
   ],
-  "floor_dim_a": [
+  "statue_a_top": [
    8,
    11
   ],
-  "floor_dim_b": [
+  "statue_a_base": [
    9,
    11
   ],
-  "floor_pale_a": [
+  "statue_b_top": [
    10,
    11
   ],
-  "floor_pale_b": [
+  "statue_b_base": [
    11,
    11
   ],
-  "floor_cracked_a": [
+  "vase_a": [
    12,
    11
   ],
-  "floor_cracked_b": [
+  "vase_b": [
    13,
    11
   ],
-  "floor_cracked_c": [
+  "vase_c": [
    14,
    11
   ],
-  "floor_moss_b": [
+  "armor_fallen_a": [
    15,
    11
   ],
-  "floor_moss_c": [
+  "armor_fallen_b": [
    0,
    12
   ],
-  "floor_broken_a": [
+  "floor_symbol_tl": [
    1,
    12
   ],
-  "floor_broken_b": [
+  "floor_symbol_tr": [
    2,
    12
   ],
-  "floor_broken_c": [
+  "floor_symbol_bl": [
    3,
    12
   ],
-  "floor_debris_a": [
+  "floor_symbol_br": [
    4,
    12
   ],
-  "floor_debris_b": [
+  "floor_symbol_small": [
    5,
    12
   ],
-  "floor_rubbled_a": [
+  "floor_dim_a": [
    6,
    12
   ],
-  "floor_rubbled_b": [
+  "floor_dim_b": [
    7,
    12
   ],
-  "floor_slab_a_tl": [
+  "floor_pale_a": [
    8,
    12
   ],
-  "floor_slab_a_tr": [
+  "floor_pale_b": [
    9,
    12
   ],
-  "floor_slab_a_bl": [
+  "floor_cracked_a": [
    10,
    12
   ],
-  "floor_slab_a_br": [
+  "floor_cracked_b": [
    11,
    12
   ],
-  "floor_slab_b_tl": [
+  "floor_cracked_c": [
    12,
    12
   ],
-  "floor_slab_b_tr": [
+  "floor_moss_b": [
    13,
    12
   ],
-  "floor_slab_b_bl": [
+  "floor_moss_c": [
    14,
    12
   ],
-  "floor_slab_b_br": [
+  "floor_broken_a": [
    15,
    12
   ],
-  "floor_slab_c_tl": [
+  "floor_broken_b": [
    0,
    13
   ],
-  "floor_slab_c_tr": [
+  "floor_broken_c": [
    1,
    13
   ],
-  "floor_slab_c_bl": [
+  "floor_debris_a": [
    2,
    13
   ],
-  "floor_slab_c_br": [
+  "floor_debris_b": [
    3,
    13
+  ],
+  "floor_rubbled_a": [
+   4,
+   13
+  ],
+  "floor_rubbled_b": [
+   5,
+   13
+  ],
+  "floor_slab_a_tl": [
+   6,
+   13
+  ],
+  "floor_slab_a_tr": [
+   7,
+   13
+  ],
+  "floor_slab_a_bl": [
+   8,
+   13
+  ],
+  "floor_slab_a_br": [
+   9,
+   13
+  ],
+  "floor_slab_b_tl": [
+   10,
+   13
+  ],
+  "floor_slab_b_tr": [
+   11,
+   13
+  ],
+  "floor_slab_b_bl": [
+   12,
+   13
+  ],
+  "floor_slab_b_br": [
+   13,
+   13
+  ],
+  "floor_slab_c_tl": [
+   14,
+   13
+  ],
+  "floor_slab_c_tr": [
+   15,
+   13
+  ],
+  "floor_slab_c_bl": [
+   0,
+   14
+  ],
+  "floor_slab_c_br": [
+   1,
+   14
   ]
  },
  "patterns": {

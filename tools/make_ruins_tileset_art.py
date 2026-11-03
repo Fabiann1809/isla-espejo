@@ -752,6 +752,145 @@ def shadow_tiles():
     ]
 
 
+# --- story pieces: statues, vases, fallen armor, engraved floor symbols --------------------------------------------
+def statue(seed, broken=False):
+    """A hooded figure on a plinth (16x32: the top tile is the figure, the base tile its pedestal)."""
+    rng = random.Random(seed)
+    img = blank(16, 32)
+    shades = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
+    # plinth: lit top face, front lit on the left, dark on the right
+    for y in range(22, 32):
+        for x in range(2, 14):
+            u = (x - 2) / 11.0
+            c = shade(shades[min(3, int(u * 4))], 0.95)
+            if y == 22:
+                c = shade(FLOOR_HI, 1.05)
+            elif y in (23, 27):
+                c = shade(ROCK_2, 0.7)
+            if 4 <= x <= 11 and 25 <= y <= 29 and (x in (4, 11) or y in (25, 29)):
+                c = mix(c, GLOW, 0.35) if (x + y) % 2 == 0 else shade(c, 0.8)
+            img.putpixel((x, y), c)
+    # the figure: a hood, a face in shadow and a cloak that widens to the plinth
+    for y in range(2, 22):
+        t = (y - 2) / 19.0
+        half = 2.6 + t * 4.2 if y > 8 else 3.2 * math.sqrt(max(0.0, 1.0 - ((y - 5.5) / 3.6) ** 2)) + 0.8
+        for x in range(16):
+            u = (x + 0.5 - 8.0) / max(0.5, half)
+            if abs(u) <= 1.0:
+                c = shades[min(3, int((u + 1.0) * 2.0))]
+                c = shade(c, 1.0 + rng.uniform(-0.06, 0.06) - t * 0.1)
+                if 5 <= y <= 8 and abs(x + 0.5 - 8.0) <= 1.6 and y >= 6:
+                    c = ROCK_D
+                if y > 12 and (x in (6, 10)) and (y % 3):
+                    c = shade(c, 0.75)
+                img.putpixel((x, y), c)
+    if broken:
+        for x in range(16):
+            top = 11 + rng.choice((-1, 0, 0, 1, 2))
+            for y in range(top):
+                img.putpixel((x, y), CLEAR)
+            if img.getpixel((x, top))[3]:
+                img.putpixel((x, top), shade(FLOOR_HI, 0.95))
+    for _ in range(5 if broken else 3):
+        x, y = rng.randrange(3, 13), rng.randrange(14, 30)
+        if img.getpixel((x, y))[3]:
+            img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
+    return outline(img)
+
+
+def vase(kind):
+    """A vase: clay (0), blue-glazed (1), or a broken one with its shards (2)."""
+    img = blank()
+    clay = (WOOD_HI, WOOD_2, WOOD_1, WOOD_D)
+    glaze = (CRY_HI, CRY_1, CRY_D, ROCK_D)
+    shades = clay if kind != 1 else glaze
+    for y in range(2, 15):
+        t = (y - 2) / 12.0
+        half = 2.4 if y < 4 else 3.0 + 3.2 * math.sin(min(1.0, (y - 3) / 8.0) * math.pi * 0.62)
+        if y >= 12:
+            half = max(2.4, half - (y - 11) * 0.9)
+        if kind == 2 and y < 8:
+            half = 0.0 if (y + 3) % 4 == 0 else half * (0.5 + 0.1 * (y % 3))
+        for x in range(16):
+            u = (x + 0.5 - 8.0) / max(0.4, half)
+            if half > 0 and abs(u) <= 1.0:
+                c = shades[min(3, int((u + 1.0) * 2.0))]
+                if y in (3, 4) or y == 8:
+                    c = shade(c, 0.78)
+                if kind == 1 and y == 8:
+                    c = ROCK_HI
+                img.putpixel((x, y), c)
+    if kind == 2:
+        for x, y in ((3, 13), (4, 14), (11, 14), (12, 13), (13, 14)):
+            put(img, x, y, WOOD_2)
+    return outline(img)
+
+
+def armor_fallen(variant):
+    """A helmet and a sword, or a shield and a skull, lying on the floor (a flat decal)."""
+    img = blank()
+    if variant == 0:
+        for y in range(5, 12):
+            for x in range(2, 9):
+                dx, dy = (x + 0.5 - 5.5) / 3.6, (y + 0.5 - 8.5) / 3.6
+                if dx * dx + dy * dy <= 1.0 and y <= 10:
+                    img.putpixel((x, y), (ROCK_HI, ROCK_4, ROCK_3)[min(2, int((dx + 1) * 1.5))])
+        for x in range(3, 8):
+            put(img, x, 9, ROCK_D)
+        for i in range(9):
+            put(img, 6 + i, 14 - i, ROCK_HI if i % 4 else FLOOR_HI)
+            put(img, 6 + i, 15 - i, ROCK_3)
+        put(img, 5, 13, GOLD_1)
+        put(img, 4, 14, GOLD_D)
+    else:
+        for y in range(2, 13):
+            for x in range(3, 12):
+                inside = abs(x - 7.5) <= 4.5 - max(0, y - 8) * 1.3
+                if inside:
+                    c = BLUE_SHIELD[0] if x < 7 else BLUE_SHIELD[1]
+                    if x == 7 or y == 2:
+                        c = GOLD_1
+                    img.putpixel((x, y), c)
+        for x, y in ((12, 13), (13, 13), (12, 14), (13, 14)):
+            put(img, x, y, BONE)
+        put(img, 12, 14, OUTLINE)
+        put(img, 13, 14, OUTLINE)
+    return outline(img)
+
+
+BLUE_SHIELD = (rgb("#1f4a8a"), rgb("#17386a"))
+
+
+def floor_symbol(big=True):
+    """An engraved ring with a cross and four glowing studs (32x32), or a lozenge (16x16): lines only, so
+    the floor under them shows."""
+    size = 32 if big else 16
+    img = blank(size, size)
+    c = size / 2.0
+    line = mix(FLOOR_2, GLOW, 0.4)
+    dark = shade(JOINT, 0.8)
+    if big:
+        for y in range(size):
+            for x in range(size):
+                d = math.hypot(x + 0.5 - c, y + 0.5 - c)
+                on_ring = abs(d - 13.0) < 0.75 or abs(d - 8.5) < 0.6
+                on_cross = (abs(x + 0.5 - c) < 0.6 or abs(y + 0.5 - c) < 0.6) and d < 13.5 and d > 3
+                if on_ring or on_cross:
+                    put(img, x, y, line if (x + y) % 5 else dark)
+        for dx, dy in ((0, -13), (0, 13), (-13, 0), (13, 0)):
+            for ox, oy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+                put(img, int(c + dx) - 1 + ox, int(c + dy) - 1 + oy, GLOW)
+        for ox, oy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+            put(img, int(c) - 1 + ox, int(c) - 1 + oy, GLOW_2)
+    else:
+        for i in range(7):
+            for x, y in ((8 - i, 1 + i), (8 + i - 1, 1 + i), (8 - i, 14 - i), (8 + i - 1, 14 - i)):
+                put(img, x, y, line if i % 3 else dark)
+        put(img, 7, 7, GLOW)
+        put(img, 8, 8, GLOW)
+    return img
+
+
 # --- stairs and bridges -------------------------------------------------------------------------------------
 def stairs_steps(wood=False):
     """Four steps, each with a bright edge, a tread and a dark riser, so a staircase reads at a glance
@@ -1395,6 +1534,16 @@ def build_tiles():
     add("wall_arch_face", wall_arch())
     for name, img in shadow_tiles():
         add(name, img)
+    add_tall("statue_a", statue(91))
+    add_tall("statue_b", statue(92, broken=True))
+    for k in range(3):
+        add("vase_%s" % "abc"[k], vase(k))
+    add("armor_fallen_a", armor_fallen(0))
+    add("armor_fallen_b", armor_fallen(1))
+    ring = floor_symbol(True)
+    for name, box in (("tl", (0, 0)), ("tr", (16, 0)), ("bl", (0, 16)), ("br", (16, 16))):
+        add("floor_symbol_%s" % name, ring.crop((box[0], box[1], box[0] + T, box[1] + T)))
+    add("floor_symbol_small", floor_symbol(False))
     add("floor_dim_a", floor_tile(51, tones=(FLOOR_D, FLOOR_1, FLOOR_1)))
     add("floor_dim_b", floor_tile(52, tones=(FLOOR_D, FLOOR_1, FLOOR_2), wear=0.3))
     add("floor_pale_a", floor_tile(53, tones=(FLOOR_2, FLOOR_3, FLOOR_HI)))
