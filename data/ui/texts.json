@@ -25,6 +25,8 @@
 	"controller_busy": "Mando ocupado",
 	"controller_error": "No se pudo abrir el mando. Revisa que estés conectado a una red.",
 	"controller_back": "Volver",
+	"controller_disconnect": "Desconectar",
+	"controller_stopped": "Mando desconectado. Abre este panel otra vez para volver a conectarlo.",
 	"hint_controls": "WASD: moverte   ·   J: disparar   ·   Espacio: esquivar",
 	"portal_sealed_prompt": "Portal sellado",
 	"portal_sealed": "El portal está sellado. Vence al guardián de esta isla para abrirlo.",

@@ -77,7 +77,8 @@ func is_controller_open() -> bool:
 	return controller_panel != null and controller_panel.visible
 
 
-## Closes the controller panel if open (stops the server, releases the held actions).
+## Hides the controller panel if open. The phone controller (autoload `RemoteControl`) keeps
+## running; only the panel's "Desconectar" button stops it.
 func close_all() -> void:
 	if is_controller_open():
 		controller_panel.close()

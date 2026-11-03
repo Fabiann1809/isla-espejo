@@ -1,20 +1,19 @@
 class_name ControllerPanel
 extends PanelContainer
 ## Phone controller panel of the options screen: QR code and address of the LAN page, plus the
-## connection status. It creates and owns the `ControlServer` and the `RemoteControlMapper`
-## (they exist only while the panel is open) and wires them together.
+## connection status. It is only a view of the `RemoteControl` autoload, which owns the server:
+## opening the panel starts it (if needed), closing the panel only hides it, so the phone keeps
+## driving Nico during play. "Desconectar" stops the server.
 
 signal closed
 
-const PORT := 8080
 const QR_MODULE_PX := 3
 const BUSY_SHOWN_SECONDS := 2.0
 
-var server: ControlServer
-var mapper: RemoteControlMapper
 var qr_rect: TextureRect
 var url_label: Label
 var status_label: Label
+var disconnect_button: Button
 var back_button: Button
 var _status_serial := 0
 
@@ -34,31 +33,31 @@ func _ready() -> void:
 	box.add_child(url_label)
 	status_label = UiKit.label(UiText.t("controller_waiting"), 14)
 	box.add_child(status_label)
+	disconnect_button = UiKit.button(UiText.t("controller_disconnect"))
+	disconnect_button.pressed.connect(disconnect_controller)
+	box.add_child(disconnect_button)
 	back_button = UiKit.button(UiText.t("controller_back"))
 	back_button.pressed.connect(close)
 	box.add_child(back_button)
 
-	mapper = RemoteControlMapper.new()
-	server = ControlServer.new()
-	add_child(server)
-	server.message_received.connect(mapper.apply)
-	server.controller_connected.connect(func() -> void: _set_status("controller_connected"))
-	server.controller_disconnected.connect(_on_controller_disconnected)
-	server.controller_rejected.connect(_on_controller_rejected)
+	# Method callables: the autoload outlives the panel and drops these when the panel is freed.
+	RemoteControl.controller_connected.connect(_on_controller_connected)
+	RemoteControl.controller_disconnected.connect(_on_controller_disconnected)
+	RemoteControl.controller_rejected.connect(_on_controller_rejected)
 	hide()
 
 
-## Starts the server and shows the QR; falls back to the error text when it cannot.
+## Starts the phone controller (idempotent) and shows the QR; falls back to the error text.
 func open() -> void:
 	show()
-	_set_status("controller_waiting")
-	var error := server.start(PORT)
-	var urls := server.get_urls()
+	var error := RemoteControl.start()
+	var urls: PackedStringArray = RemoteControl.get_urls()
 	if error != OK or urls.is_empty():
-		server.stop()
+		RemoteControl.stop()
 		_show_error()
 	else:
-		show_url(urls[0])
+		show_urls(urls)
+		_set_status("controller_connected" if RemoteControl.has_controller() else "controller_waiting")
 	back_button.grab_focus()
 
 
@@ -66,21 +65,33 @@ func is_open() -> bool:
 	return visible
 
 
+## Hides the panel. The phone controller keeps running.
 func close() -> void:
-	server.stop()
-	mapper.release_all()
 	hide()
 	closed.emit()
 
 
-## Shows the address as text and as a QR image.
-func show_url(url: String) -> void:
-	url_label.text = url
-	var image := QrCode.make_image(url, QR_MODULE_PX)
+## Stops the phone controller; opening the panel again turns it back on.
+func disconnect_controller() -> void:
+	RemoteControl.stop()
+	qr_rect.texture = null
+	url_label.text = ""
+	_set_status("controller_stopped")
+
+
+## Shows the first address as a QR image and as text.
+func show_urls(urls: PackedStringArray) -> void:
+	url_label.text = urls[0]
+	var image := QrCode.make_image(urls[0], QR_MODULE_PX)
 	if image == null:
 		_show_error()
 		return
 	qr_rect.texture = ImageTexture.create_from_image(image)
+
+
+## Shows one address as text and as a QR image.
+func show_url(url: String) -> void:
+	show_urls(PackedStringArray([url]))
 
 
 func _show_error() -> void:
@@ -94,8 +105,12 @@ func _set_status(key: String) -> void:
 	status_label.text = UiText.t(key)
 
 
+func _on_controller_connected() -> void:
+	_set_status("controller_connected")
+
+
 func _on_controller_disconnected() -> void:
-	mapper.release_all()
+	# A manual stop also lands here first; disconnect_controller() then shows its own text.
 	_set_status("controller_waiting")
 
 
@@ -109,12 +124,5 @@ func _on_controller_rejected() -> void:
 
 
 func _restore_status(serial: int) -> void:
-	if serial == _status_serial and server != null and server.has_controller():
+	if serial == _status_serial and RemoteControl.has_controller():
 		_set_status("controller_connected")
-
-
-func _exit_tree() -> void:
-	if server != null:
-		server.stop()
-	if mapper != null:
-		mapper.release_all()
