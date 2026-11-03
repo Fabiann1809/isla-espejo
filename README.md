@@ -27,6 +27,8 @@ Nico queda atrapado en una isla que lo refleja y aprende de él. Para volver a c
 
 Controles provisionales: `WASD` mover, `Espacio` esquivar, `J` atacar, `1 2 3` habilidades, `E` interactuar.
 
+También puedes manejar a Nico con el celular: en **Ajustes** escanea el código QR y se abre un mando en el navegador (mismo wifi).
+
 ## Verificación local
 ```
 ./tools/run_tests.sh
