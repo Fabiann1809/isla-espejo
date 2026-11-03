@@ -613,6 +613,10 @@
   "waterfall_base_c": [
    8,
    9
+  ],
+  "terrace_top": [
+   9,
+   9
   ]
  },
  "patterns": {

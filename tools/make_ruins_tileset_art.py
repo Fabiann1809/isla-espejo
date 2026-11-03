@@ -480,6 +480,16 @@ def wall_face(seed, moss=0.0, top_lip=False, side=None):
     return img
 
 
+def terrace_top(seed=4):
+    """The back edge of a platform seen from above: a dark rim, then a lighter stone lip."""
+    img = floor_tile(seed, tones=(FLOOR_2, FLOOR_3, FLOOR_3), wear=0.3)
+    for x in range(T):
+        img.putpixel((x, 0), OUTLINE)
+        img.putpixel((x, 1), ROCK_D)
+        img.putpixel((x, 2), shade(FLOOR_1, 0.85))
+    return img
+
+
 def terrace_side(side, seed=3):
     """The lateral edge of a platform seen from above: a stone rim on the open side."""
     rng = random.Random(seed)
@@ -1104,6 +1114,7 @@ def build_tiles():
         add("waterfall_mid_%s" % "abc"[f], waterfall_mid(f))
     for f in range(3):
         add("waterfall_base_%s" % "abc"[f], waterfall_base(f))
+    add("terrace_top", terrace_top())
     return tiles, patterns
 
 

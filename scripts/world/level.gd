@@ -558,6 +558,7 @@ func _place_player() -> void:
 	GameState.apply_to_player(player)
 	var start_room: Room = rooms[layout.start_cell]
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
+	Heights.set_level(player, Heights.LOW)
 	if player.has_method("set_camera_limits"):
 		player.set_camera_limits(bounds)
 	# A new map starts somewhere else: the camera jumps there instead of gliding across the world.
