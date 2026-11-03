@@ -104,8 +104,11 @@ func _on_controller_rejected() -> void:
 	# message is shown briefly and then replaced by the connected one, unless the status
 	# changed in the meantime.
 	_set_status("controller_busy")
-	var serial := _status_serial
-	await get_tree().create_timer(BUSY_SHOWN_SECONDS).timeout
+	# Not awaited: a Callable connected to the timer is dropped when the panel is freed.
+	get_tree().create_timer(BUSY_SHOWN_SECONDS).timeout.connect(_restore_status.bind(_status_serial))
+
+
+func _restore_status(serial: int) -> void:
 	if serial == _status_serial and server != null and server.has_controller():
 		_set_status("controller_connected")
 

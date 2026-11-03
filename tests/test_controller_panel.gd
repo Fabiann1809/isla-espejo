@@ -56,6 +56,14 @@ func _initialize() -> void:
 	holder.queue_free()
 	panel.queue_free()
 
+	# Freeing a panel with a busy timer pending must not resume anything on a dead instance.
+	var temp = panel_script.new()
+	root.add_child(temp)
+	await process_frame
+	temp.server.controller_rejected.emit()
+	temp.free()
+	await create_timer(2.2).timeout
+
 	var pause: CanvasLayer = (load("res://scenes/ui/pause_menu.tscn") as PackedScene).instantiate()
 	root.add_child(pause)
 	await process_frame
