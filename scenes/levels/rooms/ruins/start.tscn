@@ -85,5 +85,30 @@ position = Vector2(384, 176)
 script = ExtResource("2")
 kind = 1
 
+[node name="Prop17" type="Node2D" parent="."]
+position = Vector2(128, 16)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 1)
+
+[node name="Prop18" type="Node2D" parent="."]
+position = Vector2(160, 256)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 1)
+
+[node name="Prop19" type="Node2D" parent="."]
+position = Vector2(320, 240)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 2)
+
+[node name="Prop20" type="Node2D" parent="."]
+position = Vector2(32, 256)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 1)
+
+[node name="Prop21" type="Node2D" parent="."]
+position = Vector2(336, 16)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 1)
+
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 position = Vector2(240, 144)

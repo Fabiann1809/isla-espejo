@@ -14,6 +14,8 @@ The generator checks the design:
   - a raised room (RoomData.height 1, see tools/make_ruins_data.gd) has no water, terraces or alcoves.
 """
 import os
+import random
+import zlib
 
 OUT = "scenes/levels/rooms/ruins"
 os.makedirs(OUT, exist_ok=True)
@@ -24,11 +26,12 @@ LANE_COLUMNS = range(13, 17)
 LANE_ROWS = range(7, 11)
 
 # RuinProp.Kind values (keep in sync with scripts/world/ruin_prop.gd)
-ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER = range(16)
+ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES = range(17)
 POND = RIVER
 SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, POND}
 TALL = {PILLAR, CRYSTAL, STELE, BANNER}
 AREAS = {ROCKS, BRIDGE, WATERFALL, TERRACE, ALCOVE, POND}
+FLAT = {BRIDGE, WATERFALL, SPIKES}
 PLATFORMS = {TERRACE, ALCOVE}
 
 
@@ -41,9 +44,60 @@ def footprint(kind, x, y, size=(1, 1)):
     return [(x + i, y + j) for i in range(size[0]) for j in range(size[1])]
 
 
-def build(filename, node_name, props, spawns=None, player_spawn=None, raised=False):
+def add_bulges(filename, props, spawns, player_spawn, how_many):
+    """Rock outcrops that bite into the room from its walls, so the floor is not a plain rectangle.
+    Deterministic per room; never on the central lanes, near a marker, next to another prop or in
+    front of a platform's stairs."""
+    rng = random.Random(zlib.crc32(filename.encode()))
+    taken = set()
+    for prop in props:
+        size = prop[3] if len(prop) > 3 else (1, 1)
+        for tx, ty in footprint(prop[0], prop[1], prop[2], size):
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    taken.add((tx + dx, ty + dy))
+        if prop[0] in PLATFORMS:
+            w, h = prop[3]
+            stairs = prop[1] + w // 2 - 1
+            for tx in range(stairs - 2, stairs + 4):
+                for ty in range(prop[2] + h - 1, prop[2] + h + 3):
+                    taken.add((tx, ty))
+    markers = [p for points in spawns.values() for p in points]
+    if player_spawn:
+        markers.append(player_spawn)
+    for px, py in markers:
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                taken.add((px // TILE + dx, py // TILE + dy))
+    extra = []
+    for _ in range(how_many * 12):
+        if len(extra) == how_many:
+            break
+        side = rng.choice("tblr")
+        w, h = (rng.choice((2, 3, 4)), rng.choice((1, 2))) if side in "tb" else (rng.choice((1, 2)), rng.choice((2, 3, 4)))
+        if side == "t":
+            x, y = rng.randint(2, COLUMNS - 2 - w), 1
+        elif side == "b":
+            x, y = rng.randint(2, COLUMNS - 2 - w), ROWS - 1 - h
+        elif side == "l":
+            x, y = 1, rng.randint(2, ROWS - 2 - h)
+        else:
+            x, y = COLUMNS - 1 - w, rng.randint(2, ROWS - 2 - h)
+        tiles = [(x + i, y + j) for i in range(w) for j in range(h)]
+        if any(tx in LANE_COLUMNS or ty in LANE_ROWS or (tx, ty) in taken for tx, ty in tiles):
+            continue
+        extra.append((ROCKS, x, y, (w, h)))
+        for tx, ty in tiles:
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    taken.add((tx + dx, ty + dy))
+    return props + extra
+
+
+def build(filename, node_name, props, spawns=None, player_spawn=None, raised=False, bulges=7):
     """props: [(kind, x, y)] or [(kind, x, y, (w, h))]; spawns: {container: [(x_px, y_px)]}."""
     spawns = spawns or {}
+    props = add_bulges(filename, props, spawns, player_spawn, bulges)
     solid_tiles = set()
     for prop in props:
         kind, x, y = prop[0], prop[1], prop[2]
@@ -134,7 +188,8 @@ build("river", "RuinsRiver",
 build("narrow", "RuinsNarrow",
       props=[(ROCKS, 4, 3, (5, 3)), (ROCKS, 21, 3, (5, 3)), (ROCKS, 4, 12, (5, 3)), (ROCKS, 21, 12, (5, 3)),
              (ROCKS, 10, 5, (2, 2)), (ROCKS, 18, 5, (2, 2)), (ROCKS, 10, 11, (2, 2)), (ROCKS, 18, 11, (2, 2)),
-             (CRYSTAL, 12, 3), (CRYSTAL, 17, 3), (CRYSTAL, 12, 14), (CRYSTAL, 17, 14)],
+             (CRYSTAL, 12, 3), (CRYSTAL, 17, 3), (CRYSTAL, 12, 14), (CRYSTAL, 17, 14),
+             (SPIKES, 7, 9), (SPIKES, 22, 9), (SPIKES, 14, 5)],
       spawns={"EnemySpawns": [(150, 100), (330, 100), (150, 200), (330, 200), (60, 144), (420, 144)]})
 
 # --- Combat: two raised platforms with their stairs on the north side ------------------------------------------------
@@ -157,7 +212,8 @@ build("plateau", "RuinsPlateau",
 build("falls", "RuinsFalls",
       props=[(WATERFALL, 3, 1, (2, 3)), (POND, 2, 4, (4, 3)), (WATERFALL, 25, 1, (2, 3)), (POND, 24, 4, (4, 3)),
              (ROCKS, 8, 2, (2, 2)), (ROCKS, 20, 2, (2, 2)), (ROCKS, 8, 13, (3, 3)), (ROCKS, 19, 13, (3, 3)),
-             (BOULDER, 5, 12), (BOULDER, 24, 12), (CRYSTAL, 10, 12), (CRYSTAL, 19, 11), (STALAGMITE, 12, 4), (STALAGMITE, 17, 4)],
+             (BOULDER, 5, 12), (BOULDER, 24, 12), (CRYSTAL, 10, 12), (CRYSTAL, 19, 11), (STALAGMITE, 12, 4), (STALAGMITE, 17, 4),
+             (SPIKES, 10, 8), (SPIKES, 19, 9), (SPIKES, 14, 13)],
       spawns={"EnemySpawns": [(60, 130), (420, 130), (60, 220), (420, 220), (240, 56), (240, 236), (120, 144), (360, 144)]})
 
 # --- Event: the Viajera's camp (braziers, crates, a stele) ------------------------------------------------------------------

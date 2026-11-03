@@ -14,7 +14,7 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
@@ -24,7 +24,7 @@ enum Kind {
 @export var horizontal := true
 
 ## Props that are part of the ground: drawn with the floor, never over an actor.
-const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER]
+const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER, Kind.SPIKES]
 const WORLD_BITS := 1
 const WATER_BITS := 1 << (Heights.WATER_LAYER - 1)
 ## Water stops bodies a little inside its picture, so the shore is walkable.
@@ -95,6 +95,8 @@ func _build() -> void:
 			_terrace(kind == Kind.ALCOVE, rng)
 		Kind.RIVER:
 			_river()
+		Kind.SPIKES:
+			_spikes()
 	if FOOTS.has(kind):
 		_collide(FOOTS[kind])
 	match kind:
@@ -212,6 +214,15 @@ func _waterfall() -> void:
 				add_child(_animated([&"waterfall_base_a", &"waterfall_base_b", &"waterfall_base_c"], FIRE_FPS, at))
 			else:
 				add_child(_animated([&"waterfall_mid_a", &"waterfall_mid_b", &"waterfall_mid_c"], FIRE_FPS, at))
+
+
+## A floor trap of the ruins (the shared SpikeTrap, drawn with the slab and the iron spikes).
+func _spikes() -> void:
+	var trap: Node2D = load("res://scenes/world/spike_trap.tscn").instantiate()
+	trap.art_off = TileArt.tile(&"spike_trap_off")
+	trap.art_on = TileArt.tile(&"spike_trap_on")
+	trap.position = Vector2.ONE * TileArt.TILE / 2.0
+	add_child(trap)
 
 
 ## A river or pool: water with a luminous shore, its center shimmering. Bodies cannot cross it but

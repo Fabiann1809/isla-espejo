@@ -70,6 +70,41 @@ position = Vector2(288, 48)
 script = ExtResource("2")
 kind = 2
 
+[node name="Prop14" type="Node2D" parent="."]
+position = Vector2(16, 208)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 2)
+
+[node name="Prop15" type="Node2D" parent="."]
+position = Vector2(432, 176)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 2)
+
+[node name="Prop16" type="Node2D" parent="."]
+position = Vector2(128, 16)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 2)
+
+[node name="Prop17" type="Node2D" parent="."]
+position = Vector2(448, 32)
+script = ExtResource("2")
+size_tiles = Vector2i(1, 3)
+
+[node name="Prop18" type="Node2D" parent="."]
+position = Vector2(352, 256)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 1)
+
+[node name="Prop19" type="Node2D" parent="."]
+position = Vector2(112, 240)
+script = ExtResource("2")
+size_tiles = Vector2i(3, 2)
+
+[node name="Prop20" type="Node2D" parent="."]
+position = Vector2(64, 256)
+script = ExtResource("2")
+size_tiles = Vector2i(2, 1)
+
 [node name="NpcSpawn" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="NpcSpawn"]

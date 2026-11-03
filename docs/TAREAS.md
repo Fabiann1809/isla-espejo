@@ -136,7 +136,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Salas del escenario (pasadizos, agua, zonas oscuras): 10 diseños (inicio, jefe, 5 de combate de los que 2 oscuros, evento, recompensa y especial) con `tools/make_ruins_rooms.py`, y `data/scenarios/ruins.tres`
 - [x] Oscuridad por sala (capa de sombra con luces de cristales y antorchas) y animación sencilla (cascadas, llamas, cristales, destellos del agua), con sus valores e interruptores en `Tuning`
 - [x] Enemigos del escenario colocados (Bestia de la niebla, Sombra errante y Murciélago, con sus pesos en `ruins.tres`)
-- [ ] Trampa de pinchos en 2 salas de combate
+- [x] Trampa de pinchos en 2 salas de combate (3 en la sala estrecha y 3 en la de cascadas, con arte de ruinas)
 - [ ] **Jefe: Serpiente de piedra** (embestida, veneno / proyectiles)
 - [ ] Al derrotarlo: fragmento azul y habilidad **Corriente**
 - [ ] NPC **Viajera** con 3 estados de diálogo

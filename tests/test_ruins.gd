@@ -76,6 +76,17 @@ func _initialize() -> void:
 	var enemies: Array = level.get_tree().get_nodes_in_group("enemies")
 	_check(enemies.size() > 0 and enemies.all(func(e: Node) -> bool: return e.data.id in [&"bestia_de_la_niebla", &"sombra_errante", &"murcielago"]),
 			"only the second map's enemies live there (%d)" % enemies.size())
+	# Traps: three spike traps in the narrow and the falls rooms, none elsewhere.
+	var traps_ok := true
+	var trapped := 0
+	for room in level.rooms.values():
+		var traps: Array = room.find_children("*", "Node2D", true, false).filter(
+				func(n: Node) -> bool: return n.get_script() != null and n.get_script().resource_path.ends_with("spike_trap.gd"))
+		var expected_traps := 3 if room.data.id in [&"ruins_narrow", &"ruins_falls"] else 0
+		traps_ok = traps_ok and traps.size() == expected_traps
+		trapped += traps.size()
+	_check(traps_ok, "spike traps only in the narrow and the falls rooms (%d on this map)" % trapped)
+
 	# Light and life: dark rooms have their shade, crystals and fires have lights, and the water, the
 	# fires and the crystals are animated.
 	var dark_ok := true

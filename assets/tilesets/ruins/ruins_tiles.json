@@ -617,6 +617,14 @@
   "terrace_top": [
    9,
    9
+  ],
+  "spike_trap_off": [
+   10,
+   9
+  ],
+  "spike_trap_on": [
+   11,
+   9
   ]
  },
  "patterns": {

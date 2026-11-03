@@ -79,6 +79,21 @@ position = Vector2(272, 64)
 script = ExtResource("2")
 kind = 1
 
+[node name="Prop15" type="Node2D" parent="."]
+position = Vector2(160, 128)
+script = ExtResource("2")
+kind = 16
+
+[node name="Prop16" type="Node2D" parent="."]
+position = Vector2(304, 144)
+script = ExtResource("2")
+kind = 16
+
+[node name="Prop17" type="Node2D" parent="."]
+position = Vector2(224, 208)
+script = ExtResource("2")
+kind = 16
+
 [node name="EnemySpawns" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="EnemySpawns"]

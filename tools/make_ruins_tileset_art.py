@@ -480,6 +480,21 @@ def wall_face(seed, moss=0.0, top_lip=False, side=None):
     return img
 
 
+def spike_trap(out):
+    """A floor trap: a slab with four small holes, or the same slab with four iron spikes out."""
+    img = floor_tile(9, tones=(FLOOR_1, FLOOR_2, FLOOR_2))
+    d = ImageDraw.Draw(img)
+    d.rectangle((1, 1, 14, 14), outline=JOINT)
+    for cx, cy in ((4, 4), (11, 4), (4, 11), (11, 11)):
+        if out:
+            d.rectangle((cx - 1, cy - 2, cx, cy + 1), fill=rgb("#aab4cc"))
+            d.point((cx - 1, cy - 2), fill=rgb("#eaf0ff"))
+            d.point((cx, cy + 1), fill=ROCK_D)
+        else:
+            d.rectangle((cx - 1, cy - 1, cx, cy), fill=ROCK_D)
+    return img
+
+
 def terrace_top(seed=4):
     """The back edge of a platform seen from above: a dark rim, then a lighter stone lip."""
     img = floor_tile(seed, tones=(FLOOR_2, FLOOR_3, FLOOR_3), wear=0.3)
@@ -1115,6 +1130,8 @@ def build_tiles():
     for f in range(3):
         add("waterfall_base_%s" % "abc"[f], waterfall_base(f))
     add("terrace_top", terrace_top())
+    add("spike_trap_off", spike_trap(False))
+    add("spike_trap_on", spike_trap(True))
     return tiles, patterns
 
 

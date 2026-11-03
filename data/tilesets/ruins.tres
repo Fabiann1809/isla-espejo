@@ -151,6 +151,8 @@ tiles = Dictionary[StringName, Vector2i]({
 &"shore_stone_b": Vector2i(12, 4),
 &"shore_stone_c": Vector2i(13, 4),
 &"sign": Vector2i(5, 8),
+&"spike_trap_off": Vector2i(10, 9),
+&"spike_trap_on": Vector2i(11, 9),
 &"stairs_rail_b": Vector2i(6, 6),
 &"stairs_rail_l": Vector2i(3, 6),
 &"stairs_rail_r": Vector2i(4, 6),
