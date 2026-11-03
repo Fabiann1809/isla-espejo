@@ -131,7 +131,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ## 10. Escenario 2: Ruinas de la Montaña — A+B  ← 7
 - [x] Alturas reales (decidido: dos niveles, bajo y alto, con escaleras): capas físicas `block_low`/`block_high`, ayudante `Heights`, `StairZone`, nivel en jugador, enemigos y proyectiles; las salas planas (bosque) no cambian (`tests/test_heights.gd`)
-- [ ] Tileset de ruinas y cuevas: perfil `data/tilesets/` dibujado a 16x16 con `tools/make_ruins_*_art.py` (suelo de losas, muros y columnas de roca, agua con orilla, cascadas, puentes, escaleras, cristales, antorchas, runas), con vista previa antes de usarlo
+- [x] Tileset de ruinas y cuevas: perfil `data/tilesets/` dibujado a 16x16 con `tools/make_ruins_*_art.py` (suelo de losas, muros y columnas de roca, agua con orilla, cascadas, puentes, escaleras, cristales, antorchas, runas), con vista previa antes de usarlo
 - [ ] Piezas de sala nuevas (`RoomProp`): muro de terraza, escalera, puente sobre el agua
 - [ ] Salas del escenario (pasadizos, agua, zonas oscuras): 10 diseños (inicio, jefe, 5 de combate de los que 2 oscuros, evento, recompensa y especial) con `tools/make_ruins_rooms.py`, y `data/scenarios/ruins.tres`
 - [ ] Oscuridad por sala (capa de sombra con luces de cristales y antorchas) y animación sencilla (cascadas, llamas, cristales, destellos del agua), con sus valores e interruptores en `Tuning`
