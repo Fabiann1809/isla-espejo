@@ -35,6 +35,10 @@ const LINGER_MS := 1000
 ## frame a moment later. Godot's own WebSocketPeer client drops a text frame that arrives in the
 ## same read as the close frame; browsers do not need it but it costs nothing.
 const BUSY_STEP_MS := 150
+## Lower-case pieces of interface names that mark a virtual adapter (its address goes last).
+const VIRTUAL_INTERFACE_MARKERS: Array[String] = [
+	"virtual", "vmware", "vbox", "hyper-v", "wsl", "docker", "loopback", "tap", "vethernet",
+]
 
 const OPCODE_CONTINUATION := 0x0
 const OPCODE_TEXT := 0x1
@@ -121,10 +125,55 @@ static func can_open_port() -> bool:
 	return DisplayServer.get_name() != "headless" and not OS.get_cmdline_user_args().has("--no-save")
 
 
-## Private IPv4 addresses of this machine, 192.168.x first, then 10.x, then 172.16-31.x
-## (virtual adapters such as WSL usually sit in 172.x, so they go last).
+## Private IPv4 addresses of this machine, those of real adapters first (see
+## `addresses_from_interfaces`), so the QR, which takes the first one, points at the Wi-Fi.
 static func lan_addresses() -> PackedStringArray:
-	return filter_private_ipv4(IP.get_local_addresses())
+	var interfaces: Array = IP.get_local_interfaces()
+	if interfaces.is_empty():
+		return filter_private_ipv4(IP.get_local_addresses())
+	return addresses_from_interfaces(interfaces)
+
+
+## Pure part of `lan_addresses`. `interfaces` has the shape of `IP.get_local_interfaces()`:
+## [{"name", "friendly", "index", "addresses"}]. Private IPv4 addresses of real interfaces come
+## first, then those of virtual ones (VirtualBox, VMware, Hyper-V, WSL, Docker, the Windows
+## hosted network...), so a virtual address is only used when nothing else exists.
+static func addresses_from_interfaces(interfaces: Array) -> PackedStringArray:
+	var real := PackedStringArray()
+	var virtual := PackedStringArray()
+	for iface: Variant in interfaces:
+		if not iface is Dictionary:
+			continue
+		var is_virtual := is_virtual_interface(iface)
+		var addresses: Variant = iface.get("addresses", [])
+		if not (addresses is Array or addresses is PackedStringArray):
+			continue
+		for address: Variant in addresses:
+			if not address is String:
+				continue
+			# Packed arrays are copied on assignment, so append to each one by name.
+			if is_virtual:
+				virtual.append(address)
+			else:
+				real.append(address)
+	var result := PackedStringArray()
+	for address in filter_private_ipv4(real) + filter_private_ipv4(virtual):
+		if not result.has(address):
+			result.append(address)
+	return result
+
+
+## True for adapters that are not the machine's real network. On Windows `name` is a GUID, so
+## the `friendly` name is checked too; Windows also names its hidden virtual adapters (Wi-Fi
+## Direct, hosted network on 192.168.137.1) "Local Area Connection* N" with an asterisk.
+static func is_virtual_interface(iface: Dictionary) -> bool:
+	var text := ("%s %s" % [iface.get("name", ""), iface.get("friendly", "")]).to_lower()
+	if text.contains("*"):
+		return true
+	for marker in VIRTUAL_INTERFACE_MARKERS:
+		if text.contains(marker):
+			return true
+	return false
 
 
 static func filter_private_ipv4(addresses: PackedStringArray) -> PackedStringArray:

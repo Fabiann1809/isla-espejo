@@ -79,9 +79,10 @@ func disconnect_controller() -> void:
 	_set_status("controller_stopped")
 
 
-## Shows the first address as a QR image and as text.
+## Shows the first address as a QR image and every address as text (the first one on top), so
+## the player can type another one if the QR points at the wrong network.
 func show_urls(urls: PackedStringArray) -> void:
-	url_label.text = urls[0]
+	url_label.text = "\n".join(urls)
 	var image := QrCode.make_image(urls[0], QR_MODULE_PX)
 	if image == null:
 		_show_error()

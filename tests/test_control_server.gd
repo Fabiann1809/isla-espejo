@@ -113,6 +113,30 @@ func _initialize() -> void:
 	]))
 	_check(filtered == PackedStringArray(["192.168.1.40", "10.0.0.7", "172.20.1.2"]), "only private IPv4 kept, 192.168 first (got %s)" % [filtered])
 	_check(server_script.is_private_ipv4("172.31.255.255") and not server_script.is_private_ipv4("172.32.0.0"), "172.16-31 range edges")
+	# Interfaces: real adapters first, virtual ones (VirtualBox, hosted network, WSL...) last.
+	var vbox := {"name": "{GUID-1}", "friendly": "VirtualBox Host-Only Network", "index": "9",
+			"addresses": ["fe80:0:0:0:1", "192.168.56.1"]}
+	var hosted := {"name": "{GUID-2}", "friendly": "Conexión de área local* 10", "index": "12",
+			"addresses": ["192.168.137.1"]}
+	var wsl := {"name": "{GUID-3}", "friendly": "vEthernet (WSL)", "index": "30", "addresses": ["172.20.48.1"]}
+	var loopback := {"name": "{GUID-4}", "friendly": "Loopback Pseudo-Interface 1", "index": "1",
+			"addresses": ["0:0:0:0:0:0:0:1", "127.0.0.1"]}
+	var wifi := {"name": "{GUID-5}", "friendly": "Wi-Fi", "index": "5",
+			"addresses": ["fe80:0:0:0:2", "10.0.0.7"]}
+	var ethernet := {"name": "eth0", "friendly": "eth0", "index": "2", "addresses": PackedStringArray(["192.168.1.40"])}
+	var picked = server_script.addresses_from_interfaces([vbox, hosted, wsl, loopback, wifi, ethernet])
+	_check(picked == PackedStringArray(["192.168.1.40", "10.0.0.7", "192.168.56.1", "192.168.137.1", "172.20.48.1"]),
+			"real adapters first, then virtual ones (got %s)" % [picked])
+	_check(server_script.addresses_from_interfaces([vbox, hosted, loopback]) == PackedStringArray(["192.168.56.1", "192.168.137.1"]),
+			"only virtual adapters: their addresses are still used")
+	_check(server_script.addresses_from_interfaces([]).is_empty(), "no interfaces, no addresses")
+	_check(server_script.addresses_from_interfaces([wifi, wifi, "junk", {"name": "x", "addresses": 5}]) == PackedStringArray(["10.0.0.7"]),
+			"duplicates and malformed entries ignored")
+	for name in ["VMware Network Adapter VMnet8", "vboxnet0", "Hyper-V Virtual Ethernet Adapter", "docker0",
+			"TAP-Windows Adapter V9", "vEthernet (Default Switch)", "WSL", "lo Loopback"]:
+		_check(server_script.is_virtual_interface({"name": name}), "virtual interface: %s" % name)
+	for name in ["Wi-Fi", "Ethernet", "wlan0", "eth0", "en0", "Conexión de red inalámbrica"]:
+		_check(not server_script.is_virtual_interface({"name": "{GUID}", "friendly": name}), "real interface: %s" % name)
 	for address in server_script.lan_addresses():
 		_check(server_script.is_private_ipv4(address), "lan_addresses returns private %s" % address)
 

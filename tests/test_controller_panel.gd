@@ -81,6 +81,7 @@ func _initialize() -> void:
 	_check(rc.is_running(), "opening the panel starts the phone controller")
 	_check(view.qr_rect.texture != null and view.url_label.text.begins_with("http://192.168.1.20:8080/"),
 			"QR and address shown")
+	_check(view.url_label.text.contains("http://10.0.0.7:8080/"), "every address listed as text")
 	fake.fake_controller = true
 	fake.message_received.emit({"type": "action", "name": "attack", "pressed": true})
 	pause.resume()
