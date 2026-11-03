@@ -7,17 +7,17 @@ extends SceneTree
 ## live in the generated .tres files.
 
 const ROOMS := [
-	# id, type, scene, weight, tags, min_enemies, max_enemies, height
-	[&"ruins_start", RoomData.RoomType.START, "start", 1.0, [], 0, 0, 0],
-	[&"ruins_boss", RoomData.RoomType.BOSS, "boss", 1.0, [], 0, 0, 1],
-	[&"ruins_river", RoomData.RoomType.COMBAT, "river", 1.0, [&"standard"], 2, 4, 0],
-	[&"ruins_terraces", RoomData.RoomType.COMBAT, "terraces", 1.0, [&"standard"], 2, 4, 0],
-	[&"ruins_plateau", RoomData.RoomType.COMBAT, "plateau", 1.0, [&"standard"], 2, 4, 1],
-	[&"ruins_narrow", RoomData.RoomType.COMBAT, "narrow", 0.8, [&"ambush"], 4, 6, 0],
-	[&"ruins_falls", RoomData.RoomType.COMBAT, "falls", 0.8, [&"watch"], 3, 5, 0],
-	[&"ruins_event", RoomData.RoomType.EVENT, "event", 1.0, [], 0, 0, 0],
-	[&"ruins_reward", RoomData.RoomType.REWARD, "reward", 1.0, [], 0, 0, 0],
-	[&"ruins_special", RoomData.RoomType.SPECIAL, "special", 1.0, [], 0, 0, 0],
+	# id, type, scene, weight, tags, min_enemies, max_enemies, height, dark
+	[&"ruins_start", RoomData.RoomType.START, "start", 1.0, [], 0, 0, 0, false],
+	[&"ruins_boss", RoomData.RoomType.BOSS, "boss", 1.0, [], 0, 0, 1, false],
+	[&"ruins_river", RoomData.RoomType.COMBAT, "river", 1.0, [&"standard"], 2, 4, 0, false],
+	[&"ruins_terraces", RoomData.RoomType.COMBAT, "terraces", 1.0, [&"standard"], 2, 4, 0, false],
+	[&"ruins_plateau", RoomData.RoomType.COMBAT, "plateau", 1.0, [&"standard"], 2, 4, 1, false],
+	[&"ruins_narrow", RoomData.RoomType.COMBAT, "narrow", 0.8, [&"ambush"], 4, 6, 0, true],
+	[&"ruins_falls", RoomData.RoomType.COMBAT, "falls", 0.8, [&"watch"], 3, 5, 0, true],
+	[&"ruins_event", RoomData.RoomType.EVENT, "event", 1.0, [], 0, 0, 0, false],
+	[&"ruins_reward", RoomData.RoomType.REWARD, "reward", 1.0, [], 0, 0, 0, false],
+	[&"ruins_special", RoomData.RoomType.SPECIAL, "special", 1.0, [], 0, 0, 0, false],
 ]
 
 
@@ -36,6 +36,7 @@ func _initialize() -> void:
 		room.min_enemies = spec[5]
 		room.max_enemies = spec[6]
 		room.height = spec[7]
+		room.dark = spec[8]
 		var path := "res://data/rooms/%s.tres" % spec[0]
 		ResourceSaver.save(room, path)
 		saved[spec[0]] = load(path)

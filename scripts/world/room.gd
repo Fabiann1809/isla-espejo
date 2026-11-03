@@ -56,6 +56,8 @@ func _ready() -> void:
 		_build_floor()
 	WallBuilder.add_walls(self, _wall_rects(), WallBuilder.WALL_COLOR, theme == null)
 	_build_trigger()
+	if data != null and data.dark:
+		_build_darkness()
 
 
 func pixel_size() -> Vector2:
@@ -443,6 +445,7 @@ func _build_trigger() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
+	_set_player_light(body, true)
 	player_inside = true
 	visited = true
 	Events.room_entered.emit(self)
@@ -451,5 +454,36 @@ func _on_body_entered(body: Node2D) -> void:
 func _on_body_exited(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
+	_set_player_light(body, false)
 	player_inside = false
 	Events.room_exited.emit(self)
+
+
+## A shade over the whole room (above every actor, below the lights and the HUD).
+func _build_darkness() -> void:
+	if Tuning.RUIN_DARK_SHADE.a <= 0.0:
+		return
+	var shade := ColorRect.new()
+	shade.name = "Darkness"
+	shade.color = Tuning.RUIN_DARK_SHADE
+	shade.size = pixel_size()
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.z_as_relative = false
+	shade.z_index = Tuning.RUIN_DARK_Z
+	add_child(shade)
+
+
+## While the player is in a dark room a soft glow follows him, so he is never lost in the shade.
+func _set_player_light(player: Node, on: bool) -> void:
+	if data == null or not data.dark or Tuning.RUIN_PLAYER_LIGHT.a <= 0.0:
+		return
+	var existing := player.get_node_or_null("DarkRoomLight")
+	if existing != null:
+		existing.queue_free()
+	if on:
+		var glow := RuinLight.glow(Tuning.RUIN_PLAYER_LIGHT, Vector2.ONE * Tuning.RUIN_PLAYER_LIGHT_RADIUS * 2.0)
+		glow.name = "DarkRoomLight"
+		glow.position = Vector2(0, -10)
+		glow.z_as_relative = false
+		glow.z_index = Tuning.RUIN_LIGHT_Z
+		player.add_child(glow)

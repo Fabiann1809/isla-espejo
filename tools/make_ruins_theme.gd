@@ -14,6 +14,9 @@ func _initialize() -> void:
 	theme.decor_chance = 0.025
 	theme.path_tile = TileArt.DIRT
 	theme.wall_style = RoomTheme.WallStyle.ROCKS
+	# A cold blue light over the cave, and no fireflies or leaves.
+	theme.world_tint = Color(0.8, 0.86, 1.0)
+	theme.ambient_life = false
 	ResourceSaver.save(theme, "res://data/themes/ruins.tres")
 	print("theme written")
 	quit()

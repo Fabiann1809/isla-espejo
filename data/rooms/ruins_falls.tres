@@ -9,5 +9,6 @@ id = &"ruins_falls"
 scene = ExtResource("1_7styh")
 weight = 0.8
 tags = Array[StringName]([&"watch"])
+dark = true
 min_enemies = 3
 max_enemies = 5

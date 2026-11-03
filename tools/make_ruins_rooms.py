@@ -2,7 +2,7 @@
 Run from the repo root: python tools/make_ruins_rooms.py
 
 Each room is a scene inheriting room_base.tscn with RuinProp nodes (rock outcrops, pillars, crystals,
-platforms, a bridge...) and RoomProp ponds, plus spawn markers. After generating, the .tscn files are
+platforms, a bridge, rivers...), plus spawn markers. After generating, the .tscn files are
 normal scenes you can edit by hand in Godot (and tests/test_room_designs.gd checks them with real
 physics). Rooms are 30x18 tiles (16 px); coordinates below are in TILES.
 
@@ -24,9 +24,8 @@ LANE_COLUMNS = range(13, 17)
 LANE_ROWS = range(7, 11)
 
 # RuinProp.Kind values (keep in sync with scripts/world/ruin_prop.gd)
-ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE = range(15)
-# The forest's RoomProp.POND is reused for rivers (drawn with the ruins' water).
-POND = 100
+ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER = range(16)
+POND = RIVER
 SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, POND}
 TALL = {PILLAR, CRYSTAL, STELE, BANNER}
 AREAS = {ROCKS, BRIDGE, WATERFALL, TERRACE, ALCOVE, POND}
@@ -80,23 +79,18 @@ def build(filename, node_name, props, spawns=None, player_spawn=None, raised=Fal
             assert 1 <= tile[0] <= COLUMNS - 2 and 1 <= tile[1] <= ROWS - 2, f"{filename}: {container} marker outside the room {px, py}"
             assert tile not in solid_tiles, f"{filename}: {container} marker {px, py} is inside a solid prop"
 
-    text = ['[gd_scene load_steps=4 format=3]\n',
+    text = ['[gd_scene load_steps=3 format=3]\n',
             '[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]',
-            '[ext_resource type="Script" path="res://scripts/world/ruin_prop.gd" id="2"]',
-            '[ext_resource type="Script" path="res://scripts/world/room_prop.gd" id="3"]\n',
+            '[ext_resource type="Script" path="res://scripts/world/ruin_prop.gd" id="2"]\n',
             f'[node name="{node_name}" instance=ExtResource("1")]\n']
     for number, prop in enumerate(props, start=1):
         kind, x, y = prop[0], prop[1], prop[2]
         size = prop[3] if len(prop) > 3 else None
         block = [f'[node name="Prop{number}" type="Node2D" parent="."]',
                  f'position = Vector2({x * TILE}, {y * TILE})']
-        if kind == POND:
-            block.append('script = ExtResource("3")')
-            block.append('kind = 5')
-        else:
-            block.append('script = ExtResource("2")')
-            if kind != 0:
-                block.append(f'kind = {kind}')
+        block.append('script = ExtResource("2")')
+        if kind != 0:
+            block.append(f'kind = {kind}')
         if size:
             block.append(f'size_tiles = Vector2i({size[0]}, {size[1]})')
         text.append("\n".join(block) + "\n")

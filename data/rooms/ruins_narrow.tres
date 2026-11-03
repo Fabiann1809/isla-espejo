@@ -9,5 +9,6 @@ id = &"ruins_narrow"
 scene = ExtResource("1_qlwg6")
 weight = 0.8
 tags = Array[StringName]([&"ambush"])
+dark = true
 min_enemies = 4
 max_enemies = 6

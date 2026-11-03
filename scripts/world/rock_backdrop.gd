@@ -20,7 +20,7 @@ static func build(parent: Node, area: Rect2i, walkable: Dictionary, map_seed: in
 	rng.seed = hash(["rock_backdrop", map_seed])
 	# Mostly the dark mass: the rock around the map should sink away from the lit rooms.
 	var dark := TileArt.coords(&"rock_mass_dark")
-	var tiles: Array[Vector2i] = [dark, dark, dark, TileArt.coords(&"rock_mass_a"), TileArt.coords(&"rock_mass_b")]
+	var tiles: Array[Vector2i] = [dark, dark, dark, dark, dark, TileArt.coords(&"rock_mass_a")]
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			if not walkable.has(Vector2i(x, y)):

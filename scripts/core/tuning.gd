@@ -130,6 +130,26 @@ const ZONE_OUTLINE_ALPHA := 0.55
 ## are drawn at their own size (the current 16 px pack is unaffected either way).
 const TILESET_FIT_TO_GRID := false
 
+# --- Ruinas: light and darkness ---
+## Soft additive light around torches, braziers and crystals (alpha 0 = off), radius in px, and the
+## draw order of lights over the shade of a dark room (both over every actor).
+const RUIN_LIGHTS_ENABLED := true
+const RUIN_TORCH_LIGHT := Color(1.0, 0.62, 0.25, 0.38)
+const RUIN_TORCH_LIGHT_RADIUS := 44.0
+const RUIN_BRAZIER_LIGHT := Color(1.0, 0.6, 0.22, 0.45)
+const RUIN_BRAZIER_LIGHT_RADIUS := 70.0
+const RUIN_CRYSTAL_LIGHT := Color(0.35, 0.78, 1.0, 0.36)
+const RUIN_CRYSTAL_LIGHT_RADIUS := 60.0
+## How far a light's strength wanders while it flickers (share of its alpha) and how often it does.
+const RUIN_LIGHT_FLICKER := 0.2
+const RUIN_LIGHT_FLICKER_SECONDS := 0.5
+const RUIN_DARK_Z := 4
+const RUIN_LIGHT_Z := 5
+## A dark room: shade over the whole room (alpha 0 = off) and the glow that follows Nico inside it.
+const RUIN_DARK_SHADE := Color(0.02, 0.04, 0.12, 0.52)
+const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
+const RUIN_PLAYER_LIGHT_RADIUS := 64.0
+
 # --- Special rooms and exits ---
 ## Decoration of the boss arena, the reward glade and the event camp (RoomDressing). False = off.
 const ROOM_DRESSING_ENABLED := true

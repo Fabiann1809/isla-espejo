@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
 [ext_resource type="Script" path="res://scripts/world/ruin_prop.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/world/room_prop.gd" id="3"]
 
 [node name="RuinsFalls" instance=ExtResource("1")]
 
@@ -14,8 +13,8 @@ size_tiles = Vector2i(2, 3)
 
 [node name="Prop2" type="Node2D" parent="."]
 position = Vector2(32, 64)
-script = ExtResource("3")
-kind = 5
+script = ExtResource("2")
+kind = 15
 size_tiles = Vector2i(4, 3)
 
 [node name="Prop3" type="Node2D" parent="."]
@@ -26,8 +25,8 @@ size_tiles = Vector2i(2, 3)
 
 [node name="Prop4" type="Node2D" parent="."]
 position = Vector2(384, 64)
-script = ExtResource("3")
-kind = 5
+script = ExtResource("2")
+kind = 15
 size_tiles = Vector2i(4, 3)
 
 [node name="Prop5" type="Node2D" parent="."]

@@ -14,18 +14,25 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
-## Footprint in tiles. Used by ROCKS, BRIDGE, WATERFALL, TERRACE and ALCOVE.
+## Footprint in tiles. Used by ROCKS, BRIDGE, WATERFALL, TERRACE, ALCOVE and RIVER.
 @export var size_tiles := Vector2i(2, 2)
 ## BRIDGE: true when it runs along x (its planks side by side from left to right).
 @export var horizontal := true
 
 ## Props that are part of the ground: drawn with the floor, never over an actor.
-const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE]
+const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER]
 const WORLD_BITS := 1
+const WATER_BITS := 1 << (Heights.WATER_LAYER - 1)
+## Water stops bodies a little inside its picture, so the shore is walkable.
+const WATER_INSET := 4.0
+## Frames per second of the animated pieces, and of the water.
+const FIRE_FPS := 6.0
+const WATER_FPS := 3.0
+const GLOW_FPS := 1.5
 const BLOCK_LOW_BITS := 1 << (Heights.BLOCK_LOW_LAYER - 1)
 const BLOCK_HIGH_BITS := 1 << (Heights.BLOCK_HIGH_LAYER - 1)
 ## How far outside a terrace its edge keeps the high actors in (px).
@@ -67,13 +74,13 @@ func _build() -> void:
 		Kind.PILLAR:
 			_tall(&"pillar")
 		Kind.CRYSTAL:
-			_tall(&"crystal")
+			_tall(&"crystal", true, [&"crystal_top", &"crystal_top_b"], GLOW_FPS)
 		Kind.STELE:
 			_tall(&"stele")
 		Kind.BRAZIER:
-			add_child(TileArt.sprite(&"brazier_a"))
+			add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.TORCH:
-			add_child(TileArt.sprite(&"torch_a"))
+			add_child(_animated([&"torch_a", &"torch_b", &"torch_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.BANNER:
 			_tall([&"banner_a", &"banner_b"][rng.randi_range(0, 1)], false)
 		Kind.CRATE:
@@ -86,8 +93,17 @@ func _build() -> void:
 			_waterfall()
 		Kind.TERRACE, Kind.ALCOVE:
 			_terrace(kind == Kind.ALCOVE, rng)
+		Kind.RIVER:
+			_river()
 	if FOOTS.has(kind):
 		_collide(FOOTS[kind])
+	match kind:
+		Kind.TORCH:
+			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6))
+		Kind.BRAZIER:
+			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5))
+		Kind.CRYSTAL:
+			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS, Vector2(8, 14))
 
 
 func _footprint_height() -> float:
@@ -106,12 +122,51 @@ func _sort_at(offset: float) -> void:
 			child.position.y -= offset
 
 
-## A tall prop: two tiles, `<name>_top` above and `<name>_base` below; `solid` blocks its base.
-func _tall(prop_name: StringName, solid := true) -> void:
-	add_child(TileArt.sprite(StringName(prop_name + "_top")))
+## A tall prop: two tiles, `<name>_top` above and `<name>_base` below; `solid` blocks its base. With
+## `top_frames` the upper tile is animated.
+func _tall(prop_name: StringName, solid := true, top_frames: Array[StringName] = [], fps := 0.0) -> void:
+	if top_frames.is_empty():
+		add_child(TileArt.sprite(StringName(prop_name + "_top")))
+	else:
+		add_child(_animated(top_frames, fps, Vector2.ZERO))
 	add_child(TileArt.sprite(StringName(prop_name + "_base"), Vector2(0, TileArt.TILE)))
 	if solid:
 		_collide(TALL_FOOT)
+
+
+## A soft additive light at `at` (see Tuning.RUIN_*): it flickers a little and is drawn over the shade
+## of a dark room.
+func _light(color: Color, radius: float, at: Vector2) -> void:
+	if not Tuning.RUIN_LIGHTS_ENABLED or color.a <= 0.0:
+		return
+	var glow := RuinLight.glow(color, Vector2.ONE * radius * 2.0)
+	glow.position = at
+	glow.z_as_relative = false
+	glow.z_index = Tuning.RUIN_LIGHT_Z
+	add_child(glow)
+	var dim := Color(color.r, color.g, color.b, color.a * (1.0 - Tuning.RUIN_LIGHT_FLICKER))
+	var tween := glow.create_tween().set_loops()
+	var seconds := Tuning.RUIN_LIGHT_FLICKER_SECONDS * randf_range(0.8, 1.4)
+	tween.tween_property(glow, "modulate", dim, seconds)
+	tween.tween_property(glow, "modulate", color, seconds)
+
+
+## A tile that cycles through `frames` (names in the profile), starting at a random frame so a row of
+## them does not blink together.
+func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
+	var sprite := AnimatedSprite2D.new()
+	var sprite_frames := SpriteFrames.new()
+	sprite_frames.set_animation_speed(&"default", fps)
+	for frame_name in frames:
+		sprite_frames.add_frame(&"default", TileArt.tile(frame_name))
+	sprite.sprite_frames = sprite_frames
+	sprite.centered = false
+	sprite.position = at
+	sprite.scale = Vector2.ONE * TileArt.draw_scale()
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.frame = randi() % frames.size()
+	sprite.play()
+	return sprite
 
 
 ## An outcrop of rock columns that fills the footprint (rows staggered every 8 px, like the walls).
@@ -150,12 +205,27 @@ func _bridge() -> void:
 func _waterfall() -> void:
 	for x in size_tiles.x:
 		for y in size_tiles.y:
-			var role: StringName = &"waterfall_mid_a"
+			var at := Vector2(x, y) * TileArt.TILE
 			if y == 0:
-				role = &"waterfall_top"
+				add_child(TileArt.sprite(&"waterfall_top", at))
 			elif y == size_tiles.y - 1:
-				role = &"waterfall_base_a"
-			add_child(TileArt.sprite(role, Vector2(x, y) * TileArt.TILE))
+				add_child(_animated([&"waterfall_base_a", &"waterfall_base_b", &"waterfall_base_c"], FIRE_FPS, at))
+			else:
+				add_child(_animated([&"waterfall_mid_a", &"waterfall_mid_b", &"waterfall_mid_c"], FIRE_FPS, at))
+
+
+## A river or pool: water with a luminous shore, its center shimmering. Bodies cannot cross it but
+## arrows fly over (layer `water`); leave a gap for a bridge.
+func _river() -> void:
+	for y in size_tiles.y:
+		for x in size_tiles.x:
+			var at := Vector2(x, y) * TileArt.TILE
+			var tile := TileArt.nine_slice_tile(&"pond", x, y, size_tiles)
+			if tile == TileArt.coords(&"pond_4"):
+				add_child(_animated([&"pond_4", &"pond_center_b", &"pond_center_c"], WATER_FPS, at))
+			else:
+				add_child(TileArt.sprite_of(tile, at))
+	_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0), WATER_BITS)
 
 
 ## A raised platform with a staircase in the middle of its south face. Rows: the top surface, then the

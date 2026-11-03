@@ -60,7 +60,7 @@ func _initialize() -> void:
 		if room.get_node_or_null("WallTrees") != null:
 			forest_pieces += 1
 		for prop in room.find_children("*", "Node2D", false, false):
-			if prop.get_script() == load("res://scripts/world/room_prop.gd") and prop.kind != 5:
+			if prop.get_script() == load("res://scripts/world/room_prop.gd"):
 				forest_pieces += 1
 	_check(forest_pieces == 0, "no tree walls and no forest props in any room (%d)" % forest_pieces)
 	var raised_rooms: Array = level.rooms.values().filter(func(room: Node) -> bool: return room.height == 1)
@@ -76,6 +76,33 @@ func _initialize() -> void:
 	var enemies: Array = level.get_tree().get_nodes_in_group("enemies")
 	_check(enemies.size() > 0 and enemies.all(func(e: Node) -> bool: return e.data.id in [&"bestia_de_la_niebla", &"sombra_errante", &"murcielago"]),
 			"only the second map's enemies live there (%d)" % enemies.size())
+	# Light and life: dark rooms have their shade, crystals and fires have lights, and the water, the
+	# fires and the crystals are animated.
+	var dark_ok := true
+	var dark_rooms := 0
+	for room in level.rooms.values():
+		var has_shade := room.get_node_or_null("Darkness") != null
+		dark_ok = dark_ok and has_shade == room.data.dark
+		dark_rooms += 1 if room.data.dark else 0
+	_check(dark_ok, "exactly the dark rooms have a shade (%d dark rooms)" % dark_rooms)
+	var lights := 0
+	var animated := 0
+	for room in level.rooms.values():
+		animated += room.find_children("*", "AnimatedSprite2D", true, false).size()
+		for glow in room.find_children("*", "Sprite2D", true, false):
+			if glow.material is CanvasItemMaterial and glow.z_index == Tuning.RUIN_LIGHT_Z:
+				lights += 1
+	_check(lights > 20 and animated > 20, "the rooms have lights and animated pieces (%d lights, %d animated)" % [lights, animated])
+	_check(level.get_node("WorldTint").color.b > level.get_node("WorldTint").color.r and level.get_node_or_null("AmbientLife") == null
+			or level.find_children("AmbientLife*", "", true, false).is_empty(),
+			"a cold tint and no forest life over the ruins")
+	var player: Node2D = level.player
+	var dark_room = level.rooms.values().filter(func(r: Node) -> bool: return r.data.dark)[0]
+	dark_room._set_player_light(player, true)
+	_check(player.get_node_or_null("DarkRoomLight") != null, "a glow follows the player in a dark room")
+	dark_room._set_player_light(player, false)
+	await process_frame
+	_check(player.get_node_or_null("DarkRoomLight") == null, "and goes away when he leaves")
 	level.free()
 
 	print("RESULT: ", "OK" if _ok else "FAILED")

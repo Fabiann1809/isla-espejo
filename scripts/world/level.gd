@@ -95,8 +95,8 @@ func generate(new_seed := 0) -> void:
 		push_error("Invalid map (seed %d): %s" % [current_seed, ", ".join(problems)])
 
 	# The look follows the scenario being played (a themed chapter after a plain one, or back).
-	Ambience.apply(self, scenario.theme != null)
-	AmbientLife.apply(self, scenario.theme != null and Tuning.AMBIENT_LIFE_ENABLED)
+	Ambience.apply(self, scenario.theme != null, scenario.theme.world_tint if scenario.theme != null else Tuning.WORLD_TINT)
+	AmbientLife.apply(self, scenario.theme != null and scenario.theme.ambient_life and Tuning.AMBIENT_LIFE_ENABLED)
 	_clear()
 	# Rooms, corridors and props are drawn with the scenario's pack (the default one without a theme).
 	TileArt.use_profile(scenario.theme.tileset if scenario.theme != null else null)

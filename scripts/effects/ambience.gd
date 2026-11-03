@@ -23,12 +23,13 @@ void fragment() {
 
 
 ## Turns the look on or off for the scenario being played, creating its nodes the first time.
-static func apply(level: Node, enabled: bool) -> void:
+static func apply(level: Node, enabled: bool, world_tint := Tuning.WORLD_TINT) -> void:
 	if not level.has_node("WorldTint") and not level.has_node("ScreenGrade"):
 		add_to(level)
 	var tint := level.get_node_or_null("WorldTint") as CanvasModulate
 	if tint != null:
 		tint.visible = enabled
+		tint.color = world_tint
 	var grade := level.get_node_or_null("ScreenGrade") as CanvasLayer
 	if grade != null:
 		grade.visible = enabled
