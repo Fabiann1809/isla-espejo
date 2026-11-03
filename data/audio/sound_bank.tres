@@ -96,7 +96,10 @@ volumes_db = {
 &"alert": -12.0,
 &"arrow_hit": -8.0,
 &"arrow_wall": -10.0,
+&"attack_bestia_de_la_niebla": -6.0,
+&"attack_murcielago": -8.0,
 &"attack_shot": -8.0,
+&"attack_sombra_errante": -6.0,
 &"attack_summon": -4.0,
 &"boss_roots": -2.0,
 &"boss_slam": 0.0,
@@ -122,14 +125,20 @@ volumes_db = {
 &"ui_hover": -14.0
 }
 aliases = {
+&"attack_bestia_de_la_niebla": &"boss_slam",
+&"attack_murcielago": &"dash",
 &"attack_planta_tiradora": &"spit",
 &"attack_shot": &"spit",
+&"attack_sombra_errante": &"skill_shadow",
 &"attack_summon": &"summon",
+&"death_bestia_de_la_niebla": &"death_wood",
 &"death_brote": &"death_wood",
 &"death_ente": &"death_wood",
 &"death_esqueleto": &"death_bones",
 &"death_forest_guardian": &"death_wood",
+&"death_murcielago": &"death_slime",
 &"death_planta_tiradora": &"death_slime",
+&"death_sombra_errante": &"skill_shadow",
 &"enemy_death": &"death_slime",
 &"pickup_arrows": &"pickup_heart"
 }
