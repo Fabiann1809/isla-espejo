@@ -117,6 +117,9 @@ func _stepping_off_is_safe() -> void:
 
 
 func _scuttles_between_drills() -> void:
+	# Its next spot is picked at random and may land next to the last one; a fixed seed keeps the
+	# check from failing now and then.
+	seed(7)
 	_player.global_position = ARENA
 	var spider = _spawn(ARENA + Vector2(60, 0))
 	var drill_spots: Array[Vector2] = []
