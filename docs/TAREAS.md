@@ -103,7 +103,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)
 - [x] Cofres y recompensas básicas (corazón extra y curación)
-- [x] Salida al escenario 2 (portal que se abre al vencer al jefe; hoy empieza un mapa nuevo del bosque hasta que exista el escenario 2: `next_scenario` en `forest.tres`)
+- [x] Salida al escenario 2 (portal que se abre al vencer al jefe y lleva a las Ruinas de la Montaña: `next_scenario` en `forest.tres`; las ruinas cierran el viaje por ahora, `tests/test_chapters.gd`)
 
 **Hecho cuando:** se puede jugar el escenario 1 de principio a fin (inicio, salas, Anciano, jefe, fragmento) y cada partida genera un recorrido distinto.
 
