@@ -445,34 +445,92 @@ class Room:
             f.write("\n".join(text))
 
 
-def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0):
-    """The old temple's leftovers, few and well apart: a statue stands alone in the open, vases and graves sit
-    against the rock, fallen armor lies on the floor, an engraved symbol (near `symbol`) or an altar (near
-    `altar`) marks the heart of a room. Everything keeps two free tiles around it."""
-    room.scatter(STATUE, statues, near_rock=False, min_dist=11, margin=2, size=(2, 1))
-    room.scatter(VASE, vases, near_rock=True, min_dist=7, margin=2)
-    room.scatter(ARMOR, armor, near_rock=None, min_dist=8, margin=2)
-    room.scatter(GRAVE, graves, near_rock=True, min_dist=7, margin=2)
-    room.scatter(BANNER, banners, near_rock=True, min_dist=9, margin=1, region=(2, 1, 27, 3))
-    if symbol:
-        room.put_near(SYMBOL, symbol, size=(2, 2), radius=3)
-    if altar:
-        room.put_near(ALTAR, altar, size=(2, 2), radius=3)
+def pair(room, kind, wanted, size=None, radius=2, margin=1):
+    """The same prop twice, mirrored across the room's vertical axis, so a pair guards a door or flanks the way."""
+    width = size[0] if size else 1
+    mirror = (COLUMNS - 1 - wanted[0] - (width - 1), wanted[1])
+    first = room.put_near(kind, wanted, size, radius, margin)
+    second = room.put_near(kind, mirror, size, radius, margin)
+    return first and second
+
+
+def vignette(room, kinds, away_from=(14.5, 8.5), taken_corners=None):
+    """A small scene: its pieces side by side (an old camp, a fallen warrior, a row of vases) in a corner of the room,
+    against the rock and far from the center; the rest of the room stays open. Returns the anchor."""
+    candidates = []
+    for x, y in room.cells():
+        if (x, y) in room.reserved or (x, y) in room.nooks or not room.near(x, y, "#", 1):
+            continue
+        if taken_corners and any(math.hypot(x - cx, y - cy) < 9 for cx, cy in taken_corners):
+            continue
+        candidates.append((math.hypot(x - away_from[0], y - away_from[1]) + room.rng.uniform(0, 3), x, y))
+    candidates.sort(reverse=True)
+    for _, x, y in candidates[:40]:
+        spots = [(x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1), (x - 1, y), (x, y - 1)]
+        placed = 0
+        trial = []
+        for kind, spot in zip(kinds, spots):
+            if room.put(kind, spot[0], spot[1], margin=0):
+                placed += 1
+                trial.append(spot)
+        if placed == len(kinds):
+            return (x, y)
+        # not all fit: take back what was placed here and try the next anchor
+        for kind, spot in zip(kinds, trial):
+            room.props = [p for p in room.props if not (p[0] == kind and p[1] == spot[0] and p[2] == spot[1])]
+    return None
 
 
 def lit(room, crystals=0, torches=0, braziers=0, sconces=0, lanterns=0):
-    """The lights of a room, few and apart: crystals and torches against the rock, the rest in the open, so each
-    pool of light marks a zone and the floor between them stays calm."""
-    room.scatter(CRYSTAL, crystals, near_rock=True, min_dist=9, margin=2)
-    room.scatter(TORCH, torches, near_rock=True, min_dist=9, margin=2)
+    """The lights of a room, composed: torches in a pair at the side doors, crystals in a mirrored pair near the
+    top corners and the third alone, braziers as a pair on the long diagonal and lanterns by the vignettes."""
+    if torches:
+        pair(room, TORCH, (2, 6), radius=3)
+        if torches > 2:
+            pair(room, TORCH, (2, 12), radius=3)
+    if crystals >= 2:
+        pair(room, CRYSTAL, (7, 3), radius=4)
+    if crystals % 2:
+        room.scatter(CRYSTAL, 1, near_rock=True, min_dist=9, margin=2)
+    if braziers >= 2:
+        pair(room, BRAZIER, (9, 12), radius=3)
+    elif braziers:
+        room.scatter(BRAZIER, 1, near_rock=False, min_dist=10, margin=2)
     room.scatter(SCONCE, sconces, near_rock=True, min_dist=10, margin=2)
     room.scatter(LANTERN, lanterns, near_rock=False, min_dist=10, margin=2)
-    room.scatter(BRAZIER, braziers, near_rock=False, min_dist=10, margin=2)
 
 
 def little(room, boulders=0, stalagmites=0):
     room.scatter(BOULDER, boulders, near_rock=True, min_dist=8, margin=2)
     room.scatter(STALAGMITE, stalagmites, near_rock=True, min_dist=8, margin=2)
+
+
+def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0):
+    """The old temple's leftovers, composed: statues stand as guardians in a mirrored pair (or alone on a side),
+    banners hang in a pair along the top wall, vases and graves form one small corner scene, fallen armor another,
+    the engraved symbol or the altar marks the heart of the room."""
+    if statues >= 2:
+        pair(room, STATUE, (8, 4), size=(2, 1), radius=3, margin=2)
+    elif statues:
+        room.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1))
+    if banners >= 2:
+        pair(room, BANNER, (9, 1), radius=2, margin=0)
+    elif banners:
+        room.scatter(BANNER, 1, near_rock=True, min_dist=9, margin=1, region=(2, 1, 27, 3))
+    corners = []
+    scene = [VASE] * vases + [GRAVE] * graves
+    if scene:
+        anchor = vignette(room, scene)
+        if anchor:
+            corners.append(anchor)
+    if armor:
+        anchor = vignette(room, [ARMOR] * armor, taken_corners=corners)
+        if anchor:
+            corners.append(anchor)
+    if symbol:
+        room.put_near(SYMBOL, symbol, size=(2, 2), radius=3)
+    if altar:
+        room.put_near(ALTAR, altar, size=(2, 2), radius=3)
 
 
 # --- Start: a wide cavern with a lit landing --------------------------------------------------------------------------

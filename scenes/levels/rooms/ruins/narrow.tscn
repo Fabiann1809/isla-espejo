@@ -28,76 +28,76 @@ rows = "##############################
 ##############################"
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(448, 80)
+position = Vector2(32, 96)
 script = ExtResource("2")
-kind = 4
+kind = 7
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(320, 176)
+position = Vector2(432, 96)
+script = ExtResource("2")
+kind = 7
+
+[node name="Prop3" type="Node2D" parent="."]
+position = Vector2(80, 80)
 script = ExtResource("2")
 kind = 4
 
-[node name="Prop3" type="Node2D" parent="."]
-position = Vector2(288, 256)
-script = ExtResource("2")
-kind = 7
-
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(80, 256)
+position = Vector2(352, 48)
 script = ExtResource("2")
-kind = 7
+kind = 4
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(32, 256)
+position = Vector2(320, 256)
 script = ExtResource("2")
 kind = 1
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(64, 96)
+position = Vector2(448, 208)
 script = ExtResource("2")
 kind = 1
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(272, 128)
+position = Vector2(320, 128)
 script = ExtResource("2")
 kind = 16
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(384, 64)
+position = Vector2(80, 160)
 script = ExtResource("2")
 kind = 16
 
 [node name="Prop9" type="Node2D" parent="."]
-position = Vector2(160, 64)
+position = Vector2(16, 240)
 script = ExtResource("2")
 kind = 18
 
 [node name="Prop10" type="Node2D" parent="."]
-position = Vector2(224, 160)
-script = ExtResource("2")
-kind = 19
-
-[node name="Prop11" type="Node2D" parent="."]
-position = Vector2(448, 240)
+position = Vector2(32, 240)
 script = ExtResource("2")
 kind = 22
+
+[node name="Prop11" type="Node2D" parent="."]
+position = Vector2(448, 32)
+script = ExtResource("2")
+kind = 19
 
 [node name="EnemySpawns" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(408, 136)
+position = Vector2(280, 200)
 
 [node name="P2" type="Marker2D" parent="EnemySpawns"]
 position = Vector2(72, 136)
 
 [node name="P3" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(232, 232)
+position = Vector2(424, 56)
 
 [node name="P4" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(232, 56)
+position = Vector2(216, 56)
 
 [node name="P5" type="Marker2D" parent="EnemySpawns"]
-position = Vector2(296, 136)
+position = Vector2(344, 120)
 
 [node name="P6" type="Marker2D" parent="EnemySpawns"]
 position = Vector2(88, 232)

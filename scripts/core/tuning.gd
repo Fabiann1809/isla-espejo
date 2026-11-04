@@ -167,6 +167,24 @@ const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
 const RUIN_PLAYER_LIGHT_RADIUS := 64.0
 ## Seconds the shade (and the glow) take to grow when Nico enters a dark room and to fade when he leaves.
 const RUIN_DARK_FADE_SECONDS := 1.6
+## The rock between the rooms (RockBackdrop): formations on or off, spacing of their spots (px) and how far each
+## wanders, base chance of a formation and how much the noise swings it (open pockets, dense stands), noise
+## frequency, tiles left bare beside the way, tiles from the way where the middle and the deep rings begin, how
+## far the search for the nearest floor goes, px of a picture that may overlap a floor, and how much each ring darkens.
+const RUIN_BACKDROP_FORMATIONS := true
+const RUIN_BACKDROP_STEP := 15.0
+const RUIN_BACKDROP_JITTER := 5.0
+const RUIN_BACKDROP_DENSITY := 0.55
+## Least chance of a formation close to the way (the narrow gaps between rooms must never stay a bare trench).
+const RUIN_BACKDROP_NEAR_DENSITY := 0.85
+const RUIN_BACKDROP_CONTRAST := 1.1
+const RUIN_BACKDROP_NOISE_FREQUENCY := 0.06
+const RUIN_BACKDROP_CLEAR_TILES := 1
+const RUIN_BACKDROP_NEAR_TILES := 3
+const RUIN_BACKDROP_FAR_TILES := 8
+const RUIN_BACKDROP_DEPTH := 12
+const RUIN_BACKDROP_OVERLAP := 3.0
+const RUIN_BACKDROP_DARKEN := 0.2
 ## Cold flame of the blue sconces, warm light of the lanterns, and the soft shadow props throw at their foot.
 const RUIN_SCONCE_LIGHT := Color(0.3, 0.78, 1.0, 0.4)
 const RUIN_SCONCE_LIGHT_RADIUS := 56.0

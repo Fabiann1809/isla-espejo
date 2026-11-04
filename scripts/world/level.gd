@@ -468,7 +468,7 @@ func _build_backdrop() -> void:
 		_mark(taken, _cells(rect))
 	var area := _cells(bounds).grow(Tuning.BACKDROP_MARGIN_TILES)
 	if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
-		RockBackdrop.build(_map, area, walkable, current_seed)
+		RockBackdrop.build(_map, area, walkable, taken, current_seed)
 		return
 	ForestBackdrop.build(_map, area, walkable, taken, current_seed)
 	if scenario.theme.forest_art_details:

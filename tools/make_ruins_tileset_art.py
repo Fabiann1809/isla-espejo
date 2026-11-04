@@ -1446,6 +1446,68 @@ def block_stack(seed):
     return outline(img)
 
 
+# --- crags: big irregular masses of rock for the backdrop between rooms ---------------------------------------------
+def crag(seed, cols, rows, moss=0.0, crystal=False):
+    """A mass of rock `cols` x `rows` tiles big: three to six rounded lumps heaped like a pyramid, each lit
+    from the upper left with a dark underside, cracks between them, moss on the tops, rubble at the foot and,
+    sometimes, a shard of blue crystal growing between two lumps."""
+    rng = random.Random(seed)
+    w, h = cols * T, rows * T
+    img = blank(w, h)
+    noise = value_noise(rng, w, h, 4)
+    lumps = []
+    count = 3 + cols + rows
+    for i in range(count):
+        t = i / max(1, count - 1)
+        ry = rng.uniform(0.26, 0.4) * h
+        rx = rng.uniform(0.2, 0.34) * w + 2
+        cy = (h - ry - 2) - t * (h - 2 * ry - 4)
+        spread = (1.0 - t * 0.75) * (w / 2.0 - rx * 0.6)
+        cx = w / 2.0 + rng.uniform(-1.0, 1.0) * spread
+        lumps.append((cx, cy, rx, ry))
+    lumps.sort(key=lambda l: l[1])
+    for cx, cy, rx, ry in lumps:
+        for y in range(h):
+            for x in range(w):
+                dx, dy = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
+                d = math.hypot(dx, dy)
+                if d <= 1.0:
+                    light = 1.0 - (dx * 0.55 + dy * 0.65) * 0.5
+                    c = mix(ROCK_2, ROCK_HI, max(0.0, min(1.0, light * 0.6 + (noise[y][x] - 0.5) * 0.5)))
+                    if d > 0.8 and dy > -0.2:
+                        c = shade(c, 0.66)
+                    if d > 0.94:
+                        c = shade(c, 0.5)
+                    img.putpixel((x, y), c)
+    # facets: short dark cracks and a few bright chips
+    for _ in range(cols * rows * 4):
+        x, y = rng.randrange(3, w - 3), rng.randrange(4, h - 3)
+        if img.getpixel((x, y))[3]:
+            for k in range(rng.randrange(2, 5)):
+                put(img, x + k % 2, y + k, shade(img.getpixel((min(w - 1, x + k % 2), min(h - 1, y + k)))[:3] + (255,), 0.55))
+            put(img, x - 1, y, shade(ROCK_HI, 1.0))
+    if crystal:
+        cx = int(w * rng.uniform(0.35, 0.65))
+        base = int(h * 0.62)
+        for k, (ox, height, half) in enumerate(((0, 11, 2), (-4, 7, 1), (4, 8, 1))):
+            for y in range(base - height, base + 1):
+                wd = half if y > base - height + 2 else 0
+                for x in range(cx + ox - wd, cx + ox + wd + 1):
+                    put(img, x, y, CRY_HI if x < cx + ox else (CRY_2 if x == cx + ox else CRY_1))
+    if moss:
+        # moss only on the upper surfaces: a pixel whose neighbour three rows up is empty
+        for y in range(1, h - 1):
+            for x in range(1, w - 1):
+                if img.getpixel((x, y))[3] and not img.getpixel((x, max(0, y - 3)))[3] and noise[y][x] > 1.0 - moss * 2.0:
+                    put(img, x, y, rng.choice((MOSS_1, MOSS_2, MOSS_D)))
+    for _ in range(cols * 3):
+        sx, sy = rng.randrange(0, w - 3), rng.randrange(h - 5, h - 1)
+        for dx in (0, 1, 2):
+            if img.getpixel((min(w - 1, sx + dx), sy))[3]:
+                put(img, sx + dx, sy, rng.choice((ROCK_4, ROCK_3)))
+    return outline(img)
+
+
 # --- stairs and bridges -------------------------------------------------------------------------------------
 def bridge_planks(horizontal=True, seed=2):
     rng = random.Random(seed)
@@ -2074,6 +2136,13 @@ def build_tiles():
     add_tall("column_wall_b", wall_panel(206, niche=True))
     add_tall("column_stack_a", block_stack(207))
     add_tall("column_stack_b", block_stack(208))
+    for name, (seed, cols, rows, moss, crystal) in (("crag_a", (301, 2, 2, 0.25, False)), ("crag_b", (302, 3, 3, 0.3, True)),
+                                                    ("crag_c", (303, 3, 2, 0.2, False)), ("crag_d", (304, 4, 3, 0.35, True)),
+                                                    ("crag_e", (305, 2, 2, 0.1, True))):
+        big = crag(seed, cols, rows, moss, crystal)
+        for r in range(rows):
+            for c in range(cols):
+                add("%s_%d%d" % (name, r, c), big.crop((c * T, r * T, c * T + T, r * T + T)))
     add_tall("banner_blue", blue_banner())
     add("urn_a", urn(0))
     add("urn_b", urn(1))
