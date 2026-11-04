@@ -31,6 +31,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 | Habilidades | 3 fijas, una por jefe, **sin combinaciones** |
 | IA | Capa 1 (perfil del jugador) y capa 2 (la isla reacciona). Ambas obligatorias |
 | Historia | Prólogo, 3 capítulos, final, con diálogos en el juego |
+| Control por celular | Un celular maneja al único Nico mediante una página web que se abre con un QR en Ajustes (opcional; el teclado sigue funcionando) |
 | Interfaz | Menú principal, HUD, pausa, pantalla de muerte con resumen de perfil, créditos |
 | Guardado | Perfil del jugador y progreso básico |
 | Sonido | Música y efectos básicos (packs gratuitos con créditos) |
@@ -38,7 +39,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 
 ### Fuera del alcance
 - Recolección y construcción.
-- Multijugador.
+- Multijugador (varios jugadores a la vez). El control por celular maneja al único Nico y no cuenta como multijugador.
 - Tienda del Mercader (es solo diálogo).
 - Combinaciones de habilidades (extra opcional, ver sección 5).
 - Plataformas flotantes y niveles de altura (se reemplazan por caminos de piedra sobre lava).

@@ -36,6 +36,7 @@ Settings="*res://scripts/core/settings.gd"
 SaveGame="*res://scripts/core/save_game.gd"
 Dialogue="*res://scripts/core/dialogue.gd"
 Sound="*res://scripts/core/sound.gd"
+RemoteControl="*res://scripts/net/remote_control.gd"
 
 [display]
 

@@ -9,7 +9,9 @@ var volume_slider: HSlider
 var music_slider: HSlider
 var sfx_slider: HSlider
 var fullscreen_check: CheckButton
+var controller_button: Button
 var back_button: Button
+var controller_panel: ControllerPanel
 
 
 func _ready() -> void:
@@ -27,6 +29,9 @@ func _ready() -> void:
 	fullscreen_check.text = UiText.t("options_fullscreen")
 	box.add_child(fullscreen_check)
 
+	controller_button = UiKit.button(UiText.t("options_controller"))
+	box.add_child(controller_button)
+
 	back_button = UiKit.button(UiText.t("options_back"))
 	box.add_child(back_button)
 
@@ -35,6 +40,7 @@ func _ready() -> void:
 	music_slider.value_changed.connect(Settings.set_music_volume)
 	sfx_slider.value_changed.connect(Settings.set_sfx_volume)
 	fullscreen_check.toggled.connect(Settings.set_fullscreen)
+	controller_button.pressed.connect(_open_controller)
 	back_button.pressed.connect(close)
 	hide()
 
@@ -48,6 +54,39 @@ func open() -> void:
 func close() -> void:
 	hide()
 	closed.emit()
+
+
+## Hides the options and shows the phone controller panel next to them (a sibling, because a
+## hidden parent would hide it too).
+func _open_controller() -> void:
+	if controller_panel == null:
+		controller_panel = ControllerPanel.new()
+		controller_panel.set_anchors_preset(Control.PRESET_CENTER)
+		controller_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		controller_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+		controller_panel.closed.connect(func() -> void:
+			show()
+			controller_button.grab_focus())
+		get_parent().add_child(controller_panel)
+	hide()
+	controller_panel.open()
+
+
+## True while the phone controller panel is on screen (the options are hidden then).
+func is_controller_open() -> bool:
+	return controller_panel != null and controller_panel.visible
+
+
+## Hides the controller panel if open. The phone controller (autoload `RemoteControl`) keeps
+## running; only the panel's "Desconectar" button stops it.
+func close_all() -> void:
+	if is_controller_open():
+		controller_panel.close()
+
+
+func _exit_tree() -> void:
+	if controller_panel != null and is_instance_valid(controller_panel):
+		controller_panel.queue_free()
 
 
 ## Shows the current values without triggering a change.

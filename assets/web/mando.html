@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Mando - Isla Espejo</title>
+<style>
+  :root {
+    --gutter: 16px;
+    --bg: #0d1710;
+    --panel: #15241a;
+    --ring: #2f4936;
+    --ring-hi: #4d7358;
+    --fg: #e6efe4;
+    --muted: #8da593;
+    --accent: #e0b050;
+    --accent-on: #ffd47a;
+    --skill: #6fbf8e;
+    --skill-on: #a6efc3;
+    --ok: #5fd08a;
+    --warn: #e0b050;
+    --bad: #ee7b6e;
+    --atk: clamp(100px, 36vh, 160px);
+    --stick: clamp(150px, 52vh, 240px);
+  }
+  * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg);
+    font-family: system-ui, sans-serif; touch-action: none; overscroll-behavior: none; }
+  #app { position: fixed; inset: 0; padding: var(--gutter); display: flex; flex-direction: column; }
+
+  #bar { flex: none; display: flex; align-items: center; justify-content: space-between; height: 44px; font-size: 14px; color: var(--muted); }
+  #state { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 12px 0; }
+  #dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+  #state.ok #dot { background: var(--ok); }
+  #state.bad #dot { background: var(--bad); }
+  #state.tap { text-decoration: underline; cursor: pointer; }
+  #rtt { font-variant-numeric: tabular-nums; }
+  #rtt.good { color: var(--ok); }
+  #rtt.mid { color: var(--warn); }
+  #rtt.slow { color: var(--bad); }
+
+  #pad { flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: var(--gutter); }
+
+  #stick { position: relative; flex: none; width: var(--stick); height: var(--stick); border-radius: 50%;
+    background: radial-gradient(circle, #1b2e21 0%, var(--panel) 70%); border: 3px solid var(--ring);
+    touch-action: none; align-self: center; }
+  #stick.active { border-color: var(--ring-hi); }
+  #knob { position: absolute; left: 50%; top: 50%; width: 40%; height: 40%; margin: -20% 0 0 -20%; border-radius: 50%;
+    background: #4a6b53; border: 3px solid #8fb79a; pointer-events: none; transition: transform 90ms ease-out; }
+  #stick.active #knob { transition: none; background: #5d8668; }
+
+  #right { flex: none; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; gap: 12px; height: 100%; }
+  #skills { display: flex; gap: 12px; }
+  #main { display: flex; align-items: flex-end; gap: 12px; }
+
+  .btn { touch-action: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 50%; font-family: inherit; font-weight: 700; color: var(--fg); line-height: 1.1;
+    transition: transform 60ms ease-out, background 60ms; padding: 0; }
+  .btn.on { transform: scale(0.94); }
+  .skill { width: 60px; height: 60px; background: var(--panel); border: 3px solid var(--skill); color: var(--skill); }
+  .skill b { font-size: 24px; }
+  .skill.on { background: var(--skill); color: #0b1a10; }
+  .skill.on b { color: #0b1a10; }
+  #b-attack { width: var(--atk); height: var(--atk); background: #3a2e12; border: 4px solid var(--accent); color: var(--accent); font-size: 20px; }
+  #b-attack.on { background: var(--accent-on); border-color: var(--accent-on); color: #2a1f05; }
+  #b-dash { width: 84px; height: 84px; background: var(--panel); border: 3px solid var(--fg); font-size: 14px; }
+  #b-dash.on { background: var(--fg); color: #0d1710; }
+  #b-interact { width: 64px; height: 64px; background: var(--panel); border: 3px solid var(--muted); color: var(--muted); font-size: 15px; }
+  #b-interact.on { background: var(--muted); color: #0d1710; }
+
+  #rotate { display: none; position: fixed; inset: 0; z-index: 10; background: var(--bg); color: var(--fg);
+    align-items: center; justify-content: center; text-align: center; font-size: 22px; padding: var(--gutter); touch-action: none; }
+  @media (orientation: portrait) { #rotate { display: flex; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <div id="state" role="status" aria-live="polite"><span id="dot"></span><span id="stateText">Esperando...</span></div>
+    <div id="rtt"></div>
+  </div>
+  <div id="pad">
+    <div id="stick"><div id="knob"></div></div>
+    <div id="right">
+      <div id="skills">
+        <button class="btn skill" data-action="skill_1" aria-label="Habilidad 1"><b>1</b></button>
+        <button class="btn skill" data-action="skill_2" aria-label="Habilidad 2"><b>2</b></button>
+        <button class="btn skill" data-action="skill_3" aria-label="Habilidad 3"><b>3</b></button>
+      </div>
+      <div id="main">
+        <button class="btn" id="b-interact" data-action="interact">Usar</button>
+        <button class="btn" id="b-dash" data-action="dash">Esquivar</button>
+        <button class="btn" id="b-attack" data-action="attack">Atacar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="rotate">Gira el celular a horizontal</div>
+<script>
+(function () {
+  "use strict";
+  var MOVE_INTERVAL_MS = 50;      // throttle for changes
+  var MOVE_HEARTBEAT_MS = 80;     // resend while held; the server drops movement after 200 ms of silence
+  var RELEASE_REPEATS = 3, RELEASE_GAP_MS = 40;
+  var DEADZONE = 0.05; // the server applies the real deadzone (0.2); this only hides jitter
+  var PING_INTERVAL_MS = 1000, RETRY_MS = 2000, BUSY_RETRY_MS = 10000, RTT_SAMPLES = 5;
+
+  var stateEl = document.getElementById("state"), stateText = document.getElementById("stateText");
+  var rttEl = document.getElementById("rtt");
+  var portrait = window.matchMedia("(orientation: portrait)");
+  var ws = null, pingTimer = null, retryTimer = null, busy = false, rtts = [], firstConnect = true;
+
+  function setStatus(text, cls) { stateText.textContent = text; stateEl.className = cls || ""; }
+  function showRtt() {
+    if (!rtts.length) { rttEl.textContent = ""; rttEl.className = ""; return; }
+    var sum = 0; rtts.forEach(function (v) { sum += v; });
+    var avg = Math.round(sum / rtts.length);
+    rttEl.textContent = avg + " ms";
+    rttEl.className = avg < 60 ? "good" : (avg < 120 ? "mid" : "slow");
+  }
+  function send(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify(obj)); return true; }
+    return false;
+  }
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate(12); } catch (_) {} }
+
+  // ---- Joystick ----
+  var stick = document.getElementById("stick"), knob = document.getElementById("knob");
+  var stickId = null, curX = 0, curY = 0, rawX = 0, rawY = 0, sentX = 0, sentY = 0;
+  var lastMoveAt = 0, moveTimer = null, heartbeat = null, releaseTimers = [];
+
+  function sendMove() {
+    send({ type: "move", x: curX, y: curY });
+    sentX = curX; sentY = curY; lastMoveAt = Date.now();
+  }
+  function flushMove() {
+    moveTimer = null;
+    if (stickId === null || (curX === sentX && curY === sentY)) return;
+    sendMove();
+  }
+  function queueMove() {
+    if (moveTimer !== null) return;
+    var wait = MOVE_INTERVAL_MS - (Date.now() - lastMoveAt);
+    if (wait <= 0) flushMove(); else moveTimer = setTimeout(flushMove, wait);
+  }
+  function drawKnob() {
+    var r = stick.clientWidth / 2;
+    knob.style.transform = "translate(" + (rawX * r * 0.6) + "px," + (rawY * r * 0.6) + "px)";
+  }
+  function stickFromEvent(e) {
+    var b = stick.getBoundingClientRect(), r = b.width / 2;
+    var dx = (e.clientX - (b.left + r)) / r, dy = (e.clientY - (b.top + r)) / r;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 1) { dx /= len; dy /= len; len = 1; }
+    rawX = dx; rawY = dy;
+    if (len < DEADZONE) { curX = 0; curY = 0; }
+    else {
+      var k = (len - DEADZONE) / (1 - DEADZONE) / len; // rescale so output starts at 0 past the deadzone
+      curX = Math.round(dx * k * 100) / 100; curY = Math.round(dy * k * 100) / 100;
+    }
+    drawKnob(); queueMove();
+  }
+  function stopHeartbeat() { if (heartbeat !== null) { clearInterval(heartbeat); heartbeat = null; } }
+  function cancelReleaseBurst() { releaseTimers.forEach(clearTimeout); releaseTimers = []; }
+  function releaseStick() {
+    stickId = null; curX = 0; curY = 0; rawX = 0; rawY = 0;
+    if (moveTimer !== null) { clearTimeout(moveTimer); moveTimer = null; }
+    stopHeartbeat();
+    stick.classList.remove("active");
+    drawKnob();
+    // Zero three times so one lost packet cannot leave movement stuck. Closed socket: send() is a no-op.
+    cancelReleaseBurst();
+    for (var i = 0; i < RELEASE_REPEATS; i++) {
+      if (i === 0) send({ type: "move", x: 0, y: 0 });
+      else releaseTimers.push(setTimeout(function () { send({ type: "move", x: 0, y: 0 }); }, i * RELEASE_GAP_MS));
+    }
+    sentX = 0; sentY = 0; lastMoveAt = Date.now();
+  }
+  stick.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    if (stickId !== null || portrait.matches) return;
+    stickId = e.pointerId;
+    cancelReleaseBurst();
+    try { stick.setPointerCapture(e.pointerId); } catch (_) {}
+    stick.classList.add("active");
+    stickFromEvent(e);
+    stopHeartbeat();
+    heartbeat = setInterval(function () {
+      if (stickId !== null && (curX !== 0 || curY !== 0)) sendMove();
+    }, MOVE_HEARTBEAT_MS);
+  });
+  stick.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) { stickFromEvent(e); e.preventDefault(); } });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) {
+    stick.addEventListener(n, function (e) { if (e.pointerId === stickId) releaseStick(); });
+  });
+
+  // ---- Buttons ----
+  var held = {}; // action name -> {el, pointerId}
+  function press(el, e) {
+    var name = el.dataset.action;
+    if (held[name] || portrait.matches) return;
+    held[name] = { el: el, pointerId: e.pointerId };
+    el.classList.add("on");
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    buzz();
+    send({ type: "action", name: name, pressed: true });
+  }
+  function release(name) {
+    var h = held[name];
+    if (!h) return;
+    delete held[name];
+    h.el.classList.remove("on");
+    send({ type: "action", name: name, pressed: false });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".btn"), function (el) {
+    var name = el.dataset.action;
+    el.addEventListener("pointerdown", function (e) { press(el, e); e.preventDefault(); });
+    ["pointerup", "pointercancel", "pointerleave", "lostpointercapture"].forEach(function (n) {
+      el.addEventListener(n, function (e) {
+        if (held[name] && held[name].pointerId === e.pointerId) release(name);
+      });
+    });
+  });
+
+  // Whatever is held is let go (pressed:false while the socket is open; nothing if it is gone).
+  function releaseAll() {
+    if (stickId !== null) releaseStick();
+    Object.keys(held).forEach(release);
+  }
+
+  // ---- Connection ----
+  function connect() {
+    retryTimer = null;
+    busy = false;
+    rtts = []; showRtt();
+    if (firstConnect) { setStatus("Esperando..."); firstConnect = false; }
+    try {
+      ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
+    } catch (_) { scheduleRetry(RETRY_MS); return; }
+    var mine = ws;
+    function ping() { send({ type: "ping", t: Date.now() }); }
+    mine.onopen = function () {
+      setStatus("Conectado", "ok");
+      ping();
+      pingTimer = setInterval(ping, PING_INTERVAL_MS);
+    };
+    mine.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+      if (!m) return;
+      if (m.type === "busy") { busy = true; setStatus("Mando ocupado", "bad"); }
+      else if (m.type === "pong" && typeof m.t === "number") {
+        var rtt = Date.now() - m.t;
+        if (rtt >= 0 && rtt < 60000) { rtts.push(rtt); if (rtts.length > RTT_SAMPLES) rtts.shift(); showRtt(); }
+      }
+    };
+    mine.onclose = function () {
+      if (ws !== mine) return;
+      ws = null;
+      if (pingTimer !== null) { clearInterval(pingTimer); pingTimer = null; }
+      releaseAll();
+      rtts = []; showRtt();
+      if (busy) {
+        setStatus("Mando ocupado, toca para reintentar", "bad tap");
+        scheduleRetry(BUSY_RETRY_MS);
+      } else {
+        setStatus("Reconectando...", "bad");
+        scheduleRetry(RETRY_MS);
+      }
+    };
+    mine.onerror = function () { /* onclose follows */ };
+  }
+  function scheduleRetry(ms) { if (retryTimer === null) retryTimer = setTimeout(connect, ms); }
+  // Tapping the status after "busy" retries at once (only when no socket is open).
+  stateEl.addEventListener("click", function () {
+    if (!busy || ws !== null) return;
+    if (retryTimer !== null) { clearTimeout(retryTimer); retryTimer = null; }
+    connect();
+  });
+
+  // ---- Orientation, wake lock, no zoom/menus ----
+  function onOrientation() { if (portrait.matches) releaseAll(); }
+  if (portrait.addEventListener) portrait.addEventListener("change", onOrientation);
+  else if (portrait.addListener) portrait.addListener(onOrientation);
+
+  var wakeLock = null;
+  function keepAwake() {
+    try {
+      if (navigator.wakeLock && navigator.wakeLock.request) {
+        navigator.wakeLock.request("screen").then(function (l) { wakeLock = l; }, function () {});
+      }
+    } catch (_) {}
+  }
+  keepAwake();
+
+  ["gesturestart", "gesturechange", "contextmenu", "selectstart", "dblclick"].forEach(function (n) {
+    document.addEventListener(n, function (e) { e.preventDefault(); });
+  });
+  document.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+  window.addEventListener("blur", releaseAll);
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) releaseAll(); else keepAwake();
+  });
+
+  connect();
+})();
+</script>
+</body>
+</html>

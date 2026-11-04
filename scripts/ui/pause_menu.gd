@@ -57,7 +57,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("pause"):
 		return
 	if is_open():
-		if options.visible:
+		if options.is_controller_open():
+			options.close_all()
+		elif options.visible:
 			options.close()
 		else:
 			resume()
@@ -71,6 +73,7 @@ func is_open() -> bool:
 
 
 func pause() -> void:
+	options.close_all()
 	get_tree().paused = true
 	_panel.show()
 	options.hide()
@@ -79,6 +82,7 @@ func pause() -> void:
 
 
 func resume() -> void:
+	options.close_all()
 	_root.hide()
 	get_tree().paused = false
 

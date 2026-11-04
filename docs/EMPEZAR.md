@@ -17,7 +17,7 @@ Lee esto primero. En 15 minutos deberías tener el juego abierto y saber por dó
 4. Abre Godot → **Importar** → selecciona `project.godot` → **Importar y editar**.
 5. Pulsa **F5**. Verás el Bosque de la Aurora generado (pasto, pinos, estanques, caminos de tierra): Nico (cuadro amarillo) empieza en la sala verde (inicio) y los soldados rojos están repartidos por las salas. Con `R` se genera otro mapa. La sala morada es la del jefe (arriba).
 
-Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `1 2 3` habilidades (en el nivel de prueba ya vienen desbloqueadas). `E` interactuar aún no hace nada.
+Controles: `WASD` mover · `Espacio` esquivar · `J` atacar · `R` mapa nuevo. `1 2 3` habilidades (en el nivel de prueba ya vienen desbloqueadas). `E` interactuar aún no hace nada. Opcional: un celular también puede manejar a Nico (en el menú, **Ajustes**, escanea el QR).
 
 ## 2. Leer, en este orden
 1. `docs/JUEGO.md`: qué es el juego, alcance y personajes. **Lo que no está ahí no se construye sin preguntar.**
