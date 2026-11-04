@@ -1,6 +1,6 @@
 extends SceneTree
-## The end of the first island: taking the forest's exit ends the journey with the ending screen
-## (the run's summary with the victory texts) instead of building another forest.
+## The end of the last chapter built so far (the ruins): taking its exit ends the journey with the ending
+## screen (the run's summary with the victory texts) instead of building another map.
 ## `Level` and other autoload-using types must not be referenced here (autoload compile order).
 ## Run: godot --headless --path . --script res://tests/test_ending.gd
 
@@ -19,12 +19,13 @@ func _initialize() -> void:
 			"the ending texts live in the profile config")
 
 	var level: Node2D = load("res://scenes/levels/forest_level.tscn").instantiate()
+	level.scenario = load("res://data/scenarios/ruins.tres")
 	level.seed_value = 5
 	level.completion_delay = 0.05
 	root.add_child(level)
 	await _frames(3)
 	_check(level.end_after_last_chapter and level.scenario.next_scenario == null,
-			"the forest is the last chapter and the real level ends the journey after it")
+			"the ruins are the last chapter and the real level ends the journey after it")
 	var ended := {"count": 0}
 	level.journey_ended.connect(func() -> void: ended.count += 1)
 	var builds := {"count": 0}
@@ -33,17 +34,17 @@ func _initialize() -> void:
 	_check(not panel.visible, "no summary while playing")
 
 	profile.begin_run()
-	events.scenario_completed.emit(&"forest")
+	events.scenario_completed.emit(&"ruins")
 	_check(not panel.visible, "finishing a chapter shows nothing before the veil falls")
 	await create_timer(2.0).timeout
 	_check(ended.count == 1, "taking the last exit ends the journey")
-	_check(builds.count == 0, "no new forest is built after the last chapter")
+	_check(builds.count == 0, "no new map is built after the last chapter")
 	_check(panel.visible and level.get_node("ProfileSummary").ending_shown, "the ending screen is shown")
 	var lines := _texts(level)
 	_check(texts.ending_line in lines and texts.ending_continue in lines and not texts.continue in lines,
 			"it speaks of the ending, not of trying again")
 
-	events.scenario_completed.emit(&"forest")
+	events.scenario_completed.emit(&"ruins")
 	await create_timer(0.5).timeout
 	_check(ended.count == 1, "the exit cannot end the journey twice")
 	level.free()

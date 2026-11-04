@@ -103,7 +103,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Al derrotarlo: fragmento verde y habilidad **Raíces**
 - [x] NPC **Anciano** con 3 estados de diálogo (`data/dialogues/elder.json`)
 - [x] Cofres y recompensas básicas (corazón extra y curación)
-- [x] Salida al escenario 2 (portal que se abre al vencer al jefe; hoy empieza un mapa nuevo del bosque hasta que exista el escenario 2: `next_scenario` en `forest.tres`)
+- [x] Salida al escenario 2 (portal que se abre al vencer al jefe y lleva a las Ruinas de la Montaña: `next_scenario` en `forest.tres`; las ruinas cierran el viaje por ahora, `tests/test_chapters.gd`)
 
 **Hecho cuando:** se puede jugar el escenario 1 de principio a fin (inicio, salas, Anciano, jefe, fragmento) y cada partida genera un recorrido distinto.
 
@@ -130,9 +130,14 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** jugando de forma agresiva y luego sigilosa se ven diferencias claras en las salas y enemigos, y el cambio se puede explicar con el registro de depuración.
 
 ## 10. Escenario 2: Ruinas de la Montaña — A+B  ← 7
-- [ ] Tileset de ruinas y cuevas
-- [ ] Salas del escenario (pasadizos, agua, zonas oscuras)
-- [ ] Enemigos del escenario colocados
+- [x] Alturas reales (decidido: dos niveles, bajo y alto, con escaleras): capas físicas `block_low`/`block_high`, ayudante `Heights`, `StairZone`, nivel en jugador, enemigos y proyectiles; las salas planas (bosque) no cambian (`tests/test_heights.gd`)
+- [x] Tileset de ruinas y cuevas: perfil `data/tilesets/` dibujado a 16x16 con `tools/make_ruins_*_art.py` (suelo de losas, muros y columnas de roca, agua con orilla, cascadas, puentes, escaleras, cristales, antorchas, runas), con vista previa antes de usarlo
+- [x] Piezas de sala nuevas (`RuinProp`): terraza, alcoba (mini sala con su escalera), puente sobre el río, cascada, columnas, cristales, estelas, braseros, antorchas, estandartes y racimos de roca (`tests/test_ruin_props.gd`)
+- [x] Salas con forma de cueva irregular (`RuinShape`: plano en texto con roca, suelo, río, puente y cascada), ríos con curvas y pasillos de escalera con parapetos y antorchas (`tests/test_ruin_shape.gd`)
+- [x] Salas del escenario (pasadizos, agua, zonas oscuras): 10 diseños (inicio, jefe, 5 de combate de los que 2 oscuros, evento, recompensa y especial) con `tools/make_ruins_rooms.py`, y `data/scenarios/ruins.tres`
+- [x] Oscuridad por sala (capa de sombra con luces de cristales y antorchas) y animación sencilla (cascadas, llamas, cristales, destellos del agua), con sus valores e interruptores en `Tuning`
+- [x] Enemigos del escenario colocados (Bestia de la niebla, Sombra errante y Murciélago, con sus pesos en `ruins.tres`)
+- [x] Trampa de pinchos en 2 salas de combate (3 en la sala estrecha y 3 en la de cascadas, con arte de ruinas)
 - [ ] **Jefe: Serpiente de piedra** (embestida, veneno / proyectiles)
 - [ ] Al derrotarlo: fragmento azul y habilidad **Corriente**
 - [ ] NPC **Viajera** con 3 estados de diálogo

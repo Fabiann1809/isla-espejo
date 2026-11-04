@@ -29,6 +29,16 @@ const GROUND_FX_Z := -1
 @export var forest_art_details := false
 
 
+## A light tint over the whole world while this theme is played, and whether the quiet life (fireflies
+## and falling leaves of the forest) drifts around the camera.
+@export var world_tint := Tuning.WORLD_TINT
+@export var ambient_life := true
+enum WallStyle { TREES, ROCKS }
+## How the walls of rooms and corridors are drawn and what fills the space around the map: rows of
+## trees over a forest, or clusters of rock columns over solid rock (the Ruinas).
+@export var wall_style := WallStyle.TREES
+
+
 ## Makes this theme's pack the one TileArt draws with (Level does it before building a map).
 func activate() -> void:
 	TileArt.use_profile(tileset)

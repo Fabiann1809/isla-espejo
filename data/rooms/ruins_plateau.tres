@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/ruins/plateau.tscn" id="1_uyrwy"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_xmgu2"]
+
+[resource]
+script = ExtResource("2_xmgu2")
+id = &"ruins_plateau"
+scene = ExtResource("1_uyrwy")
+tags = Array[StringName]([&"standard"])
+height = 1

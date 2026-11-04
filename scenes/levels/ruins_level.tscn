@@ -1,0 +1,44 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/test_level.gd" id="1"]
+[ext_resource type="Resource" path="res://data/scenarios/ruins.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_summary.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6"]
+
+[node name="RuinsLevel" type="Node2D"]
+script = ExtResource("1")
+scenario = ExtResource("2")
+player_scene = ExtResource("3")
+unlock_all_skills = false
+end_after_last_chapter = true
+
+[node name="Hud" parent="." instance=ExtResource("4")]
+
+[node name="ProfileSummary" parent="." instance=ExtResource("5")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("6")]
+
+[node name="Debug" type="CanvasLayer" parent="."]
+
+[node name="Info" type="Label" parent="Debug"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -480.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 28.0
+horizontal_alignment = 2
+
+[node name="PlanInfo" type="Label" parent="Debug"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -630.0
+offset_top = 30.0
+offset_right = -8.0
+offset_bottom = 50.0
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 10

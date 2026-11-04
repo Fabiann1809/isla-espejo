@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/ruins/narrow.tscn" id="1_qlwg6"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_ut855"]
+
+[resource]
+script = ExtResource("2_ut855")
+id = &"ruins_narrow"
+scene = ExtResource("1_qlwg6")
+weight = 0.8
+tags = Array[StringName]([&"ambush"])
+dark = true
+min_enemies = 4
+max_enemies = 6

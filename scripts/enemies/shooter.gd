@@ -81,6 +81,7 @@ func _fire() -> void:
 		return
 	Events.enemy_attacked.emit(self, &"shot")
 	var orb: EnemyOrb = _shooter.projectile_scene.instantiate()
+	orb.height_level = Heights.level_of(self)
 	orb.setup(facing, _shooter.projectile_speed, _shooter.projectile_range,
 			ceili(data.attack_damage * damage_multiplier))
 	orb.position = position + facing * _shooter.muzzle_distance

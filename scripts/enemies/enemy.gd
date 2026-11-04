@@ -94,6 +94,11 @@ var _status_tinted := false
 
 func _ready() -> void:
 	add_to_group("enemies")
+	# An enemy lives on the height of the room that holds it.
+	var level := Heights.level_of(self)
+	if get_parent() != null and "height" in get_parent():
+		level = get_parent().height
+	Heights.set_level(self, level)
 	if data == null:
 		push_error("Enemy '%s' has no EnemyData assigned." % name)
 		data = EnemyData.new()

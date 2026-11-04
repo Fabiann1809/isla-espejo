@@ -75,6 +75,27 @@ const DETAIL_FOOT_LIFT := 3.0
 const WALL_TREE_STEP := 18.0
 const WALL_TREE_JITTER := 2.0
 const WALL_TREE_BACK_ROW := 9.0
+## Rock columns on the walls of the rooms and corridors of the Ruinas: distance between them, how far
+## each one wanders from its place (px), how far behind the top wall's front row its back row stands,
+## and the share of taller columns.
+const ROCK_WALL_STEP := 13.0
+const ROCK_WALL_JITTER := 3.0
+const ROCK_WALL_BACK_ROW := 8.0
+const ROCK_WALL_TALL_CHANCE := 0.25
+## Share of the wall's columns that are snapped off, slim or fat (the rest are the plain and tall ones).
+const ROCK_WALL_BROKEN_CHANCE := 0.1
+const ROCK_WALL_THIN_CHANCE := 0.1
+const ROCK_WALL_FAT_CHANCE := 0.06
+const ROCK_WALL_TEMPLE_CHANCE := 0.12
+const ROCK_WALL_PANEL_CHANCE := 0.1
+const ROCK_WALL_STACK_CHANCE := 0.07
+## Step between columns varies between these factors of ROCK_WALL_STEP; share of steps left empty (a bay); how far
+## (px) the wall sways across its line; share of wall feet that get a chunk of fallen rock at their foot.
+const ROCK_WALL_STEP_MIN := 0.6
+const ROCK_WALL_STEP_MAX := 1.7
+const ROCK_WALL_GAP_CHANCE := 0.12
+const ROCK_WALL_WAVE := 3.5
+const ROCK_WALL_CHUNK_CHANCE := 0.05
 ## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
 ## narrower than the picture, and its smallest and largest size (px).
 const PROP_FOOT_INSET := 2.0
@@ -96,6 +117,8 @@ const SHADOWS_ENABLED := true
 const SHADOW_ALPHA := 0.28
 const SHADOW_WIDTH_FACTOR := 0.7
 const SHADOW_HEIGHT_FACTOR := 0.35
+## Shadow strength on the Ruinas' dark stone, where the normal one barely shows.
+const RUIN_SHADOW_ALPHA := 0.6
 
 ## Quiet life around the camera, at ground level (under every actor): fireflies drifting and leaves
 ## falling. Counts are particles alive at once (0 = off).
@@ -122,6 +145,64 @@ const ZONE_OUTLINE_ALPHA := 0.55
 ## grid, so rooms, props and collision stay the same size (see docs/GUIA_TILESET.md). False = tiles
 ## are drawn at their own size (the current 16 px pack is unaffected either way).
 const TILESET_FIT_TO_GRID := false
+
+# --- Ruinas: light and darkness ---
+## Soft additive light around torches, braziers and crystals (alpha 0 = off), radius in px, and the
+## draw order of lights over the shade of a dark room (both over every actor).
+const RUIN_LIGHTS_ENABLED := true
+const RUIN_TORCH_LIGHT := Color(1.0, 0.62, 0.25, 0.38)
+const RUIN_TORCH_LIGHT_RADIUS := 44.0
+const RUIN_BRAZIER_LIGHT := Color(1.0, 0.6, 0.22, 0.45)
+const RUIN_BRAZIER_LIGHT_RADIUS := 70.0
+const RUIN_CRYSTAL_LIGHT := Color(0.35, 0.78, 1.0, 0.36)
+const RUIN_CRYSTAL_LIGHT_RADIUS := 60.0
+## How far a light's strength wanders while it flickers (share of its alpha) and how often it does.
+const RUIN_LIGHT_FLICKER := 0.2
+const RUIN_LIGHT_FLICKER_SECONDS := 0.5
+const RUIN_DARK_Z := 4
+const RUIN_LIGHT_Z := 5
+## A dark room: shade over the whole room (alpha 0 = off) and the glow that follows Nico inside it.
+const RUIN_DARK_SHADE := Color(0.02, 0.04, 0.12, 0.52)
+const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
+const RUIN_PLAYER_LIGHT_RADIUS := 64.0
+## Seconds the shade (and the glow) take to grow when Nico enters a dark room and to fade when he leaves.
+const RUIN_DARK_FADE_SECONDS := 1.6
+## The rock between the rooms (RockBackdrop): formations on or off, spacing of their spots (px) and how far each
+## wanders, base chance of a formation and how much the noise swings it (open pockets, dense stands), noise
+## frequency, tiles left bare beside the way, tiles from the way where the middle and the deep rings begin, how
+## far the search for the nearest floor goes, px of a picture that may overlap a floor, and how much each ring darkens.
+const RUIN_BACKDROP_FORMATIONS := true
+const RUIN_BACKDROP_STEP := 15.0
+const RUIN_BACKDROP_JITTER := 5.0
+const RUIN_BACKDROP_DENSITY := 0.55
+## Least chance of a formation close to the way (the narrow gaps between rooms must never stay a bare trench).
+const RUIN_BACKDROP_NEAR_DENSITY := 0.85
+const RUIN_BACKDROP_CONTRAST := 1.1
+const RUIN_BACKDROP_NOISE_FREQUENCY := 0.06
+const RUIN_BACKDROP_CLEAR_TILES := 1
+const RUIN_BACKDROP_NEAR_TILES := 3
+const RUIN_BACKDROP_FAR_TILES := 8
+const RUIN_BACKDROP_DEPTH := 12
+const RUIN_BACKDROP_OVERLAP := 3.0
+const RUIN_BACKDROP_DARKEN := 0.2
+## Cold flame of the blue sconces, warm light of the lanterns, and the soft shadow props throw at their foot.
+const RUIN_SCONCE_LIGHT := Color(0.3, 0.78, 1.0, 0.4)
+const RUIN_SCONCE_LIGHT_RADIUS := 56.0
+const RUIN_LANTERN_LIGHT := Color(1.0, 0.7, 0.3, 0.32)
+const RUIN_LANTERN_LIGHT_RADIUS := 44.0
+const RUIN_PROP_SHADOWS := true
+const RUIN_PROP_SHADOW_ALPHA := 0.42
+## Chance that a platform's front tile carries hanging vines.
+const RUIN_PLATFORM_VINE_CHANCE := 0.3
+## Floor variety of a ruin room (RuinShape._build_floor_detail): drift of darker/paler slabs (noise
+## frequency, threshold), big flagstones tried per room, and the patches of worn, mossy or broken floor.
+const RUIN_FLOOR_DRIFT_FREQUENCY := 0.11
+const RUIN_FLOOR_DIM_THRESHOLD := 0.18
+const RUIN_FLOOR_SLAB_TRIES := 14
+const RUIN_FLOOR_ZONES_MIN := 2
+const RUIN_FLOOR_ZONES_MAX := 3
+const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
+const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 
 # --- Special rooms and exits ---
 ## Decoration of the boss arena, the reward glade and the event camp (RoomDressing). False = off.

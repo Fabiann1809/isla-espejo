@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Resource" path="res://data/rooms/ruins_boss.tres" id="1_uyk2g"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="2_vkpyx"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="3_e1vcw"]
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="4_gc772"]
+[ext_resource type="Resource" path="res://data/resources/heart.tres" id="5_cmyky"]
+[ext_resource type="Resource" path="res://data/resources/arrows.tres" id="6_0ifpo"]
+[ext_resource type="Resource" path="res://data/resources/gold.tres" id="7_kfhnh"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bestia_de_la_niebla.tscn" id="8_nskt5"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/sombra_errante.tscn" id="9_17cr1"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/murcielago.tscn" id="10_vbwlf"]
+[ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="11_tt8rx"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="12_i5typ"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_river.tres" id="13_wmivt"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_terraces.tres" id="14_xjon4"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_plateau.tres" id="15_l3tv5"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_narrow.tres" id="16_vlh0q"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_falls.tres" id="17_ul8xy"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_event.tres" id="18_3luj0"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_reward.tres" id="19_qje4h"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_special.tres" id="20_d1lav"]
+[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="21_ihfyc"]
+[ext_resource type="Resource" path="res://data/rooms/ruins_start.tres" id="22_0w6gt"]
+[ext_resource type="Resource" path="res://data/themes/ruins.tres" id="23_uf6w3"]
+
+[resource]
+script = ExtResource("21_ihfyc")
+id = &"ruins"
+display_name = "Ruinas de la Montaña"
+chapter_title = "Las ruinas guardan respuestas."
+grid_size = Vector2i(5, 6)
+min_main_path = 7
+max_main_path = 12
+side_rooms = 4
+reward_rooms = 2
+completion_text = "Capítulo 2 completado. El templo del eclipse te espera."
+objective = "Encuentra a la Serpiente de piedra"
+objective_done = "Cruza el portal"
+objective_flag = &"ruins_boss_defeated"
+theme = ExtResource("23_uf6w3")
+start_room = ExtResource("22_0w6gt")
+boss_room = ExtResource("1_uyk2g")
+rooms = Array[ExtResource("12_i5typ")]([ExtResource("13_wmivt"), ExtResource("14_xjon4"), ExtResource("15_l3tv5"), ExtResource("16_vlh0q"), ExtResource("17_ul8xy"), ExtResource("18_3luj0"), ExtResource("19_qje4h"), ExtResource("20_d1lav")])
+enemy_pool = Array[PackedScene]([ExtResource("8_nskt5"), ExtResource("9_17cr1"), ExtResource("10_vbwlf")])
+enemy_weights = {
+&"bestia_de_la_niebla": 3.0,
+&"murcielago": 4.0,
+&"sombra_errante": 3.0
+}
+exit_scene = ExtResource("11_tt8rx")
+chest_scenes = Array[PackedScene]([ExtResource("2_vkpyx"), ExtResource("3_e1vcw")])
+drops = Array[ExtResource("4_gc772")]([ExtResource("5_cmyky"), ExtResource("6_0ifpo"), ExtResource("7_kfhnh")])

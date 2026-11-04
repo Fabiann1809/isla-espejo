@@ -95,8 +95,8 @@ func generate(new_seed := 0) -> void:
 		push_error("Invalid map (seed %d): %s" % [current_seed, ", ".join(problems)])
 
 	# The look follows the scenario being played (a themed chapter after a plain one, or back).
-	Ambience.apply(self, scenario.theme != null)
-	AmbientLife.apply(self, scenario.theme != null and Tuning.AMBIENT_LIFE_ENABLED)
+	Ambience.apply(self, scenario.theme != null, scenario.theme.world_tint if scenario.theme != null else Tuning.WORLD_TINT)
+	AmbientLife.apply(self, scenario.theme != null and scenario.theme.ambient_life and Tuning.AMBIENT_LIFE_ENABLED)
 	_clear()
 	# Rooms, corridors and props are drawn with the scenario's pack (the default one without a theme).
 	TileArt.use_profile(scenario.theme.tileset if scenario.theme != null else null)
@@ -238,6 +238,9 @@ func _build_rooms(rng: RandomNumberGenerator) -> void:
 func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> void:
 	match cell.type:
 		RoomData.RoomType.COMBAT:
+			# Debug: `-- --no-enemies` walks the map empty (to look at the rooms).
+			if OS.get_cmdline_user_args().has("--no-enemies"):
+				return
 			if cell.coord == _guard_cell:
 				_spawn_at(room, scenario.miniboss_scene, room.center())
 				return
@@ -327,6 +330,7 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 
 	if scenario.theme != null:
 		_paint_corridor(parent, floor_rect, walls)
+		_dress_stairs(parent, floor_rect, coord, dir)
 		return
 	var floor_visual := ColorRect.new()
 	floor_visual.color = CORRIDOR_COLOR
@@ -336,6 +340,67 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 	floor_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(floor_visual)
 	WallBuilder.add_walls(parent, walls)
+
+
+## A corridor between rooms of different height is a staircase: steps on its floor and a StairZone
+## that changes the level of whoever crosses it, in the direction from the low room to the high one.
+func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector2i) -> void:
+	if scenario.theme.wall_style != RoomTheme.WallStyle.ROCKS:
+		return
+	var from_height := layout.get_cell(coord).room_data.height
+	var to_height := layout.get_cell(coord + dir).room_data.height
+	if from_height == to_height:
+		return
+	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
+	var vertical := dir == Vector2i.DOWN
+	var steps: StringName = &"stairs_steps" if vertical else &"stairs_steps_h"
+	var tile := float(TileArt.TILE)
+	var stairs := Node2D.new()
+	stairs.name = "Stairs%d" % parent.get_child_count()
+	stairs.z_index = RoomTheme.FLOOR_Z
+	parent.add_child(stairs)
+	# The staircase fills the corridor between two stone parapets (the outermost cells of its width).
+	var cells_x := int(floor_rect.size.x / tile)
+	var cells_y := int(floor_rect.size.y / tile)
+	for iy in cells_y:
+		for ix in cells_x:
+			var edge_first := ix == 0 if vertical else iy == 0
+			var edge_last := ix == cells_x - 1 if vertical else iy == cells_y - 1
+			var role := steps
+			if edge_first:
+				role = &"stairs_rail_l" if vertical else &"stairs_rail_t"
+			elif edge_last:
+				role = &"stairs_rail_r" if vertical else &"stairs_rail_b"
+			stairs.add_child(TileArt.sprite(role, floor_rect.position + Vector2(ix, iy) * tile))
+	# The parapets stop everybody and leave a staircase two cells wide.
+	var rail_rects: Array[Rect2] = []
+	if vertical:
+		rail_rects.append(Rect2(floor_rect.position, Vector2(tile, floor_rect.size.y)))
+		rail_rects.append(Rect2(floor_rect.position + Vector2(floor_rect.size.x - tile, 0), Vector2(tile, floor_rect.size.y)))
+	else:
+		rail_rects.append(Rect2(floor_rect.position, Vector2(floor_rect.size.x, tile)))
+		rail_rects.append(Rect2(floor_rect.position + Vector2(0, floor_rect.size.y - tile), Vector2(floor_rect.size.x, tile)))
+	WallBuilder.add_walls(parent, rail_rects, WallBuilder.WALL_COLOR, false)
+	# A torch on each parapet at the top of the stairs, so the way up is lit.
+	for rail in rail_rects:
+		var torch := RuinProp.new()
+		torch.kind = RuinProp.Kind.TORCH
+		var top: Vector2
+		if vertical:
+			top = Vector2(rail.position.x, floor_rect.position.y if uphill.y < 0.0 else floor_rect.end.y - tile)
+		else:
+			top = Vector2(floor_rect.position.x if uphill.x < 0.0 else floor_rect.end.x - tile, rail.position.y)
+		torch.position = top
+		parent.add_child(torch)
+	var zone := StairZone.new()
+	zone.direction = uphill
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = floor_rect.size
+	shape.shape = rectangle
+	zone.add_child(shape)
+	zone.position = floor_rect.get_center()
+	parent.add_child(zone)
 
 
 ## A themed corridor: path tiles on the floor and the border tile (trees) along its walls.
@@ -352,11 +417,27 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 	var layer := scenario.theme.new_layer(parent, "Corridor%d" % number)
 	scenario.theme.fill(layer, _cells(floor_rect), scenario.theme.path_tile)
 	for wall in walls:
-		if scenario.theme.forest_art_details:
+		if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+			_plant_corridor_rocks(parent, wall)
+		elif scenario.theme.forest_art_details:
 			_plant_corridor_trees(parent, wall)
 		else:
 			scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
 	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+
+
+## A corridor wall as a row of rock columns, like the rooms' walls (y-sorted with the actors).
+func _plant_corridor_rocks(parent: Node, wall: Rect2) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([current_seed, wall.position])
+	var feet: Array[Vector2]
+	if wall.size.x > wall.size.y:
+		feet = RockWall.feet_along(Vector2(wall.position.x, wall.end.y - 1.0), Vector2(wall.end.x, wall.end.y - 1.0), rng)
+	else:
+		var x := wall.get_center().x
+		feet = RockWall.feet_along(Vector2(x, wall.position.y), Vector2(x, wall.end.y), rng)
+	for foot in feet:
+		parent.add_child(RockWall.column(foot, rng))
 
 
 ## A corridor wall as a row of trees, like the rooms' walls (y-sorted with the actors).
@@ -386,6 +467,9 @@ func _build_backdrop() -> void:
 	for rect in _corridor_walls:
 		_mark(taken, _cells(rect))
 	var area := _cells(bounds).grow(Tuning.BACKDROP_MARGIN_TILES)
+	if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		RockBackdrop.build(_map, area, walkable, taken, current_seed)
+		return
 	ForestBackdrop.build(_map, area, walkable, taken, current_seed)
 	if scenario.theme.forest_art_details:
 		_build_forest_shade(area)
@@ -510,14 +594,17 @@ func _compute_bounds() -> void:
 
 
 func _add_shadows() -> void:
+	var alpha := -1.0
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		alpha = Tuning.RUIN_SHADOW_ALPHA
 	for node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("npcs"):
 		if _map.is_ancestor_of(node):
-			ActorShadow.attach(node)
+			ActorShadow.attach(node, alpha)
 	if player != null:
-		ActorShadow.attach(player)
+		ActorShadow.attach(player, alpha)
 ## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void.
 func _build_boundary() -> void:
-	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED:
+	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED 			or scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		return
 	var boundary_script = load("res://scripts/world/forest_boundary.gd")
 	if boundary_script == null:
@@ -539,6 +626,7 @@ func _place_player() -> void:
 	GameState.apply_to_player(player)
 	var start_room: Room = rooms[layout.start_cell]
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
+	Heights.set_level(player, Heights.LOW)
 	if player.has_method("set_camera_limits"):
 		player.set_camera_limits(bounds)
 	# A new map starts somewhere else: the camera jumps there instead of gliding across the world.
