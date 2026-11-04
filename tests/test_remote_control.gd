@@ -34,6 +34,11 @@ func _initialize() -> void:
 	rc.server.message_received.emit({"type": "move", "x": 1.0, "y": 0.0})
 	_check(Input.is_action_pressed("move_right"), "move message presses move_right")
 
+	# The autoload drives the mapper's clock: without new move messages the watchdog lets go.
+	await create_timer(0.35).timeout
+	_check(not Input.is_action_pressed("move_right"), "watchdog releases movement through the autoload")
+	_check(Input.is_action_pressed("attack"), "buttons are not touched by the watchdog")
+
 	# Forwarded signals.
 	var seen := {"connected": 0, "disconnected": 0, "rejected": 0}
 	rc.controller_connected.connect(func() -> void: seen["connected"] += 1)
@@ -44,8 +49,7 @@ func _initialize() -> void:
 	_check(seen["connected"] == 1 and seen["rejected"] == 1, "connected and rejected forwarded")
 	rc.server.controller_disconnected.emit()
 	_check(seen["disconnected"] == 1, "disconnected forwarded")
-	_check(not Input.is_action_pressed("attack") and not Input.is_action_pressed("move_right"),
-			"a disconnect releases every held action")
+	_check(not Input.is_action_pressed("attack"), "a disconnect releases every held action")
 
 	# stop() releases what the phone holds.
 	rc.server.message_received.emit({"type": "action", "name": "dash", "pressed": true})

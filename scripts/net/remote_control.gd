@@ -59,7 +59,7 @@ func get_urls() -> PackedStringArray:
 func set_server(new_server: ControlServer) -> void:
 	if server != null:
 		stop()
-		server.message_received.disconnect(mapper.apply)
+		server.message_received.disconnect(_on_message)
 		server.controller_connected.disconnect(_on_connected)
 		server.controller_disconnected.disconnect(_on_disconnected)
 		server.controller_rejected.disconnect(_on_rejected)
@@ -67,11 +67,21 @@ func set_server(new_server: ControlServer) -> void:
 			remove_child(server)
 		server.free()
 	server = new_server
-	server.message_received.connect(mapper.apply)
+	server.message_received.connect(_on_message)
 	server.controller_connected.connect(_on_connected)
 	server.controller_disconnected.connect(_on_disconnected)
 	server.controller_rejected.connect(_on_rejected)
 	add_child(server)
+
+
+## Every physics frame, before the level's nodes (autoloads come first in the tree): deferred
+## button releases and the movement watchdog of the mapper.
+func _physics_process(_delta: float) -> void:
+	mapper.tick(Time.get_ticks_msec())
+
+
+func _on_message(msg: Dictionary) -> void:
+	mapper.apply(msg, Time.get_ticks_msec())
 
 
 func _on_connected() -> void:

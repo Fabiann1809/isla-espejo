@@ -32,8 +32,10 @@ func _initialize() -> void:
 
 	_check(mapper.apply({"type": "action", "name": "attack", "pressed": true}), "valid action accepted")
 	_check(Input.is_action_pressed("attack"), "attack pressed")
-	mapper.apply({"type": "action", "name": "attack", "pressed": false})
-	_check(not Input.is_action_pressed("attack"), "attack released")
+	mapper.tick(40)
+	mapper.tick(60)
+	mapper.apply({"type": "action", "name": "attack", "pressed": false}, 80)
+	_check(not Input.is_action_pressed("attack"), "attack released (held long enough)")
 	for action in ["dash", "skill_1", "skill_2", "skill_3", "interact"]:
 		mapper.apply({"type": "action", "name": action, "pressed": true})
 		_check(Input.is_action_pressed(action), "%s pressed" % action)
@@ -62,6 +64,9 @@ func _initialize() -> void:
 		any = any or Input.is_action_pressed(action)
 	_check(not any, "release_all releases everything")
 
+	_test_min_hold()
+	_test_watchdog()
+
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
@@ -70,3 +75,76 @@ func _check(condition: bool, message: String) -> void:
 	print(("PASS " if condition else "FAIL ") + message)
 	if not condition:
 		_ok = false
+
+
+## A quick tap stays pressed until the player has seen it for a whole physics frame.
+func _test_min_hold() -> void:
+	var mapper = load("res://scripts/net/remote_control_mapper.gd").new()
+	mapper.tick(1000)
+	mapper.apply({"type": "action", "name": "attack", "pressed": true}, 1000)
+	mapper.apply({"type": "action", "name": "attack", "pressed": false}, 1005)
+	_check(Input.is_action_pressed("attack") and mapper.is_release_pending(&"attack"), "early release is deferred")
+	mapper.tick(1010)
+	_check(Input.is_action_pressed("attack"), "tap still pressed in the next physics frame")
+	mapper.tick(1040)
+	_check(not Input.is_action_pressed("attack") and not mapper.is_release_pending(&"attack"),
+			"deferred release applied on the following tick")
+
+	# Enough time but no physics frame in between: still deferred.
+	mapper.apply({"type": "action", "name": "dash", "pressed": true}, 2000)
+	mapper.apply({"type": "action", "name": "dash", "pressed": false}, 2050)
+	_check(Input.is_action_pressed("dash"), "release waits for a physics frame even after 17 ms")
+	mapper.tick(2060)
+	_check(Input.is_action_pressed("dash"), "the first tick runs before the player: still pressed")
+	mapper.tick(2076)
+	_check(not Input.is_action_pressed("dash"), "released on the second tick")
+
+	# Held for a frame and 17 ms: released at once.
+	mapper.apply({"type": "action", "name": "skill_1", "pressed": true}, 3000)
+	mapper.tick(3016)
+	mapper.apply({"type": "action", "name": "skill_1", "pressed": false}, 3017)
+	_check(not Input.is_action_pressed("skill_1"), "a long enough press is released immediately")
+
+	# A new press cancels the waiting release.
+	mapper.apply({"type": "action", "name": "interact", "pressed": true}, 4000)
+	mapper.apply({"type": "action", "name": "interact", "pressed": false}, 4002)
+	mapper.apply({"type": "action", "name": "interact", "pressed": true}, 4004)
+	mapper.tick(4020)
+	mapper.tick(4040)
+	_check(Input.is_action_pressed("interact") and not mapper.is_release_pending(&"interact"),
+			"a new press cancels the deferred release")
+	mapper.release_all()
+
+	# release_all lets go now and forgets the deferred releases.
+	mapper.apply({"type": "action", "name": "dash", "pressed": true}, 5000)
+	mapper.apply({"type": "action", "name": "dash", "pressed": false}, 5001)
+	mapper.release_all()
+	_check(not Input.is_action_pressed("dash") and not mapper.is_release_pending(&"dash"),
+			"release_all releases now and clears pending releases")
+	mapper.apply({"type": "action", "name": "dash", "pressed": true}, 5010)
+	mapper.tick(5020)
+	mapper.tick(5040)
+	_check(Input.is_action_pressed("dash"), "no stale deferred release after release_all")
+	mapper.release_all()
+
+
+## No move message for 200 ms lets go of the movement, not before.
+func _test_watchdog() -> void:
+	var mapper = load("res://scripts/net/remote_control_mapper.gd").new()
+	mapper.apply({"type": "move", "x": 1.0, "y": 0.5}, 10000)
+	mapper.tick(10100)
+	mapper.tick(10199)
+	_check(Input.is_action_pressed("move_right") and Input.is_action_pressed("move_down"), "move kept at 199 ms")
+	mapper.tick(10200)
+	_check(not Input.is_action_pressed("move_right") and not Input.is_action_pressed("move_down"),
+			"move released after 200 ms without a move message")
+	mapper.apply({"type": "move", "x": -1.0, "y": 0.0}, 11000)
+	mapper.tick(11150)
+	mapper.apply({"type": "move", "x": -1.0, "y": 0.0}, 11150)
+	mapper.tick(11300)
+	_check(Input.is_action_pressed("move_left"), "each move message restarts the watchdog")
+	mapper.apply({"type": "action", "name": "attack", "pressed": true}, 11300)
+	mapper.tick(11350)
+	_check(not Input.is_action_pressed("move_left") and Input.is_action_pressed("attack"),
+			"the watchdog only releases movement")
+	mapper.release_all()
