@@ -28,8 +28,8 @@
     font-family: system-ui, sans-serif; touch-action: none; overscroll-behavior: none; }
   #app { position: fixed; inset: 0; padding: var(--gutter); display: flex; flex-direction: column; }
 
-  #bar { flex: none; display: flex; align-items: center; justify-content: space-between; height: 28px; font-size: 14px; color: var(--muted); }
-  #state { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  #bar { flex: none; display: flex; align-items: center; justify-content: space-between; height: 44px; font-size: 14px; color: var(--muted); }
+  #state { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 12px 0; }
   #dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
   #state.ok #dot { background: var(--ok); }
   #state.bad #dot { background: var(--bad); }
@@ -57,15 +57,15 @@
     border-radius: 50%; font-family: inherit; font-weight: 700; color: var(--fg); line-height: 1.1;
     transition: transform 60ms ease-out, background 60ms; padding: 0; }
   .btn.on { transform: scale(0.94); }
-  .skill { width: 60px; height: 60px; background: var(--panel); border: 3px solid var(--skill); font-size: 11px; color: var(--skill); }
-  .skill b { font-size: 22px; }
+  .skill { width: 60px; height: 60px; background: var(--panel); border: 3px solid var(--skill); color: var(--skill); }
+  .skill b { font-size: 24px; }
   .skill.on { background: var(--skill); color: #0b1a10; }
   .skill.on b { color: #0b1a10; }
   #b-attack { width: var(--atk); height: var(--atk); background: #3a2e12; border: 4px solid var(--accent); color: var(--accent); font-size: 20px; }
   #b-attack.on { background: var(--accent-on); border-color: var(--accent-on); color: #2a1f05; }
-  #b-dash { width: 84px; height: 84px; background: var(--panel); border: 3px solid var(--fg); font-size: 15px; }
+  #b-dash { width: 84px; height: 84px; background: var(--panel); border: 3px solid var(--fg); font-size: 14px; }
   #b-dash.on { background: var(--fg); color: #0d1710; }
-  #b-interact { width: 64px; height: 64px; background: var(--panel); border: 3px solid var(--muted); color: var(--muted); font-size: 12px; }
+  #b-interact { width: 64px; height: 64px; background: var(--panel); border: 3px solid var(--muted); color: var(--muted); font-size: 15px; }
   #b-interact.on { background: var(--muted); color: #0d1710; }
 
   #rotate { display: none; position: fixed; inset: 0; z-index: 10; background: var(--bg); color: var(--fg);
@@ -83,12 +83,12 @@
     <div id="stick"><div id="knob"></div></div>
     <div id="right">
       <div id="skills">
-        <button class="btn skill" data-action="skill_1">Habilidad<b>1</b></button>
-        <button class="btn skill" data-action="skill_2">Habilidad<b>2</b></button>
-        <button class="btn skill" data-action="skill_3">Habilidad<b>3</b></button>
+        <button class="btn skill" data-action="skill_1" aria-label="Habilidad 1"><b>1</b></button>
+        <button class="btn skill" data-action="skill_2" aria-label="Habilidad 2"><b>2</b></button>
+        <button class="btn skill" data-action="skill_3" aria-label="Habilidad 3"><b>3</b></button>
       </div>
       <div id="main">
-        <button class="btn" id="b-interact" data-action="interact">Interactuar</button>
+        <button class="btn" id="b-interact" data-action="interact">Usar</button>
         <button class="btn" id="b-dash" data-action="dash">Esquivar</button>
         <button class="btn" id="b-attack" data-action="attack">Atacar</button>
       </div>
@@ -100,15 +100,15 @@
 (function () {
   "use strict";
   var MOVE_INTERVAL_MS = 50;      // throttle for changes
-  var MOVE_HEARTBEAT_MS = 100;    // resend while held; the server drops movement after 200 ms of silence
+  var MOVE_HEARTBEAT_MS = 80;     // resend while held; the server drops movement after 200 ms of silence
   var RELEASE_REPEATS = 3, RELEASE_GAP_MS = 40;
-  var DEADZONE = 0.12;
+  var DEADZONE = 0.05; // the server applies the real deadzone (0.2); this only hides jitter
   var PING_INTERVAL_MS = 1000, RETRY_MS = 2000, BUSY_RETRY_MS = 10000, RTT_SAMPLES = 5;
 
   var stateEl = document.getElementById("state"), stateText = document.getElementById("stateText");
   var rttEl = document.getElementById("rtt");
   var portrait = window.matchMedia("(orientation: portrait)");
-  var ws = null, pingTimer = null, retryTimer = null, busy = false, rtts = [];
+  var ws = null, pingTimer = null, retryTimer = null, busy = false, rtts = [], firstConnect = true;
 
   function setStatus(text, cls) { stateText.textContent = text; stateEl.className = cls || ""; }
   function showRtt() {
@@ -233,7 +233,7 @@
     retryTimer = null;
     busy = false;
     rtts = []; showRtt();
-    setStatus("Esperando...");
+    if (firstConnect) { setStatus("Esperando..."); firstConnect = false; }
     try {
       ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
     } catch (_) { scheduleRetry(RETRY_MS); return; }
