@@ -61,6 +61,19 @@ func _initialize() -> void:
 
 	# Messages: only Dictionaries pass.
 	_check(server_script.parse_message("{\"type\":\"ping\"}") is Dictionary, "JSON object accepted")
+
+	# Pong reply: a server frame (unmasked) whose text echoes the ping's t.
+	var pong: PackedByteArray = server_script.pong_reply(server_script.parse_message("{\"type\":\"ping\",\"t\":1730000000123}"))
+	_check(pong.size() > 2 and pong[0] == 0x81 and (pong[1] & 0x80) == 0, "pong is one unmasked text frame")
+	_check(pong.slice(2).get_string_from_ascii() == "{\"type\":\"pong\",\"t\":1730000000123}",
+			"pong echoes a whole t without .0 (got %s)" % pong.slice(2).get_string_from_ascii())
+	_check(pong == server_script.encode_text("{\"type\":\"pong\",\"t\":1730000000123}"), "pong uses the text frame encoder")
+	var frac: PackedByteArray = server_script.pong_reply({"type": "ping", "t": 12345.678})
+	_check(frac.slice(2).get_string_from_ascii() == "{\"type\":\"pong\",\"t\":12345.678}", "pong echoes a fractional t")
+	_check(server_script.pong_reply({"type": "ping", "t": 7}).slice(2).get_string_from_ascii() == "{\"type\":\"pong\",\"t\":7}", "int t echoed")
+	for bad in [{"type": "ping"}, {"type": "ping", "t": "5"}, {"type": "ping", "t": null}, {"type": "ping", "t": [1]},
+			{"type": "ping", "t": NAN}, {"type": "ping", "t": INF}, {"type": "move", "t": 5}, {}]:
+		_check(server_script.pong_reply(bad).is_empty(), "no pong for %s" % [bad])
 	_check(server_script.parse_message("[1,2]") == null, "JSON array ignored")
 	_check(server_script.parse_message("42") == null, "JSON number ignored")
 	_check(server_script.parse_message("not json") == null, "invalid JSON ignored")

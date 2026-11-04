@@ -392,6 +392,22 @@ static func parse_message(text: String) -> Variant:
 	return json.data if json.data is Dictionary else null
 
 
+## Text frame {"type":"pong","t":<same t>} for a {"type":"ping","t":<number>} message; empty
+## for anything else (a ping without a numeric, finite `t` gets no reply).
+static func pong_reply(msg: Dictionary) -> PackedByteArray:
+	if msg.get("type") != "ping":
+		return PackedByteArray()
+	var t: Variant = msg.get("t")
+	if not (t is float or t is int):
+		return PackedByteArray()
+	var value: float = float(t)
+	if is_nan(value) or is_inf(value):
+		return PackedByteArray()
+	# JSON numbers arrive as floats; whole ones (client ms) go back without a ".0".
+	var echoed: Variant = int(value) if value == floorf(value) and absf(value) < 9007199254740992.0 else value
+	return encode_text(JSON.stringify({"type": "pong", "t": echoed}, "", false, true))
+
+
 # --- Limits (pure) ---
 
 ## Fixed one-second window: true while fewer than `limit` messages were accepted in it.
@@ -540,6 +556,10 @@ func _handle_frame(frame: Dictionary, now_ms: int) -> void:
 			var msg: Variant = parse_message(payload.get_string_from_ascii())
 			if msg != null:
 				message_received.emit(msg)
+				# The page measures its round-trip time with the echoed `t`.
+				var pong := pong_reply(msg)
+				if not pong.is_empty() and _controller != null:
+					_send_to_controller(pong)
 		OPCODE_CLOSE:
 			_drop_controller(CLOSE_NORMAL)
 		OPCODE_PING:
