@@ -11,7 +11,8 @@ extends RefCounted
 ## player has had one whole physics frame to see it; an earlier release waits in `tick()`.
 
 const DEADZONE := 0.2
-const MOVE_TIMEOUT_MS := 200
+## The page repeats its move every 80 ms; 300 ms rides out Wi-Fi power-save gaps of 150-300 ms.
+const MOVE_TIMEOUT_MS := 300
 ## About one physics frame at 60 Hz.
 const MIN_HOLD_MS := 17
 const MOVE_ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"move_up", &"move_down"]
@@ -28,8 +29,9 @@ var _now_ms := 0
 var _ticks := 0
 
 
-## Applies one message received at `now_ms` (-1: the time of the last `tick()`). Returns false
-## (and does nothing) when it is unknown or malformed.
+## Applies one message received at `now_ms`. Returns false (and does nothing) when it is unknown
+## or malformed. The game always passes the time (RemoteControl._on_message); the -1 default
+## (use the time of the last `tick()`) is only for tests that do not care about time.
 func apply(msg: Dictionary, now_ms: int = -1) -> bool:
 	if now_ms >= 0:
 		_now_ms = now_ms
@@ -55,7 +57,7 @@ func tick(now_ms: int) -> void:
 			_release_button(action)
 	if _last_move_ms >= 0 and now_ms - _last_move_ms >= MOVE_TIMEOUT_MS:
 		_last_move_ms = -1
-		for action in MOVE_ACTIONS:
+		for action: StringName in MOVE_ACTIONS:
 			if _held.has(action):
 				Input.action_release(action)
 				_held.erase(action)

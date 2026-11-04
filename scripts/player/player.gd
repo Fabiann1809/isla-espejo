@@ -366,14 +366,17 @@ func _process_free(_delta: float) -> void:
 		_start_dash()
 
 
-## Remembers an attack or dash pressed while its cooldown is still running (any state but
-## dead or in a dialogue); `_process_free` performs it once the cooldown is over.
+## Remembers an attack or dash pressed while it cannot happen yet: its cooldown is running or
+## Nico is busy (attacking, dashing, hurt). `_process_free` performs it once he is free and the
+## cooldown is over. A press that can fire right away (free state, cooldown 0) is not buffered,
+## so it never fires twice. Not while dead or in a dialogue.
 func _buffer_presses() -> void:
 	if _locked or state == State.DEAD:
 		return
-	if Input.is_action_just_pressed("attack") and _attack_cooldown_left > 0.0:
+	var busy := state not in [State.IDLE, State.MOVE]
+	if Input.is_action_just_pressed("attack") and (_attack_cooldown_left > 0.0 or busy):
 		_attack_buffer_left = input_buffer_time
-	if Input.is_action_just_pressed("dash") and _dash_cooldown_left > 0.0:
+	if Input.is_action_just_pressed("dash") and (_dash_cooldown_left > 0.0 or busy):
 		_dash_buffer_left = input_buffer_time
 
 

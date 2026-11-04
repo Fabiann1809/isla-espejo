@@ -128,23 +128,23 @@ func _test_min_hold() -> void:
 	mapper.release_all()
 
 
-## No move message for 200 ms lets go of the movement, not before.
+## No move message for 300 ms lets go of the movement, not before.
 func _test_watchdog() -> void:
 	var mapper = load("res://scripts/net/remote_control_mapper.gd").new()
 	mapper.apply({"type": "move", "x": 1.0, "y": 0.5}, 10000)
 	mapper.tick(10100)
-	mapper.tick(10199)
-	_check(Input.is_action_pressed("move_right") and Input.is_action_pressed("move_down"), "move kept at 199 ms")
-	mapper.tick(10200)
+	mapper.tick(10299)
+	_check(Input.is_action_pressed("move_right") and Input.is_action_pressed("move_down"), "move kept at 299 ms")
+	mapper.tick(10300)
 	_check(not Input.is_action_pressed("move_right") and not Input.is_action_pressed("move_down"),
-			"move released after 200 ms without a move message")
+			"move released after 300 ms without a move message")
 	mapper.apply({"type": "move", "x": -1.0, "y": 0.0}, 11000)
 	mapper.tick(11150)
 	mapper.apply({"type": "move", "x": -1.0, "y": 0.0}, 11150)
 	mapper.tick(11300)
 	_check(Input.is_action_pressed("move_left"), "each move message restarts the watchdog")
 	mapper.apply({"type": "action", "name": "attack", "pressed": true}, 11300)
-	mapper.tick(11350)
+	mapper.tick(11450)
 	_check(not Input.is_action_pressed("move_left") and Input.is_action_pressed("attack"),
 			"the watchdog only releases movement")
 	mapper.release_all()

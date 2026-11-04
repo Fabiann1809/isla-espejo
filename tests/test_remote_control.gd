@@ -35,7 +35,7 @@ func _initialize() -> void:
 	_check(Input.is_action_pressed("move_right"), "move message presses move_right")
 
 	# The autoload drives the mapper's clock: without new move messages the watchdog lets go.
-	await create_timer(0.35).timeout
+	await create_timer(0.5).timeout
 	_check(not Input.is_action_pressed("move_right"), "watchdog releases movement through the autoload")
 	_check(Input.is_action_pressed("attack"), "buttons are not touched by the watchdog")
 
