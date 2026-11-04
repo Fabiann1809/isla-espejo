@@ -209,7 +209,7 @@ const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 ## (the lowest BREATH_LEG_SHARE of the figure) stretch to keep the feet fixed, one breath every BREATH_SECONDS. False = off.
 const BREATH_ENABLED := true
 const BREATH_PIXELS := 1.5
-const BREATH_SECONDS := 1.7
+const BREATH_SECONDS := 1.2
 const BREATH_LEG_SHARE := 0.3
 
 # --- Special rooms and exits ---
