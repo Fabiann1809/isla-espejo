@@ -352,17 +352,18 @@ func _terrace(walled: bool, rng: RandomNumberGenerator) -> void:
 		var wall: StringName = &"wall_face_moss" if rng.randf() < 0.2 else &"wall_face"
 		var face: StringName = [&"wall_under_a", &"wall_under_b"][rng.randi_range(0, 1)]
 		if x == stairs_x - 1:
-			lip = &"stairs_rail_l"
+			lip = &"stairs_post_l"
 			wall = &"stairs_rail_l"
-			face = &"stairs_rail_l"
+			face = &"stairs_foot_l"
 		elif x == stairs_x + 2:
-			lip = &"stairs_rail_r"
+			lip = &"stairs_post_r"
 			wall = &"stairs_rail_r"
-			face = &"stairs_rail_r"
+			face = &"stairs_foot_r"
 		elif near_stairs:
-			lip = &"stairs_steps"
-			wall = &"stairs_steps"
-			face = &"stairs_steps"
+			var steps: StringName = &"stairs_steps" if x == stairs_x else &"stairs_steps_b"
+			lip = steps
+			wall = steps
+			face = steps
 		elif x == 0 or x == w - 1:
 			var side := "l" if x == 0 else "r"
 			lip = StringName("terrace_post_%s_lip" % side)

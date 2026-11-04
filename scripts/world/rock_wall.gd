@@ -12,6 +12,11 @@ const TALL_COLUMNS: Array[StringName] = [&"column_tall_a", &"column_tall_b"]
 const THIN_COLUMNS: Array[StringName] = [&"column_thin_a", &"column_thin_b"]
 const FAT_COLUMNS: Array[StringName] = [&"column_fat_a"]
 const BROKEN_COLUMNS: Array[StringName] = [&"column_broken_a", &"column_broken_b"]
+## The temple's own pieces: square-capitalled pillars, snapped pillars, brick panels, heaps of blocks.
+const TEMPLE_COLUMNS: Array[StringName] = [&"column_temple_a", &"column_temple_b"]
+const RUIN_COLUMNS: Array[StringName] = [&"column_ruin_a", &"column_ruin_b"]
+const PANEL_COLUMNS: Array[StringName] = [&"column_wall_a", &"column_wall_b"]
+const STACK_COLUMNS: Array[StringName] = [&"column_stack_a", &"column_stack_b"]
 
 ## Column name -> its painted picture, per profile (a column is two or three tiles put together).
 static var _images := {}
@@ -40,14 +45,20 @@ static func image(column: StringName) -> Image:
 
 static func pick(rng: RandomNumberGenerator) -> StringName:
 	var roll := rng.randf()
-	var profile_has := TileArt.profile().tiles.has(&"column_thin_a_top")
-	if profile_has:
-		if roll < Tuning.ROCK_WALL_BROKEN_CHANCE:
-			return BROKEN_COLUMNS[rng.randi_range(0, BROKEN_COLUMNS.size() - 1)]
-		if roll < Tuning.ROCK_WALL_BROKEN_CHANCE + Tuning.ROCK_WALL_THIN_CHANCE:
-			return THIN_COLUMNS[rng.randi_range(0, THIN_COLUMNS.size() - 1)]
-		if roll < Tuning.ROCK_WALL_BROKEN_CHANCE + Tuning.ROCK_WALL_THIN_CHANCE + Tuning.ROCK_WALL_FAT_CHANCE:
-			return FAT_COLUMNS[0]
+	if TileArt.profile().tiles.has(&"column_temple_a_top"):
+		var table: Array = [
+			[Tuning.ROCK_WALL_BROKEN_CHANCE, BROKEN_COLUMNS + RUIN_COLUMNS],
+			[Tuning.ROCK_WALL_THIN_CHANCE, THIN_COLUMNS],
+			[Tuning.ROCK_WALL_FAT_CHANCE, FAT_COLUMNS],
+			[Tuning.ROCK_WALL_TEMPLE_CHANCE, TEMPLE_COLUMNS],
+			[Tuning.ROCK_WALL_PANEL_CHANCE, PANEL_COLUMNS],
+			[Tuning.ROCK_WALL_STACK_CHANCE, STACK_COLUMNS],
+		]
+		for entry in table:
+			var names: Array = entry[1]
+			if roll < entry[0]:
+				return names[rng.randi_range(0, names.size() - 1)]
+			roll -= entry[0]
 	if rng.randf() < Tuning.ROCK_WALL_TALL_CHANCE:
 		return TALL_COLUMNS[rng.randi_range(0, TALL_COLUMNS.size() - 1)]
 	return COLUMNS[rng.randi_range(0, COLUMNS.size() - 1)]
@@ -90,15 +101,31 @@ static func baked_row(feet: Array[Vector2], rng: RandomNumberGenerator) -> Node2
 	return node
 
 
-## Feet every `Tuning.ROCK_WALL_STEP` px from `from` to `to`, each wandering a little in both axes so
-## the columns never line up.
+## Feet along a line, never at an even distance: each step is a different length, now and then a gap is left,
+## and the line sways across itself (a wave of the world position, so neighbouring cells agree), so the wall
+## has bays and small salients and no rhythm.
 static func feet_along(from: Vector2, to: Vector2, rng: RandomNumberGenerator) -> Array[Vector2]:
 	var feet: Array[Vector2] = []
 	var length := from.distance_to(to)
 	var direction := (to - from).normalized()
-	var travelled := Tuning.ROCK_WALL_STEP / 2.0
+	var across := Vector2(-direction.y, direction.x)
+	var travelled := Tuning.ROCK_WALL_STEP * rng.randf_range(0.2, 0.7)
 	while travelled < length:
+		var at := from + direction * travelled
+		var wave := sin(at.x * 0.09 + at.y * 0.05) * Tuning.ROCK_WALL_WAVE + sin(at.y * 0.13 - at.x * 0.04) * Tuning.ROCK_WALL_WAVE * 0.6
 		var nudge := Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * Tuning.ROCK_WALL_JITTER
-		feet.append((from + direction * travelled + nudge).round())
-		travelled += Tuning.ROCK_WALL_STEP
+		feet.append((at + across * wave + nudge).round())
+		travelled += Tuning.ROCK_WALL_STEP * rng.randf_range(Tuning.ROCK_WALL_STEP_MIN, Tuning.ROCK_WALL_STEP_MAX)
+		if rng.randf() < Tuning.ROCK_WALL_GAP_CHANCE:
+			travelled += Tuning.ROCK_WALL_STEP
 	return feet
+
+
+## A chunk of fallen rock at the foot of a wall (no collision), so the cliff juts out here and there.
+static func chunk(foot: Vector2, rng: RandomNumberGenerator) -> Node2D:
+	var node := Node2D.new()
+	node.position = foot - Vector2(0, RoomProp.SORT_ABOVE_BOTTOM)
+	var sprite := TileArt.sprite([&"rubble_a", &"rubble_b", &"boulder_small", &"boulder_small_moss", &"boulder_b"][rng.randi_range(0, 4)])
+	sprite.position = Vector2(-8, -15 + RoomProp.SORT_ABOVE_BOTTOM)
+	node.add_child(sprite)
+	return node

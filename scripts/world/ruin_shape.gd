@@ -358,3 +358,5 @@ func _build_rock_edge(rng: RandomNumberGenerator) -> void:
 		rocks.add_child(row)
 	for foot in singles:
 		rocks.add_child(RockWall.column(foot, rng))
+		if rng.randf() < Tuning.ROCK_WALL_CHUNK_CHANCE:
+			rocks.add_child(RockWall.chunk(foot + Vector2(rng.randf_range(-5.0, 5.0), rng.randf_range(3.0, 7.0)), rng))

@@ -922,96 +922,6 @@ def floor_symbol(big=True):
 
 
 # --- bigger story pieces, after the catalog of details (statues, altar, banners, urns, vines) -----------------
-def statue_big(seed, kind="orb"):
-    """A statue 2 tiles wide and 3 high (32x48): a hooded figure on a stepped plinth with a glowing rune.
-    kind: 'orb' holds a crystal orb in both hands, 'monk' folds its hands, 'broken' lost its head and arm."""
-    rng = random.Random(seed)
-    img = blank(32, 48)
-    cols = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
-    noise = value_noise(rng, 32, 48, 4)
-    # stepped plinth
-    for y in range(36, 48):
-        for x in range(2, 30):
-            low = y >= 43
-            if not low and not 5 <= x <= 26:
-                continue
-            u = (x - (2 if low else 5)) / (27.0 if low else 21.0)
-            c = shade(cols[min(3, int(u * 4))], 0.92 + (noise[y][x] - 0.5) * 0.25)
-            if y in (36, 43):
-                c = shade(FLOOR_HI, 1.0)
-            elif y in (37, 44):
-                c = shade(ROCK_2, 0.72)
-            img.putpixel((x, y), c)
-    # engraved rune panel on the plinth
-    for y in range(38, 42):
-        for x in range(11, 21):
-            if x in (11, 20) or y in (38, 41):
-                put(img, x, y, shade(ROCK_2, 0.65))
-    for x, y in ((15, 39), (16, 39), (15, 40), (16, 40)):
-        put(img, x, y, GLOW if (x + y) % 2 else GLOW_2)
-    # the figure
-    top = 14 if kind == "broken" else 2
-    for y in range(top, 36):
-        t = (y - 2) / 33.0
-        if y < 15:
-            half = 5.2 * math.sqrt(max(0.0, 1.0 - ((y - 9.5) / 7.5) ** 2)) + 0.5
-        elif y < 22:
-            half = 5.5 + (y - 15) * 0.5
-        else:
-            half = 9.0 + (y - 22) * 0.18 + (1.2 if y > 31 else 0.0)
-        for x in range(32):
-            u = (x + 0.5 - 16.0) / max(0.5, half)
-            if abs(u) <= 1.0:
-                c = cols[min(3, int((u + 1.0) * 2.0))]
-                c = shade(c, 1.0 + (noise[y][x] - 0.5) * 0.35 - t * 0.12)
-                if y >= 15 and (x - 16) % 5 == 0 and y % 7 != 0:
-                    c = shade(c, 0.78)  # folds of the robe
-                if 6 <= y <= 13 and kind != "broken" and abs(x + 0.5 - 16.0) <= 2.9:
-                    c = ROCK_D if y >= 7 else shade(c, 0.7)
-                if y >= 17 and abs(u) > 0.88:
-                    c = shade(c, 0.8)
-                img.putpixel((x, y), c)
-    if kind == "orb":
-        for y in range(22, 31):
-            for x in range(9, 24):
-                if abs(x - 16) <= 7 - abs(y - 26) * 0.4 and 22 <= y <= 29:
-                    img.putpixel((x, y), shade(ROCK_4, 1.08 if y < 25 else 0.85))
-        for y in range(19, 27):
-            for x in range(12, 21):
-                d = math.hypot(x + 0.5 - 16.0, y + 0.5 - 22.5)
-                if d <= 3.6:
-                    img.putpixel((x, y), CRY_HI if d < 1.3 else (CRY_2 if d < 2.4 else CRY_1))
-    elif kind == "monk":
-        for y in range(23, 31):
-            for x in range(11, 22):
-                if abs(x - 16) <= 5.5 - abs(y - 26) * 0.35:
-                    img.putpixel((x, y), shade(ROCK_3, 1.1 if y < 26 else 0.8))
-        for x in range(13, 19):
-            put(img, x, 26, ROCK_D)
-    else:
-        # snapped off at the chest, with stones at its foot
-        for x in range(32):
-            jag = 14 + rng.choice((0, 0, 1, 2, -1))
-            if img.getpixel((x, jag + 1))[3]:
-                put(img, x, jag + 1, shade(FLOOR_HI, 0.95))
-        for _ in range(7):
-            sx, sy = rng.choice((rng.randrange(2, 7), rng.randrange(25, 30))), rng.randrange(40, 46)
-            for dx in (0, 1, 2):
-                put(img, sx + dx, sy, rng.choice((ROCK_4, ROCK_3)))
-    # moss on the plinth and a trailing vine
-    for _ in range(18):
-        x, y = rng.randrange(3, 29), rng.randrange(34, 47)
-        if img.getpixel((x, y))[3]:
-            img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
-    vx = 22
-    for y in range(18 if kind != "broken" else 15, 36):
-        vx += rng.choice((-1, 0, 0, 1))
-        for off in ((0, 1) if y % 3 == 0 else (0,)):
-            if img.getpixel((vx + off, y))[3]:
-                img.putpixel((vx + off, y), rng.choice((MOSS_1, MOSS_2)))
-    return outline(img)
-
-
 def altar_crystal():
     """A stone altar holding a blue crystal (32x32; the crystal's glow comes from a light)."""
     img = blank(32, 32)
@@ -1236,50 +1146,307 @@ def crystal_brazier(frame):
     return outline(img)
 
 
-# --- stairs and bridges -------------------------------------------------------------------------------------
-def stairs_steps(wood=False):
-    """Four steps, each with a bright edge, a tread and a dark riser, so a staircase reads at a glance
-    against the flat floor around it."""
+# --- detail pass: carved staircases, statues with faces and arms, temple pillars, wall panels, rubble stacks -------
+def shaded_poly(img, points, cols, noise=None, seed=0, light=0.0, dark=0.0):
+    """Fills a polygon with four vertical bands of `cols` (lit on the left), a little noise, a lit upper
+    edge and a darker lower edge."""
+    rng = random.Random(seed)
+    mask = Image.new("L", img.size, 0)
+    ImageDraw.Draw(mask).polygon(points, fill=255)
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    mp = mask.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            if mp[x, y] < 128:
+                continue
+            u = (x - x0) / max(1.0, x1 - x0)
+            v = (y - y0) / max(1.0, y1 - y0)
+            c = cols[min(len(cols) - 1, int(u * len(cols)))]
+            c = shade(c, 1.0 + rng.uniform(-0.04, 0.04) + light * (1.0 - v) - dark * v + (0.0 if noise is None else (noise[y][x] - 0.5) * 0.25))
+            img.putpixel((x, y), c)
+    return mask
+
+
+def stairs_steps(wood=False, variant=0):
+    """Four steps: a chipped bright nosing, a lit tread with its block joint, a dark riser with a shadow
+    under it, a worn path down the middle, a crack or a patch of moss, so the staircase has life."""
+    rng = random.Random(40 + variant)
     img = blank()
     edge = rgb("#b4b8dc") if not wood else WOOD_HI
     tread = FLOOR_HI if not wood else WOOD_2
     mid = FLOOR_2 if not wood else WOOD_1
     riser = rgb("#171c30") if not wood else WOOD_D
+    crack_step = rng.randrange(4)
     for i in range(4):
         y0 = i * 4
-        rows = (edge, tread, mid, riser)
+        joint_x = (5 + i * 5 + variant * 6) % 14 + 1
         for y in range(4):
             for x in range(T):
-                c = rows[y]
+                c = (edge, tread, mid, riser)[y]
                 if y in (1, 2):
                     c = shade(c, 1.0 + ((x * 7 + i * 3) % 5 - 2) * 0.015)
-                img.putpixel((x, y0 + y), shade(c, 1.0 - 0.07 * i))
+                    if 5 <= x <= 10:
+                        c = shade(c, 0.93)  # the worn path
+                    if x == joint_x:
+                        c = shade(c, 0.72)
+                if y == 0 and (x + i * 5 + variant) % 13 == 0:
+                    c = shade(tread, 0.8)  # a chip in the nosing
+                if y == 3:
+                    c = shade(riser, 0.85 + 0.15 * (x % 2))
+                img.putpixel((x, y0 + y), shade(c, 1.0 - 0.06 * i))
+        if i == crack_step:
+            cx = rng.randrange(3, 12)
+            for k in range(3):
+                put(img, cx + k % 2, y0 + 1 + k, shade(JOINT, 0.7))
+    for _ in range(rng.randrange(2, 5)):
+        x, y = rng.choice((rng.randrange(0, 3), rng.randrange(13, 16))), rng.randrange(1, 15)
+        put(img, x, y, rng.choice((MOSS_1, MOSS_2)))
     return img
 
 
-def stairs_rail(side):
-    """A stone parapet with a wooden post, on the side of a staircase."""
+def stairs_rail(side, part="mid"):
+    """A stone balustrade beside a staircase: a bevelled cap, carved panels, a finial post at its top end
+    (`part` 'top') and a rounded foot at its bottom end ('foot')."""
     img = blank()
     for y in range(T):
         for x in range(T):
             near = x if side == "l" else T - 1 - x
-            if 5 <= near <= 15:
-                if near == 15 or near == 5:
-                    c = OUTLINE
-                elif near < 8:
-                    c = ROCK_HI if near == 6 else ROCK_4
-                else:
-                    c = ROCK_3 if near < 12 else ROCK_2
-                if y % 8 == 7:
-                    c = shade(c, 0.6)
-                img.putpixel((x, y), c)
-    for y in range(3, 14):
-        for x in (7, 8):
-            xx = x if side == "l" else T - 1 - x
-            img.putpixel((xx, y), WOOD_2 if y > 4 else WOOD_HI)
+            if not 4 <= near <= 15:
+                continue
+            if near in (4, 15):
+                c = OUTLINE
+            elif near <= 6:
+                c = ROCK_HI
+            elif near <= 9:
+                c = ROCK_4
+            elif near <= 12:
+                c = ROCK_3
+            else:
+                c = ROCK_2
+            if near in (7, 8) and 3 <= y <= 12 and part == "mid":
+                c = shade(c, 0.72) if near == 8 else shade(c, 1.12)  # a carved panel
+            if y % 8 == 7:
+                c = shade(c, 0.62)
+            img.putpixel((x, y), c)
+    if part == "top":
+        for y in range(0, 8):
+            for x in range(3, 16):
+                near = x if side == "l" else T - 1 - x
+                xx = x if side == "l" else x
+                if 3 <= near <= 15 and y < 8:
+                    c = shade(FLOOR_HI, 1.1) if y < 3 else (ROCK_4 if near < 9 else ROCK_2)
+                    if y == 0 or near in (3, 15):
+                        c = OUTLINE
+                    img.putpixel((x, y), c)
+        for dx in (0, 1):
+            xx = 8 + dx if side == "l" else T - 1 - (8 + dx)
+            put(img, xx, 1, GLOW if dx == 0 else GLOW_2)
+    elif part == "foot":
+        for y in range(11, 16):
+            for x in range(T):
+                near = x if side == "l" else T - 1 - x
+                if 4 <= near <= 15 and (y - 11) > (near - 4) * 0 and ((near - 9.5) / 6.0) ** 2 + ((y - 11) / 5.0) ** 2 > 1.05:
+                    img.putpixel((x, y), CLEAR)
     return img
 
 
+def statue_big(seed, kind="orb"):
+    """A statue 2 tiles wide and 3 high (32x48): a hooded figure with face, sleeves and hands on a stepped
+    plinth with carved panels, folds in the robe, moss and a vine. kind: 'orb' holds a crystal orb,
+    'monk' leans on a staff, 'broken' lost its head and an arm."""
+    rng = random.Random(seed)
+    img = blank(32, 48)
+    cols = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
+    noise = value_noise(rng, 32, 48, 4)
+    # --- plinth: two steps, a carved front panel with a rune, corner studs
+    shaded_poly(img, [(2, 43), (30, 43), (30, 47), (2, 47)], cols, noise, seed + 1, 0.0, 0.2)
+    shaded_poly(img, [(5, 36), (27, 36), (27, 43), (5, 43)], cols, noise, seed + 2, 0.05, 0.15)
+    for x in range(5, 27):
+        put(img, x, 36, shade(FLOOR_HI, 1.05))
+        put(img, x, 43, shade(FLOOR_HI, 0.95))
+    for x in range(2, 30):
+        put(img, x, 44, shade(ROCK_2, 0.7))
+    for y in range(38, 42):
+        for x in range(9, 23):
+            if x in (9, 22) or y in (38, 41):
+                put(img, x, y, shade(ROCK_2, 0.6))
+            else:
+                put(img, x, y, shade(ROCK_3, 0.9))
+    for x, y in ((15, 39), (16, 39), (15, 40), (16, 40)):
+        put(img, x, y, GLOW if (x + y) % 2 else GLOW_2)
+    for sx in (7, 24):
+        put(img, sx, 38, GLOW)
+        put(img, sx, 40, mix(ROCK_3, GLOW, 0.5))
+    top = 15 if kind == "broken" else 0
+    # --- robe, cape, sleeves, hood
+    shaded_poly(img, [(10, 17), (22, 17), (25, 25), (27, 36), (5, 36), (7, 25)], cols, noise, seed + 3, 0.04, 0.22)
+    for fx, fy0 in ((10, 24), (13, 23), (17, 24), (20, 23), (23, 26)):
+        for y in range(fy0, 36):
+            xx = fx + (1 if (y - fy0) // 5 % 2 else 0)
+            if img.getpixel((xx, y))[3]:
+                img.putpixel((xx, y), shade(img.getpixel((xx, y)), 0.72))
+                if img.getpixel((xx - 1, y))[3] and (y % 3):
+                    img.putpixel((xx - 1, y), shade(img.getpixel((xx - 1, y)), 1.1))
+    for x in range(6, 27):
+        if img.getpixel((x, 35))[3]:
+            img.putpixel((x, 35), shade(img.getpixel((x, 35)), 1.18))
+    shaded_poly(img, [(8, 14), (24, 14), (26, 19), (6, 19)], cols, noise, seed + 4, 0.12, 0.1)
+    shaded_poly(img, [(8, 18), (12, 18), (15, 27), (11, 29), (7, 24)], cols[1:] + (ROCK_D,), noise, seed + 5, 0.0, 0.12)
+    shaded_poly(img, [(20, 18), (24, 18), (25, 24), (21, 29), (17, 27)], cols[2:] + (ROCK_D, ROCK_D), noise, seed + 6, 0.0, 0.12)
+    if kind != "broken":
+        shaded_poly(img, [(10, 5), (22, 5), (24, 13), (8, 13)], cols, noise, seed + 7, 0.1, 0.15)
+        # the hood: a rounded dome with a pointed crown
+        shaded_poly(img, [(16, 0), (20, 3), (22, 8), (22, 13), (10, 13), (10, 8), (12, 3)], cols, noise, seed + 8, 0.1, 0.1)
+        # the face in shadow, with two pale cheeks and a chin line
+        for y in range(5, 13):
+            half = 2.6 - abs(y - 8) * 0.35
+            for x in range(32):
+                if abs(x + 0.5 - 16.0) <= half:
+                    img.putpixel((x, y), ROCK_D if y != 8 else shade(ROCK_D, 1.5))
+        put(img, 14, 9, ROCK_3)
+        put(img, 18, 9, ROCK_3)
+        put(img, 16, 11, shade(ROCK_3, 0.8))
+    # --- what it holds
+    if kind == "orb":
+        shaded_poly(img, [(12, 25), (20, 25), (21, 29), (11, 29)], cols[1:] + (ROCK_2,), noise, seed + 9, 0.08, 0.1)
+        for y in range(18, 27):
+            for x in range(11, 22):
+                d = math.hypot(x + 0.5 - 16.0, y + 0.5 - 22.0)
+                if d <= 3.8:
+                    img.putpixel((x, y), CRY_HI if d < 1.3 else (CRY_2 if d < 2.5 else CRY_1))
+                elif d <= 4.8 and (x + y) % 2 == 0:
+                    img.putpixel((x, y), mix(ROCK_3, GLOW, 0.4))
+    elif kind == "monk":
+        shaded_poly(img, [(12, 25), (20, 25), (20, 29), (12, 29)], cols[1:] + (ROCK_2,), noise, seed + 9, 0.08, 0.1)
+        for y in range(4, 38):
+            put(img, 27, y, ROCK_3 if y % 2 else ROCK_HI)
+            put(img, 28, y, ROCK_2)
+        for x in range(25, 31):
+            put(img, x, 4, GOLD_1)
+            put(img, x, 3, GOLD_2 if x in (27, 28) else GOLD_D)
+    else:
+        for x in range(32):
+            jag = 15 + rng.choice((0, 0, 1, 2, -1))
+            if img.getpixel((x, jag + 1))[3]:
+                img.putpixel((x, jag + 1), shade(FLOOR_HI, 0.95))
+        for y in range(0, 15):
+            for x in range(32):
+                if x > 0 and img.getpixel((x, y))[3] and y < 14 - rng.choice((0, 1)):
+                    img.putpixel((x, y), CLEAR)
+        for _ in range(8):
+            sx, sy = rng.choice((rng.randrange(2, 7), rng.randrange(25, 30))), rng.randrange(40, 46)
+            for dx in (0, 1, 2):
+                put(img, sx + dx, sy, rng.choice((ROCK_4, ROCK_3)))
+    # --- age: chips on the outline, moss, a vine
+    for _ in range(14):
+        x, y = rng.randrange(3, 29), rng.randrange(top, 46)
+        if img.getpixel((x, y))[3] and not img.getpixel((x, y - 1))[3]:
+            img.putpixel((x, y), CLEAR)
+    for _ in range(26):
+        x, y = rng.randrange(3, 29), rng.randrange(34, 47)
+        if img.getpixel((x, y))[3]:
+            img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
+    vx = 24
+    for y in range(max(top, 14), 37):
+        vx += rng.choice((-1, 0, 0, 1))
+        for off in ((0, 1) if y % 3 == 0 else (0,)):
+            if img.getpixel((vx + off, y))[3]:
+                img.putpixel((vx + off, y), rng.choice((MOSS_1, MOSS_2, MOSS_HI)))
+    return outline(img)
+
+
+def temple_pillar(seed, mossy=False, broken=0):
+    """A square-capitalled pillar of the old temple (16x32): a carved capital, a fluted shaft with grooves,
+    a stepped base; `broken` snaps the shaft at that row and leaves rubble."""
+    rng = random.Random(seed)
+    img = blank(16, 32)
+    cols = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
+    shaded_poly(img, [(2, 28), (14, 28), (14, 31), (2, 31)], cols, None, seed, 0.1, 0.2)
+    shaded_poly(img, [(3, 25), (13, 25), (13, 28), (3, 28)], cols, None, seed + 1, 0.1, 0.2)
+    shaded_poly(img, [(4, 7), (12, 7), (12, 25), (4, 25)], cols, None, seed + 2, 0.0, 0.1)
+    for x in (6, 9):
+        for y in range(8, 25):
+            if img.getpixel((x, y))[3]:
+                img.putpixel((x, y), shade(img.getpixel((x, y)), 0.78))
+    shaded_poly(img, [(2, 3), (14, 3), (14, 7), (2, 7)], cols, None, seed + 3, 0.12, 0.2)
+    shaded_poly(img, [(3, 1), (13, 1), (13, 3), (3, 3)], cols, None, seed + 4, 0.18, 0.1)
+    for x in range(2, 14):
+        put(img, x, 3, shade(FLOOR_HI, 1.0))
+        put(img, x, 7, shade(ROCK_2, 0.65))
+    for p in ((7, 4), (8, 4), (7, 5), (8, 5)):
+        put(img, p[0], p[1], mix(ROCK_3, GLOW, 0.45))
+    if broken:
+        for x in range(16):
+            top = broken + rng.choice((-2, -1, 0, 0, 1, 2))
+            for y in range(top):
+                img.putpixel((x, y), CLEAR)
+            if img.getpixel((x, top))[3]:
+                img.putpixel((x, top), FLOOR_HI)
+    if mossy or broken:
+        for _ in range(16):
+            x, y = rng.randrange(2, 14), rng.randrange(max(2, broken), 31)
+            if img.getpixel((x, y))[3]:
+                img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
+    return outline(img)
+
+
+def wall_panel(seed, niche=False):
+    """A piece of brick wall standing like a column (16x32): staggered blocks, a ragged top, moss, and an
+    arched niche in some."""
+    rng = random.Random(seed)
+    img = blank(16, 32)
+    noise = value_noise(rng, 16, 32, 3)
+    top = [4 + rng.choice((0, 0, 1, 2, 3)) for _ in range(16)]
+    for x in range(1, 15):
+        for y in range(top[x], 31):
+            row = (y - 4) // 5
+            off = 0 if row % 2 == 0 else 4
+            bx = (x + off) % 8
+            c = ROCK_3 if (row + (x + off) // 8) % 2 == 0 else ROCK_2
+            c = shade(c, 1.0 + (noise[y][x] - 0.5) * 0.4 + (0.12 if x < 5 else 0.0) - y * 0.004)
+            if (y - 4) % 5 == 4 or bx == 7:
+                c = ROCK_D
+            elif (y - 4) % 5 == 0:
+                c = shade(c, 1.18)
+            img.putpixel((x, y), c)
+    if niche:
+        for y in range(11, 25):
+            for x in range(5, 11):
+                inside = y >= 15 or ((x - 7.5) ** 2 / 9.0 + (y - 15) ** 2 / 16.0 <= 1.0)
+                if inside:
+                    img.putpixel((x, y), ROCK_D if (x, y) != (7, 20) else GLOW)
+    for _ in range(22):
+        x, y = rng.randrange(1, 15), rng.randrange(top[1], 31)
+        if img.getpixel((x, y))[3] and (y < top[x] + 4 or y > 20):
+            img.putpixel((x, y), rng.choice((MOSS_1, MOSS_2, MOSS_D)))
+    return outline(img)
+
+
+def block_stack(seed):
+    """A heap of fallen blocks, tall at one side (16x32 with only the lower part drawn)."""
+    rng = random.Random(seed)
+    img = blank(16, 32)
+    cols = (ROCK_HI, ROCK_4, ROCK_3, ROCK_2)
+    y = 31
+    width = 13
+    for level in range(3):
+        h = rng.choice((4, 5, 6))
+        x0 = 1 + rng.randrange(0, 16 - width + 1) + (1 if level else 0)
+        shaded_poly(img, [(x0, y - h), (x0 + width, y - h), (x0 + width, y), (x0, y)], cols, None, seed + level, 0.15, 0.2)
+        for x in range(x0, x0 + width + 1):
+            put(img, x, y - h, FLOOR_HI)
+        y -= h
+        width = max(5, width - rng.choice((2, 3, 4)))
+    for _ in range(10):
+        x, yy = rng.randrange(1, 15), rng.randrange(18, 31)
+        if img.getpixel((x, yy))[3]:
+            img.putpixel((x, yy), rng.choice((MOSS_1, MOSS_2)))
+    return outline(img)
+
+
+# --- stairs and bridges -------------------------------------------------------------------------------------
 def bridge_planks(horizontal=True, seed=2):
     rng = random.Random(seed)
     img = blank()
@@ -1811,6 +1978,10 @@ def build_tiles():
     steps = stairs_steps()
     add("stairs_steps", steps)
     add("stairs_steps_wood", stairs_steps(wood=True))
+    add("stairs_steps_b", stairs_steps(variant=1))
+    for side in "lr":
+        add("stairs_post_%s" % side, stairs_rail(side, "top"))
+        add("stairs_foot_%s" % side, stairs_rail(side, "foot"))
     add("stairs_steps_h", steps.rotate(-90))
     add("stairs_rail_l", stairs_rail("l"))
     add("stairs_rail_r", stairs_rail("r"))
@@ -1843,8 +2014,8 @@ def build_tiles():
     add("chest_open", chest(True))
     add("crate", crate())
     add("barrel", barrel())
-    add_tall("pillar", pillar())
-    add("pillar_broken", pillar(True))
+    add_tall("pillar", temple_pillar(301, mossy=True))
+    add("pillar_broken", temple_pillar(302, broken=14).crop((0, 16, 16, 32)))
     add_tall("stele", stele())
     add("stele_small", stele(False))
     add("fern_a", fern(1))
@@ -1895,6 +2066,14 @@ def build_tiles():
     altar = altar_crystal()
     for name, box in (("tl", (0, 0)), ("tr", (16, 0)), ("bl", (0, 16)), ("br", (16, 16))):
         add("altar_%s" % name, altar.crop((box[0], box[1], box[0] + T, box[1] + T)))
+    add_tall("column_temple_a", temple_pillar(201))
+    add_tall("column_temple_b", temple_pillar(202, mossy=True))
+    add_tall("column_ruin_a", temple_pillar(203, broken=12))
+    add_tall("column_ruin_b", temple_pillar(204, broken=18))
+    add_tall("column_wall_a", wall_panel(205))
+    add_tall("column_wall_b", wall_panel(206, niche=True))
+    add_tall("column_stack_a", block_stack(207))
+    add_tall("column_stack_b", block_stack(208))
     add_tall("banner_blue", blue_banner())
     add("urn_a", urn(0))
     add("urn_b", urn(1))
