@@ -7,7 +7,7 @@ extends PanelContainer
 
 signal closed
 
-const QR_MODULE_PX := 3
+const QR_MODULE_PX := 2
 const BUSY_SHOWN_SECONDS := 2.0
 
 var qr_rect: TextureRect
@@ -21,24 +21,28 @@ var _status_serial := 0
 func _ready() -> void:
 	theme = UiKit.theme()
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 6)
 	add_child(box)
 	box.add_child(UiKit.label(UiText.t("controller_title"), 18))
-	box.add_child(UiKit.label(UiText.t("controller_hint"), 11))
 	qr_rect = TextureRect.new()
 	qr_rect.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	qr_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	box.add_child(qr_rect)
-	url_label = UiKit.label("", 12)
+	url_label = UiKit.label("", 11)
 	box.add_child(url_label)
 	status_label = UiKit.label(UiText.t("controller_waiting"), 14)
 	box.add_child(status_label)
-	disconnect_button = UiKit.button(UiText.t("controller_disconnect"))
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 6)
+	box.add_child(buttons)
+	disconnect_button = UiKit.button(UiText.t("controller_disconnect"), 120.0, 44.0)
+	disconnect_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	disconnect_button.pressed.connect(disconnect_controller)
-	box.add_child(disconnect_button)
-	back_button = UiKit.button(UiText.t("controller_back"))
+	buttons.add_child(disconnect_button)
+	back_button = UiKit.button(UiText.t("controller_back"), 120.0, 44.0)
+	back_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	back_button.pressed.connect(close)
-	box.add_child(back_button)
+	buttons.add_child(back_button)
 
 	# Method callables: the autoload outlives the panel and drops these when the panel is freed.
 	RemoteControl.controller_connected.connect(_on_controller_connected)
