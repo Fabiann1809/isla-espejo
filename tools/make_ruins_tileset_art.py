@@ -1173,6 +1173,69 @@ def under_shadow():
     return img
 
 
+# --- light sources of the catalog: blue sconces, warm lanterns, crystal braziers -----------------------------------
+def blue_flame(img, cx, base_y, h, frame):
+    """A cold flame (like `flame`, in the crystal blues) that flickers over `frame` 0..2."""
+    sway = (0, 1, -1)[frame % 3]
+    hh = h + (0, 1, 0)[frame % 3]
+    for i in range(hh):
+        w = max(0.0, (hh - i) * 0.42 * (1.0 if i < hh * 0.6 else 0.6))
+        shift = sway * (i / hh)
+        for x in range(int(cx - w - 1), int(cx + w + 2)):
+            dx = abs(x + 0.5 - (cx + shift))
+            if dx <= w + 0.5:
+                c = GLOW_2 if (dx < w * 0.35 and i < hh * 0.6) else (GLOW if dx < w * 0.65 else CRY_2)
+                if i > hh * 0.78:
+                    c = CRY_1
+                put(img, x, base_y - i, c)
+
+
+def sconce_blue(frame):
+    """A stone bowl on a short pillar holding a blue flame."""
+    img = blank()
+    d = ImageDraw.Draw(img)
+    d.rectangle((5, 13, 10, 15), fill=ROCK_2)
+    d.rectangle((6, 9, 9, 13), fill=ROCK_3)
+    d.line((6, 9, 6, 13), fill=ROCK_4)
+    d.rectangle((4, 7, 11, 9), fill=ROCK_4)
+    d.line((4, 7, 11, 7), fill=ROCK_HI)
+    outline(img)
+    blue_flame(img, 7.5, 6, 6, frame)
+    return img
+
+
+def lantern(frame):
+    """A small iron lantern on a post: warm light behind glass."""
+    img = blank()
+    d = ImageDraw.Draw(img)
+    d.rectangle((7, 11, 8, 15), fill=ROCK_D)
+    d.rectangle((5, 14, 10, 15), fill=ROCK_2)
+    d.rectangle((5, 4, 10, 11), fill=ROCK_D)
+    d.rectangle((6, 5, 9, 10), fill=FIRE_2 if frame % 2 else FIRE_3)
+    d.rectangle((7, 6, 8, 9), fill=FIRE_HI)
+    d.line((5, 3, 10, 3), fill=ROCK_3)
+    d.line((7, 1, 8, 1), fill=ROCK_3)
+    outline(img)
+    return img
+
+
+def crystal_brazier(frame):
+    """A stone base with a cluster of blue crystals whose glow pulses."""
+    img = blank()
+    d = ImageDraw.Draw(img)
+    d.rectangle((3, 11, 12, 15), fill=ROCK_3)
+    d.line((3, 11, 12, 11), fill=ROCK_HI)
+    d.rectangle((9, 12, 12, 15), fill=ROCK_2)
+    pulse = (CRY_2, CRY_HI, CRY_2)[frame % 3]
+    for cx, top, half in ((8, 1, 2), (5, 5, 1), (11, 4, 1)):
+        for y in range(top, 11):
+            w = half if y > top + 1 else 0
+            for x in range(cx - w, cx + w + 1):
+                put(img, x, y, pulse if x <= cx else CRY_1)
+    put(img, 8, 3, CRY_HI)
+    return outline(img)
+
+
 # --- stairs and bridges -------------------------------------------------------------------------------------
 def stairs_steps(wood=False):
     """Four steps, each with a bright edge, a tread and a dark riser, so a staircase reads at a glance
@@ -1806,6 +1869,11 @@ def build_tiles():
 
     # floor variety: tone shifts, cracks, big flagstones, holes, fallen stones (kept at the end of the
     # sheet so the coordinates of every older tile stay the same)
+    for f in range(3):
+        add("sconce_blue_%s" % "abc"[f], sconce_blue(f))
+        add("crystal_brazier_%s" % "abc"[f], crystal_brazier(f))
+    for f in range(2):
+        add("lantern_%s" % "ab"[f], lantern(f))
     add("platform_a", platform_floor(111))
     add("platform_b", platform_floor(112))
     add("platform_rune", platform_floor(113, rune=True))

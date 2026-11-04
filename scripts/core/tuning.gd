@@ -157,6 +157,13 @@ const RUIN_PLAYER_LIGHT := Color(0.85, 0.92, 1.0, 0.3)
 const RUIN_PLAYER_LIGHT_RADIUS := 64.0
 ## Seconds the shade (and the glow) take to grow when Nico enters a dark room and to fade when he leaves.
 const RUIN_DARK_FADE_SECONDS := 1.6
+## Cold flame of the blue sconces, warm light of the lanterns, and the soft shadow props throw at their foot.
+const RUIN_SCONCE_LIGHT := Color(0.3, 0.78, 1.0, 0.4)
+const RUIN_SCONCE_LIGHT_RADIUS := 56.0
+const RUIN_LANTERN_LIGHT := Color(1.0, 0.7, 0.3, 0.32)
+const RUIN_LANTERN_LIGHT_RADIUS := 44.0
+const RUIN_PROP_SHADOWS := true
+const RUIN_PROP_SHADOW_ALPHA := 0.42
 ## Chance that a platform's front tile carries hanging vines.
 const RUIN_PLATFORM_VINE_CHANCE := 0.45
 ## Floor variety of a ruin room (RuinShape._build_floor_detail): drift of darker/paler slabs (noise

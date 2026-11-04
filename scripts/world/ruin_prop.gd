@@ -14,7 +14,7 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
@@ -52,8 +52,26 @@ const FOOTS := {
 	Kind.GRAVE: Rect2(3, 6, 10, 9),
 	Kind.STATUE: Rect2(3, 4, 26, 11),
 	Kind.ALTAR: Rect2(3, 16, 26, 15),
+	Kind.SCONCE: Rect2(5, 9, 6, 6),
+	Kind.LANTERN: Rect2(5, 11, 6, 4),
+	Kind.CRYSTAL_BRAZIER: Rect2(3, 11, 10, 4),
 }
 const TALL_FOOT := Rect2(3, 22, 10, 8)
+## Foot shadow of a prop: its center and size, relative to the prop's origin.
+const FOOT_SHADOWS := {
+	Kind.STATUE: [Vector2(16, 12), Vector2(30, 8)],
+	Kind.ALTAR: [Vector2(16, 29), Vector2(30, 8)],
+	Kind.PILLAR: [Vector2(8, 30), Vector2(14, 5)],
+	Kind.CRYSTAL: [Vector2(8, 30), Vector2(14, 5)],
+	Kind.STELE: [Vector2(8, 30), Vector2(14, 5)],
+	Kind.BOULDER: [Vector2(8, 14), Vector2(13, 4)],
+	Kind.STALAGMITE: [Vector2(8, 14), Vector2(12, 4)],
+	Kind.BRAZIER: [Vector2(8, 14), Vector2(12, 4)],
+	Kind.VASE: [Vector2(8, 14), Vector2(10, 4)],
+	Kind.GRAVE: [Vector2(8, 14), Vector2(11, 4)],
+	Kind.SCONCE: [Vector2(8, 14), Vector2(10, 4)],
+	Kind.CRYSTAL_BRAZIER: [Vector2(8, 14), Vector2(13, 4)],
+}
 
 
 func is_flat() -> bool:
@@ -114,6 +132,12 @@ func _build() -> void:
 			_symbol()
 		Kind.ALTAR:
 			_altar()
+		Kind.SCONCE:
+			add_child(_animated([&"sconce_blue_a", &"sconce_blue_b", &"sconce_blue_c"], FIRE_FPS, Vector2.ZERO))
+		Kind.LANTERN:
+			add_child(_animated([&"lantern_a", &"lantern_b"], FIRE_FPS / 2.0, Vector2.ZERO))
+		Kind.CRYSTAL_BRAZIER:
+			add_child(_animated([&"crystal_brazier_a", &"crystal_brazier_b", &"crystal_brazier_c"], GLOW_FPS, Vector2.ZERO))
 		Kind.GRAVE:
 			add_child(TileArt.sprite([&"gravestone_a", &"gravestone_b"][rng.randi_range(0, 1)]))
 	if FOOTS.has(kind):
@@ -125,6 +149,27 @@ func _build() -> void:
 			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5))
 		Kind.CRYSTAL:
 			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS, Vector2(8, 14))
+		Kind.SCONCE:
+			_light(Tuning.RUIN_SCONCE_LIGHT, Tuning.RUIN_SCONCE_LIGHT_RADIUS, Vector2(8, 6))
+		Kind.LANTERN:
+			_light(Tuning.RUIN_LANTERN_LIGHT, Tuning.RUIN_LANTERN_LIGHT_RADIUS, Vector2(8, 8))
+		Kind.CRYSTAL_BRAZIER:
+			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS * 1.2, Vector2(8, 6))
+	_foot_shadow()
+
+
+## A soft shadow on the floor around the foot of the bigger props (and of the ones that burn), under their art.
+func _foot_shadow() -> void:
+	if not Tuning.RUIN_PROP_SHADOWS or not FOOT_SHADOWS.has(kind):
+		return
+	var spec: Array = FOOT_SHADOWS[kind]
+	var shadow := ActorShadow.new()
+	shadow.name = ActorShadow.NODE_NAME
+	shadow.position = spec[0]
+	shadow.size = spec[1]
+	shadow.alpha = Tuning.RUIN_PROP_SHADOW_ALPHA
+	add_child(shadow)
+	move_child(shadow, 0)
 
 
 func _footprint_height() -> float:

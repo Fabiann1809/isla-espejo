@@ -34,8 +34,8 @@ LANE_ROWS = range(7, 11)
 CENTER = (14, 8)
 
 # RuinProp.Kind values (keep in sync with scripts/world/ruin_prop.gd)
-ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE = range(23)
-SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, STATUE, VASE, ALTAR, GRAVE}
+ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER = range(26)
+SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, STATUE, VASE, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER}
 TALL = {PILLAR, CRYSTAL, STELE, BANNER}
 AREAS = {ROCKS, TERRACE, ALCOVE, SYMBOL, STATUE, ALTAR}
 PLATFORMS = {TERRACE, ALCOVE}
@@ -464,6 +464,10 @@ def lit(room, crystals, torches, braziers=0):
     """The lights of a room: crystals and torches against the rock, braziers in the open."""
     room.scatter(CRYSTAL, crystals, near_rock=True, min_dist=7)
     room.scatter(TORCH, torches, near_rock=True, min_dist=6)
+    room.scatter(SCONCE, max(1, torches // 2), near_rock=True, min_dist=8)
+    room.scatter(LANTERN, 1 + torches // 3, near_rock=False, min_dist=8)
+    if crystals >= 3:
+        room.scatter(CRYSTAL_BRAZIER, 1, near_rock=False, min_dist=8)
     if braziers:
         room.scatter(BRAZIER, braziers, near_rock=False, min_dist=7)
 

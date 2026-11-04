@@ -682,380 +682,412 @@
    9,
    10
   ],
-  "platform_a": [
+  "sconce_blue_a": [
    10,
    10
   ],
-  "platform_b": [
+  "crystal_brazier_a": [
    11,
    10
   ],
-  "platform_rune": [
+  "sconce_blue_b": [
    12,
    10
   ],
-  "terrace_corner_l": [
+  "crystal_brazier_b": [
    13,
    10
   ],
-  "terrace_corner_r": [
+  "sconce_blue_c": [
    14,
    10
   ],
-  "terrace_post_l_lip": [
+  "crystal_brazier_c": [
    15,
    10
   ],
-  "terrace_post_l_face": [
+  "lantern_a": [
    0,
+   11
+  ],
+  "lantern_b": [
+   1,
+   11
+  ],
+  "platform_a": [
+   2,
+   11
+  ],
+  "platform_b": [
+   3,
+   11
+  ],
+  "platform_rune": [
+   4,
+   11
+  ],
+  "terrace_corner_l": [
+   5,
+   11
+  ],
+  "terrace_corner_r": [
+   6,
+   11
+  ],
+  "terrace_post_l_lip": [
+   7,
+   11
+  ],
+  "terrace_post_l_face": [
+   8,
    11
   ],
   "terrace_post_r_lip": [
-   1,
+   9,
    11
   ],
   "terrace_post_r_face": [
-   2,
+   10,
    11
   ],
   "wall_support_lip": [
-   3,
+   11,
    11
   ],
   "wall_support_face": [
-   4,
+   12,
    11
   ],
   "wall_arch_face": [
-   5,
+   13,
    11
   ],
   "shadow_s": [
-   6,
+   14,
    11
   ],
   "shadow_w": [
-   7,
+   15,
    11
   ],
   "shadow_e": [
-   8,
-   11
+   0,
+   12
   ],
   "shadow_sw": [
-   9,
-   11
+   1,
+   12
   ],
   "shadow_se": [
-   10,
-   11
+   2,
+   12
   ],
   "statue_big_a_00": [
-   11,
-   11
+   3,
+   12
   ],
   "statue_big_a_01": [
-   12,
-   11
+   4,
+   12
   ],
   "statue_big_a_10": [
-   13,
-   11
+   5,
+   12
   ],
   "statue_big_a_11": [
-   14,
-   11
+   6,
+   12
   ],
   "statue_big_a_20": [
-   15,
-   11
+   7,
+   12
   ],
   "statue_big_a_21": [
-   0,
+   8,
    12
   ],
   "statue_big_b_00": [
-   1,
+   9,
    12
   ],
   "statue_big_b_01": [
-   2,
+   10,
    12
   ],
   "statue_big_b_10": [
-   3,
+   11,
    12
   ],
   "statue_big_b_11": [
-   4,
+   12,
    12
   ],
   "statue_big_b_20": [
-   5,
+   13,
    12
   ],
   "statue_big_b_21": [
-   6,
+   14,
    12
   ],
   "statue_big_c_00": [
-   7,
+   15,
    12
   ],
   "statue_big_c_01": [
-   8,
-   12
+   0,
+   13
   ],
   "statue_big_c_10": [
-   9,
-   12
+   1,
+   13
   ],
   "statue_big_c_11": [
-   10,
-   12
+   2,
+   13
   ],
   "statue_big_c_20": [
-   11,
-   12
+   3,
+   13
   ],
   "statue_big_c_21": [
-   12,
-   12
+   4,
+   13
   ],
   "altar_tl": [
-   13,
-   12
+   5,
+   13
   ],
   "altar_tr": [
-   14,
-   12
+   6,
+   13
   ],
   "altar_bl": [
-   15,
-   12
+   7,
+   13
   ],
   "altar_br": [
-   0,
+   8,
    13
   ],
   "banner_blue_top": [
-   1,
+   9,
    13
   ],
   "banner_blue_base": [
-   2,
+   10,
    13
   ],
   "urn_a": [
-   3,
+   11,
    13
   ],
   "urn_b": [
-   4,
+   12,
    13
   ],
   "skull": [
-   5,
+   13,
    13
   ],
   "sword_fallen": [
-   6,
+   14,
    13
   ],
   "gravestone_a": [
-   7,
+   15,
    13
   ],
   "gravestone_b": [
-   8,
-   13
+   0,
+   14
   ],
   "vine_hang_a": [
-   9,
-   13
+   1,
+   14
   ],
   "vine_hang_b": [
-   10,
-   13
+   2,
+   14
   ],
   "wall_under_a": [
-   11,
-   13
+   3,
+   14
   ],
   "wall_under_b": [
-   12,
-   13
+   4,
+   14
   ],
   "shadow_under": [
-   13,
-   13
+   5,
+   14
   ],
   "statue_a_top": [
-   14,
-   13
+   6,
+   14
   ],
   "statue_a_base": [
-   15,
-   13
+   7,
+   14
   ],
   "statue_b_top": [
-   0,
+   8,
    14
   ],
   "statue_b_base": [
-   1,
+   9,
    14
   ],
   "vase_a": [
-   2,
+   10,
    14
   ],
   "vase_b": [
-   3,
+   11,
    14
   ],
   "vase_c": [
-   4,
+   12,
    14
   ],
   "armor_fallen_a": [
-   5,
+   13,
    14
   ],
   "armor_fallen_b": [
-   6,
+   14,
    14
   ],
   "floor_symbol_tl": [
-   7,
+   15,
    14
   ],
   "floor_symbol_tr": [
-   8,
-   14
+   0,
+   15
   ],
   "floor_symbol_bl": [
-   9,
-   14
+   1,
+   15
   ],
   "floor_symbol_br": [
-   10,
-   14
+   2,
+   15
   ],
   "floor_symbol_small": [
-   11,
-   14
+   3,
+   15
   ],
   "floor_dim_a": [
-   12,
-   14
+   4,
+   15
   ],
   "floor_dim_b": [
-   13,
-   14
+   5,
+   15
   ],
   "floor_pale_a": [
-   14,
-   14
+   6,
+   15
   ],
   "floor_pale_b": [
-   15,
-   14
+   7,
+   15
   ],
   "floor_cracked_a": [
-   0,
+   8,
    15
   ],
   "floor_cracked_b": [
-   1,
-   15
-  ],
-  "floor_cracked_c": [
-   2,
-   15
-  ],
-  "floor_moss_b": [
-   3,
-   15
-  ],
-  "floor_moss_c": [
-   4,
-   15
-  ],
-  "floor_broken_a": [
-   5,
-   15
-  ],
-  "floor_broken_b": [
-   6,
-   15
-  ],
-  "floor_broken_c": [
-   7,
-   15
-  ],
-  "floor_debris_a": [
-   8,
-   15
-  ],
-  "floor_debris_b": [
    9,
    15
   ],
-  "floor_rubbled_a": [
+  "floor_cracked_c": [
    10,
    15
   ],
-  "floor_rubbled_b": [
+  "floor_moss_b": [
    11,
    15
   ],
-  "floor_slab_a_tl": [
+  "floor_moss_c": [
    12,
    15
   ],
-  "floor_slab_a_tr": [
+  "floor_broken_a": [
    13,
    15
   ],
-  "floor_slab_a_bl": [
+  "floor_broken_b": [
    14,
    15
   ],
-  "floor_slab_a_br": [
+  "floor_broken_c": [
    15,
    15
   ],
-  "floor_slab_b_tl": [
+  "floor_debris_a": [
    0,
    16
   ],
-  "floor_slab_b_tr": [
+  "floor_debris_b": [
    1,
    16
   ],
-  "floor_slab_b_bl": [
+  "floor_rubbled_a": [
    2,
    16
   ],
-  "floor_slab_b_br": [
+  "floor_rubbled_b": [
    3,
    16
   ],
-  "floor_slab_c_tl": [
+  "floor_slab_a_tl": [
    4,
    16
   ],
-  "floor_slab_c_tr": [
+  "floor_slab_a_tr": [
    5,
    16
   ],
-  "floor_slab_c_bl": [
+  "floor_slab_a_bl": [
    6,
    16
   ],
-  "floor_slab_c_br": [
+  "floor_slab_a_br": [
    7,
+   16
+  ],
+  "floor_slab_b_tl": [
+   8,
+   16
+  ],
+  "floor_slab_b_tr": [
+   9,
+   16
+  ],
+  "floor_slab_b_bl": [
+   10,
+   16
+  ],
+  "floor_slab_b_br": [
+   11,
+   16
+  ],
+  "floor_slab_c_tl": [
+   12,
+   16
+  ],
+  "floor_slab_c_tr": [
+   13,
+   16
+  ],
+  "floor_slab_c_bl": [
+   14,
+   16
+  ],
+  "floor_slab_c_br": [
+   15,
    16
   ]
  },
