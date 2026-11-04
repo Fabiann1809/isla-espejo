@@ -32,6 +32,7 @@ func _ready() -> void:
 		_sprite.position.y = FEET_Y - CELL_FEET_ROW * sprite_scale
 		_sprite.visible = true
 		_sprite.play(&"idle")
+		add_child(IdleBreath.new())
 		# The name sits right above the head, whatever the scale.
 		_name.offset_bottom = FEET_Y - 2.0 * CELL_FEET_ROW * sprite_scale - 2.0
 		_name.offset_top = _name.offset_bottom - 18.0

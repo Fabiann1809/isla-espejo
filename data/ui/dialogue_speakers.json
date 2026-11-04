@@ -1,0 +1,6 @@
+{
+	"default": {"fill": "#1b1f33", "border": "#8f86d4", "text": "#ecebf7", "tag": "#38d39f", "tag_text": "#0e2a22"},
+	"Nico": {"fill": "#eceef5", "border": "#8c93ad", "text": "#1b2033", "tag": "#38d39f", "tag_text": "#0e2a22"},
+	"El Anciano": {"fill": "#3a73e8", "border": "#1f3f9a", "text": "#ffffff", "tag": "#38d39f", "tag_text": "#0e2a22"},
+	"El Mercader": {"fill": "#b8741f", "border": "#6e3f0e", "text": "#fff6e4", "tag": "#38d39f", "tag_text": "#0e2a22"}
+}

@@ -204,6 +204,13 @@ const RUIN_FLOOR_ZONES_MAX := 3
 const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
 const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 
+# --- Idle breathing (IdleBreath) ---
+## Nico and the NPCs breathe while they stand still: a stretch of up to BREATH_PIXELS whole pixels, feet fixed,
+## one breath every BREATH_SECONDS. False = off.
+const BREATH_ENABLED := true
+const BREATH_PIXELS := 2.0
+const BREATH_SECONDS := 1.7
+
 # --- Special rooms and exits ---
 ## Decoration of the boss arena, the reward glade and the event camp (RoomDressing). False = off.
 const ROOM_DRESSING_ENABLED := true

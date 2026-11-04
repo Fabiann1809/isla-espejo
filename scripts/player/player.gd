@@ -109,6 +109,7 @@ const ANIM_SPEED_MAX := 2.0
 
 func _ready() -> void:
 	add_to_group("player")
+	add_child(IdleBreath.new())
 	Heights.set_level(self, Heights.LOW)
 	_hurtbox.invulnerability_check = is_invulnerable
 	_hurtbox.hit.connect(_on_hurtbox_hit)
