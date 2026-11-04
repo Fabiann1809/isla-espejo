@@ -64,7 +64,7 @@ func _test_sprite() -> void:
 			rested += 1
 			untouched = untouched and sprite.self_modulate.a == 1.0
 	_check(raised > 10 and rested > 10, "it rises and settles (%d frames raised, %d at rest)" % [raised, rested])
-	_check(heights.size() >= 1 and heights.size() <= int(Tuning.BREATH_PIXELS), "by whole pixels (%d different heights)" % heights.size())
+	_check(heights.size() >= 1 and heights.size() <= ceili(Tuning.BREATH_PIXELS), "by whole pixels (%d different heights)" % heights.size())
 	_check(untouched, "the sprite's own scale and position never change, and it is see-through only while the copy is drawn")
 
 	sprite.play(&"walk")

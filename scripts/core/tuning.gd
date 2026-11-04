@@ -208,7 +208,7 @@ const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 ## Nico and the NPCs breathe while they stand still: the body rises up to BREATH_PIXELS whole pixels while the legs
 ## (the lowest BREATH_LEG_SHARE of the figure) stretch to keep the feet fixed, one breath every BREATH_SECONDS. False = off.
 const BREATH_ENABLED := true
-const BREATH_PIXELS := 2.0
+const BREATH_PIXELS := 1.5
 const BREATH_SECONDS := 1.7
 const BREATH_LEG_SHARE := 0.3
 
