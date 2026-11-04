@@ -45,6 +45,8 @@ func _initialize() -> void:
 	await _frames(20)
 	_check(not player.is_invulnerable(), "invulnerability ends after the dash")
 
+	await _test_input_buffer(player)
+
 	player.global_position = Vector2(470, 260)
 	await _frames(60)
 	var cam: Camera2D = player.get_node("Camera2D")
@@ -59,6 +61,47 @@ func _initialize() -> void:
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
+
+
+## An attack pressed during its cooldown fires when the cooldown ends; a press made too early
+## expires and does not fire.
+func _test_input_buffer(player) -> void:
+	var attacks := [0]
+	var count := func(_dir: Vector2) -> void: attacks[0] += 1
+	player.attacked.connect(count)
+	player.facing = Vector2.UP
+	await _frames(60)
+	await _tap("attack")
+	_check(attacks[0] == 1, "buffer test: first attack")
+	# Press again while the cooldown still has less than the buffer time left.
+	while player._attack_cooldown_left > 0.1:
+		await physics_frame
+	_check(player._attack_cooldown_left > 0.0, "second press lands during the cooldown")
+	await _tap("attack")
+	await _frames(4)
+	_check(attacks[0] == 2, "buffered attack fires once the cooldown ends (attacks=%d)" % attacks[0])
+
+	await _frames(60)
+	await _tap("attack")
+	_check(attacks[0] == 3, "buffer test: third attack")
+	# Pressed right away: the cooldown outlasts the buffer, so the press expires.
+	await _tap("attack")
+	await _frames(40)
+	_check(attacks[0] == 3, "an expired buffered press does not fire (attacks=%d)" % attacks[0])
+
+	await _tap("dash")
+	await _frames(1)
+	_check(player.state == player.State.DASH, "buffer test: dash")
+	while player._dash_cooldown_left > 0.1:
+		await physics_frame
+	await _tap("dash")
+	var dashed_again: bool = player.state == player.State.DASH
+	for i in 4:
+		await physics_frame
+		dashed_again = dashed_again or player.state == player.State.DASH
+	_check(dashed_again, "buffered dash fires once its cooldown ends")
+	player.attacked.disconnect(count)
+	await _frames(60)
 
 
 ## The dummy is knocked back by every hit; put it back in front of the player.

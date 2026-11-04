@@ -22,6 +22,11 @@ enum State { IDLE, MOVE, DASH, ATTACK, HURT, DEAD }
 ## The attack numbers come from this weapon (data/weapons/); see equip().
 @export var weapon: WeaponData
 
+@export_group("Input buffer")
+## An attack or dash pressed while its cooldown runs is kept this long (seconds) and performed
+## as soon as the cooldown ends, so a press a moment too early (keyboard or phone) is not lost.
+@export var input_buffer_time := 0.15
+
 @export_group("Hurt")
 @export var hurt_time := 0.25
 @export var knockback_speed := 140.0
@@ -41,6 +46,9 @@ var visibility := 1.0
 var _state_time_left := 0.0
 var _dash_cooldown_left := 0.0
 var _attack_cooldown_left := 0.0
+## Time left of a buffered attack / dash press (0 = none).
+var _attack_buffer_left := 0.0
+var _dash_buffer_left := 0.0
 var _invulnerable_left := 0.0
 var _stealth_left := 0.0
 ## True while a dialogue is open: the player cannot move, attack or cast.
@@ -116,6 +124,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
 	_attack_cooldown_left = maxf(_attack_cooldown_left - delta, 0.0)
+	_attack_buffer_left = maxf(_attack_buffer_left - delta, 0.0)
+	_dash_buffer_left = maxf(_dash_buffer_left - delta, 0.0)
+	_buffer_presses()
 	_invulnerable_left = maxf(_invulnerable_left - delta, 0.0)
 	if _stealth_left > 0.0:
 		_stealth_left -= delta
@@ -345,10 +356,25 @@ func _process_free(_delta: float) -> void:
 
 	if _locked:
 		return
-	if Input.is_action_just_pressed("attack") and _attack_cooldown_left == 0.0:
+	var wants_attack := Input.is_action_just_pressed("attack") or _attack_buffer_left > 0.0
+	var wants_dash := Input.is_action_just_pressed("dash") or _dash_buffer_left > 0.0
+	if wants_attack and _attack_cooldown_left == 0.0:
+		_attack_buffer_left = 0.0
 		_start_attack()
-	elif Input.is_action_just_pressed("dash") and _dash_cooldown_left == 0.0:
+	elif wants_dash and _dash_cooldown_left == 0.0:
+		_dash_buffer_left = 0.0
 		_start_dash()
+
+
+## Remembers an attack or dash pressed while its cooldown is still running (any state but
+## dead or in a dialogue); `_process_free` performs it once the cooldown is over.
+func _buffer_presses() -> void:
+	if _locked or state == State.DEAD:
+		return
+	if Input.is_action_just_pressed("attack") and _attack_cooldown_left > 0.0:
+		_attack_buffer_left = input_buffer_time
+	if Input.is_action_just_pressed("dash") and _dash_cooldown_left > 0.0:
+		_dash_buffer_left = input_buffer_time
 
 
 func _start_dash() -> void:
