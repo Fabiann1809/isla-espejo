@@ -78,7 +78,7 @@ const WALL_TREE_BACK_ROW := 9.0
 ## Rock columns on the walls of the rooms and corridors of the Ruinas: distance between them, how far
 ## each one wanders from its place (px), how far behind the top wall's front row its back row stands,
 ## and the share of taller columns.
-const ROCK_WALL_STEP := 11.0
+const ROCK_WALL_STEP := 13.0
 const ROCK_WALL_JITTER := 3.0
 const ROCK_WALL_BACK_ROW := 8.0
 const ROCK_WALL_TALL_CHANCE := 0.25
@@ -93,9 +93,9 @@ const ROCK_WALL_STACK_CHANCE := 0.07
 ## (px) the wall sways across its line; share of wall feet that get a chunk of fallen rock at their foot.
 const ROCK_WALL_STEP_MIN := 0.6
 const ROCK_WALL_STEP_MAX := 1.7
-const ROCK_WALL_GAP_CHANCE := 0.08
+const ROCK_WALL_GAP_CHANCE := 0.12
 const ROCK_WALL_WAVE := 3.5
-const ROCK_WALL_CHUNK_CHANCE := 0.1
+const ROCK_WALL_CHUNK_CHANCE := 0.05
 ## The blocking part of a bush, rock or stump of the forest art (ForestArt.footprint): how much
 ## narrower than the picture, and its smallest and largest size (px).
 const PROP_FOOT_INSET := 2.0
@@ -175,14 +175,14 @@ const RUIN_LANTERN_LIGHT_RADIUS := 44.0
 const RUIN_PROP_SHADOWS := true
 const RUIN_PROP_SHADOW_ALPHA := 0.42
 ## Chance that a platform's front tile carries hanging vines.
-const RUIN_PLATFORM_VINE_CHANCE := 0.45
+const RUIN_PLATFORM_VINE_CHANCE := 0.3
 ## Floor variety of a ruin room (RuinShape._build_floor_detail): drift of darker/paler slabs (noise
 ## frequency, threshold), big flagstones tried per room, and the patches of worn, mossy or broken floor.
 const RUIN_FLOOR_DRIFT_FREQUENCY := 0.11
 const RUIN_FLOOR_DIM_THRESHOLD := 0.18
 const RUIN_FLOOR_SLAB_TRIES := 14
-const RUIN_FLOOR_ZONES_MIN := 3
-const RUIN_FLOOR_ZONES_MAX := 5
+const RUIN_FLOOR_ZONES_MIN := 2
+const RUIN_FLOOR_ZONES_MAX := 3
 const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
 const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 

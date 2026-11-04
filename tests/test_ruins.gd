@@ -82,7 +82,7 @@ func _initialize() -> void:
 	for room in level.rooms.values():
 		var traps: Array = room.find_children("*", "Node2D", true, false).filter(
 				func(n: Node) -> bool: return n.get_script() != null and n.get_script().resource_path.ends_with("spike_trap.gd"))
-		var expected_traps := 3 if room.data.id in [&"ruins_narrow", &"ruins_falls"] else 0
+		var expected_traps := 2 if room.data.id in [&"ruins_narrow", &"ruins_falls"] else 0
 		traps_ok = traps_ok and traps.size() == expected_traps
 		trapped += traps.size()
 	_check(traps_ok, "spike traps only in the narrow and the falls rooms (%d on this map)" % trapped)

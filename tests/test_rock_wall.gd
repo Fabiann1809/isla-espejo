@@ -25,7 +25,13 @@ func _initialize() -> void:
 	_check(picture.get_size() == Vector2i(16, 32) and tall.get_size() == Vector2i(16, 48), "a column is 2 tiles tall and a tall one is 3")
 	_check(not picture.is_invisible() and not tall.is_invisible(), "the column pictures are drawn")
 	var feet := RockWall.feet_along(Vector2(0, 15), Vector2(480, 15), rng)
-	_check(feet.size() >= 40 and feet[1].x - feet[0].x < 16.0, "the columns along a wall are packed (%d for 480 px)" % feet.size())
+	var steps := {}
+	var widest := 0.0
+	for i in range(1, feet.size()):
+		steps[int(feet[i].x - feet[i - 1].x)] = true
+		widest = maxf(widest, feet[i].x - feet[i - 1].x)
+	_check(feet.size() >= 25 and widest < 48.0 and steps.size() >= 6,
+			"the columns along a wall are close but never at an even distance (%d for 480 px, %d different steps)" % [feet.size(), steps.size()])
 	var node := RockWall.column(Vector2(100, 100), rng)
 	_check(node.is_in_group(RoomProp.CANOPY_GROUP) and node.get_child_count() == 1, "a column is one sprite that fades like a tree")
 	node.free()
