@@ -75,7 +75,7 @@ func _initialize() -> void:
 	scenario.objective = "Encuentra a la Serpiente de piedra"
 	scenario.objective_done = "Cruza el portal"
 	scenario.objective_flag = &"ruins_boss_defeated"
-	scenario.completion_text = "Capítulo 2 completado. El templo del eclipse te espera."
+	scenario.completion_text = "Capítulo 2 completado. El viaje de Nico continuará."
 	ResourceSaver.save(scenario, "res://data/scenarios/ruins.tres")
 	print("ruins data written")
 	quit()

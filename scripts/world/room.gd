@@ -444,7 +444,9 @@ func _build_trigger() -> void:
 	area.collision_mask = 2
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = pixel_size() - Vector2(WALL, WALL) * 2.0
+	# The whole room, walls included: a Nico standing in a doorway is still inside, so the room's
+	# events (and a dark room's shade) do not flap while he lingers at the door.
+	rectangle.size = pixel_size()
 	shape.shape = rectangle
 	shape.position = center()
 	area.add_child(shape)

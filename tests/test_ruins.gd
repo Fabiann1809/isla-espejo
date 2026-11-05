@@ -104,6 +104,19 @@ func _initialize() -> void:
 			if glow.material is CanvasItemMaterial and glow.z_index == Tuning.RUIN_LIGHT_Z:
 				lights += 1
 	_check(lights > 20 and animated > 20, "the rooms have lights and animated pieces (%d lights, %d animated)" % [lights, animated])
+	# No forest earth on the ruins' paths, and the exit stays open while the chapter has no boss.
+	var dirt_layers := 0
+	for room in level.rooms.values():
+		dirt_layers += 1 if room.get_node_or_null("Paths") != null else 0
+	dirt_layers += level.get_node("Map/Corridors").find_children("CorridorPath*", "", false, false).size()
+	_check(dirt_layers == 0, "the ruins keep their worn-stone paths (no forest dirt layers)")
+	var portals: Array = level.get_tree().get_nodes_in_group("exit_portals")
+	_check(portals.size() == 1 and portals[0].is_open() and portals[0].required_flag == &"",
+			"with no Serpiente yet the ruins' exit is open")
+	portals[0].seal_with(&"ruins_boss_defeated")
+	root.get_node("GameState").set_flag(&"forest_boss_defeated")
+	_check(not portals[0].is_open(), "sealed with the chapter's flag, the forest's flag does not open it")
+	root.get_node("GameState").reset()
 	# The Viajera waits in the event room and her conversation follows the chapter's story.
 	var npcs: Array = level.get_tree().get_nodes_in_group("npcs")
 	_check(npcs.size() == 1 and npcs[0].dialogue_id == &"traveler" and npcs[0].get_parent().data.type == RoomData.RoomType.EVENT,

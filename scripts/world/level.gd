@@ -126,8 +126,14 @@ func generate(new_seed := 0) -> void:
 
 ## Tells the HUD what to do now: the objective, or the follow-up once the boss is down.
 func _announce_objective() -> void:
-	var done := scenario.objective_flag != &"" and GameState.has_flag(scenario.objective_flag)
+	var done := not _has_boss() or (scenario.objective_flag != &"" and GameState.has_flag(scenario.objective_flag))
 	Events.objective_changed.emit(scenario.objective_done if done else scenario.objective)
+
+
+## A chapter without its boss yet (the ruins, for now) has nothing to defeat: its exit is open and
+## its objective is to cross it.
+func _has_boss() -> bool:
+	return scenario.boss_scene != null
 
 
 ## The director's room weights combined with any manual ones.
@@ -252,6 +258,9 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")
 			if portal != null:
 				portal.scenario_id = scenario.id
+				if portal.has_method("seal_with"):
+					# A chapter whose boss is not built yet keeps its way out open.
+					portal.seal_with(scenario.objective_flag if _has_boss() else &"")
 		RoomData.RoomType.EVENT:
 			_spawn_single(room, scenario.npc_scene, "NpcSpawn")
 		RoomData.RoomType.SPECIAL:
@@ -561,7 +570,9 @@ func _soften_paths() -> void:
 		var offset := Vector2i(layer.global_position) / TileArt.TILE
 		for cell in layer.get_used_cells_by_id(0, path_tile):
 			path[cell + offset] = true
-	if DirtArt.available():
+	# The forest's earth stays in the forest: a rock-walled theme (the ruins) keeps its own worn
+	# stone paths from the tileset.
+	if DirtArt.available() and scenario.theme.wall_style != RoomTheme.WallStyle.ROCKS:
 		_paint_dirt(layers, path, path_tile, floor_tile)
 		return
 	var on_path := func(cell: Vector2i) -> bool: return path.has(cell)
@@ -671,7 +682,9 @@ func _place_player() -> void:
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
 	Heights.set_level(player, Heights.LOW)
 	if player.has_method("set_camera_limits"):
-		player.set_camera_limits(bounds)
+		# The backdrop is painted this far past the rooms: the camera may show the top wall's crowns
+		# and the side walls of the edge rooms instead of cutting them at the room's line.
+		player.set_camera_limits(bounds.grow(Tuning.BACKDROP_MARGIN_TILES * TileArt.TILE))
 	# A new map starts somewhere else: the camera jumps there instead of gliding across the world.
 	if player.has_method("snap_camera"):
 		player.snap_camera()

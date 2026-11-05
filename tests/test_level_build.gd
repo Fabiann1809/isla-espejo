@@ -62,7 +62,8 @@ func _initialize() -> void:
 	var spawn: Vector2 = start_room.global_position + start_room.player_spawn()
 	_check(_level.player.global_position.distance_to(spawn) < 1.0, "player starts at the start room spawn")
 	var cam: Camera2D = _level.player.get_node("Camera2D")
-	_check(cam.limit_left == int(_level.bounds.position.x) and cam.limit_bottom == int(_level.bounds.end.y),
+	var margin: float = Tuning.BACKDROP_MARGIN_TILES * TileArt.TILE
+	_check(cam.limit_left == int(_level.bounds.position.x - margin) and cam.limit_bottom == int(_level.bounds.end.y + margin),
 			"camera limits cover the whole map")
 
 	# --- Every connection is physically walkable by a player-sized body; closed sides are walls
