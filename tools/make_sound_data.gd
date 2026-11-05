@@ -39,6 +39,10 @@ const VOLUMES := {
 	&"attack_murcielago": -8.0,
 	&"attack_sombra_errante": -6.0,
 	&"attack_bestia_de_la_niebla": -6.0,
+	&"attack_melee": -8.0,
+	&"attack_trap": -10.0,
+	&"attack_charge": -6.0,
+	&"attack_dive": -8.0,
 }
 ## Cue -> the cue whose sound it uses (enemy ids are the scene file names).
 const ALIASES := {
@@ -59,6 +63,34 @@ const ALIASES := {
 	&"death_sombra_errante": &"skill_shadow",
 	&"death_bestia_de_la_niebla": &"death_wood",
 	&"pickup_arrows": &"pickup_heart",
+	# Attack kinds without a cue of their own: a swing whooshes, a trap clinks, a charge thumps.
+	&"attack_melee": &"dash",
+	&"attack_trap": &"arrow_wall",
+	&"attack_charge": &"boss_slam",
+	&"attack_dive": &"dash",
+	# Deaths by material (the rest fall to `enemy_death`, the soft squish): stone, metal and bone
+	# crack; spirits fade with the shadow's hiss.
+	&"death_grunt": &"death_bones",
+	&"death_ancient_guardian": &"death_bones",
+	&"death_centinela_obsidiana": &"death_bones",
+	&"death_verdugo_piedra": &"death_bones",
+	&"death_carnero_basalto": &"death_bones",
+	&"death_campanero_bronce": &"death_bones",
+	&"death_rueda_devoradora": &"death_bones",
+	&"death_forjador_condenado": &"death_bones",
+	&"death_baldosa_hambrienta": &"death_bones",
+	&"death_relojero_trampas": &"death_bones",
+	&"death_custodio_sello": &"death_bones",
+	&"death_arana_talladora": &"death_bones",
+	&"death_carcelero_cadenas": &"death_bones",
+	&"death_duelista_maldito": &"death_bones",
+	&"death_salamandra_cristal": &"death_bones",
+	&"death_vasija_poseida": &"death_bones",
+	&"death_monje_sin_rostro": &"death_bones",
+	&"death_espiritu_vasija": &"skill_shadow",
+	&"death_eco_espejo": &"skill_shadow",
+	&"death_manos_abismo": &"skill_shadow",
+	&"death_mascara_parasita": &"skill_shadow",
 }
 const MUSIC_VOLUMES := {
 	&"menu": -8.0,

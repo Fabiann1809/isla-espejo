@@ -10,6 +10,7 @@ const NEEDED_CUES := [
 	&"ui_click", &"ui_hover", &"boss_warn", &"boss_slam", &"boss_roots", &"boss_defeated",
 	&"skill_roots", &"skill_current", &"skill_shadow", &"fragment", &"portal", &"alert",
 	&"attack_shot", &"attack_summon", &"attack_planta_tiradora", &"dialogue",
+	&"attack_melee", &"attack_trap", &"attack_charge", &"attack_dive", &"death_centinela_obsidiana",
 ]
 
 var _ok := true

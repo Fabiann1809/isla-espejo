@@ -92,6 +92,10 @@ func play_music(id: StringName) -> void:
 	if incoming.playing:
 		incoming.stop()
 	_music_active = incoming
+	if not outgoing.playing and current_music == StringName():
+		# Nothing to fade and nothing to bring in: a tween with no tweeners would only log an error.
+		_music_tween = null
+		return
 	_music_tween = create_tween().set_parallel(true)
 	if outgoing.playing:
 		_music_tween.tween_property(outgoing, "volume_db", -60.0, MUSIC_FADE)
@@ -128,6 +132,7 @@ func _connect_events() -> void:
 	Events.chest_opened.connect(func(_chest: Node) -> void: play(&"chest"))
 	Events.skill_used.connect(func(id: StringName, _d: Vector2, _n: int) -> void:
 		play(StringName("skill_" + id)))
+	Events.skill_blocked.connect(func(_slot: int) -> void: play(&"ui_back", Vector2.INF, -6.0))
 	Events.dialogue_started.connect(func(_id: StringName) -> void: play(&"dialogue"))
 	Events.fragment_collected.connect(func(_id: StringName) -> void: play(&"fragment"))
 	Events.scenario_completed.connect(func(_id: StringName) -> void: play(&"portal"))
