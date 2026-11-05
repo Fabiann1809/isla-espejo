@@ -68,6 +68,56 @@ const BUSH_ROCK_CHANCE := 0.3
 ## How far a bush's picture may wander from its tile's middle (px), so bushes side by side do not
 ## line up like a hedge.
 const BUSH_NUDGE := Vector2(3, 2)
+## The forest's own water and bridges (WaterArt, drawn by tools/make_water_art.py); false = the
+## tileset's flat pond and square of planks. Seconds per frame of the water's ripples, glints and
+## foam, and the share of open-water tiles with a lily pad.
+const WATER_ART_ENABLED := true
+const WATER_FRAME_TIME := 0.22
+const WATER_LILY_CHANCE := 0.2
+## A bridge: how far its deck reaches onto each bank (px), how far inside the deck's edge its rail
+## posts stand (px) and where the shade it casts on the water falls (px, light from the upper left).
+const BRIDGE_OVERHANG := 6
+const BRIDGE_RAIL_INSET := 3.0
+const BRIDGE_SHADOW_OFFSET := Vector2(3, 3)
+## The forest's own bare earth for paths and dirt patches (DirtArt, drawn by tools/make_dirt_art.py):
+## a frayed, wandering edge instead of the tileset's boxes with a dotted rim. False = the tileset's.
+const DIRT_ART_ENABLED := true
+## A dirt patch loses its corner cells, and a side at least this many tiles long gets a bite of grass.
+const DIRT_PATCH_BITE_SIDE := 7
+## The camp's own campfire (stones, logs and a flame) and the cut stump with roots and a shadow
+## (tools/make_camp_art.py); false = the tileset's campfire and the forest art set's stump. Frames
+## per second of the flame.
+const CAMP_ART_ENABLED := true
+const CAMPFIRE_FPS := 8.0
+## The Anciano's camp around its fire (RoomDressing; art in assets/art_forest/camp/, drawn in
+## Aseprite, sources in its source/ folder). Each piece: its picture, where its foot stands from the
+## middle of the campfire (px), whether it blocks (with its base only) and, optionally, how tall that
+## base is (px; a log lying towards us blocks along its length; default CAMP_BASE_HEIGHT). The seats
+## ring the fire: a log across below it and one lying towards us on its right. A piece that would land
+## on another prop, a spawn marker or a door lane is left out.
+const CAMP_PROPS_ENABLED := true
+const CAMP_PIECES := [
+	["tent", Vector2(-36, -26), true],
+	["lantern", Vector2(-14, -24), false],
+	["woodpile", Vector2(28, -22), true],
+	["pot", Vector2(20, 2), false],
+	["log_seat", Vector2(2, 24), true],
+	["log_seat_side", Vector2(36, 14), true, 18.0],
+	["backpack", Vector2(-52, 24), false],
+	["rune_stone", Vector2(-66, 0), true],
+]
+## Tufts of tall grass at the edge of the clearing (from the middle of the campfire, px).
+const CAMP_GRASS := [Vector2(-58, -30), Vector2(-20, -40), Vector2(44, -36), Vector2(62, 26), Vector2(-62, 26)]
+## How far below its foot a piece's shadow reaches (px), the height of a blocking piece's base (px)
+## and how far its base keeps from the door lanes (px).
+const CAMP_SHADOW_BELOW := 2.0
+const CAMP_BASE_HEIGHT := 6.0
+const CAMP_LANE_MARGIN := 8.0
+## The lantern's warm light and the carved stone's faint glow (alpha 0 = off) and their sizes (px).
+const CAMP_LANTERN_LIGHT := Color(1.0, 0.72, 0.36, 0.3)
+const CAMP_LANTERN_LIGHT_RADIUS := 26.0
+const CAMP_RUNE_LIGHT := Color(0.45, 0.9, 1.0, 0.2)
+const CAMP_RUNE_LIGHT_RADIUS := 18.0
 ## How far above a tile's bottom the floor details of the forest art stand (px).
 const DETAIL_FOOT_LIFT := 3.0
 ## Trees on the walls of the rooms and corridors: distance between them, how far each one wanders
@@ -119,6 +169,16 @@ const SHADOW_WIDTH_FACTOR := 0.7
 const SHADOW_HEIGHT_FACTOR := 0.35
 ## Shadow strength on the Ruinas' dark stone, where the normal one barely shows.
 const RUIN_SHADOW_ALPHA := 0.6
+## A soft shadow at the foot of trees, bushes, rocks and standing stones (GroundShadow), drawn with the
+## floor: how dark, its color, how wide for the picture's width (and at least, px), how flat, and how
+## far it leans from the foot (px; light from the upper left).
+const PROP_SHADOWS_ENABLED := true
+const PROP_SHADOW_ALPHA := 0.3
+const PROP_SHADOW_COLOR := Color(0.03, 0.08, 0.02)
+const PROP_SHADOW_WIDTH_FACTOR := 0.72
+const PROP_SHADOW_MIN_WIDTH := 10.0
+const PROP_SHADOW_HEIGHT_FACTOR := 0.3
+const PROP_SHADOW_OFFSET := Vector2(2, 0)
 
 ## Quiet life around the camera, at ground level (under every actor): fireflies drifting and leaves
 ## falling. Counts are particles alive at once (0 = off).
@@ -240,6 +300,13 @@ const PORTAL_BASE := true
 const PORTAL_LIGHT := Color(0.7, 0.45, 1.0, 0.35)
 const PORTAL_LIGHT_RADIUS := 40.0
 const PORTAL_SPARKS := 10
+## The portal's own art (assets/art_forest/portal/, drawn in Aseprite): a round stone dais lying with
+## the floor, a stone arch standing with the actors (sorted by its foot, this far below the portal's
+## origin, px) and a swirling veil in its doorway once it opens (frames per second). False = the
+## tileset's flagstones and the plain violet doorway.
+const PORTAL_ART_ENABLED := true
+const PORTAL_ARCH_FOOT := 8.0
+const PORTAL_VEIL_FPS := 6.0
 
 # --- Game feel (GameFeel: what a hit, a kill or a wound feels like) ------------------------------
 ## Every effect below can be switched off on its own. Hit stop = the game freezes for an instant

@@ -39,6 +39,12 @@ func _initialize() -> void:
 		if prop.get_script() != null and prop.has_method("is_flat") and prop.is_flat():
 			flat_low = flat_low and prop.z_index < 0
 	_check(flat_low, "flat props (ponds, bridges, dirt, tufts) are drawn with the floor")
+	# The soft shadows at the foot of trees, bushes and rocks lie with the floor too.
+	var shadows: Array = level.get_node("Map").find_children("GroundShadow*", "Node2D", true, false)
+	var shadows_low := not shadows.is_empty()
+	for shadow in shadows:
+		shadows_low = shadows_low and _effective_z(shadow) < 0
+	_check(shadows_low, "the shadows at the foot of trees, bushes and rocks (%d) are drawn with the floor" % shadows.size())
 	# Boss warnings, roots and skill areas lie on the ground, under Nico wherever he stands.
 	var zone := SkillZone.circle(level.player.global_position + Vector2(0, 20), 40.0, Color.RED, 5.0)
 	level.add_child(zone)
@@ -60,7 +66,7 @@ func _initialize() -> void:
 		level.add_child(edge_zone)
 		await _frames(1)
 		for sprite in patch.get_children():
-			if sprite is Sprite2D and _draws_above(sprite, edge_zone):
+			if (sprite is Sprite2D or sprite is TileMapLayer) and _draws_above(sprite, edge_zone):
 				covered_zone = true
 	var lower_floor := false
 	for coord in level.rooms:

@@ -1,6 +1,7 @@
 extends SceneTree
 ## Ponds are water (physics layer 7): Nico and enemies cannot walk into them, but arrows and enemy
-## orbs fly over, so a fight across a pond is not a stalemate.
+## orbs fly over, so a fight across a pond is not a stalemate. A bridge (planks between two ponds)
+## lets the water run on under it and only changes the drawing.
 ## Run: godot --headless --path . --script res://tests/test_water.gd
 
 var _ok := true
@@ -42,7 +43,36 @@ func _initialize() -> void:
 	arrow.global_position = Vector2(170, 120)
 	await _frames(25)
 	_check(is_instance_valid(arrow) and arrow.global_position.x > 250.0, "an arrow flies over the pond")
+	room.queue_free()
+	await _frames(1)
+	await _check_bridge()
 	quit(0 if _ok else 1)
+
+
+## The river room: its two ponds and the planks between them are one river with a bridge over it.
+func _check_bridge() -> void:
+	var water_art = load("res://scripts/world/water_art.gd")
+	if not water_art.available():
+		print("PASS the tileset's own pond and planks are drawn (Tuning.WATER_ART_ENABLED is off)")
+		return
+	var river: Node2D = load("res://scenes/levels/rooms/forest/river.tscn").instantiate()
+	root.add_child(river)
+	await _frames(2)
+	var north: Node2D = river.get_node("Prop1")
+	var south: Node2D = river.get_node("Prop2")
+	var planks: Node2D = river.get_node("Prop3")
+	var layer: TileMapLayer = north.get_node("Water")
+	var last_row: int = north.size_tiles.y - 1
+	var row: int = layer.get_cell_atlas_coords(Vector2i(1, last_row)).y
+	_check(row in load("res://scripts/world/area_art.gd").MIDDLE_ROWS, "the water runs on under the bridge (no shore where it starts)")
+	var bodies := planks.get_children().filter(func(n: Node) -> bool: return n is CollisionObject2D)
+	_check(bodies.is_empty(), "a bridge adds no collision: Nico walks over it as before")
+	var railing: Node2D = planks.get_node_or_null("Railing")
+	_check(railing != null and not railing.z_as_relative and railing.z_index == 0 and planks.y_sort_enabled,
+			"the near rail stands with the actors and is y-sorted with them")
+	_check(planks.z_index < 0 and planks.get_node("Deck").global_position.y > south.global_position.y,
+			"the deck lies with the floor and over the pond below it (its shade and piles show)")
+	river.queue_free()
 
 
 func _frames(count: int) -> void:

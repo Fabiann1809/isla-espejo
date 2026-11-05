@@ -10,8 +10,10 @@ extends RefCounted
 static func tree(foot: Vector2, rng: RandomNumberGenerator) -> Node2D:
 	var node := Node2D.new()
 	node.position = foot - Vector2(0, RoomProp.SORT_ABOVE_BOTTOM)
-	node.add_child(ForestArt.standing(ForestArt.pick_path(ForestArt.WALL_TREES, rng),
-			Vector2(0, RoomProp.SORT_ABOVE_BOTTOM)))
+	var picture := ForestArt.pick_path(ForestArt.WALL_TREES, rng)
+	node.add_child(ForestArt.standing(picture, Vector2(0, RoomProp.SORT_ABOVE_BOTTOM)))
+	if picture != null:
+		GroundShadow.under(node, Vector2(0, RoomProp.SORT_ABOVE_BOTTOM - 3), picture.get_width())
 	node.add_to_group(RoomProp.CANOPY_GROUP)
 	return node
 

@@ -561,6 +561,9 @@ func _soften_paths() -> void:
 		var offset := Vector2i(layer.global_position) / TileArt.TILE
 		for cell in layer.get_used_cells_by_id(0, path_tile):
 			path[cell + offset] = true
+	if DirtArt.available():
+		_paint_dirt(layers, path, path_tile, floor_tile)
+		return
 	var on_path := func(cell: Vector2i) -> bool: return path.has(cell)
 	for layer in layers:
 		var offset := Vector2i(layer.global_position) / TileArt.TILE
@@ -572,6 +575,43 @@ func _soften_paths() -> void:
 			if overlay != layer:
 				layer.set_cell(cell, 0, floor_tile)
 			overlay.set_cell(cell, 0, tile)
+
+
+## The paths with the forest's own earth (DirtArt): every path cell keeps the floor's grass (a
+## corridor's own grass is the layer below it) and gets the earth on a layer just above, so its frayed
+## edge shows grass. The dirt patches of the rooms are part of the same earth: a path runs into one
+## with no edge between them.
+func _paint_dirt(layers: Array[TileMapLayer], path: Dictionary, path_tile: Vector2i, floor_tile: Vector2i) -> void:
+	var earth := path.duplicate()
+	var patches: Array[RoomProp] = []
+	for coord: Vector2i in layout.cells:
+		for child in rooms[coord].get_children():
+			if child is RoomProp and child.kind == RoomProp.Kind.DIRT_PATCH:
+				patches.append(child)
+				earth.merge(DirtArt.patch_cells(child))
+	for layer in layers:
+		var offset := Vector2i(layer.global_position) / TileArt.TILE
+		var cells := layer.get_used_cells_by_id(0, path_tile)
+		if cells.is_empty():
+			continue
+		var corridor := String(layer.name).begins_with("Corridor")
+		# Numbered like the corridor it belongs to: siblings with the same name are renamed.
+		var dirt := DirtArt.new_layer("CorridorPath%s" % String(layer.name).trim_prefix("Corridor") if corridor else "Paths")
+		dirt.z_index = RoomTheme.FLOOR_Z
+		dirt.position = layer.position
+		layer.get_parent().add_child(dirt)
+		# Right above the path's layer (a room's grass patches stay under the earth).
+		var patches_layer := layer.get_parent().get_node_or_null("Patches")
+		var below: Node = patches_layer if not corridor and patches_layer != null else layer
+		layer.get_parent().move_child(dirt, below.get_index() + 1)
+		for cell in cells:
+			if corridor:
+				layer.erase_cell(cell)
+			else:
+				layer.set_cell(cell, 0, floor_tile)
+			dirt.set_cell(cell, 0, Vector2i(0, AreaArt.row(earth, cell + offset)))
+	for patch in patches:
+		DirtArt.repaint_patch(patch, earth)
 
 
 static func _mark(cells: Dictionary, rect: Rect2i) -> void:

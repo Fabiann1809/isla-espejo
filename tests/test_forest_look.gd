@@ -85,6 +85,7 @@ func _initialize() -> void:
 	for n in forest_art.BIG_ROCKS:
 		allowed[forest_art.ROCKS % n] = true
 	allowed[forest_art.STUMP] = true
+	allowed[forest_art.CUT_STUMP] = true
 	var blockers := 0
 	var wrong := []
 	for prop in level.get_node("Map").find_children("*", "Node2D", true, false):
@@ -242,6 +243,9 @@ func _bare_tiles(level: Node) -> Dictionary:
 ## Path tiles of the whole map (rooms and corridors): concave corners drawn with an inner-corner tile
 ## (rounded) or with the plain center tile (square).
 func _path_corners(level: Node) -> Dictionary:
+	var dirt_art: Script = load("res://scripts/world/dirt_art.gd")
+	if dirt_art.available():
+		return _earth_corners(level)
 	var art: Script = load("res://scripts/world/tile_art.gd")
 	var inner: Array = art.pattern(art.DIRT_PATCH_INNER)
 	var path_tile: Vector2i = art.coords(art.DIRT)
@@ -301,3 +305,29 @@ func _check(condition: bool, message: String) -> void:
 func _frames(count: int) -> void:
 	for i in count:
 		await physics_frame
+
+
+## The same with the forest's own earth (DirtArt): every layer painted with its sheet, paths and
+## patches alike; a rounded inner corner is one of its inner-corner rows.
+func _earth_corners(level: Node) -> Dictionary:
+	var area: Script = load("res://scripts/world/area_art.gd")
+	var dirt_tiles: TileSet = area.tile_set(load("res://scripts/world/dirt_art.gd").DIRT)
+	var tiles := {}
+	for layer in level.get_node("Map").find_children("*", "TileMapLayer", true, false):
+		if layer.tile_set != dirt_tiles:
+			continue
+		var offset := Vector2i((layer.global_position / 16.0).round())
+		for cell in layer.get_used_cells():
+			tiles[cell + offset] = layer.get_cell_atlas_coords(cell).y
+	var result := {"square": 0, "rounded": 0}
+	for cell: Vector2i in tiles:
+		var sides := [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN].all(
+				func(d: Vector2i) -> bool: return tiles.has(cell + d))
+		var corners := [Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)].any(
+				func(d: Vector2i) -> bool: return not tiles.has(cell + d))
+		if sides and corners:
+			if tiles[cell] in area.INNER_ROWS:
+				result.rounded += 1
+			else:
+				result.square += 1
+	return result

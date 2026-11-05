@@ -285,7 +285,7 @@ func _swap_details_for_art(decor: TileMapLayer, rng: RandomNumberGenerator) -> v
 		var coords := decor.get_cell_atlas_coords(cell)
 		var tex: Texture2D = null
 		if coords == stump:
-			tex = ForestArt.texture(ForestArt.STUMP)
+			tex = ForestArt.stump()
 		elif swaps.has(coords):
 			tex = ForestArt.pick(swaps[coords][0], swaps[coords][1], rng)
 		if tex == null:
