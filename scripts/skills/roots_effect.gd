@@ -18,7 +18,7 @@ func activate(caster: Node2D, skill: SkillData, direction: Vector2) -> int:
 			if enemy.has_method("apply_root"):
 				enemy.apply_root(root_time)
 	var zone := SkillZone.circle(center, radius, skill.color, duration, apply)
-	caster.get_parent().add_child(zone)
+	effects_parent(caster).add_child(zone)
 	apply.call()
 
 	var affected := 0

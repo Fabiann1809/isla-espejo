@@ -52,6 +52,8 @@ func _initialize() -> void:
 	var cam: Camera2D = player.get_node("Camera2D")
 	_check(cam.limit_right == 480 and cam.limit_left == -480, "camera limits are applied")
 
+	await _test_feel_and_resets(player)
+
 	player.hurt(player.global_position - Vector2(10, 0))
 	_check(player.state == player.State.HURT, "hurt state")
 	await _frames(30)
@@ -61,6 +63,49 @@ func _initialize() -> void:
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
+
+
+## Walking keeps its step when Nico turns to another view, a pull never catches a dodge, a hit during
+## the wind-up gives the shot's cooldown back, and a new map forgets pulls, slows and cooldowns.
+func _test_feel_and_resets(player: CharacterBody2D) -> void:
+	var sprite: AnimatedSprite2D = player.get_node("Sprite")
+	await _press("move_right")
+	await _frames(12)
+	_check(sprite.animation == &"walk_side", "walking right shows the side walk")
+	var step: int = sprite.frame
+	await _release("move_right")
+	await _press("move_down")
+	await _frames(1)
+	_check(sprite.animation == &"walk_down" and absi(sprite.frame - step) <= 1,
+			"turning to the front keeps the step of the walk (frame %d -> %d)" % [step, sprite.frame])
+	await _release("move_down")
+	await _frames(10)
+
+	player.facing = Vector2.RIGHT
+	await _tap("dash")
+	player.apply_pull(player.global_position + Vector2(200, 0), 100.0, 2.0)
+	_check(player.state == player.State.DASH and not player.is_pulled(), "a chain cannot catch Nico mid-dodge")
+	await _frames(45)
+	player.apply_pull(player.global_position + Vector2(200, 0), 100.0, 2.0)
+	_check(player.is_pulled(), "a pull takes hold once he is free")
+	player.start_stealth(0.5, 0.3)
+	_check(not player.is_pulled(), "Sombra breaks a pull")
+	player.end_stealth()
+
+	await _frames(40)
+	await _tap("attack")
+	_check(player.state == player.State.ATTACK and player._attack_cooldown_left > 0.0, "shot started")
+	player.hurt(player.global_position + Vector2(10, 0))
+	_check(player.state == player.State.HURT and player._attack_cooldown_left == 0.0,
+			"a hit during the wind-up gives the shot's cooldown back")
+	await _frames(60)
+
+	player.apply_slow(0.5, 5.0)
+	player.apply_pull(player.global_position + Vector2(200, 0), 100.0, 2.0)
+	player.skills._cooldowns[0] = 3.0
+	player.reset_for_new_map()
+	_check(not player.is_slowed() and not player.is_pulled() and player.skills.cooldown_left(0) == 0.0,
+			"a new map forgets the slow, the pull and the skills' cooldowns")
 
 
 ## An attack pressed during its cooldown fires when the cooldown ends; a press made too early

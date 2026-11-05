@@ -37,6 +37,7 @@ var _low_health: ColorRect
 var _low_health_on := false
 var _pulse_time := 0.0
 var _ghost_material: ShaderMaterial
+var _step_left := 0.0
 
 
 func _ready() -> void:
@@ -72,6 +73,7 @@ func _process(delta: float) -> void:
 		_hit_stop_until = 0
 		Engine.time_scale = 1.0
 	_update_shake(real_delta)
+	_update_walk_dust(delta)
 	if _low_health_on:
 		_pulse_time += real_delta
 		var tint := Tuning.LOW_HEALTH_PULSE
@@ -166,12 +168,48 @@ func _on_player_dashed(_direction: Vector2) -> void:
 	if player == null:
 		return
 	burst(player.global_position, Tuning.DASH_DUST_COLOR, Tuning.DASH_DUST, Tuning.DASH_DUST_SPEED)
+	squash_and_stretch(player)
 	for i in Tuning.DASH_GHOSTS:
-		if i > 0:
-			await get_tree().create_timer(Tuning.DASH_GHOST_EVERY, false).timeout
-		if not is_instance_valid(player):
-			return
-		afterimage(player)
+		if i == 0:
+			afterimage(player)
+		else:
+			# A timer signal, not an await: nothing resumes on a GameFeel freed by a scene change.
+			get_tree().create_timer(Tuning.DASH_GHOST_EVERY * i, false).timeout.connect(
+					func() -> void:
+						if is_instance_valid(player):
+							afterimage(player))
+
+
+## The dodge's weight on the picture: squashed wide as it starts, stretched tall as it lands, then
+## settled. The tween lives on the sprite, so it ends with it.
+func squash_and_stretch(actor: Node2D) -> void:
+	if Tuning.DASH_SQUASH == Vector2.ONE and Tuning.DASH_STRETCH_END == Vector2.ONE:
+		return
+	var sprite := actor.get_node_or_null("Sprite") as Node2D
+	if sprite == null:
+		return
+	var dash_time: float = actor.get("dash_time") if actor.get("dash_time") != null else 0.15
+	sprite.scale = Tuning.DASH_SQUASH
+	var tween := sprite.create_tween()
+	tween.tween_property(sprite, "scale", Tuning.DASH_STRETCH_END, dash_time).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(sprite, "scale", Vector2.ONE, Tuning.DASH_STRETCH_SETTLE) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## A pinch of dust under Nico's feet at every step while he walks.
+func _update_walk_dust(delta: float) -> void:
+	if Tuning.WALK_DUST <= 0:
+		return
+	var player := get_tree().get_first_node_in_group("player") as CharacterBody2D
+	if player == null or player.get("state") != 1 or player.velocity.length() < 5.0:
+		_step_left = 0.0
+		return
+	_step_left -= delta
+	if _step_left > 0.0:
+		return
+	_step_left = Tuning.WALK_DUST_EVERY
+	puff(player.global_position + Vector2(0, 1), -player.velocity.normalized(), Tuning.WALK_DUST_COLOR,
+			Tuning.WALK_DUST, Tuning.WALK_DUST_SPEED)
 
 
 ## A still silhouette of the actor's current frame that fades where it stands.
@@ -250,6 +288,40 @@ func burst(at: Vector2, color: Color, count: int, speed: float) -> void:
 	sparks.emitting = true
 	# A timer, not `finished`: that signal does not come when the particles are not drawn.
 	get_tree().create_timer(sparks.lifetime + 0.1, false).timeout.connect(sparks.queue_free)
+
+
+## A soft puff of dust at `at` (world position) drifting `away` (from the feet, against the walk),
+## lying on the ground under every actor; it frees itself.
+func puff(at: Vector2, away: Vector2, color: Color, count: int, speed: float) -> void:
+	if count <= 0:
+		return
+	var dust := CPUParticles2D.new()
+	dust.texture = RoomDressing.pixel()
+	dust.one_shot = true
+	dust.explosiveness = 1.0
+	dust.amount = count
+	dust.lifetime = 0.35
+	dust.direction = away if away != Vector2.ZERO else Vector2.UP
+	dust.spread = 50.0
+	dust.initial_velocity_min = speed * 0.5
+	dust.initial_velocity_max = speed
+	dust.gravity = Vector2(0, -8.0)
+	dust.damping_min = 10.0
+	dust.damping_max = 20.0
+	dust.scale_amount_min = 1.0
+	dust.scale_amount_max = 2.0
+	dust.color = color
+	var fade := Gradient.new()
+	fade.set_color(0, Color.WHITE)
+	fade.set_color(1, Color(1, 1, 1, 0))
+	dust.color_ramp = fade
+	dust.z_as_relative = false
+	dust.z_index = RoomTheme.GROUND_FX_Z
+	_keep_still(dust)
+	add_child(dust)
+	dust.global_position = at
+	dust.emitting = true
+	get_tree().create_timer(dust.lifetime + 0.1, false).timeout.connect(dust.queue_free)
 
 
 ## A number that rises and fades over `at` (world position).

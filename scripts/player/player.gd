@@ -169,6 +169,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_interaction()
 	_update_visuals(delta)
+	_update_camera_lead(delta)
 
 
 ## Makes `new_weapon` the active weapon: its numbers drive the next attacks.
@@ -206,6 +207,7 @@ func is_stealthed() -> bool:
 ## Makes enemies notice the player only from `new_visibility` of their normal range.
 func start_stealth(duration: float, new_visibility: float) -> void:
 	var was_stealthed := is_stealthed()
+	break_pull()
 	_stealth_left = duration
 	visibility = new_visibility
 	if not was_stealthed:
@@ -223,7 +225,8 @@ func end_stealth() -> void:
 ## Drags the player toward `toward` (world position) at `pull_speed` for up to `duration` seconds,
 ## or until close to it. Nico cannot walk meanwhile, but a dodge breaks free.
 func apply_pull(toward: Vector2, pull_speed: float, duration: float) -> void:
-	if state == State.DEAD:
+	# A dodge breaks free, so a chain cannot catch him in the middle of one either.
+	if state == State.DEAD or state == State.DASH:
 		return
 	_pull_to = toward
 	_pull_speed = pull_speed
@@ -232,6 +235,11 @@ func apply_pull(toward: Vector2, pull_speed: float, duration: float) -> void:
 
 func is_pulled() -> bool:
 	return _pull_left > 0.0
+
+
+## Ends a pull at once (a dodge, a teleport).
+func break_pull() -> void:
+	_pull_left = 0.0
 
 
 ## Multiplies the walking speed by `factor` (0.5 = half as fast) for `duration` seconds; overlapping
@@ -276,6 +284,35 @@ func clear_run_resources() -> void:
 	add_gold(-gold)
 
 
+## Forgets what only mattered on the map just left: a chain's pull, a slow, the stealth, the
+## invulnerability, buffered presses and the skills' cooldowns. Health, gold and the buff stay: they
+## are the run's. The Level calls it when it puts Nico on a new map.
+func reset_for_new_map() -> void:
+	if state == State.DEAD:
+		return
+	break_pull()
+	_pull_speed = 0.0
+	_slow_left = 0.0
+	_slow_factor = 1.0
+	end_stealth()
+	_invulnerable_left = 0.0
+	_attack_buffer_left = 0.0
+	_dash_buffer_left = 0.0
+	_interact_block_left = 0.0
+	skills.reset_cooldowns()
+	if state in [State.DASH, State.ATTACK, State.HURT]:
+		_set_attack_active(false)
+		_enter_state(State.IDLE, 0.0)
+
+
+## Where Nico's arrows and skill effects live: the map, so they go away with it, or his parent in a
+## bare scene.
+func effects_parent() -> Node:
+	var parent := get_parent()
+	var map := parent.get_node_or_null("Map") if parent != null else null
+	return map if map != null else parent
+
+
 ## Limits the camera to a rectangle in world coordinates (usually the level bounds).
 func set_camera_limits(bounds: Rect2) -> void:
 	_camera.limit_left = int(bounds.position.x)
@@ -286,14 +323,30 @@ func set_camera_limits(bounds: Rect2) -> void:
 
 ## Moves the camera straight to the player (after a jump to another map) instead of gliding.
 func snap_camera() -> void:
+	_camera.position = Vector2.ZERO
 	_camera.reset_smoothing()
 	Placement.reset(_camera)
+
+
+## The camera leads Nico a little where he walks (or dodges), so the way ahead is seen first; it
+## settles back over him when he stops.
+func _update_camera_lead(delta: float) -> void:
+	if Tuning.CAMERA_LOOK_AHEAD <= 0.0:
+		return
+	var lead := Vector2.ZERO
+	if state == State.MOVE or state == State.DASH:
+		lead = (_action_dir if state == State.DASH else _move_dir.normalized()) * Tuning.CAMERA_LOOK_AHEAD
+	_camera.position = _camera.position.lerp(lead, 1.0 - exp(-Tuning.CAMERA_LOOK_AHEAD_SPEED * delta))
 
 
 ## Puts the player in the hurt state and pushes it away from `from_position`.
 func hurt(from_position: Vector2) -> void:
 	if is_invulnerable():
 		return
+	# A hit during the wind-up cancels the shot: its cooldown is given back, the player owes nothing
+	# for an arrow that never left.
+	if _shot_pending:
+		_attack_cooldown_left = 0.0
 	_set_attack_active(false)
 	_action_dir = (global_position - from_position).normalized()
 	_invulnerable_left = hit_invulnerability_time
@@ -340,8 +393,10 @@ func _on_dialogue_finished(_dialogue_id: StringName, _state: StringName) -> void
 
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
-	health.take_damage(damage, from_position)
+	# Published before the health drops: the profile closes the run on `player_died`, so a damage
+	# event after it would be lost and the killing blow would never count.
 	Events.player_damaged.emit(damage, from_position)
+	health.take_damage(damage, from_position)
 	if not health.is_dead():
 		hurt(from_position)
 
@@ -383,7 +438,7 @@ func _buffer_presses() -> void:
 
 
 func _start_dash() -> void:
-	_pull_left = 0.0
+	break_pull()
 	_action_dir = facing
 	_dash_cooldown_left = dash_cooldown
 	_enter_state(State.DASH, dash_time)
@@ -410,7 +465,8 @@ func _start_attack() -> void:
 
 func _process_attack(delta: float) -> void:
 	velocity = _move_dir * speed * attack_move_factor
-	if _shot_pending and 1.0 - _state_time_left / attack_time >= weapon.release_at:
+	# The last tick of the attack always releases a pending shot (a release_at of 1.0 included).
+	if _shot_pending and (_state_time_left - delta <= 0.0 or 1.0 - _state_time_left / attack_time >= weapon.release_at):
 		_fire()
 	_state_time_left -= delta
 	if _state_time_left <= 0.0:
@@ -450,7 +506,7 @@ func _fire() -> void:
 		if i == (count - 1) / 2:
 			arrow.hit_landed.connect(_on_arrow_hit)
 		arrow.blocked.connect(func(at: Vector2) -> void: Events.arrow_blocked.emit(at))
-		get_parent().add_child(arrow)
+		effects_parent().add_child(arrow)
 		arrow.global_position = muzzle
 		Placement.reset(arrow)
 	Events.player_shot.emit(_action_dir, _nearest_enemy_distance(weapon.projectile_range))
@@ -467,6 +523,10 @@ func _nearest_enemy_distance(reach: float) -> float:
 		if distance <= reach and (best < 0.0 or distance < best):
 			best = distance
 	return best
+
+
+func _is_walk(anim: StringName) -> bool:
+	return String(anim).begins_with("walk")
 
 
 ## `<base>_side` if Nico's art has it, else nothing (the state keeps its old look).
@@ -511,16 +571,23 @@ func _update_visuals(delta: float) -> void:
 			one_shot_time = attack_time
 		State.DASH:
 			one_shot = _side_art(&"dash")
-			one_shot_time = dash_time
+			one_shot_time = dash_time if one_shot != StringName() else 0.0
 		State.HURT:
 			one_shot = _side_art(&"hurt")
-			one_shot_time = hurt_time
+			one_shot_time = hurt_time if one_shot != StringName() else 0.0
 		State.DEAD:
 			one_shot = _side_art(&"death")
 	if one_shot != StringName():
 		wanted = one_shot
 	if _body.animation != wanted:
+		# Turning from one walking view to another keeps the step: the cycle goes on from the same
+		# frame instead of starting over, so a turn never stutters.
+		var keep_step := Tuning.WALK_KEEP_STEP and _is_walk(_body.animation) and _is_walk(wanted)
+		var frame := _body.frame
+		var progress := _body.frame_progress
 		_body.play(wanted)
+		if keep_step and frame < _body.sprite_frames.get_frame_count(wanted):
+			_body.set_frame_and_progress(frame, progress)
 	# The swing, the dash and the hurt fit exactly in their state's time; death plays at its own
 	# pace and stays on its last frame; walk follows the real speed so the feet slide less.
 	if one_shot_time > 0.0:

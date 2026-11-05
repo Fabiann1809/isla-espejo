@@ -30,6 +30,12 @@ func unlock(skill: SkillData) -> void:
 	Events.skill_unlocked.emit(skill.id)
 
 
+## Every skill is ready again (a new map).
+func reset_cooldowns() -> void:
+	for slot in SLOT_COUNT:
+		_cooldowns[slot] = 0.0
+
+
 func is_unlocked(slot: int) -> bool:
 	return _skills[slot] != null
 

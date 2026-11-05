@@ -664,6 +664,9 @@ func _place_player() -> void:
 		add_child(player)
 	# Idempotent: whatever the player has earned (skills) is on the player for every map.
 	GameState.apply_to_player(player)
+	# What only mattered on the map just left (a pull, a slow, cooldowns) is forgotten.
+	if player.has_method("reset_for_new_map"):
+		player.reset_for_new_map()
 	var start_room: Room = rooms[layout.start_cell]
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
 	Heights.set_level(player, Heights.LOW)

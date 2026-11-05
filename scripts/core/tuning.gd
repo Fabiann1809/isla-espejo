@@ -360,6 +360,26 @@ const HURT_FLASH_TIME := 0.3
 const LOW_HEALTH := 1
 const LOW_HEALTH_PULSE := Color(0.6, 0.0, 0.0, 0.22)
 
+# --- Nico's movement feel ---------------------------------------------------------------------------
+## Turning between the walking views (side, front, back) keeps the step of the cycle instead of
+## starting it over. False = every turn restarts the walk.
+const WALK_KEEP_STEP := true
+## Dust under Nico's feet while he walks: particles per step (0 = off), seconds between steps (the
+## footstep sound's pace), how fast the dust drifts (px/s) and its color.
+const WALK_DUST := 2
+const WALK_DUST_EVERY := 0.32
+const WALK_DUST_SPEED := 10.0
+const WALK_DUST_COLOR := Color(0.85, 0.8, 0.65, 0.55)
+## The dodge squashes Nico's picture (x, y scale) as it starts, stretches it as it ends and settles
+## back in these seconds. Vector2.ONE for both = no squash.
+const DASH_SQUASH := Vector2(1.25, 0.8)
+const DASH_STRETCH_END := Vector2(0.9, 1.12)
+const DASH_STRETCH_SETTLE := 0.1
+## The camera leads Nico this many px where he walks or dodges (0 = off), catching up at this
+## speed (per second).
+const CAMERA_LOOK_AHEAD := 10.0
+const CAMERA_LOOK_AHEAD_SPEED := 3.0
+
 # --- Trees in front of Nico (CanopyFade) -----------------------------------------------------------
 ## A tree whose crown covers Nico turns see-through to this alpha (1 = off), at this speed (per s).
 const CANOPY_FADE_ALPHA := 0.45
