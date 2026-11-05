@@ -68,7 +68,7 @@ func _initialize() -> void:
 	scenario.objective = "Encuentra al Guardián del bosque"
 	scenario.objective_done = "Cruza el portal"
 	scenario.objective_flag = &"forest_boss_defeated"
-	scenario.completion_text = "Capítulo 1 completado. Las ruinas de la montaña te esperan."
+	scenario.completion_text = "Capítulo 1 completado. Las Ruinas de la Montaña te esperan."
 	ResourceSaver.save(scenario, "res://data/scenarios/forest.tres")
 	print("forest data written")
 	quit()

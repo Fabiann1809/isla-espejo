@@ -30,6 +30,7 @@ var credits: CreditsScreen
 
 var _menu: VBoxContainer
 var _confirming_start := false
+var _subtitle: Label
 
 
 func _ready() -> void:
@@ -48,7 +49,8 @@ func _ready() -> void:
 	title.offset_right = 200
 	title.offset_top = 12
 	add_child(title)
-	var subtitle := UiKit.label(UiText.t("menu_subtitle"), 13, UiKit.TEXT_DIM)
+	_subtitle = UiKit.label(UiText.t("menu_subtitle"), 13, UiKit.TEXT_DIM)
+	var subtitle := _subtitle
 	subtitle.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	subtitle.offset_left = -200
 	subtitle.offset_right = 200
@@ -215,7 +217,15 @@ func _open(panel: Control) -> void:
 
 func _on_panel_closed() -> void:
 	_menu.show()
+	_cancel_start_confirm()
 	_focus_first()
+
+
+## Back from a panel, the "borrar el progreso" question is forgotten: one press must never erase.
+func _cancel_start_confirm() -> void:
+	if _confirming_start:
+		_confirming_start = false
+		start_button.text = UiText.t("menu_start")
 
 
 ## With a save, the first press only asks for confirmation: starting over deletes the progress.
@@ -231,3 +241,5 @@ func _on_start() -> void:
 func _on_continue() -> void:
 	if SaveGame.load_save():
 		get_tree().change_scene_to_file(GAME_SCENE)
+	else:
+		_subtitle.text = UiText.t("save_corrupt")

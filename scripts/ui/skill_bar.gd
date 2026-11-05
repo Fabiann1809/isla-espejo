@@ -5,15 +5,20 @@ extends HBoxContainer
 const SLOT_SIZE := Vector2(36, 36)
 const LOCKED_COLOR := Color(0.2, 0.2, 0.24)
 
+const BLOCKED_FLASH := Color(0.9, 0.25, 0.2, 0.7)
+const BLOCKED_FLASH_SECONDS := 0.18
+
 var _manager: SkillManager
 var _icons: Array[ColorRect] = []
 var _overlays: Array[ColorRect] = []
+var _frames: Array[ColorRect] = []
 
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 6)
 	for slot in SkillManager.SLOT_COUNT:
 		_add_slot(slot)
+	Events.skill_blocked.connect(_on_skill_blocked)
 
 
 func _process(_delta: float) -> void:
@@ -40,6 +45,7 @@ func _add_slot(slot: int) -> void:
 	frame.color = Color(0, 0, 0, 0.6)
 	frame.size = SLOT_SIZE
 	holder.add_child(frame)
+	_frames.append(frame)
 
 	var icon := ColorRect.new()
 	icon.color = LOCKED_COLOR
@@ -61,6 +67,16 @@ func _add_slot(slot: int) -> void:
 	holder.add_child(key)
 
 	add_child(holder)
+
+
+## The slot blinks red for an instant: the key was heard, the skill is not ready.
+func _on_skill_blocked(slot: int) -> void:
+	if slot < 0 or slot >= _frames.size():
+		return
+	var frame := _frames[slot]
+	frame.color = BLOCKED_FLASH
+	var tween := frame.create_tween()
+	tween.tween_property(frame, "color", Color(0, 0, 0, 0.6), BLOCKED_FLASH_SECONDS)
 
 
 func _refresh_slot(slot: int) -> void:

@@ -56,6 +56,13 @@ func close() -> void:
 	closed.emit()
 
 
+## Esc (ui_cancel) leaves the panel like its "Volver" button, in a menu and in the game alike.
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()
+
+
 ## Hides the options and shows the phone controller panel next to them (a sibling, because a
 ## hidden parent would hide it too).
 func _open_controller() -> void:

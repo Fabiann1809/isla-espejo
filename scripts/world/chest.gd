@@ -8,7 +8,10 @@ enum Reward { HEAL, MAX_HEALTH }
 ## Health restored, or hearts added to the maximum.
 @export var amount := 2
 ## What the island tells the player (Spanish).
-@export var message := "Has encontrado una mejora."
+## Spanish; empty = the generic chest line of data/ui/texts.json.
+@export var message := "":
+	get:
+		return message if message != "" else UiText.t("chest_found")
 
 var opened := false
 

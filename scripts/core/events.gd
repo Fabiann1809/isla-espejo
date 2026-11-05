@@ -55,6 +55,8 @@ signal player_buff_changed(buff_id: StringName, duration: float, color: Color)
 signal skill_unlocked(skill_id: StringName)
 ## `affected` = how many enemies the skill touched (the AI uses it to read the play style).
 signal skill_used(skill_id: StringName, direction: Vector2, affected: int)
+## A skill key pressed while that skill cannot be cast (locked, cooling down, busy).
+signal skill_blocked(slot: int)
 
 # Enemies
 signal enemy_damaged(enemy: Node, amount: int)

@@ -78,6 +78,13 @@ func close() -> void:
 	closed.emit()
 
 
+## Esc (ui_cancel) leaves the panel like its "Volver" button, in a menu and in the game alike.
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()
+
+
 ## Stops the phone controller; opening the panel again turns it back on.
 func disconnect_controller() -> void:
 	RemoteControl.stop()

@@ -107,6 +107,7 @@ func _build_fragments_and_objective() -> void:
 	_objective.position = Vector2(8, 38)
 	_objective.add_theme_font_size_override("font_size", 10)
 	_objective.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
+	_outline(_objective)
 	add_child(_objective)
 	_refresh_fragments()
 
@@ -125,6 +126,7 @@ func _build_resources() -> void:
 	_gold_label.text = "0"
 	_gold_label.add_theme_font_size_override("font_size", 10)
 	_gold_label.add_theme_color_override("font_color", GOLD_COLOR)
+	_outline(_gold_label)
 	gold_row.add_child(_gold_label)
 	var coin := ColorRect.new()
 	coin.custom_minimum_size = Vector2(8, 8)
@@ -265,8 +267,14 @@ func _show_boss_card(boss_name: String) -> void:
 	tween.tween_callback(card.queue_free)
 
 
+## A dark edge around a text drawn over the world, so it reads on bright grass and glowing crystals.
+func _outline(label: Label) -> void:
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	label.add_theme_constant_override("outline_size", 3)
+
+
 func _on_prompt_changed(prompt: String) -> void:
-	_prompt.text = "[E] " + prompt
+	_prompt.text = UiText.t("prompt_prefix") + prompt
 	_prompt.visible = prompt != ""
 
 

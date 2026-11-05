@@ -2,21 +2,21 @@
 	"speaker": "La Viajera",
 	"states": {
 		"first": [
-			"Quieto. No des un paso más... ¿Eres de verdad? Aquí, a veces, las cosas no lo son.",
+			"Quieto. No des un paso más… ¿Eres de verdad? Aquí, a veces, las cosas no lo son.",
 			{"speaker": "Nico", "text": "Soy Nico. Naufragué en esta isla y busco los fragmentos de mi brújula para volver a casa."},
-			"¿Volver...? Sé que he estado aquí antes… pero no recuerdo cómo llegué.",
+			"¿Volver…? Sé que he estado aquí antes… pero no recuerdo cómo llegué.",
 			"Mira las paredes: nombres, marcas de cuenta, dibujos de barcos. Otros viajeros cruzaron estas ruinas antes que nosotros.",
 			"Ninguno dejó escrito cómo salió."
 		],
 		"again": [
 			"Las ruinas no están vacías. Algo repta por los pasadizos de piedra, y lleva aquí más tiempo que cualquiera de nosotros.",
 			"La Serpiente de piedra guarda el fragmento azul. Se desliza entre los niveles: cuando la pierdas de vista, no te quedes quieto.",
-			"Y no te fíes del silencio. Las piedras de este lugar... escuchan."
+			"Y no te fíes del silencio. Las piedras de este lugar… escuchan."
 		],
 		"final": [
 			{"speaker": "Nico", "text": "La Serpiente ha caído. El fragmento azul ya brilla en mi brújula."},
 			"Entonces es cierto. Se puede vencer a lo que esta isla pone delante.",
-			"Mientras luchabas recordé algo: un templo, un eclipse... y un hombre que hablaba de precios.",
+			"Mientras luchabas recordé algo: un templo, un eclipse… y un hombre que hablaba de precios.",
 			"Ve al templo, Nico. Si tú encuentras el camino a casa, quizá yo también lo recuerde."
 		]
 	},

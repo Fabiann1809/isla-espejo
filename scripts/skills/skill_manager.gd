@@ -17,8 +17,8 @@ var _cooldowns: Array[float] = [0.0, 0.0, 0.0]
 func _physics_process(delta: float) -> void:
 	for slot in SLOT_COUNT:
 		_cooldowns[slot] = maxf(_cooldowns[slot] - delta, 0.0)
-		if Input.is_action_just_pressed("skill_%d" % (slot + 1)):
-			try_use(slot)
+		if Input.is_action_just_pressed("skill_%d" % (slot + 1)) and not try_use(slot):
+			Events.skill_blocked.emit(slot)
 
 
 func unlock(skill: SkillData) -> void:

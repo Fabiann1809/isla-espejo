@@ -205,7 +205,7 @@ func _on_player_died() -> void:
 		player.clear_run_resources()
 	GameState.reset()
 	SaveGame.scenario_id = &""
-	SaveGame.save()
+	SaveGame.save(true)
 
 
 func room_at(coord: Vector2i) -> Room:

@@ -8,7 +8,10 @@ extends Area2D
 signal interacted(player: Node)
 
 ## Short Spanish verb shown to the player ("Hablar", "Abrir").
-@export var prompt := "Interactuar"
+## Spanish, from the scene; empty = the generic prompt of data/ui/texts.json.
+@export var prompt := "":
+	get:
+		return prompt if prompt != "" else UiText.t("prompt_default")
 var enabled := true
 
 

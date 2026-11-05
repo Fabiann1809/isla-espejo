@@ -139,7 +139,7 @@ func _test_main_menu() -> void:
 	await process_frame
 	_check(not menu.continue_button.disabled, "continue is enabled with a save")
 	menu.start_button.pressed.emit()
-	_check(menu.start_button.text == "¿Borrar el progreso? Pulsa de nuevo" and _save.has_save() and _state.has_fragment(&"green"),
+	_check(menu.start_button.text == UiText.t("menu_start_confirm") and _save.has_save() and _state.has_fragment(&"green"),
 			"starting over asks first and erases nothing yet")
 	menu.options_button.pressed.emit()
 	_check(menu.options.visible and not menu.continue_button.is_visible_in_tree(), "options open over the menu")

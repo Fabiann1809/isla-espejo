@@ -7,8 +7,13 @@ extends Node2D
 @export var skill_id: StringName = &"roots"
 @export var color := Color(0.35, 0.85, 0.4)
 ## Spanish texts. `%s` in the second one is the skill name.
-@export var fragment_message := "Fragmento de brújula obtenido."
-@export var skill_message := "Habilidad aprendida: %s"
+## Spanish; empty = the lines of data/ui/texts.json.
+@export var fragment_message := "":
+	get:
+		return fragment_message if fragment_message != "" else UiText.t("fragment_taken")
+@export var skill_message := "":
+	get:
+		return skill_message if skill_message != "" else UiText.t("skill_learned")
 
 var _time := 0.0
 
