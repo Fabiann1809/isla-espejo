@@ -110,7 +110,10 @@ func _pit_spots(center: Vector2) -> Array[Vector2]:
 	for i in count:
 		var spot := center
 		if i > 0:
-			spot += Vector2.from_angle(start_angle + TAU * (i - 1) / maxf(count - 1, 1)) * _spider.pit_spread
+			# On a square ring rather than a circle: diagonally a circle of `pit_spread` would still
+			# overlap the patch under Nico, and that patch would be dropped.
+			var dir := Vector2.from_angle(start_angle + TAU * (i - 1) / maxf(count - 1, 1))
+			spot += dir / maxf(absf(dir.x), absf(dir.y)) * _spider.pit_spread
 		spot = _fit_pit(spot, size)
 		var overlaps := false
 		for other in spots:
