@@ -104,6 +104,22 @@ func _initialize() -> void:
 			if glow.material is CanvasItemMaterial and glow.z_index == Tuning.RUIN_LIGHT_Z:
 				lights += 1
 	_check(lights > 20 and animated > 20, "the rooms have lights and animated pieces (%d lights, %d animated)" % [lights, animated])
+	# The Viajera waits in the event room and her conversation follows the chapter's story.
+	var npcs: Array = level.get_tree().get_nodes_in_group("npcs")
+	_check(npcs.size() == 1 and npcs[0].dialogue_id == &"traveler" and npcs[0].get_parent().data.type == RoomData.RoomType.EVENT,
+			"the Viajera waits in the event room (%d NPCs)" % npcs.size())
+	var dialogue: Node = root.get_node("Dialogue")
+	var state: Node = root.get_node("GameState")
+	state.reset()
+	var traveler: Dictionary = dialogue.load_dialogue(&"traveler")
+	var first: bool = dialogue.pick_state(traveler) == &"first"
+	state.set_flag(&"met_traveler")
+	var again: bool = dialogue.pick_state(traveler) == &"again"
+	state.set_flag(&"ruins_boss_defeated")
+	var final: bool = dialogue.pick_state(traveler) == &"final"
+	state.reset()
+	_check(first and again and final and traveler.speaker == "La Viajera",
+			"she greets, then hints at the boss, and after the Serpiente falls she says her last lines")
 	_check(level.get_node("WorldTint").color.b > level.get_node("WorldTint").color.r and level.get_node_or_null("AmbientLife") == null
 			or level.find_children("AmbientLife*", "", true, false).is_empty(),
 			"a cold tint and no forest life over the ruins")

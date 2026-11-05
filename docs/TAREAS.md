@@ -140,7 +140,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Trampa de pinchos en 2 salas de combate (3 en la sala estrecha y 3 en la de cascadas, con arte de ruinas)
 - [ ] **Jefe: Serpiente de piedra** (embestida, veneno / proyectiles)
 - [ ] Al derrotarlo: fragmento azul y habilidad **Corriente**
-- [ ] NPC **Viajera** con 3 estados de diálogo
+- [x] NPC **Viajera** con 3 estados de diálogo (`scenes/npcs/traveler.tscn`, `data/dialogues/traveler.json`; espera en la sala de evento de las ruinas y después de la Serpiente dice sus últimas líneas)
 - [ ] Transición desde el escenario 1 y hacia el 3
 
 **Hecho cuando:** el escenario 2 es completable de inicio a jefe con la IA funcionando.
@@ -158,7 +158,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 
 ## 12. Diálogos, historia y final — B  ← 7
 - [x] Sistema de diálogo (caja de texto, avance, retratos opcionales) leyendo de `data/dialogues/` (hecho por A; faltan los retratos, que son opcionales)
-- [ ] Redactar los 3 estados de diálogo de Anciano (hecho), Viajera y Mercader (pendientes: copiar `elder.json`)
+- [x] Redactar los 3 estados de diálogo de Anciano (`elder.json`), Viajera (`traveler.json`) y Mercader (`merchant.json`)
 - [x] Prólogo y textos de inicio de capítulo (prólogo de la tormenta en `scenes/ui/prologue.tscn` con textos en `data/story/prologue.json`; el título de capítulo del bosque ya existía; los de los capítulos 2 y 3 van con sus escenarios)
 - [ ] Diálogos de jefes (antes y después): el Guardián del bosque ya tiene los dos (`intro_lines` y `defeat_lines` en su `BossData`); faltan los jefes 2 y 3
 - [x] Textos de muerte y reinicio ("La isla vuelve a empezar…", en `data/ai/profile_config.tres`)
