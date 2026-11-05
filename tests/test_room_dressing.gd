@@ -1,7 +1,8 @@
 extends SceneTree
 ## Decoration of the special rooms (RoomDressing) and the exit portal's look, on real forest maps:
 ## the boss arena has its stones, roots, shade and door torches, the reward glade its light, the
-## event camp its fire light and signpost; nothing of it collides, blocks a door lane or is drawn over
+## event camp its fire light, signpost and furniture; nothing of it collides (a camp piece only with
+## its base), blocks a door lane or is drawn over
 ## the actors; and the portal's base shows from the start while its light waits for the boss to fall.
 ## Run: godot --headless --path . --script res://tests/test_room_dressing.gd
 ## `Level` and `Room` types must not be referenced here (autoload compile order).
@@ -35,6 +36,8 @@ func _initialize() -> void:
 	var stones := 0
 	var glades := 0
 	var camps := 0
+	var camp_pieces := 1000
+	var camp_lanes_ok := true
 	for map_seed in SEEDS:
 		level.generate(map_seed)
 		await physics_frame
@@ -42,13 +45,20 @@ func _initialize() -> void:
 			var room: Node2D = level.rooms[coord]
 			var dressing := _dressing_of(room)
 			for node in dressing:
-				if node is CollisionObject2D or node is CollisionShape2D or not node.find_children("*", "CollisionShape2D", true, false).is_empty():
+				var piece := _piece_of(node, room)
+				if node is CollisionShape2D and String(piece.name).begins_with("CampProp"):
+					# A camp piece blocks with its base only: a band ending at its foot, inside its picture.
+					var box: Vector2 = node.shape.size
+					var art: Sprite2D = piece.get_child(0)
+					if node.get_parent().name != &"Base" or box.y > art.texture.get_height() - 4 							or box.x > art.texture.get_width() or absf(node.position.y + box.y / 2.0) > 0.5:
+						no_collision = false
+				elif node is CollisionShape2D or (node is CollisionObject2D and not String(piece.name).begins_with("CampProp")):
 					no_collision = false
-				# The flame, the stones and the signpost stand up (sorted with the actors); the rest
+				# The flame, the stones, the signpost and the camp's pieces stand up (sorted with the actors); the rest
 				# (the torch's light too) lies on the ground.
 				var holder: String = String(node.get_parent().name)
 				var upright: bool = node is AnimatedSprite2D or node.get_parent() == room \
-						or (node is Sprite2D and node.material == null and (holder.begins_with("ArenaStone") or holder == "CampSign"))
+						or (node is Sprite2D and node.material == null and (holder.begins_with("ArenaStone") or holder == "CampSign")) 						or String(piece.name).begins_with("CampProp")
 				if node is CanvasItem and not upright and _drawn_z(node) >= 0:
 					under_actors = false
 			match int(room.data.type):
@@ -69,11 +79,19 @@ func _initialize() -> void:
 				EVENT:
 					camps += 1
 					camps_ok = camps_ok and room.get_node_or_null("CampfireLight") != null and room.get_node_or_null("CampSign") != null
+					var pieces := dressing.filter(func(n: Node) -> bool: return n.get_parent() == room and String(n.name).begins_with("CampProp"))
+					camp_pieces = mini(camp_pieces, pieces.size())
+					for piece in pieces:
+						var from_center: Vector2 = piece.position - Vector2(240, 144)
+						if absf(from_center.x) < 32.0 or absf(from_center.y) < 32.0:
+							camp_lanes_ok = false
 	_check(arenas_ok, "every boss arena has standing stones, roots and its darker floor (%d stones)" % stones)
 	_check(torches_ok, "every door of the boss arena has a torch on each side")
 	_check(lanes_ok, "no standing stone stands in a door lane of the arena")
 	_check(glades > 0 and glades_ok, "every reward glade has its pool of light (%d glades)" % glades)
 	_check(camps > 0 and camps_ok, "every event camp has its fire light and a signpost (%d camps)" % camps)
+	_check(camp_pieces >= 5 and camp_lanes_ok,
+			"the Anciano's camp is furnished (at least %d pieces) and none of them stands in a door lane" % camp_pieces)
 	var torch_lane_ok := true
 	for coord in level.layout.cells:
 		for torch in level.rooms[coord].get_children().filter(func(n: Node) -> bool: return n.name.begins_with("DoorTorch")):
@@ -82,7 +100,7 @@ func _initialize() -> void:
 			if art.intersects(Rect2(208, 0, 64, 288)) or art.intersects(Rect2(0, 112, 480, 64)):
 				torch_lane_ok = false
 	_check(torch_lane_ok, "the door torches stand beside the door gaps, not in them")
-	_check(no_collision, "the decoration has no collision")
+	_check(no_collision, "the decoration has no collision (a camp piece blocks with its base only)")
 	_check(under_actors, "lights, shade, roots and flowers are drawn under the actors")
 
 	# The portal: base from the start, light and sparks once the boss has fallen.
@@ -91,6 +109,11 @@ func _initialize() -> void:
 	var closed_ok: bool = portal.get_node("Base").visible and not portal.get_node("Light").visible \
 			and not portal.get_node("Sparks").emitting and not portal.is_open()
 	_check(closed_ok, "a closed portal shows its stone base but no light")
+	# With its own art, the arch stands with the actors and its veil waits inside the hidden glow.
+	if portal.has_method("_has_art") and portal._has_art():
+		var arch: Node2D = portal.get_node_or_null("Arch")
+		_check(arch != null and portal.y_sort_enabled and arch.position.y > 0.0 and portal.get_node_or_null("Glow/Veil") != null,
+				"the portal's arch sorts with the actors by its foot and its veil lives in the glow")
 	game_state.set_flag(portal.required_flag)
 	root.get_node("Events").boss_defeated.emit(&"test")
 	await physics_frame
@@ -118,6 +141,14 @@ func _drawn_z(item: CanvasItem) -> int:
 		node = node.get_parent()
 		z += (node as CanvasItem).z_index
 	return z
+
+
+## The child of `room` that `node` belongs to.
+func _piece_of(node: Node, room: Node) -> Node:
+	var current := node
+	while current.get_parent() != room and current.get_parent() != null:
+		current = current.get_parent()
+	return current
 
 
 ## The nodes RoomDressing added to a room (and what they hold).

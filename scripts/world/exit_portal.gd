@@ -2,13 +2,26 @@ class_name ExitPortal
 extends Node2D
 ## The way out of a scenario. It stays sealed until the scenario's boss has been defeated (its
 ## story flag is set); then E takes the player to the next chapter. Sealed, E only says so.
-## Placeholder art: a glowing violet doorway on a base of flagstones. The base shows from the start
-## (the player knows where the way out will be); light and sparks join the glow once it opens.
+## Its art (Tuning.PORTAL_ART_ENABLED): a stone dais with a ring of runes, lying with the floor, and a
+## stone arch standing on it, y-sorted with the actors by its foot so Nico can walk behind it; once
+## open, a swirling violet veil fills the doorway. Without the art: a glowing violet doorway on
+## flagstones. The base shows from the start (the player knows where the way out will be); light and
+## sparks join the glow once it opens.
 
 ## The portal opens when this flag is set (the boss's `defeated_flag`).
 @export var required_flag: StringName = &"forest_boss_defeated"
 ## How far down the base's sort point goes (past the bottom of any room).
 const BASE_SORT_OFFSET := 320.0
+const ART_DIR := "res://assets/art_forest/portal/"
+const DAIS := ART_DIR + "portal_dais.png"
+const ARCH := ART_DIR + "portal_arch.png"
+const VEIL := ART_DIR + "portal_veil.png"
+## Where the veil sits in the arch's picture (its doorway's top-left corner) and the dais's middle in
+## its own picture.
+const DOORWAY := Vector2(9, 10)
+const DAIS_MIDDLE := Vector2(24, 12)
+## Width of one frame of the veil's strip.
+const VEIL_FRAME_WIDTH := 14.0
 
 ## Set by the Level that places the portal.
 var scenario_id: StringName = &""
@@ -74,11 +87,14 @@ func _build_base() -> void:
 	base.position = Vector2(0, BASE_SORT_OFFSET)
 	add_child(base)
 	move_child(base, 0)
-	var size := Vector2i(3, 2)
-	for y in size.y:
-		for x in size.x:
-			var tile := TileArt.nine_slice_tile(TileArt.STONE_FLOOR, x, y, size)
-			base.add_child(TileArt.sprite_of(tile, Vector2(x * TileArt.TILE - 24, y * TileArt.TILE - 8 - BASE_SORT_OFFSET)))
+	if _has_art():
+		_build_art(base)
+	else:
+		var size := Vector2i(3, 2)
+		for y in size.y:
+			for x in size.x:
+				var tile := TileArt.nine_slice_tile(TileArt.STONE_FLOOR, x, y, size)
+				base.add_child(TileArt.sprite_of(tile, Vector2(x * TileArt.TILE - 24, y * TileArt.TILE - 8 - BASE_SORT_OFFSET)))
 	if Tuning.PORTAL_LIGHT.a > 0.0:
 		_light = RoomDressing.make_glow(Tuning.PORTAL_LIGHT, Vector2.ONE * Tuning.PORTAL_LIGHT_RADIUS * 2.0, true)
 		_light.name = "Light"
@@ -105,3 +121,53 @@ func _build_base() -> void:
 		_sparks.scale_amount_max = 2.0
 		_sparks.emitting = false
 		add_child(_sparks)
+
+
+func _has_art() -> bool:
+	return Tuning.PORTAL_ART_ENABLED and ResourceLoader.exists(DAIS) and ResourceLoader.exists(ARCH) 			and ResourceLoader.exists(VEIL)
+
+
+## The dais (on the floor, in `base`), the arch (with the actors) and the veil (in the glow, so it
+## shows and pulses only while the portal is open).
+func _build_art(base: Node2D) -> void:
+	var foot := Tuning.PORTAL_ARCH_FOOT
+	var dais := _sprite(load(DAIS))
+	dais.position = Vector2(0, foot) - DAIS_MIDDLE - base.position
+	base.add_child(dais)
+	var arch_texture: Texture2D = load(ARCH)
+	var arch := Node2D.new()
+	arch.name = "Arch"
+	arch.position = Vector2(0, foot)
+	var arch_sprite := _sprite(arch_texture)
+	arch_sprite.position = -Vector2(floorf(arch_texture.get_width() / 2.0), arch_texture.get_height() - 2.0)
+	arch.add_child(arch_sprite)
+	add_child(arch)
+	# The children (the arch by its foot) join the room's sort with the actors.
+	y_sort_enabled = true
+	var sheet: Texture2D = load(VEIL)
+	var frames := SpriteFrames.new()
+	frames.set_animation_speed(&"default", Tuning.PORTAL_VEIL_FPS)
+	var cell := Vector2(VEIL_FRAME_WIDTH, sheet.get_height())
+	for i in int(sheet.get_width() / cell.x):
+		var frame := AtlasTexture.new()
+		frame.atlas = sheet
+		frame.region = Rect2(Vector2(i * cell.x, 0), cell)
+		frames.add_frame(&"default", frame)
+	var veil := AnimatedSprite2D.new()
+	veil.name = "Veil"
+	veil.sprite_frames = frames
+	veil.centered = false
+	veil.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	veil.position = arch.position + arch_sprite.position + DOORWAY
+	veil.play(&"default")
+	_glow.color.a = 0.0
+	_glow.add_child(veil)
+
+
+func _sprite(texture: Texture2D) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.centered = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return sprite
+

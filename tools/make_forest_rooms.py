@@ -190,7 +190,7 @@ build("watch", "ForestWatch",
 
 # --- Event: a small camp with a fire (the Anciano lives here) ---------------------------------------------------------------
 build("event", "ForestEvent",
-      props=[(DIRT_PATCH, 6, 3, (6, 4)), (CAMPFIRE, 8, 4), (LOGS, 10, 5), (LOGS, 6, 5),
+      props=[(DIRT_PATCH, 6, 3, (6, 4)), (CAMPFIRE, 8, 4), (LOGS, 6, 5),
              (TALL_PINE, 3, 2), (TALL_PINE, 24, 2), (TALL_ROUND_TREE, 4, 12), (TALL_ROUND_TREE, 24, 12),
              (BUSH, 18, 4), (BUSH, 20, 14), (PINE, 26, 4), (PINE, 12, 15)],
       spawns={"NpcSpawn": [(104, 108)]}, scatter=[(PINE, 9), (BUSH, 4), (TALL_ROUND_TREE, 2)])

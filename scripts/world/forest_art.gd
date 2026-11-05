@@ -8,6 +8,11 @@ extends RefCounted
 const BUSHES := "res://assets/art_forest/bushes/bush_%d.png"
 const ROCKS := "res://assets/art_forest/rocks/rock_%d.png"
 const STUMP := "res://assets/art_forest/logs/stump.png"
+## The camp's own art (tools/make_camp_art.py): a cut stump with roots and its shadow, and the
+## campfire's frames side by side (square cells).
+const CAMP_DIR := "res://assets/art_forest/camp/"
+const CUT_STUMP := CAMP_DIR + "stump.png"
+const CAMPFIRE := CAMP_DIR + "campfire.png"
 
 ## Round, leafy bushes (some with flowers or berries): they stand up and block the way.
 const SOLID_BUSHES := [8, 11, 12, 14, 17, 18, 19, 20, 21, 25, 29]
@@ -62,6 +67,35 @@ static func image(path: String) -> Image:
 			img.convert(Image.FORMAT_RGBA8)
 		_images[path] = img
 	return _images[path]
+
+
+## The stump props and floor details use: the cut stump with roots (Tuning.CAMP_ART_ENABLED), or the
+## set's own.
+static func stump() -> Texture2D:
+	var cut := texture(CUT_STUMP) if Tuning.CAMP_ART_ENABLED else null
+	return cut if cut != null else texture(STUMP)
+
+
+## The campfire's flame, looping, standing on `foot` (null without the art).
+static func campfire(foot: Vector2) -> AnimatedSprite2D:
+	var sheet := texture(CAMPFIRE) if Tuning.CAMP_ART_ENABLED else null
+	if sheet == null:
+		return null
+	var cell := sheet.get_height()
+	var frames := SpriteFrames.new()
+	frames.set_animation_speed(&"default", Tuning.CAMPFIRE_FPS)
+	for i in sheet.get_width() / cell:
+		var frame := AtlasTexture.new()
+		frame.atlas = sheet
+		frame.region = Rect2(i * cell, 0, cell, cell)
+		frames.add_frame(&"default", frame)
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = frames
+	sprite.centered = false
+	sprite.position = foot - Vector2(floorf(cell / 2.0), cell)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.play(&"default")
+	return sprite
 
 
 static func pick_path(paths: Array, rng: RandomNumberGenerator) -> Texture2D:

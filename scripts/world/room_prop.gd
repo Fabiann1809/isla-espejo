@@ -80,15 +80,26 @@ func _build() -> void:
 		Kind.BUSH:
 			_bush_or_rock(rng)
 		Kind.POND:
-			_area(TileArt.POND)
+			if WaterArt.available():
+				WaterArt.dress_pond(self)
+			else:
+				_area(TileArt.POND)
 			_collide(Rect2(Vector2.ONE * WATER_INSET, Vector2(size_tiles * TileArt.TILE) - Vector2.ONE * WATER_INSET * 2.0),
 					WATER_LAYER_BIT)
 		Kind.PLANKS:
-			_planks()
+			if WaterArt.available():
+				WaterArt.dress_bridge(self)
+			else:
+				_planks()
 		Kind.DIRT_PATCH:
-			_area(TileArt.DIRT_PATCH)
+			if DirtArt.available():
+				DirtArt.dress_patch(self)
+			else:
+				_area(TileArt.DIRT_PATCH)
 		Kind.CAMPFIRE:
-			add_child(TileArt.sprite(TileArt.CAMPFIRE))
+			# The ring of stones stands on the tile's bottom edge, the flame rising above it.
+			var fire := ForestArt.campfire(Vector2(TileArt.TILE / 2.0, TileArt.TILE))
+			add_child(fire if fire != null else TileArt.sprite(TileArt.CAMPFIRE))
 			_collide(Rect2(3, 6, 10, 8))
 		Kind.LOGS:
 			_stump()
@@ -132,6 +143,7 @@ func _lush_tree(catalog: Array, base_pos: Vector2, rng: RandomNumberGenerator) -
 		sprite.position = base_pos - pivot
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(sprite)
+		GroundShadow.under(self, base_pos, tex.get_width())
 	else:
 		# Fallback to legacy sprite if texture missing
 		add_child(TileArt.sprite(TileArt.PINE))
@@ -149,12 +161,13 @@ func _bush_or_rock(rng: RandomNumberGenerator) -> void:
 	# line up like a hedge; the collision stays put.
 	var nudge := (Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * Tuning.BUSH_NUDGE).round()
 	add_child(ForestArt.standing(tex, PROP_FOOT + nudge))
+	GroundShadow.under(self, PROP_FOOT + nudge - Vector2(0, 1), tex.get_width())
 	_collide(ForestArt.footprint(tex, PROP_FOOT))
 
 
-## A stump of the forest art set (the tileset's one as fallback).
+## A cut stump with its roots and shadow (the tileset's one as fallback).
 func _stump() -> void:
-	var tex := ForestArt.texture(ForestArt.STUMP)
+	var tex := ForestArt.stump()
 	if tex == null:
 		add_child(TileArt.sprite(TileArt.STUMP))
 		_collide(Rect2(4, 7, 9, 7))

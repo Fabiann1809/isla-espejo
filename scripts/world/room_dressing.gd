@@ -83,6 +83,7 @@ static func _place_stones(room: Room, arena: Rect2, rng: RandomNumberGenerator) 
 		holder.name = "ArenaStone%d" % i
 		holder.position = spot.round()
 		holder.add_child(stone)
+		GroundShadow.under(holder, Vector2(0, -1), TileArt.TILE)
 		room.add_child(holder)
 
 
@@ -189,6 +190,8 @@ static func _dress_camp(room: Room) -> void:
 			var flicker := light.create_tween().set_loops()
 			flicker.tween_property(light, "modulate:a", full * 0.7, 0.35).set_trans(Tween.TRANS_SINE)
 			flicker.tween_property(light, "modulate:a", full, 0.45).set_trans(Tween.TRANS_SINE)
+		if child is RoomProp and child.kind == RoomProp.Kind.CAMPFIRE and Tuning.CAMP_PROPS_ENABLED:
+			_furnish_camp(room, child)
 	if Tuning.CAMP_SIGN and not room.open_doors.is_empty():
 		var sign_spot := _beside_door(room, room.open_doors[0])[0]
 		var holder := Node2D.new()
@@ -196,6 +199,123 @@ static func _dress_camp(room: Room) -> void:
 		holder.position = sign_spot.round()
 		holder.add_child(TileArt.sprite(TileArt.SIGN, Vector2(-8, -15)))
 		room.add_child(holder)
+
+
+## The Anciano's camp around its fire, so the one who tells the island's story lives somewhere: a
+## tent, logs to sit on, firewood, a pot, his backpack, a lantern and a standing stone carved with the
+## island's mark, with tall grass at the clearing's edge (Tuning.CAMP_PIECES). Pieces stand with the
+## actors (y-sorted by their foot) and the big ones block with their base only; one that would land on
+## another prop, a marker or a door lane is left out.
+static func _furnish_camp(room: Room, fire: RoomProp) -> void:
+	# The fire prop's origin is near the bottom of its tile (y-sort): the ring's middle is above it.
+	var anchor := fire.position + Vector2(TileArt.TILE / 2.0, 0)
+	var taken: Array[Rect2] = _blocked_rects(room)
+	var count := 0
+	for piece: Array in Tuning.CAMP_PIECES:
+		var tex := ForestArt.texture(ForestArt.CAMP_DIR + "%s.png" % piece[0])
+		if tex == null:
+			continue
+		var foot: Vector2 = (anchor + piece[1]).round()
+		var base := _camp_base(tex, foot, piece[3] if piece.size() > 3 else Tuning.CAMP_BASE_HEIGHT)
+		if not _camp_spot_free(room, base, taken):
+			continue
+		taken.append(base)
+		count += 1
+		var holder := Node2D.new()
+		holder.name = "CampProp%s%d" % [String(piece[0]).to_pascal_case(), count]
+		holder.position = foot
+		var sprite := Sprite2D.new()
+		sprite.texture = tex
+		sprite.centered = false
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.position = -Vector2(floorf(tex.get_width() / 2.0), tex.get_height() - Tuning.CAMP_SHADOW_BELOW)
+		holder.add_child(sprite)
+		if piece[2]:
+			holder.add_child(_base_body(Rect2(base.position - foot, base.size)))
+		room.add_child(holder)
+		match piece[0]:
+			"lantern":
+				_camp_light(room, foot + Vector2(0, -6), Tuning.CAMP_LANTERN_LIGHT, Tuning.CAMP_LANTERN_LIGHT_RADIUS, "CampLanternLight")
+			"rune_stone":
+				_camp_light(room, foot + Vector2(-1, -8), Tuning.CAMP_RUNE_LIGHT, Tuning.CAMP_RUNE_LIGHT_RADIUS, "CampRuneLight")
+	var grass := _floor_layer(room, "CampGrass")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(["camp", Vector2i(anchor)])
+	for offset: Vector2 in Tuning.CAMP_GRASS:
+		var spot := (anchor + offset).round()
+		if not _camp_spot_free(room, Rect2(spot - Vector2(4, 4), Vector2(8, 4)), taken):
+			continue
+		var tex := ForestArt.pick(ForestArt.BUSHES, ForestArt.GROUND_PLANTS, rng)
+		if tex != null:
+			grass.add_child(ForestArt.standing(tex, spot))
+
+
+## The part of a camp piece that blocks: a band `height` px tall ending at its foot, a little narrower
+## than its picture.
+static func _camp_base(tex: Texture2D, foot: Vector2, height: float) -> Rect2:
+	var width := tex.get_width() - 2.0 * (1.0 + Tuning.PROP_FOOT_INSET)
+	return Rect2(foot.x - width / 2.0, foot.y - height, width, height)
+
+
+## Whether a piece's base (room px) is clear of the walls, the door lanes (the room's central cross),
+## the spawn markers and everything that already blocks.
+static func _camp_spot_free(room: Room, base: Rect2, taken: Array[Rect2]) -> bool:
+	var size := room.pixel_size()
+	var inside := Rect2(Vector2.ONE * Room.WALL, size - Vector2.ONE * Room.WALL * 2.0)
+	if not inside.encloses(base):
+		return false
+	var margin := Tuning.CAMP_LANE_MARGIN
+	var half := Room.DOOR_WIDTH / 2.0 + margin
+	var lanes := [Rect2(size.x / 2.0 - half, 0, half * 2.0, size.y), Rect2(0, size.y / 2.0 - half, size.x, half * 2.0)]
+	for lane: Rect2 in lanes:
+		if lane.intersects(base):
+			return false
+	for rect in taken:
+		if rect.grow(2.0).intersects(base):
+			return false
+	for marker in room.find_children("*", "Marker2D", true, false):
+		if base.grow(10.0).has_point(room.to_local(marker.global_position)):
+			return false
+	return true
+
+
+## What already blocks in the room (its props' bodies), in room px.
+static func _blocked_rects(room: Room) -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for child in room.get_children():
+		if not child is RoomProp:
+			continue
+		for shape in child.find_children("*", "CollisionShape2D", true, false):
+			if shape.shape is RectangleShape2D:
+				var extent: Vector2 = shape.shape.size / 2.0
+				var center := room.to_local(shape.global_position)
+				rects.append(Rect2(center - extent, extent * 2.0))
+	return rects
+
+
+## A static body on the world layer over `rect` (local to its holder).
+static func _base_body(rect: Rect2) -> StaticBody2D:
+	var body := StaticBody2D.new()
+	body.name = "Base"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = rect.size
+	shape.shape = box
+	shape.position = rect.get_center()
+	body.add_child(shape)
+	return body
+
+
+static func _camp_light(room: Room, spot: Vector2, color: Color, radius: float, light_name: String) -> void:
+	if color.a <= 0.0:
+		return
+	var light := make_glow(color, Vector2.ONE * radius * 2.0, true)
+	light.name = light_name
+	light.position = spot
+	light.z_index = RoomTheme.GROUND_FX_Z
+	room.add_child(light)
 
 
 # --- Helpers ----------------------------------------------------------------------------------

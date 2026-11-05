@@ -154,8 +154,9 @@ func _test_built_level() -> void:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if layout.are_connected(coord, coord + dir):
 				connections += 1
-	# Per corridor: its grass, its path and trees, and its walls.
-	_check(corridor_layers == connections * 3, "every corridor has its tile layers and its walls (%d connections)" % connections)
+	# Per corridor: its grass, its path and trees, and its walls (and its earth, with the forest's own).
+	var per_corridor := 4 if load("res://scripts/world/dirt_art.gd").available() else 3
+	_check(corridor_layers == connections * per_corridor, "every corridor has its tile layers and its walls (%d connections)" % connections)
 
 	var total := 0
 	var walkable := 0

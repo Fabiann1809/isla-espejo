@@ -34,6 +34,7 @@ func _initialize() -> void:
 	await _test_chests()
 	await _test_nearest()
 	await _test_npc()
+	_test_elder_idle()
 
 	root.get_node("GameState").reset()
 	print("RESULT: ", "OK" if _ok else "FAILED")
@@ -186,3 +187,17 @@ func _tap(action: String) -> void:
 	release.pressed = false
 	Input.parse_input_event(release)
 	await _frames(2)
+
+
+## The Anciano stands still while he waits: a slow breath, his feet always on the same row.
+func _test_elder_idle() -> void:
+	var frames: SpriteFrames = load("res://data/npcs/elder_frames.tres")
+	var count := frames.get_frame_count(&"idle")
+	var seconds := 0.0
+	var feet := {}
+	for i in count:
+		seconds += frames.get_frame_duration(&"idle", i) / frames.get_animation_speed(&"idle")
+		var image: Image = frames.get_frame_texture(&"idle", i).get_image()
+		feet[image.get_used_rect().end.y] = true
+	_check(count <= 2 and seconds >= 2.0 and feet.size() == 1,
+			"the Anciano's idle is a slow breath that never moves his feet (%d frames, %.1f s)" % [count, seconds])
