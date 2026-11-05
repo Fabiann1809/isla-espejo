@@ -170,6 +170,15 @@ func is_dead() -> bool:
 	return state == State.DEAD
 
 
+## True when no wall, tree or rock stands between the enemy and `other` (ponds do not count: a
+## melee attack reaches across the water's edge as the sight does).
+func has_clear_path_to(other: Node2D) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(
+			global_position, other.global_position, 1 << (WORLD_LAYER - 1))
+	query.exclude = [get_rid()]
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
 ## Status effects used by player skills.
 func apply_root(duration: float) -> void:
 	if state != State.DEAD:
@@ -278,7 +287,8 @@ func _process_chase(_delta: float) -> void:
 		return
 	var to_target := target.global_position - global_position
 	facing = to_target.normalized()
-	if to_target.length() <= data.attack_range and _attack_cooldown_left == 0.0:
+	# In reach and nothing of the world in between: a swing never lands through a rock or a tree.
+	if to_target.length() <= data.attack_range and _attack_cooldown_left == 0.0 and has_clear_path_to(target):
 		_start_attack()
 		return
 	# Keep a little distance once in range instead of pushing into the player.
@@ -408,6 +418,11 @@ func _hit_world() -> bool:
 
 ## Walks back to where it was spawned (a patrol leg to its home point).
 func _return_home() -> void:
+	# An enemy that cannot walk (a planted shooter) only waits: a patrol leg at no speed would show
+	# it pedalling in place for as long as the leg lasts.
+	if data.move_speed * _speed_scale() <= 0.0:
+		_enter_idle()
+		return
 	state = State.PATROL
 	_patrol_point = _home
 	_start_patrol_leg()

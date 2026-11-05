@@ -55,9 +55,9 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 4. Enemigos base — B  ← 3
 - [x] Clase base de enemigo con vida, daño, estados (idle, patrulla, persecución, ataque, muerte) y datos en `data/enemies/` (`scripts/enemies/enemy.gd`, plantilla `scenes/enemies/grunt.tscn`)
 - [x] Detección del jugador (rango de visión, cono, línea de visión y señal `player_detected`)
-- [ ] **Bestia de la niebla** (embiste). Va en el mapa 2, no en el bosque
-- [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`). Va en el mapa 2, no en el bosque
-- [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Va en el mapa 2, no en el bosque
+- [x] **Bestia de la niebla** (embiste en línea recta con aviso y acosa en manada: `scripts/enemies/charger.gd`, `tests/test_fog_beast.gd`). Va en el mapa 2
+- [x] **Sombra errante** (se desvanece, avisa dónde va a aparecer detrás de Nico y golpea: `scripts/enemies/teleporter.gd`, `tests/test_sombra_errante.gd`). Va en el mapa 2
+- [x] **Murciélago** (vuela sobre el agua, ronda y se lanza en picado con aviso, en grupo: `scripts/enemies/diver.gd`, `tests/test_murcielago.gd`). Va en el mapa 2
 - [x] **Slime verde** (siempre se mueve a saltos y ataca de cerca con un golpe corto): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
 - [x] **Planta tiradora** (se mueve a saltitos entre disparos y escupe bolas hacia el jugador; sin línea de visión no dispara): arte propio con `tools/make_planta_art.py`, datos en `data/enemies/planta_tiradora.tres` y escena `scenes/enemies/planta_tiradora.tscn`; ya aparece en el bosque
 - [x] **Esqueleto** (camina hacia el jugador y lo golpea con un hueso; comportamiento cuerpo a cuerpo genérico): arte propio con `tools/make_esqueleto_art.py`, datos en `data/enemies/esqueleto.tres` y escena `scenes/enemies/esqueleto.tscn`; ya aparece en el bosque

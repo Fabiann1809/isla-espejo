@@ -90,6 +90,12 @@ func _spawn_minions() -> void:
 	for i in count:
 		var minion: Node2D = _summoner.minion_scene.instantiate()
 		minion.position = position + Vector2.from_angle(start_angle + TAU * i / maxf(count, 1.0)) * _summoner.spawn_radius
+		# The island's tuning of the summoner reaches what it summons.
+		minion.health_multiplier = health_multiplier
+		minion.speed_multiplier = speed_multiplier
+		minion.damage_multiplier = damage_multiplier
+		minion.vision_multiplier = vision_multiplier
+		minion.patrol_multiplier = patrol_multiplier
 		parent.add_child(minion)
 		Placement.reset(minion)
 		if parent.has_method("register_enemy"):

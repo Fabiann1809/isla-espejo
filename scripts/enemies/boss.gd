@@ -251,7 +251,8 @@ func _scaled(windup: float) -> float:
 
 ## The first eruption is where the player stands; the others are scattered around.
 func _choose_roots_spots() -> Array[Vector2]:
-	var spots: Array[Vector2] = [target.global_position]
+	# Under the player, but never past the arena's edge (a Nico backing into the corridor).
+	var spots: Array[Vector2] = [_inside_arena(target.global_position)]
 	var total := _boss.roots_count + (_boss.phase_two_extra_roots if phase == 2 else 0)
 	for i in range(1, total):
 		var offset := Vector2.from_angle(randf() * TAU) * randf_range(_boss.roots_radius, _boss.roots_spread)
