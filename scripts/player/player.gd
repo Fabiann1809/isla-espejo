@@ -79,6 +79,11 @@ var _pull_left := 0.0
 ## Slowed by an enemy (a burning trail): walking speed multiplied by `_slow_factor` for a while.
 var _slow_factor := 1.0
 var _slow_left := 0.0
+## A flash of color over the art (a cast), fading over `_flash_total` seconds; see flash().
+var _flash_color := Color.WHITE
+var _flash_strength := 0.0
+var _flash_left := 0.0
+var _flash_total := 0.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
@@ -141,6 +146,7 @@ func _physics_process(delta: float) -> void:
 			_end_arrow_buff()
 
 	_interact_block_left = maxf(_interact_block_left - delta, 0.0)
+	_flash_left = maxf(_flash_left - delta, 0.0)
 	_slow_left = maxf(_slow_left - delta, 0.0)
 	_pull_left = maxf(_pull_left - delta, 0.0)
 	_move_dir = Vector2.ZERO if _locked else Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -220,6 +226,15 @@ func end_stealth() -> void:
 	_stealth_left = 0.0
 	visibility = 1.0
 	Events.player_stealth_changed.emit(false)
+
+
+## Washes `color` over Nico's art at `strength` (0..1), fading out over `seconds` (GameFeel calls it
+## when he casts). The breath overlay follows the tint, so it shows while he stands still too.
+func flash(color: Color, seconds: float, strength: float) -> void:
+	_flash_color = color
+	_flash_strength = strength
+	_flash_total = maxf(seconds, 0.01)
+	_flash_left = _flash_total
 
 
 ## Drags the player toward `toward` (world position) at `pull_speed` for up to `duration` seconds,
@@ -613,3 +628,5 @@ func _update_visuals(delta: float) -> void:
 				_body.modulate = Color(0.7, 0.5, 1.0, 0.5)
 			else:
 				_body.modulate = Color.WHITE
+			if _flash_left > 0.0:
+				_body.modulate = _body.modulate.lerp(_flash_color, _flash_strength * _flash_left / _flash_total)

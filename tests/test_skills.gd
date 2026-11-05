@@ -85,6 +85,12 @@ func _initialize() -> void:
 	await _settle()
 	mgr.try_use(0)
 	_check(_used.size() == 1 and _used[0][1] == 1, "Raíces reports exactly 1 enemy affected (%s)" % [_used])
+	await process_frame
+	var zones: Array = _player.effects_parent().get_children().filter(func(n: Node) -> bool:
+			return n is SkillZone and n.has_art() and n.get_node("Art").animation == &"start")
+	_check(zones.size() >= 1, "the zone shows the roots' art, sprouting first (%d zones)" % zones.size())
+	_check(bar.slot_state(0).unlocked and bar._pictures[0].visible and bar._pictures[0].texture != null,
+			"the HUD slot shows the skill's icon")
 	_check(inside.is_rooted() and not outside.is_rooted(), "only the enemy inside the zone is rooted")
 	await _frames(30)
 	_check(inside.global_position.distance_to(inside_start) < 1.5, "the rooted enemy does not move")

@@ -380,6 +380,13 @@ const DASH_STRETCH_SETTLE := 0.1
 const CAMERA_LOOK_AHEAD := 10.0
 const CAMERA_LOOK_AHEAD_SPEED := 3.0
 
+# --- Casting a skill ---------------------------------------------------------------------------------
+## A ring of sparks in the skill's color at Nico's feet (false = off) and the flash of that color over
+## him, fading in these seconds (0 = off).
+const CAST_BURST := true
+const CAST_FLASH_SECONDS := 0.3
+const CAST_FLASH_STRENGTH := 0.8
+
 # --- Trees in front of Nico (CanopyFade) -----------------------------------------------------------
 ## A tree whose crown covers Nico turns see-through to this alpha (1 = off), at this speed (per s).
 const CANOPY_FADE_ALPHA := 0.45

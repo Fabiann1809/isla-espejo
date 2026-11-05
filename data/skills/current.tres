@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/skills/current_effect.gd" id="1_c0hoh"]
 [ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="2_dt5cq"]
+[ext_resource type="SpriteFrames" path="res://data/skills/current_frames.tres" id="3_frames"]
+[ext_resource type="Texture2D" path="res://assets/sprites/skills/icon_current.png" id="4_icon"]
 
 [sub_resource type="Resource" id="Resource_s56qv"]
 script = ExtResource("1_c0hoh")
@@ -15,3 +17,5 @@ slot = 1
 range = 90.0
 color = Color(0.3, 0.55, 0.95, 1)
 effect = SubResource("Resource_s56qv")
+zone_frames = ExtResource("3_frames")
+icon = ExtResource("4_icon")

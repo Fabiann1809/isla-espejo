@@ -28,8 +28,8 @@ func activate(caster: Node2D, skill: SkillData, direction: Vector2) -> int:
 		caster.start_stealth(stealth_time, visibility)
 
 	var parent := effects_parent(caster)
-	parent.add_child(SkillZone.circle(origin, 14.0, skill.color, 0.4))
-	parent.add_child(SkillZone.circle(destination, 14.0, skill.color, 0.4))
+	parent.add_child(SkillZone.circle(origin, 14.0, skill.color, 0.4, Callable(), skill.zone_frames))
+	parent.add_child(SkillZone.circle(destination, 14.0, skill.color, 0.4, Callable(), skill.zone_frames))
 	return hunters
 
 

@@ -23,6 +23,7 @@ void fragment() {
 """
 ## Above the actors and the props: these effects last an instant and must never hide behind a tree.
 const EFFECT_Z := 10
+const CAST_BURST_FRAMES := "res://data/skills/cast_burst_frames.tres"
 
 ## Off in headless runs, so tests that count frames or seconds are not slowed down by the freezes
 ## (tests switch it on to check it).
@@ -38,6 +39,7 @@ var _low_health_on := false
 var _pulse_time := 0.0
 var _ghost_material: ShaderMaterial
 var _step_left := 0.0
+var _burst_frames: SpriteFrames
 
 
 func _ready() -> void:
@@ -52,6 +54,7 @@ func _ready() -> void:
 	Events.player_damaged.connect(_on_player_damaged)
 	Events.player_health_changed.connect(_on_player_health_changed)
 	Events.player_dashed.connect(_on_player_dashed)
+	Events.skill_used.connect(_on_skill_used)
 	Events.boss_attack_struck.connect(_on_boss_attack_struck)
 	Events.boss_phase_changed.connect(func(_id: StringName, _phase: int) -> void:
 		hit_stop(Tuning.HIT_STOP_BOSS_PHASE)
@@ -178,6 +181,34 @@ func _on_player_dashed(_direction: Vector2) -> void:
 					func() -> void:
 						if is_instance_valid(player):
 							afterimage(player))
+
+
+## A cast: a ring of sparks in the skill's color bursts at Nico's feet and the color washes over him.
+func _on_skill_used(skill_id: StringName, _direction: Vector2, _affected: int) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
+		return
+	var skill := load(GameState.SKILL_PATH % skill_id) as SkillData
+	var color: Color = skill.color if skill != null else Color.WHITE
+	if Tuning.CAST_BURST and _cast_burst_frames() != null:
+		var burst := AnimatedSprite2D.new()
+		burst.sprite_frames = _cast_burst_frames()
+		burst.modulate = color
+		burst.z_as_relative = false
+		burst.z_index = RoomTheme.GROUND_FX_Z
+		burst.animation_finished.connect(burst.queue_free)
+		_keep_still(burst)
+		add_child(burst)
+		burst.global_position = player.global_position + Vector2(0, -6)
+		burst.play(&"start")
+	if Tuning.CAST_FLASH_SECONDS > 0.0 and player.has_method("flash"):
+		player.flash(color * 1.6, Tuning.CAST_FLASH_SECONDS, Tuning.CAST_FLASH_STRENGTH)
+
+
+func _cast_burst_frames() -> SpriteFrames:
+	if _burst_frames == null and ResourceLoader.exists(CAST_BURST_FRAMES):
+		_burst_frames = load(CAST_BURST_FRAMES)
+	return _burst_frames
 
 
 ## The dodge's weight on the picture: squashed wide as it starts, stretched tall as it lands, then

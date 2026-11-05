@@ -76,7 +76,8 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] **Raíces**: traba enemigos en una zona
 - [x] **Corriente**: empuja y ralentiza
 - [x] **Sombra**: teletransporte corto y menor detección
-- [x] HUD de habilidades con indicador de recarga
+- [x] HUD de habilidades con indicador de recarga (con iconos propios de cada habilidad)
+- [x] Arte y animación de las habilidades: raíces que brotan y se hunden, ola de agua que avanza, humo de Sombra, destello en Nico al lanzar (`tools/make_skill_art.py`, `assets/sprites/skills/`)
 - [x] Cada habilidad emite eventos al bus (la IA los usa)
 - [x] Diseñar el sistema para que añadir una habilidad nueva sea solo agregar datos y un efecto
 
