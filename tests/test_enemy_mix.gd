@@ -89,7 +89,9 @@ func _check_real_maps() -> void:
 					continue
 				var weights: Dictionary = roster_script.room_weights(base, level.layout.cells[coord].room_data.enemy_affinity)
 				var weight_sum := 0.0
+				var roster_ids := []
 				for scene in level.roster:
+					roster_ids.append(_id(scene))
 					weight_sum += maxf(float(weights.get(_id(scene), 1.0)), 0.0)
 				var in_room := {}
 				var count := 0
@@ -102,7 +104,9 @@ func _check_real_maps() -> void:
 					continue
 				rooms += 1
 				for id in in_room:
-					if in_room[id] > ceili(count * float(weights.get(id, 1.0)) / weight_sum):
+					# An enemy outside the roster has weight 0: it must not be spawned at all.
+					var weight := float(weights.get(id, 1.0)) if id in roster_ids else 0.0
+					if in_room[id] > ceili(count * weight / weight_sum):
 						over.append("seed %d %s: %s" % [map_seed + 1, coord, in_room])
 						break
 		_check(rooms > 0 and over.is_empty(), "%s: real maps spawn each room's fair share (%d rooms, over: %s)"

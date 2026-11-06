@@ -256,7 +256,7 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
 			var weights := EnemyRoster.room_weights(scenario.enemy_weights, data.enemy_affinity)
-			room.spawn_enemies(roster, plan.adjust_count(count), rng, plan, weights, _surge_spawn_points(room, weights))
+			room.spawn_enemies(roster, plan.adjust_count(count), rng, plan, weights, _attach_surge_spawn_points(room, weights))
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")
@@ -275,11 +275,12 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 	RoomDressing.dress(room)
 
 
-## A surge room (RoomData.surge_stages > 0, the temple) gets its LavaSurge, fed with the map's roster,
+## Attaches the LavaSurge to a surge room (RoomData.surge_stages > 0, the temple) and returns its spawn
+## points. The room gets its LavaSurge, fed with the map's roster,
 ## the director's plan and the room's weights; its own enemies are born only on the cells that stay
 ## safe when the lava is highest, so the fight is always reachable. Empty for any other room: the
 ## room's markers are used.
-func _surge_spawn_points(room: Room, weights: Dictionary) -> Array[Vector2]:
+func _attach_surge_spawn_points(room: Room, weights: Dictionary) -> Array[Vector2]:
 	var points: Array[Vector2] = []
 	if room.data.surge_stages <= 0 or not Tuning.TEMPLE_SURGE_ENABLED:
 		return points

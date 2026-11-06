@@ -252,6 +252,15 @@ func is_rooted() -> bool:
 	return _root_left > 0.0
 
 
+## False for an enemy whose attack cannot be cut short by a hit because it is untouchable for the
+## whole warning (see `interrupt_opt_out_reason`). `tests/test_enemy_interrupt.gd` skips the
+## "hit during the attack" check for these and prints who opted out and why. Prefer fixing the hit
+## path to opting out.
+var interruptible := true
+## Why `interruptible` is false (shown by the test). Empty for everyone else.
+var interrupt_opt_out_reason := ""
+
+
 ## A hit or a push during an attack cuts it short: a short rest after the hurt before the next
 ## warning, so a cut attack is not started again at once.
 func _interrupt_attack() -> void:

@@ -70,6 +70,31 @@ func _check_data(scenario: ScenarioData) -> void:
 	expected.sort()
 	_check(found == expected, "it has the 13 room designs (%s)" % [found])
 	_check(scenario.boss_room.height == 1 and scenario.start_room.height == 0, "the boss arena is raised and the start is on the ground")
+	# The brief's table: every room's type, base height and exact tag set.
+	var table := {
+		&"temple_start": [RoomData.RoomType.START, 0, []],
+		&"temple_boss": [RoomData.RoomType.BOSS, 1, []],
+		&"temple_pillar_court": [RoomData.RoomType.COMBAT, 0, [&"court"]],
+		&"temple_isles": [RoomData.RoomType.COMBAT, 0, [&"bridges"]],
+		&"temple_terraces": [RoomData.RoomType.COMBAT, 0, [&"heights"]],
+		&"temple_trap_walk": [RoomData.RoomType.COMBAT, 0, [&"traps"]],
+		&"temple_lava_falls": [RoomData.RoomType.COMBAT, 1, [&"falls"]],
+		&"temple_surge_basin": [RoomData.RoomType.COMBAT, 0, [&"surge"]],
+		&"temple_surge_tiers": [RoomData.RoomType.COMBAT, 0, [&"surge"]],
+		&"temple_surge_bridges": [RoomData.RoomType.COMBAT, 0, [&"bridges", &"surge"]],
+		&"temple_sanctum": [RoomData.RoomType.REWARD, 0, [&"bridges"]],
+		&"temple_event": [RoomData.RoomType.EVENT, 0, []],
+		&"temple_special": [RoomData.RoomType.SPECIAL, 0, []],
+	}
+	for room in rooms:
+		var row: Array = table.get(room.id, [])
+		var room_tags: Array = Array(room.tags)
+		var same_tags: bool = not row.is_empty() and room_tags.size() == row[2].size()
+		if same_tags:
+			for tag in row[2]:
+				same_tags = same_tags and room_tags.has(tag)
+		_check(not row.is_empty() and room.type == row[0] and room.height == row[1] and same_tags,
+				"%s is %s at height %s with tags %s (brief: %s)" % [room.id, room.type, room.height, room_tags, row])
 	var surge := {}
 	for room in scenario.rooms:
 		if room.surge_stages > 0:

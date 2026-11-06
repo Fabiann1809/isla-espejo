@@ -46,6 +46,7 @@ func _initialize() -> void:
 	await _check_climbing()
 	_check_backdrop()
 	_check_boundary()
+	_check_stairs_two_levels_apart()
 	_level.free()
 	_finish()
 
@@ -444,3 +445,25 @@ func _check(condition: bool, message: String) -> void:
 	print(("PASS " if condition else "FAIL ") + message)
 	if not condition:
 		_ok = false
+
+# --- two levels apart ---------------------------------------------------------------------------------
+## A corridor between rooms two levels apart is a layout error (MapLayout.validate never allows it):
+## _dress_stairs builds nothing and pushes an error (visible in the log, marked below).
+func _check_stairs_two_levels_apart() -> void:
+	var real_layout = _level.layout
+	var layout := MapLayout.new()
+	var low := layout.add_cell(Vector2i(0, 0))
+	low.room_data = RoomData.new()
+	low.room_data.height = 0
+	var high := layout.add_cell(Vector2i(1, 0))
+	high.room_data = RoomData.new()
+	high.room_data.height = 2
+	_level.layout = layout
+	var holder := Node2D.new()
+	root.add_child(holder)
+	print("(expected) the next error is pushed on purpose:")
+	_level._dress_stairs(holder, Rect2(0, 0, 64, 32), Vector2i(0, 0), Vector2i.RIGHT)
+	_check(holder.get_child_count() == 0, "a corridor between rooms two levels apart builds no staircase (%d nodes)" % holder.get_child_count())
+	holder.free()
+	_level.layout = real_layout
+
