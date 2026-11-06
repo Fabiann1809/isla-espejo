@@ -117,7 +117,9 @@ func _under_deck_height(cell: Vector2i) -> int:
 	if h <= 0:
 		return TemplePlan.LAVA_HEIGHT
 	var under := h - 1
-	var across: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN] if _deck_along_x(cell) else [Vector2i.LEFT, Vector2i.RIGHT]
+	# Two literals in one ternary lose their type: the array is built from the chosen pair instead.
+	var across: Array[Vector2i] = []
+	across.assign([Vector2i.UP, Vector2i.DOWN] if _deck_along_x(cell) else [Vector2i.LEFT, Vector2i.RIGHT])
 	for dir in across:
 		var n := cell + dir
 		var nc := plan.cell_at(n)
