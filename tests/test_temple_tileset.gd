@@ -35,12 +35,13 @@ const TILES: Array[String] = [
 	"floor0_a", "floor0_f", "floor0_moss_a", "floor0_crack_b", "floor1_a", "floor1_f",
 	"floor2_a", "floor2_f", "floor2_moss_b", "floor2_crack_a", "floor2_rune_a",
 	"floor0_m_0_0", "floor0_m_3_3", "floor1_m_0_0", "floor1_m_3_3", "floor2_m_0_0", "floor2_m_3_3",
-	"lava_m_0_0", "lava_m_3_3", "lava_bubble_over",
+	"lava_m_0_0", "lava_m_3_3", "lava_m_7_7", "lava_m2_0_0", "lava_m2_7_7", "lava_m3_0_0", "lava_m3_7_7", "lava_bubble_over",
 	"moss_over_a", "moss_over_c", "floor0_crack_over_a", "floor2_crack_over_b",
 ]
 const PATTERNS_47: Array[String] = ["lava_rim", "ledge"]
 const ANIMATIONS := {"lava_flow": 8, "lava_bubble": 6, "floor_rune_glow": 4, "lava_rim_glow": 4, "cliff_foot_lava_m": 4,
-		"lava_m_0_0": 8, "lava_m_3_3": 8, "lava_bubble_over": 6, "floor2_rune_glow": 4}
+		"lava_m_0_0": 8, "lava_m_3_3": 8, "lava_m_7_7": 8, "lava_m2_0_0": 8, "lava_m3_7_7": 8, "lava_bubble_over": 6,
+		"floor2_rune_glow": 4}
 const FLOORS: Array[String] = ["floor_a", "floor_b", "floor_c", "floor_d", "floor_e", "floor_f"]
 
 var _ok := true

@@ -12,8 +12,10 @@ def rgb(h):
 CLEAR = (0, 0, 0, 0)
 OUTLINE = rgb("#1a0c10")
 
-# Temple stone: warm rosy grey, darkest in joints and cliff bases.
+# Temple stone: warm rosy grey, darkest in joints and cliff bases. STONE_0 is the ground level's
+# slab (a dusty, darker rose between STONE_1 and STONE_2), so the three floors read as three heights.
 STONE_D = rgb("#302221")
+STONE_0 = rgb("#5f403c")
 STONE_1 = rgb("#523337")
 STONE_2 = rgb("#70483f")
 STONE_3 = rgb("#8f5f59")

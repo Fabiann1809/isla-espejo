@@ -8,15 +8,18 @@ tools/make_tileset_temple.gd turns into the tileset profile. With --preview it a
 contact sheet, a sample 30x18 composition and GIFs of every animation to <folder> (not part of the
 game). Every tile is deterministic (fixed seeds) and uses only the colours of tools/temple_palette.py.
 
-Lava: the sea is a macro pattern of 4x4 tiles (a 64 px period): dark cooled plates drifting on
-molten channels, hot only along the cracks. `lava_m_<cx>_<cy>` (cx, cy in 0..3) is one animation of 8
-frames per macro cell; paint cell (x, y) of the map with `lava_m_<x mod 4>_<y mod 4>` and every frame
-is seamless. `lava_flow` is the same lava folded into one self-seamless 16 px tile (8 frames) and
-`lava_a..d` are still variants of it; `lava_bubble` (6 frames) is a bubble on that tile and
-`lava_bubble_over` the bubble alone, to lay over the macro lava.
+Lava: the sea is a macro pattern of 8x8 tiles (a 128 px period) in three variants (`lava_m`,
+`lava_m2`, `lava_m3`) that share their edges: dark cooled plates drifting on molten channels, hot
+only along the cracks, pushed off any lattice by a warp and dimmed in regions by a slow cooling
+field. `<variant>_<cx>_<cy>` (cx, cy in 0..7) is one animation of 8 frames per macro cell; paint
+cell (x, y) of the map with `<variant>_<x mod 8>_<y mod 8>`, picking the variant per 8x8 block by any
+rule (LavaBackdrop uses a world-space noise), and every frame is seamless. `lava_flow` is the same
+lava folded into one self-seamless 16 px tile (8 frames) and `lava_a..d` are still variants of it;
+`lava_bubble` (6 frames) is a bubble on that tile and `lava_bubble_over` the bubble alone, to lay
+over the macro lava.
 
-Floors: a level has its own tone so the eye reads the height: level 0 dark and grey, level 1 the
-rosy mid stone, level 2 the palest and warmest. `floor<L>_m_<cx>_<cy>` is a 4x4 macro plan of large
+Floors: a level has its own tone so the eye reads the height: level 0 the darkest, dusty rose
+(STONE_0), level 1 the rosy mid stone, level 2 the palest and warmest. `floor<L>_m_<cx>_<cy>` is a 4x4 macro plan of large
 flagstones whose slabs cross the tile borders (paint cell (x, y) with cx = x mod 4, cy = y mod 4);
 `floor<L>_a..f` are single seamless tiles, `floor<L>_moss_*`, `floor<L>_crack_*` their details.
 `floor_*` (no level) is level 1.
@@ -126,13 +129,34 @@ def smooth(t):
     return t * t * (3 - 2 * t)
 
 
-def periodic_noise(rng, n=T, cell=4, octaves=2):
-    """Value noise that wraps at `n` (a tile of it is seamless with itself), 0..1."""
-    out = [[0.0] * n for _ in range(n)]
-    amp, total, c = 1.0, 0.0, cell
+def noise_grids(rng, n=T, cell=4, octaves=2, border_of=None):
+    """The lattices of a periodic value noise: [(cell, grid), ...], one per octave. With `border_of`
+    (the lattices of another noise of the same n, cell and octaves) the first row and column of
+    every lattice are copied from it, so the two fields agree along their edges: tiles of one can
+    stand next to tiles of the other without a seam (see LavaField)."""
+    grids = []
+    c, octave = cell, 0
     while octaves > 0 and c >= 1:
         g = max(1, n // c)
         grid = [[rng.random() for _ in range(g)] for _ in range(g)]
+        if border_of is not None:
+            other = border_of[octave][1]
+            grid[0] = list(other[0])
+            for y in range(g):
+                grid[y][0] = other[y][0]
+        grids.append((c, grid))
+        c //= 2
+        octaves -= 1
+        octave += 1
+    return grids
+
+
+def noise_field(n, grids):
+    """The periodic value noise of `grids` (see noise_grids), n x n, 0..1."""
+    out = [[0.0] * n for _ in range(n)]
+    amp, total = 1.0, 0.0
+    for c, grid in grids:
+        g = len(grid)
         for y in range(n):
             for x in range(n):
                 gx, gy = x / c, y / c
@@ -144,9 +168,24 @@ def periodic_noise(rng, n=T, cell=4, octaves=2):
                 out[y][x] += (top * (1 - fy) + bot * fy) * amp
         total += amp
         amp *= 0.5
-        c //= 2
-        octaves -= 1
     return [[v / total for v in row] for row in out]
+
+
+def periodic_noise(rng, n=T, cell=4, octaves=2):
+    """Value noise that wraps at `n` (a tile of it is seamless with itself), 0..1."""
+    return noise_field(n, noise_grids(rng, n, cell, octaves))
+
+
+def sample_wrapped(field, x, y):
+    """Bilinear sample of a periodic field at a fractional position."""
+    n = len(field)
+    x0, y0 = math.floor(x), math.floor(y)
+    fx, fy = x - x0, y - y0
+    x0, y0 = x0 % n, y0 % n
+    x1, y1 = (x0 + 1) % n, (y0 + 1) % n
+    top = field[y0][x0] * (1 - fx) + field[y0][x1] * fx
+    bot = field[y1][x0] * (1 - fx) + field[y1][x1] * fx
+    return top * (1 - fy) + bot * fy
 
 
 def ridged(field):
@@ -186,8 +225,8 @@ def cut(img, name_fn, size=MACRO):
 ## The stone of each height level: slab tones (mid, dark, pale) with the lit bevel, the shade and the
 ## joint of each, from the dark grey ground to the pale warm top.
 LEVEL_TONES = {
-    0: {"tones": [(SMOKE_2, ASH, SMOKE_1)] * 7 + [(SMOKE_1, SMOKE_2, SMOKE_D)] * 2 + [(ASH, ASH, SMOKE_2)],
-        "joint": SMOKE_D, "outer_shade": SMOKE_1, "pit": (SMOKE_1, ASH), "crack": (SMOKE_D, ASH),
+    0: {"tones": [(STONE_0, STONE_2, STONE_1)] * 7 + [(STONE_1, STONE_0, STONE_D)] * 2 + [(STONE_2, STONE_3, STONE_1)],
+        "joint": STONE_D, "outer_shade": STONE_D, "pit": (STONE_D, STONE_2), "crack": (STONE_D, STONE_3),
         "moss": (MOSS_D, MOSS_1, MOSS_2)},
     1: {"tones": [(STONE_3, STONE_4, STONE_1)] * 7 + [(STONE_2, STONE_3, STONE_1)] * 2 + [(STONE_4, STONE_HI, STONE_2)],
         "joint": JOINT, "outer_shade": STONE_1, "pit": (STONE_2, STONE_4), "crack": (STONE_D, STONE_4),
@@ -369,24 +408,54 @@ def rune_over(img, rune, glow=None, groove=STONE_D):
 
 # --- lava ---------------------------------------------------------------------------------------------
 ## Share of the surface each tone takes, from the cooled plates to the white-hot knots of the channels.
-LAVA_SHARES = [(CRUST_1, 0.33), (LAVA_D, 0.19), (LAVA_1, 0.15), (LAVA_2, 0.12), (LAVA_3, 0.10),
-               (LAVA_4, 0.06), (LAVA_HI, 0.038), (LAVA_CORE, 0.012)]
+LAVA_SHARES = [(CRUST_1, 0.27), (LAVA_D, 0.18), (LAVA_1, 0.16), (LAVA_2, 0.14), (LAVA_3, 0.13),
+               (LAVA_4, 0.07), (LAVA_HI, 0.038), (LAVA_CORE, 0.012)]
 FLOW_FRAMES = 8
 
 
-class Lava:
-    """A periodic lava field of `n` px: plates (slow ridged noise) with cracks on them, molten channels
-    between them whose shimmer drifts 2 px per frame (a seamless loop of 8 frames)."""
+## How far (px) the plates' noise is pushed about by the warp (0 at the field's edges, so variants
+## that share their edges still meet), and how much the slow cooling field dims whole regions.
+WARP_PX = 9.0
+WARP_FADE_PX = 10.0
+COOL_SWING = 0.5
 
-    def __init__(self, n, seed=11):
+
+class LavaField:
+    """A periodic lava field of `n` px: plates (ridged noise, pushed about by a warp so they never
+    sit on a lattice, dimmed by a slow cooling field so some regions are mostly crust and others
+    mostly channel) with cracks on them, molten channels between them whose shimmer drifts 2 px per
+    frame (a seamless loop of 8 frames). A field made with `variant_of` another shares its edges
+    (noise_grids' border copy; the warp fades out at the edges), so tiles cut from either can stand
+    side by side with no seam: the sea mixes the variants by a world-space noise and never repeats."""
+
+    def __init__(self, n, seed=11, variant_of=None):
         rng = random.Random(seed)
         self.n = n
-        self.plates = ridged(periodic_noise(rng, n=n, cell=n // 2, octaves=3))
-        self.cracks = ridged(periodic_noise(rng, n=n, cell=max(4, n // 8), octaves=2))
-        self.speck = periodic_noise(rng, n=n, cell=max(2, n // 16), octaves=2)
-        self.flow = periodic_noise(rng, n=T, cell=8, octaves=2)
-        self.steps = quantile_steps([self.value(x, y, 0) for y in range(n) for x in range(n)], LAVA_SHARES)
-        self.plate_level = self.steps[0][0]
+        ref = variant_of
+        border = (lambda name: getattr(ref, name) if ref is not None else None)
+        self.plate_grids = noise_grids(rng, n, max(4, n // 4), 3, border("plate_grids"))
+        self.warp_grids = [noise_grids(rng, n, max(4, n // 8), 2, border("warp_grids")[i] if ref else None) for i in range(2)]
+        self.cool_grids = noise_grids(rng, n, max(4, n // 2), 1, border("cool_grids"))
+        self.crack_grids = noise_grids(rng, n, max(4, n // 8), 2, border("crack_grids"))
+        self.speck_grids = noise_grids(rng, n, max(2, n // 16), 2, border("speck_grids"))
+        self.flow = ref.flow if ref is not None else periodic_noise(rng, n=T, cell=8, octaves=2)
+        base = noise_field(n, self.plate_grids)
+        warp_x, warp_y = (noise_field(n, g) for g in self.warp_grids)
+        cool = noise_field(n, self.cool_grids)
+        self.plates = [[0.0] * n for _ in range(n)]
+        for y in range(n):
+            for x in range(n):
+                edge = min(x + 0.5, n - x - 0.5, y + 0.5, n - y - 0.5)
+                amp = WARP_PX * smooth(min(1.0, edge / WARP_FADE_PX)) if n > 2 * WARP_FADE_PX else 0.0
+                v = sample_wrapped(base, x + (warp_x[y][x] - 0.5) * 2 * amp, y + (warp_y[y][x] - 0.5) * 2 * amp)
+                self.plates[y][x] = (1.0 - 2.0 * abs(v - 0.5)) * (1.0 - COOL_SWING / 2 + COOL_SWING * cool[y][x])
+        self.cracks = ridged(noise_field(n, self.crack_grids))
+        self.speck = noise_field(n, self.speck_grids)
+        if ref is not None:
+            self.steps, self.plate_level = ref.steps, ref.plate_level
+        else:
+            self.steps = quantile_steps([self.value(x, y, 0) for y in range(n) for x in range(n)], LAVA_SHARES)
+            self.plate_level = self.steps[0][0]
 
     def value(self, x, y, frame):
         shimmer = self.flow[(y - 2 * frame) % T][(x - 2 * frame) % T] - 0.5
@@ -418,8 +487,15 @@ class Lava:
         return img
 
 
-LAVA_MACRO = Lava(MN, 11)
-LAVA_SMALL = Lava(T, 12)
+## The sea: LAVA_MACRO tiles per side (a 128 px period) in LAVA_VARIANTS variants that share their
+## edges, each cut into `<variant>_<cx>_<cy>` animations of FLOW_FRAMES frames.
+LAVA_MACRO = 8
+LAVA_MN = LAVA_MACRO * T
+LAVA_VARIANTS = ["lava_m", "lava_m2", "lava_m3"]
+LAVA_FIELDS = [LavaField(LAVA_MN, 11)]
+for _i, _seed in enumerate((23, 37)):
+    LAVA_FIELDS.append(LavaField(LAVA_MN, _seed, variant_of=LAVA_FIELDS[0]))
+LAVA_SMALL = LavaField(T, 12)
 
 
 def lava_base_tiles():
@@ -1141,11 +1217,12 @@ def build_tiles():
         add("floor%d_crack_over_a" % level, crack_overlay(16 + level, level))
         add("floor%d_crack_over_b" % level, crack_overlay(19 + level, level))
 
-    # lava: the macro sea (16 animations), the folded small tile and its stills and bubbles
-    macro_frames = [LAVA_MACRO.frame(k) for k in range(FLOW_FRAMES)]
-    for cy in range(MACRO):
-        for cx in range(MACRO):
-            add_frames("lava_m_%d_%d" % (cx, cy), [f.crop((cx * T, cy * T, cx * T + T, cy * T + T)) for f in macro_frames])
+    # lava: the macro sea (LAVA_MACRO² animations per variant), the folded small tile and its stills and bubbles
+    for variant, field in zip(LAVA_VARIANTS, LAVA_FIELDS):
+        macro_frames = [field.frame(k) for k in range(FLOW_FRAMES)]
+        for cy in range(LAVA_MACRO):
+            for cx in range(LAVA_MACRO):
+                add_frames("%s_%d_%d" % (variant, cx, cy), [f.crop((cx * T, cy * T, cx * T + T, cy * T + T)) for f in macro_frames])
     small = lava_base_tiles()
     for name, img in zip("abcd", small):
         add("lava_" + name, img)
@@ -1371,7 +1448,8 @@ def sample_map(coords, sheet, frame=0, scale=3):
     # 1. lava: the macro sea, with bubbles laid over it
     for y in range(H):
         for x in range(W):
-            blit("lava_m_%d_%d_f%d" % (x % MACRO, y % MACRO, frame % FLOW_FRAMES), x, y)
+            variant = LAVA_VARIANTS[(x // LAVA_MACRO + 2 * (y // LAVA_MACRO)) % len(LAVA_VARIANTS)]
+            blit("%s_%d_%d_f%d" % (variant, x % LAVA_MACRO, y % LAVA_MACRO, frame % FLOW_FRAMES), x, y)
             if (x, y) in bubbles:
                 blit("lava_bubble_over_f%d" % ((frame + bubbles[(x, y)]) % 6), x, y)
     # 2. faces
@@ -1477,7 +1555,7 @@ def sample_map(coords, sheet, frame=0, scale=3):
 
 def animation_gifs(coords, sheet, animations, folder, scale=6):
     for name, names in animations.items():
-        if name.startswith("lava_m_") and name != "lava_m_0_0":
+        if name.startswith("lava_m") and name != "lava_m_0_0":
             continue
         frames = []
         for frame_name in names:
@@ -1488,8 +1566,13 @@ def animation_gifs(coords, sheet, animations, folder, scale=6):
             frames.append(bg.resize((T * scale, T * scale), Image.NEAREST).convert("P", palette=Image.ADAPTIVE))
         frames[0].save(os.path.join(folder, "anim_%s.gif" % name), save_all=True, append_images=frames[1:],
                        duration=140, loop=0)
-    # the whole lava macro, looping
-    frames = [LAVA_MACRO.frame(k).resize((MN * 3, MN * 3), Image.NEAREST).convert("P", palette=Image.ADAPTIVE) for k in range(FLOW_FRAMES)]
+    # the three lava macros side by side (their shared edges meet), looping
+    frames = []
+    for k in range(FLOW_FRAMES):
+        row = Image.new("RGBA", (LAVA_MN * len(LAVA_FIELDS), LAVA_MN), CLEAR)
+        for i, field in enumerate(LAVA_FIELDS):
+            row.paste(field.frame(k), (i * LAVA_MN, 0))
+        frames.append(row.resize((row.width * 2, row.height * 2), Image.NEAREST).convert("P", palette=Image.ADAPTIVE))
     frames[0].save(os.path.join(folder, "anim_lava_macro.gif"), save_all=True, append_images=frames[1:], duration=160, loop=0)
 
 
