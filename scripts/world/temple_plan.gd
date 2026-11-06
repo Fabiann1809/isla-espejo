@@ -60,12 +60,19 @@ const DOOR_NAMES := ["north", "east", "south", "west"]
 const MIN_RELIEF_SHARE := 0.2
 ## A surge's safe level needs this many walkable cells in one connected region.
 const SURGE_MIN_SAFE_CELLS := 60
+## `validate` names this many unreachable cells one by one before it only counts the rest.
+const UNREACHABLE_LISTED := 3
 
 var base_height := 0
 var errors: Array[String] = []
 
 var _cells: Array[String] = []
 var _heights: Array[int] = []
+## Raised deck cell -> true when it is one of the deck's two ends (where its supports stand).
+var _deck_ends := {}
+## The `(x, y, level)` states the doors reach (see `_reach_from_doors`), computed once when asked.
+var _reached := {}
+var _reached_done := false
 
 
 static func parse(text: String) -> TemplePlan:
@@ -132,6 +139,7 @@ func _read(text: String) -> void:
 		return
 	_read_ring()
 	_read_heights()
+	_read_decks()
 
 
 ## The outer ring is masonry, except the doors: floor, all at the same height, which is the base.
@@ -191,11 +199,44 @@ func _read_heights() -> void:
 			var target := cell + step
 			while cell_at(target) == c:
 				target += step
-			var top := MASONRY_HEIGHT if STAIRS.has(cell_at(target)) else _heights[_index(target)]
+			# A stair on a malformed ring may climb out of the grid: height_at answers masonry there.
+			var top := MASONRY_HEIGHT if STAIRS.has(cell_at(target)) else height_at(target)
 			if top < 1 or top > MAX_HEIGHT:
 				errors.append("the stair at (%d, %d) climbs to nothing" % [x, y])
 			else:
 				_heights[_index(cell)] = top - 1
+
+
+## Every raised deck (`b`, `B`) is a connected group of cells of the same kind; the longer side of its
+## bounding box is its span and the two extreme rows or columns across it are its ends, where the
+## supports stand. Only the ends block the actors passing under the deck.
+func _read_decks() -> void:
+	_deck_ends.clear()
+	var seen := {}
+	for y in ROWS:
+		for x in COLUMNS:
+			var start := Vector2i(x, y)
+			var c := cell_at(start)
+			if seen.has(start) or not DECKS.has(c) or DECKS[c] == 0:
+				continue
+			var group: Array[Vector2i] = [start]
+			seen[start] = true
+			var head := 0
+			var low := start
+			var high := start
+			while head < group.size():
+				var cell := group[head]
+				head += 1
+				low = Vector2i(mini(low.x, cell.x), mini(low.y, cell.y))
+				high = Vector2i(maxi(high.x, cell.x), maxi(high.y, cell.y))
+				for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+					var n: Vector2i = cell + dir
+					if not seen.has(n) and cell_at(n) == c:
+						seen[n] = true
+						group.append(n)
+			var along_x := high.x - low.x >= high.y - low.y
+			for cell in group:
+				_deck_ends[cell] = (cell.x == low.x or cell.x == high.x) if along_x else (cell.y == low.y or cell.y == high.y)
 
 
 func _index(cell: Vector2i) -> int:
@@ -252,11 +293,14 @@ func is_walkable(cell: Vector2i, level: int) -> bool:
 	return false
 
 
-## A cell fit for an enemy or a prop: walkable at its own height, not a face, not a stair, no lava
-## in the 8 cells around it.
+## A cell fit for an enemy or a prop: an inner cell walkable at its own height that the doors reach
+## (a sealed platform or an isolated patch never qualifies), not a face, not a stair, no lava in the
+## 8 cells around it.
 func spawn_ok(cell: Vector2i) -> bool:
 	var h := height_at(cell)
-	if h < 0 or h > MAX_HEIGHT or is_stair(cell) or not is_walkable(cell, h):
+	if not is_inner(cell) or h < 0 or h > MAX_HEIGHT or is_stair(cell) or not is_walkable(cell, h):
+		return false
+	if not _reach().has(Vector3i(cell.x, cell.y, h)):
 		return false
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
@@ -265,18 +309,26 @@ func spawn_ok(cell: Vector2i) -> bool:
 	return true
 
 
-## Level -> the inner cells walkable at that level (a stair is in both of its levels). The ring
-## (wall and doors) is left out: it belongs to Room.
+## Level -> the inner cells walkable at that level that the doors reach (a stair is in both of its
+## levels). The ring (wall and doors) is left out: it belongs to Room.
 func level_regions() -> Dictionary:
+	var reached := _reach()
 	var regions := {}
 	for level in range(MAX_HEIGHT + 1):
 		var cells: Array[Vector2i] = []
 		for y in range(1, ROWS - 1):
 			for x in range(1, COLUMNS - 1):
-				if is_walkable(Vector2i(x, y), level):
+				if reached.has(Vector3i(x, y, level)):
 					cells.append(Vector2i(x, y))
 		regions[level] = cells
 	return regions
+
+
+func _reach() -> Dictionary:
+	if not _reached_done:
+		_reached = _reach_from_doors()
+		_reached_done = true
+	return _reached
 
 
 # --- stairs ------------------------------------------------------------------------------------------------------------
@@ -374,12 +426,9 @@ func _passable(cell: Vector2i, level: int) -> bool:
 	return is_walkable(cell, level)
 
 
-## An end of a raised deck: the deck runs along the axis its neighbours of the same kind lie on, and
-## its ends are the cells with no such neighbour on one side along it. A lone cell is an end.
+## An end of a raised deck (see `_read_decks`). A lone cell is an end.
 func _is_deck_end(cell: Vector2i) -> bool:
-	var c := cell_at(cell)
-	var axis := Vector2i.RIGHT if cell_at(cell + Vector2i.LEFT) == c or cell_at(cell + Vector2i.RIGHT) == c else Vector2i.DOWN
-	return cell_at(cell + axis) != c or cell_at(cell - axis) != c
+	return _deck_ends.get(cell, true)
 
 
 # --- validation ------------------------------------------------------------------------------------------------------
@@ -391,8 +440,9 @@ func validate(surge_stages := 0) -> Array[String]:
 	if not errors.is_empty():
 		return errors.duplicate()
 	var problems: Array[String] = []
-	var reached := _reach_from_doors()
+	var reached := _reach()
 	_check_doors(reached, problems)
+	_check_reach(reached, problems)
 	_check_stairs(problems)
 	_check_relief(problems)
 	_check_lanes(reached, problems)
@@ -402,7 +452,9 @@ func validate(surge_stages := 0) -> Array[String]:
 
 
 ## BFS over (cell, level) from the north door at base height: a step onto a neighbour that is
-## walkable at the current level, or a change of level on a stair cell.
+## walkable at the current level, or a change of level on a stair cell. A stair is entered and left
+## only through its ends (the low end at its low level, the high end at its high level) or from
+## another cell of the same stair; never from the side.
 func _reach_from_doors() -> Dictionary:
 	var visited := {}
 	var queue: Array[Vector3i] = []
@@ -419,7 +471,7 @@ func _reach_from_doors() -> Dictionary:
 		var next: Array[Vector3i] = []
 		for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
 			var n: Vector2i = cell + dir
-			if is_walkable(n, level):
+			if is_walkable(n, level) and _stair_step_ok(cell, n, level):
 				next.append(Vector3i(n.x, n.y, level))
 		if is_stair(cell):
 			var other := height_at(cell) + 1 if level == height_at(cell) else height_at(cell)
@@ -431,12 +483,46 @@ func _reach_from_doors() -> Dictionary:
 	return visited
 
 
+## Whether a step from `from` to `to` at `level` respects the stairs: between two cells of the same
+## stair anything goes; a stair's low end is the cell behind it, its high end the cell it climbs to.
+func _stair_step_ok(from: Vector2i, to: Vector2i, level: int) -> bool:
+	if is_stair(from) and is_stair(to):
+		return cell_at(from) == cell_at(to) and height_at(from) == height_at(to)
+	if is_stair(to):
+		return _is_stair_end(to, from, level)
+	if is_stair(from):
+		return _is_stair_end(from, to, level)
+	return true
+
+
+func _is_stair_end(stair: Vector2i, other: Vector2i, level: int) -> bool:
+	var dir: Vector2i = STAIRS[cell_at(stair)]
+	var low := height_at(stair)
+	return (level == low and other == stair - dir) or (level == low + 1 and other == stair + dir)
+
+
 func _check_doors(reached: Dictionary, problems: Array[String]) -> void:
 	var doors := door_cells()
 	for name in DOOR_NAMES:
 		var cells: Array[Vector2i] = doors[name]
 		if not cells.any(func(c: Vector2i) -> bool: return reached.has(Vector3i(c.x, c.y, base_height))):
 			problems.append("the %s door cannot be reached from the north door" % name)
+
+
+## Every inner walkable cell must be reached at its level: a sealed platform or an isolated patch
+## would be dead ground where nothing may spawn. Reported one by one up to a few, then counted.
+func _check_reach(reached: Dictionary, problems: Array[String]) -> void:
+	var missing: Array[String] = []
+	for y in range(1, ROWS - 1):
+		for x in range(1, COLUMNS - 1):
+			for level in range(MAX_HEIGHT + 1):
+				if is_walkable(Vector2i(x, y), level) and not reached.has(Vector3i(x, y, level)):
+					missing.append("unreachable cell (%d, %d) at level %d" % [x, y, level])
+	var listed := mini(missing.size(), UNREACHABLE_LISTED)
+	for i in listed:
+		problems.append(missing[i])
+	if missing.size() > listed:
+		problems.append("%d more unreachable cells" % (missing.size() - listed))
 
 
 func _check_stairs(problems: Array[String]) -> void:
