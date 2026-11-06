@@ -400,3 +400,20 @@ const TEMPLE_SURGE_MAX_STAIR_DISTANCE := 9
 # --- Temple: tileset ---------------------------------------------------------------------------------
 ## A warm, slightly orange light over the whole Templo del Eclipse (the lava's glow in the air).
 const TEMPLE_WORLD_TINT := Color(1.0, 0.93, 0.86)
+
+# --- Temple: props ---
+## A lava geyser (TempleProp.GEYSER) cycles idle, rumble, erupt and settle, in seconds; a hazard geyser
+## hurts only while it erupts. An ambient geyser starts its idle at a seeded point of it, so neighbours
+## never erupt together.
+const TEMPLE_GEYSER_IDLE := 3.0
+const TEMPLE_GEYSER_RUMBLE := 1.0
+const TEMPLE_GEYSER_ERUPT := 1.2
+const TEMPLE_GEYSER_SETTLE := 0.6
+const TEMPLE_GEYSER_DAMAGE := 1
+## Additive glows of the temple's fires and lava (alpha 0 = off) and their radii (px): fire for torches
+## and braziers, lava for the falls, the geyser while it erupts and the gate's mouth.
+const TEMPLE_FIRE_LIGHT := Color(1.0, 0.62, 0.2, 0.42)
+const TEMPLE_FIRE_LIGHT_RADIUS := 48.0
+const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.4)
+const TEMPLE_LAVA_LIGHT_RADIUS := 56.0
+const TEMPLE_GATE_LIGHT_RADIUS := 80.0
