@@ -31,6 +31,8 @@ const SHADE_SORT_Y := 1000000.0
 var weight_modifiers := {}
 ## What the director decided for the current map.
 var plan: DirectorPlan = DirectorPlan.neutral()
+## The enemies this map fields (`EnemyRoster`: the whole pool unless the scenario has a `roster_size`).
+var roster: Array[PackedScene] = []
 var layout: MapLayout
 var current_seed := 0
 ## Grid coordinate -> Room node.
@@ -89,6 +91,7 @@ func generate(new_seed := 0) -> void:
 	# First close the previous run (the profile learns from it), then let the director read the result.
 	Events.level_started.emit(scenario.id, current_seed)
 	plan = Director.make_plan() if use_director else DirectorPlan.neutral()
+	roster = EnemyRoster.pick(scenario.enemy_pool, scenario.roster_size, current_seed, scenario.enemy_weights, plan)
 	layout = MapGenerator.generate(scenario, current_seed, _room_weights())
 	var problems := layout.validate()
 	if not problems.is_empty():
@@ -252,7 +255,8 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 				return
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
-			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan, scenario.enemy_weights)
+			room.spawn_enemies(roster, plan.adjust_count(count), rng, plan,
+					EnemyRoster.room_weights(scenario.enemy_weights, data.enemy_affinity))
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")

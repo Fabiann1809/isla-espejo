@@ -4,6 +4,55 @@ extends SceneTree
 ## Run: godot --headless --path . --script res://tests/test_map_generator.gd
 
 const SEEDS := 400
+## room_data.id per cell ("x,y:id" sorted by coord) of the forest and the ruins for seeds 1..20,
+## recorded before rooms were picked by height, so a change to the generator that moves one room of
+## the first two chapters fails here (regenerate the table only on purpose, with the old code).
+const REFERENCE := {
+	"forest": {
+		1: "2,3:forest_special 2,4:forest_river 2,5:forest_start 3,0:forest_boss 3,1:forest_clearing_a 3,2:forest_event 3,3:forest_river 3,4:forest_clearing_a 3,5:forest_reward 4,0:forest_clearing_b 4,1:forest_watch 4,2:forest_dense 4,3:forest_reward",
+		2: "0,2:forest_special 0,3:forest_river 0,4:forest_watch 0,5:forest_start 1,1:forest_reward 1,2:forest_event 1,3:forest_clearing_b 1,4:forest_dense 2,0:forest_reward 2,1:forest_dense 2,2:forest_clearing_a 3,0:forest_boss 3,1:forest_river",
+		3: "0,1:forest_reward 1,1:forest_dense 1,2:forest_clearing_b 2,0:forest_special 2,1:forest_watch 2,2:forest_event 2,3:forest_clearing_a 3,0:forest_boss 3,1:forest_clearing_b 3,2:forest_reward 3,3:forest_clearing_a 3,4:forest_river 3,5:forest_dense 4,4:forest_river 4,5:forest_start",
+		4: "0,3:forest_reward 1,3:forest_clearing_b 2,2:forest_reward 2,3:forest_river 2,4:forest_river 2,5:forest_start 3,2:forest_event 3,3:forest_clearing_a 3,4:forest_special 4,0:forest_boss 4,1:forest_clearing_a 4,2:forest_watch",
+		5: "0,0:forest_reward 0,1:forest_watch 0,2:forest_special 0,3:forest_event 0,4:forest_river 1,0:forest_clearing_a 1,1:forest_river 1,2:forest_clearing_b 1,3:forest_clearing_a 1,4:forest_river 1,5:forest_start 2,0:forest_boss 2,2:forest_reward 2,4:forest_dense 2,5:forest_clearing_b",
+		6: "0,4:forest_dense 0,5:forest_clearing_b 1,2:forest_special 1,3:forest_watch 1,4:forest_river 1,5:forest_start 2,1:forest_reward 2,2:forest_event 2,3:forest_dense 2,4:forest_clearing_a 3,0:forest_boss 3,1:forest_clearing_a 3,2:forest_clearing_b 3,3:forest_reward 4,0:forest_clearing_a 4,1:forest_clearing_b",
+		7: "0,1:forest_clearing_b 0,2:forest_clearing_a 0,3:forest_event 0,4:forest_river 1,0:forest_boss 1,1:forest_watch 1,2:forest_reward 1,3:forest_special 1,4:forest_dense 1,5:forest_clearing_a 2,1:forest_reward 2,4:forest_clearing_a 2,5:forest_river 3,5:forest_start",
+		8: "1,0:forest_special 1,1:forest_clearing_a 1,2:forest_reward 2,0:forest_dense 2,1:forest_dense 2,4:forest_reward 3,0:forest_boss 3,1:forest_dense 3,2:forest_river 3,3:forest_clearing_b 3,4:forest_clearing_b 3,5:forest_watch 4,1:forest_river 4,2:forest_event 4,5:forest_start",
+		9: "1,0:forest_boss 1,1:forest_clearing_b 1,2:forest_river 1,3:forest_clearing_a 1,4:forest_special 2,1:forest_reward 2,3:forest_river 2,4:forest_event 2,5:forest_clearing_b 3,2:forest_reward 3,3:forest_clearing_b 3,4:forest_watch 3,5:forest_dense 4,4:forest_clearing_a 4,5:forest_start",
+		10: "1,3:forest_special 2,0:forest_dense 2,1:forest_clearing_b 2,2:forest_dense 2,3:forest_clearing_a 2,4:forest_river 2,5:forest_watch 3,0:forest_boss 3,2:forest_river 3,3:forest_watch 3,4:forest_clearing_b 3,5:forest_start 4,1:forest_reward 4,2:forest_event 4,3:forest_clearing_a 4,4:forest_reward",
+		11: "0,0:forest_dense 0,1:forest_clearing_a 0,2:forest_event 0,3:forest_special 0,4:forest_watch 0,5:forest_start 1,0:forest_boss 1,1:forest_river 1,2:forest_watch 1,3:forest_reward 1,5:forest_reward",
+		12: "0,4:forest_reward 1,2:forest_river 1,3:forest_clearing_b 1,4:forest_clearing_b 1,5:forest_start 2,0:forest_special 2,1:forest_dense 2,2:forest_event 2,4:forest_clearing_a 3,0:forest_clearing_b 3,4:forest_watch 4,0:forest_boss 4,4:forest_reward",
+		13: "0,4:forest_dense 0,5:forest_start 1,3:forest_watch 1,4:forest_clearing_b 1,5:forest_clearing_b 2,0:forest_boss 2,1:forest_reward 2,2:forest_dense 2,3:forest_river 3,0:forest_clearing_a 3,1:forest_clearing_b 3,2:forest_event 3,3:forest_special 4,0:forest_watch 4,1:forest_river 4,2:forest_reward",
+		14: "1,5:forest_start 2,0:forest_reward 2,2:forest_clearing_b 2,3:forest_watch 2,4:forest_clearing_b 2,5:forest_dense 3,0:forest_river 3,1:forest_river 3,2:forest_event 3,3:forest_clearing_a 4,0:forest_boss 4,1:forest_river 4,2:forest_dense 4,3:forest_special 4,4:forest_reward",
+		15: "0,5:forest_dense 1,0:forest_boss 1,1:forest_event 1,2:forest_clearing_a 1,3:forest_dense 1,4:forest_river 1,5:forest_start 2,0:forest_river 2,1:forest_clearing_a 2,2:forest_reward 2,3:forest_clearing_b 2,4:forest_river 3,0:forest_clearing_b 3,1:forest_clearing_b 3,4:forest_special 4,0:forest_reward",
+		16: "0,4:forest_clearing_b 0,5:forest_start 1,1:forest_dense 1,2:forest_special 1,3:forest_event 1,4:forest_clearing_b 2,0:forest_boss 2,1:forest_clearing_a 2,2:forest_reward 2,3:forest_river 2,4:forest_clearing_a 3,0:forest_dense 3,1:forest_watch 4,0:forest_reward",
+		17: "1,1:forest_reward 1,2:forest_event 1,3:forest_clearing_b 2,0:forest_boss 2,1:forest_watch 2,2:forest_river 2,3:forest_dense 2,4:forest_clearing_a 2,5:forest_start 3,1:forest_reward 3,2:forest_special 3,4:forest_river",
+		18: "2,0:forest_boss 2,1:forest_clearing_a 2,2:forest_reward 2,5:forest_river 3,1:forest_clearing_b 3,2:forest_clearing_b 3,3:forest_special 3,5:forest_start 4,1:forest_reward 4,2:forest_event 4,3:forest_river 4,4:forest_dense 4,5:forest_clearing_a",
+		19: "0,0:forest_boss 0,1:forest_reward 1,0:forest_river 1,1:forest_dense 1,2:forest_clearing_b 1,3:forest_river 2,2:forest_special 2,3:forest_watch 2,4:forest_reward 3,2:forest_event 3,4:forest_dense 3,5:forest_start 4,2:forest_clearing_a 4,3:forest_dense 4,4:forest_clearing_b",
+		20: "0,0:forest_boss 0,1:forest_clearing_b 0,2:forest_event 0,3:forest_clearing_a 0,4:forest_river 0,5:forest_start 1,0:forest_watch 1,1:forest_river 1,2:forest_special 1,3:forest_clearing_b 1,4:forest_dense 1,5:forest_clearing_a 2,0:forest_reward 2,1:forest_reward",
+	},
+	"ruins": {
+		1: "2,3:ruins_special 2,4:ruins_plateau 2,5:ruins_start 3,0:ruins_boss 3,1:ruins_river 3,2:ruins_event 3,3:ruins_plateau 3,4:ruins_river 3,5:ruins_reward 4,0:ruins_terraces 4,1:ruins_falls 4,2:ruins_narrow 4,3:ruins_reward",
+		2: "0,2:ruins_special 0,3:ruins_plateau 0,4:ruins_falls 0,5:ruins_start 1,1:ruins_reward 1,2:ruins_event 1,3:ruins_terraces 1,4:ruins_narrow 2,0:ruins_reward 2,1:ruins_narrow 2,2:ruins_river 3,0:ruins_boss 3,1:ruins_plateau",
+		3: "0,1:ruins_reward 1,1:ruins_narrow 1,2:ruins_terraces 2,0:ruins_special 2,1:ruins_falls 2,2:ruins_event 2,3:ruins_river 3,0:ruins_boss 3,1:ruins_terraces 3,2:ruins_reward 3,3:ruins_river 3,4:ruins_plateau 3,5:ruins_narrow 4,4:ruins_plateau 4,5:ruins_start",
+		4: "0,3:ruins_reward 1,3:ruins_terraces 2,2:ruins_reward 2,3:ruins_plateau 2,4:ruins_plateau 2,5:ruins_start 3,2:ruins_event 3,3:ruins_river 3,4:ruins_special 4,0:ruins_boss 4,1:ruins_river 4,2:ruins_falls",
+		5: "0,0:ruins_reward 0,1:ruins_falls 0,2:ruins_special 0,3:ruins_event 0,4:ruins_plateau 1,0:ruins_river 1,1:ruins_plateau 1,2:ruins_terraces 1,3:ruins_river 1,4:ruins_plateau 1,5:ruins_start 2,0:ruins_boss 2,2:ruins_reward 2,4:ruins_narrow 2,5:ruins_terraces",
+		6: "0,4:ruins_narrow 0,5:ruins_terraces 1,2:ruins_special 1,3:ruins_falls 1,4:ruins_plateau 1,5:ruins_start 2,1:ruins_reward 2,2:ruins_event 2,3:ruins_narrow 2,4:ruins_river 3,0:ruins_boss 3,1:ruins_river 3,2:ruins_terraces 3,3:ruins_reward 4,0:ruins_river 4,1:ruins_terraces",
+		7: "0,1:ruins_terraces 0,2:ruins_river 0,3:ruins_event 0,4:ruins_plateau 1,0:ruins_boss 1,1:ruins_falls 1,2:ruins_reward 1,3:ruins_special 1,4:ruins_narrow 1,5:ruins_river 2,1:ruins_reward 2,4:ruins_river 2,5:ruins_plateau 3,5:ruins_start",
+		8: "1,0:ruins_special 1,1:ruins_river 1,2:ruins_reward 2,0:ruins_narrow 2,1:ruins_narrow 2,4:ruins_reward 3,0:ruins_boss 3,1:ruins_narrow 3,2:ruins_plateau 3,3:ruins_terraces 3,4:ruins_terraces 3,5:ruins_falls 4,1:ruins_plateau 4,2:ruins_event 4,5:ruins_start",
+		9: "1,0:ruins_boss 1,1:ruins_terraces 1,2:ruins_plateau 1,3:ruins_river 1,4:ruins_special 2,1:ruins_reward 2,3:ruins_plateau 2,4:ruins_event 2,5:ruins_terraces 3,2:ruins_reward 3,3:ruins_terraces 3,4:ruins_falls 3,5:ruins_narrow 4,4:ruins_river 4,5:ruins_start",
+		10: "1,3:ruins_special 2,0:ruins_narrow 2,1:ruins_terraces 2,2:ruins_narrow 2,3:ruins_river 2,4:ruins_plateau 2,5:ruins_falls 3,0:ruins_boss 3,2:ruins_plateau 3,3:ruins_falls 3,4:ruins_terraces 3,5:ruins_start 4,1:ruins_reward 4,2:ruins_event 4,3:ruins_river 4,4:ruins_reward",
+		11: "0,0:ruins_narrow 0,1:ruins_river 0,2:ruins_event 0,3:ruins_special 0,4:ruins_falls 0,5:ruins_start 1,0:ruins_boss 1,1:ruins_plateau 1,2:ruins_falls 1,3:ruins_reward 1,5:ruins_reward",
+		12: "0,4:ruins_reward 1,2:ruins_plateau 1,3:ruins_terraces 1,4:ruins_terraces 1,5:ruins_start 2,0:ruins_special 2,1:ruins_narrow 2,2:ruins_event 2,4:ruins_river 3,0:ruins_terraces 3,4:ruins_falls 4,0:ruins_boss 4,4:ruins_reward",
+		13: "0,4:ruins_narrow 0,5:ruins_start 1,3:ruins_falls 1,4:ruins_terraces 1,5:ruins_terraces 2,0:ruins_boss 2,1:ruins_reward 2,2:ruins_narrow 2,3:ruins_plateau 3,0:ruins_river 3,1:ruins_terraces 3,2:ruins_event 3,3:ruins_special 4,0:ruins_falls 4,1:ruins_plateau 4,2:ruins_reward",
+		14: "1,5:ruins_start 2,0:ruins_reward 2,2:ruins_terraces 2,3:ruins_falls 2,4:ruins_terraces 2,5:ruins_narrow 3,0:ruins_plateau 3,1:ruins_plateau 3,2:ruins_event 3,3:ruins_river 4,0:ruins_boss 4,1:ruins_plateau 4,2:ruins_narrow 4,3:ruins_special 4,4:ruins_reward",
+		15: "0,5:ruins_narrow 1,0:ruins_boss 1,1:ruins_event 1,2:ruins_river 1,3:ruins_narrow 1,4:ruins_plateau 1,5:ruins_start 2,0:ruins_plateau 2,1:ruins_river 2,2:ruins_reward 2,3:ruins_terraces 2,4:ruins_plateau 3,0:ruins_terraces 3,1:ruins_terraces 3,4:ruins_special 4,0:ruins_reward",
+		16: "0,4:ruins_terraces 0,5:ruins_start 1,1:ruins_narrow 1,2:ruins_special 1,3:ruins_event 1,4:ruins_terraces 2,0:ruins_boss 2,1:ruins_river 2,2:ruins_reward 2,3:ruins_plateau 2,4:ruins_river 3,0:ruins_narrow 3,1:ruins_falls 4,0:ruins_reward",
+		17: "1,1:ruins_reward 1,2:ruins_event 1,3:ruins_terraces 2,0:ruins_boss 2,1:ruins_falls 2,2:ruins_plateau 2,3:ruins_narrow 2,4:ruins_river 2,5:ruins_start 3,1:ruins_reward 3,2:ruins_special 3,4:ruins_plateau",
+		18: "2,0:ruins_boss 2,1:ruins_river 2,2:ruins_reward 2,5:ruins_plateau 3,1:ruins_terraces 3,2:ruins_terraces 3,3:ruins_special 3,5:ruins_start 4,1:ruins_reward 4,2:ruins_event 4,3:ruins_plateau 4,4:ruins_narrow 4,5:ruins_river",
+		19: "0,0:ruins_boss 0,1:ruins_reward 1,0:ruins_plateau 1,1:ruins_narrow 1,2:ruins_terraces 1,3:ruins_plateau 2,2:ruins_special 2,3:ruins_falls 2,4:ruins_reward 3,2:ruins_event 3,4:ruins_narrow 3,5:ruins_start 4,2:ruins_river 4,3:ruins_narrow 4,4:ruins_terraces",
+		20: "0,0:ruins_boss 0,1:ruins_terraces 0,2:ruins_event 0,3:ruins_river 0,4:ruins_plateau 0,5:ruins_start 1,0:ruins_falls 1,1:ruins_plateau 1,2:ruins_special 1,3:ruins_terraces 1,4:ruins_narrow 1,5:ruins_river 2,0:ruins_reward 2,1:ruins_reward",
+	},
+}
 
 var _ok := true
 
@@ -98,8 +147,77 @@ func _initialize() -> void:
 				only_combat.append(room)
 		s.rooms = only_combat)
 
+	_check_heights(scenario)
+	_check_reference_layouts()
+
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
+
+
+## Rooms are picked by height: a corridor never joins rooms two levels apart (a staircase climbs one
+## level). Every room of the test scenario is offered at heights 0, 1 and 2.
+func _check_heights(base: ScenarioData) -> void:
+	var scenario: ScenarioData = base.duplicate()
+	var tall: Array[RoomData] = []
+	for room in base.rooms:
+		for height in 3:
+			var copy: RoomData = room.duplicate()
+			copy.id = StringName("%s_h%d" % [room.id, height])
+			copy.height = height
+			tall.append(copy)
+	scenario.rooms = tall
+	var bad := 0
+	var invalid := 0
+	var steps := 0
+	var raised := 0
+	for map_seed in range(1, 201):
+		var layout := MapGenerator.generate(scenario, map_seed)
+		var problems := layout.validate()
+		if not problems.is_empty():
+			invalid += 1
+			printerr("heights, seed %d: %s" % [map_seed, problems])
+		var wide := false
+		for coord: Vector2i in layout.cells:
+			var cell := layout.get_cell(coord)
+			if cell.room_data.height > 0:
+				raised += 1
+			for dir in cell.doors:
+				var step := absi(cell.room_data.height - layout.get_cell(coord + dir).room_data.height)
+				if step == 1:
+					steps += 1
+				wide = wide or step > 1
+		if wide:
+			bad += 1
+	_check(bad == 0, "no corridor joins rooms two levels apart over 200 seeds (bad: %d)" % bad)
+	_check(invalid == 0, "height-aware maps stay valid over 200 seeds (invalid: %d)" % invalid)
+	_check(raised > 0 and steps > 0, "raised rooms and one-level steps do appear (%d raised rooms, %d steps)" % [raised, steps])
+
+	# The layout check itself names the pair.
+	var layout := MapLayout.new()
+	layout.grid_size = Vector2i(1, 2)
+	layout.start_cell = Vector2i(0, 1)
+	layout.boss_cell = Vector2i(0, 0)
+	layout.add_cell(Vector2i(0, 0)).type = RoomData.RoomType.BOSS
+	layout.add_cell(Vector2i(0, 1)).type = RoomData.RoomType.START
+	layout.connect_cells(Vector2i(0, 0), Vector2i(0, 1))
+	layout.get_cell(Vector2i(0, 0)).room_data = tall[2]
+	layout.get_cell(Vector2i(0, 1)).room_data = tall[0]
+	_check(layout.validate().has("height step > 1 between (0, 0) and (0, 1)"),
+			"validate() reports a height step > 1: %s" % [layout.validate()])
+	layout.get_cell(Vector2i(0, 0)).room_data = tall[1]
+	_check(layout.validate().is_empty(), "a one-level step is fine: %s" % [layout.validate()])
+
+
+## The forest and the ruins (heights 0 and 1 only) keep every layout they had before.
+func _check_reference_layouts() -> void:
+	for name in REFERENCE:
+		var scenario: ScenarioData = load("res://data/scenarios/%s.tres" % name)
+		var changed: Array[int] = []
+		for map_seed in REFERENCE[name]:
+			var layout := MapGenerator.generate(scenario, map_seed)
+			if " ".join(_room_ids(layout)) != REFERENCE[name][map_seed]:
+				changed.append(map_seed)
+		_check(changed.is_empty(), "%s layouts are unchanged for seeds 1..20 (changed: %s)" % [name, changed])
 
 
 func _check_variant(base: ScenarioData, label: String, tweak: Callable) -> void:
@@ -132,7 +250,7 @@ func _room_ids(layout: MapLayout) -> Array:
 	var coords := layout.cells.keys()
 	coords.sort()
 	for coord in coords:
-		ids.append("%s:%s" % [coord, layout.get_cell(coord).room_data.id])
+		ids.append("%d,%d:%s" % [coord.x, coord.y, layout.get_cell(coord).room_data.id])
 	return ids
 
 

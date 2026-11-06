@@ -15,10 +15,14 @@ enum RoomType { START, COMBAT, EVENT, REWARD, SPECIAL, BOSS }
 ## A dark room (the Ruinas): a shade over the whole room, lit only by its crystals and torches and by
 ## a glow around the player.
 @export var dark := false
-## Height level of the whole room (0 = ground, 1 = raised; see Heights). A corridor between rooms of
-## different height is a staircase. A raised room has no water, terraces or alcoves of its own.
-@export_range(0, 1) var height := 0
+## Height level of the whole room (0 = ground, 1 = raised, 2 only in the temple; see Heights). A
+## corridor between rooms of different height is a staircase, so the generator never joins rooms
+## two levels apart. A raised room has no water, terraces or alcoves of its own.
+@export_range(0, 2) var height := 0
 
 @export_group("Enemies")
 @export var min_enemies := 2
 @export var max_enemies := 4
+## Enemy id -> multiplier of the scenario's `enemy_weights` in this room only (e.g. flyers over
+## lava). A missing id counts as 1; 0 keeps that enemy out of the room.
+@export var enemy_affinity: Dictionary = {}

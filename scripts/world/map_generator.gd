@@ -193,6 +193,9 @@ static func _first_combat(layout: MapLayout, coords: Array[Vector2i]) -> Vector2
 
 # --- 4. Concrete rooms --------------------------------------------------------------
 
+## A corridor between rooms of different height is a staircase that climbs one level, so a cell
+## never gets a room two levels away from a connected neighbour that already has its room. The
+## start and boss rooms are fixed, so they go first and constrain their neighbours.
 static func _assign_rooms(layout: MapLayout, scenario: ScenarioData, rng: RandomNumberGenerator,
 		weight_modifiers: Dictionary) -> void:
 	var used := {}
@@ -206,14 +209,31 @@ static func _assign_rooms(layout: MapLayout, scenario: ScenarioData, rng: Random
 				cell.room_data = scenario.start_room
 			RoomData.RoomType.BOSS:
 				cell.room_data = scenario.boss_room
-			_:
-				cell.room_data = _pick_room(scenario, cell.type, rng, weight_modifiers, used)
-				if cell.room_data != null:
-					used[cell.room_data.id] = used.get(cell.room_data.id, 0) + 1
+	for coord: Vector2i in coords:
+		var cell := layout.get_cell(coord)
+		if cell.type == RoomData.RoomType.START or cell.type == RoomData.RoomType.BOSS:
+			continue
+		cell.room_data = _pick_room(scenario, cell.type, rng, weight_modifiers, used,
+				_neighbour_heights(layout, coord))
+		if cell.room_data != null:
+			used[cell.room_data.id] = used.get(cell.room_data.id, 0) + 1
 
 
+## Heights of the connected neighbours that already have a room.
+static func _neighbour_heights(layout: MapLayout, coord: Vector2i) -> Array[int]:
+	var heights: Array[int] = []
+	for other in layout.neighbors_connected(coord):
+		var room := layout.get_cell(other).room_data
+		if room != null and not heights.has(room.height):
+			heights.append(room.height)
+	return heights
+
+
+## Rooms more than one level away from a neighbour's height weigh 0. If that leaves nothing, the
+## rooms at a neighbour's own height are tried, then any room, so the map is still built. Without
+## neighbour heights (or with every room within reach) the draw is exactly the one it always was.
 static func _pick_room(scenario: ScenarioData, type: RoomData.RoomType, rng: RandomNumberGenerator,
-		weight_modifiers: Dictionary, used: Dictionary) -> RoomData:
+		weight_modifiers: Dictionary, used: Dictionary, neighbour_heights: Array[int] = []) -> RoomData:
 	var pool: Array[RoomData] = []
 	for room in scenario.rooms:
 		if room.type == type:
@@ -232,7 +252,34 @@ static func _pick_room(scenario: ScenarioData, type: RoomData.RoomType, rng: Ran
 		for tag in room.tags:
 			weight *= weight_modifiers.get(tag, 1.0)
 		weights.append(maxf(weight, 0.0))
+
+	var within_reach := _weights_at_heights(pool, weights, neighbour_heights, 1)
+	if _sum(within_reach) > 0.0:
+		return pool[_weighted_index(within_reach, rng)]
+	if _sum(weights) > 0.0:
+		var same_height := _weights_at_heights(pool, weights, neighbour_heights, 0)
+		if _sum(same_height) > 0.0:
+			return pool[_weighted_index(same_height, rng)]
 	return pool[_weighted_index(weights, rng)]
+
+
+## `weights` with a 0 for every room farther than `reach` levels from one of `heights` (no heights:
+## the weights as they are).
+static func _weights_at_heights(pool: Array[RoomData], weights: Array[float], heights: Array[int],
+		reach: int) -> Array[float]:
+	var result: Array[float] = weights.duplicate()
+	for i in pool.size():
+		for height in heights:
+			if absi(pool[i].height - height) > reach:
+				result[i] = 0.0
+	return result
+
+
+static func _sum(weights: Array[float]) -> float:
+	var total := 0.0
+	for weight in weights:
+		total += weight
+	return total
 
 
 # --- Helpers ------------------------------------------------------------------------

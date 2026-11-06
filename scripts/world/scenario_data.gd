@@ -51,6 +51,9 @@ extends Resource
 ## How often each enemy of the pool is picked, by enemy id (the scene's file name); a missing id
 ## counts as 1. The director's weights multiply these.
 @export var enemy_weights: Dictionary = {}
+## How many enemies of the pool one map fields (`EnemyRoster`, drawn by the seed and these weights).
+## 0 fields the whole pool.
+@export var roster_size := 0
 @export var boss_scene: PackedScene
 ## Optional mini boss that waits alone, in the middle of the room, in the last combat room before the
 ## boss room (it replaces that room's normal enemies).

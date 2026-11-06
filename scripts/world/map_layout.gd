@@ -106,6 +106,9 @@ func validate() -> Array[String]:
 				problems.append("cell %s has a non-adjacent door %s" % [coord, dir])
 			elif not are_connected(other, coord):
 				problems.append("door %s -> %s is not mirrored" % [coord, other])
+			elif (dir == Vector2i.RIGHT or dir == Vector2i.DOWN) and _height_step(coord, other) > 1:
+				# A staircase corridor climbs one level; each pair is reported once.
+				problems.append("height step > 1 between %s and %s" % [coord, other])
 
 	var dist := distances_from(start_cell)
 	if dist.size() != cells.size():
@@ -119,6 +122,15 @@ func validate() -> Array[String]:
 	if count_of_type(RoomData.RoomType.START) != 1 or count_of_type(RoomData.RoomType.BOSS) != 1:
 		problems.append("there must be exactly one start and one boss room")
 	return problems
+
+
+## Height difference between the rooms of two cells (0 while either has no room yet).
+func _height_step(a: Vector2i, b: Vector2i) -> int:
+	var room_a := get_cell(a).room_data
+	var room_b := get_cell(b).room_data
+	if room_a == null or room_b == null:
+		return 0
+	return absi(room_a.height - room_b.height)
 
 
 ## Text drawing of the map for logs and debugging. S start, B boss, C combat, E event,
