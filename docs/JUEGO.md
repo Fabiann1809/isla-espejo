@@ -42,7 +42,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 - Multijugador (varios jugadores a la vez). El control por celular maneja al único Nico y no cuenta como multijugador.
 - Tienda del Mercader (es solo diálogo).
 - Combinaciones de habilidades (extra opcional, ver sección 5).
-- Plataformas flotantes y niveles de altura (se reemplazan por caminos de piedra sobre lava).
+- Plataformas flotantes en el aire, sin roca debajo. El Templo del Eclipse sí tiene tres niveles de altura, sobre lava (caminos de piedra, escaleras y puentes).
 - Aprendizaje automático / redes neuronales (capa 3 de IA, extra opcional).
 - Un cuarto escenario y un Guardián de la isla como jefe separado (extras opcionales).
 
