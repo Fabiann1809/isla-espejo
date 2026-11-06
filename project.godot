@@ -128,6 +128,8 @@ debug_unlock_skills={
 2d_physics/layer_7="water"
 2d_physics/layer_8="block_low"
 2d_physics/layer_9="block_high"
+2d_physics/layer_10="block_top"
+2d_physics/layer_11="cliff_top"
 
 [physics]
 
