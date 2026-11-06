@@ -391,3 +391,8 @@ const CAST_FLASH_STRENGTH := 0.8
 ## A tree whose crown covers Nico turns see-through to this alpha (1 = off), at this speed (per s).
 const CANOPY_FADE_ALPHA := 0.45
 const CANOPY_FADE_SPEED := 8.0
+
+# --- Temple: plan ---
+## In a surge room every walkable level-0 cell must have a stair up within this many steps (cells),
+## so nobody is caught by the lava with no way up (TemplePlan.validate).
+const TEMPLE_SURGE_MAX_STAIR_DISTANCE := 9
