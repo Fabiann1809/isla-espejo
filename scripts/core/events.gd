@@ -71,3 +71,10 @@ signal room_entered(room: Node)
 signal room_exited(room: Node)
 ## Every enemy of the room is dead.
 signal room_cleared(room: Node)
+
+## The lava of a `surge` room is about to rise to flood `stage` levels (a warning: tremor, text).
+signal lava_surge_warned(room: Node, stage: int)
+## The lava of a room rose and now floods `stage` levels (1 or 2).
+signal lava_surge_started(room: Node, stage: int)
+## The lava of a room went back down for good.
+signal lava_surge_receded(room: Node)

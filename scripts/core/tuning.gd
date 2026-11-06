@@ -519,3 +519,33 @@ const TEMPLE_EMBER_LIFETIME := 1.8
 const TEMPLE_EMBER_SPEED := Vector2(8.0, 18.0)
 const TEMPLE_EMBER_RISE := 14.0
 const TEMPLE_EMBER_COLOR := Color(1.0, 0.6, 0.2, 0.9)
+
+# --- Temple: surge ---------------------------------------------------------------------------------
+## Lava surge (LavaSurge, LavaSurgeLogic): the lava rises level by level in a `surge` room. Seconds of
+## warning before each rise, of the rise itself (the lava creeps in from the edges) and per level
+## when it recedes; the damage the lava deals every interval to whoever walks on a flooded level;
+## seconds between waves of enemies, of ring warning before each one appears, and of steam over the
+## floor the lava leaves. Nico must be farther than the trigger depth (px) from every door.
+const TEMPLE_SURGE_ENABLED := true
+const TEMPLE_SURGE_WARN_SECONDS := 2.5
+const TEMPLE_SURGE_RISE_SECONDS := 3.0
+const TEMPLE_SURGE_RECEDE_SECONDS := 2.5
+const TEMPLE_SURGE_DAMAGE_INTERVAL := 0.8
+const TEMPLE_SURGE_DAMAGE := 1
+const TEMPLE_SURGE_WAVE_INTERVAL := 4.0
+const TEMPLE_SURGE_SPAWN_WARN := 0.8
+const TEMPLE_SURGE_TRIGGER_DEPTH := 64.0
+const TEMPLE_SURGE_STEAM_SECONDS := 2.0
+## A wave never appears closer than this many cells to Nico.
+const TEMPLE_SURGE_SPAWN_MIN_DISTANCE := 4
+## Physics frames the lava's hitbox stays on a target (it retries while Nico is still blinking).
+const TEMPLE_SURGE_HIT_FRAMES := 6
+## Warning: camera shake (px, seconds), how often a bubble bursts on the edge (s), the glow of the
+## cells that flood first (alpha at its brightest).
+const TEMPLE_SURGE_WARN_SHAKE := Vector2(1.5, 2.0)
+const TEMPLE_SURGE_BUBBLE_EVERY := 0.12
+const TEMPLE_SURGE_WARN_GLOW := 0.32
+## Colours of the sealing fire, the warning ring of a wave and the bubbles.
+const TEMPLE_SURGE_SEAL_COLOR := Color(1.0, 0.42, 0.1, 0.55)
+const TEMPLE_SURGE_RING_COLOR := Color(1.0, 0.5, 0.12, 0.9)
+const TEMPLE_SURGE_BUBBLE_COLOR := Color(1.0, 0.72, 0.25, 0.85)

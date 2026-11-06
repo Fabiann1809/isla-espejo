@@ -38,5 +38,8 @@
 	"chest_found": "Has encontrado una mejora.",
 	"fragment_taken": "Fragmento de brújula obtenido.",
 	"skill_learned": "Habilidad aprendida: %s",
-	"save_corrupt": "No se pudo leer la partida guardada."
+	"save_corrupt": "No se pudo leer la partida guardada.",
+	"temple_surge_warning": "¡La lava sube! Busca terreno alto.",
+	"temple_surge_rising": "La lava sigue subiendo…",
+	"temple_surge_receding": "La lava retrocede."
 }

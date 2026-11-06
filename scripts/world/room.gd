@@ -37,6 +37,9 @@ var enemies_alive := 0
 ## Height level of the room (see Heights): its enemies are born on it.
 var height := Heights.LOW
 
+## While true the room does not report itself cleared (see release_clear).
+var clear_held := false
+
 var _had_enemies := false
 
 
@@ -179,7 +182,17 @@ func register_enemy(enemy: Node) -> void:
 
 func _on_enemy_died() -> void:
 	enemies_alive -= 1
-	if enemies_alive == 0 and _had_enemies:
+	_check_cleared()
+
+
+## Lets a room whose fight is not over yet (a lava surge sends waves) hold its `cleared` back.
+func release_clear() -> void:
+	clear_held = false
+	_check_cleared()
+
+
+func _check_cleared() -> void:
+	if enemies_alive == 0 and _had_enemies and not clear_held:
 		cleared.emit()
 		Events.room_cleared.emit(self)
 

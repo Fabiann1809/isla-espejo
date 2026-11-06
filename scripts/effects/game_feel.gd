@@ -56,6 +56,8 @@ func _ready() -> void:
 	Events.player_dashed.connect(_on_player_dashed)
 	Events.skill_used.connect(_on_skill_used)
 	Events.boss_attack_struck.connect(_on_boss_attack_struck)
+	Events.lava_surge_warned.connect(func(_room: Node, _stage: int) -> void:
+		shake(Tuning.TEMPLE_SURGE_WARN_SHAKE))
 	Events.boss_phase_changed.connect(func(_id: StringName, _phase: int) -> void:
 		hit_stop(Tuning.HIT_STOP_BOSS_PHASE)
 		shake(Tuning.SHAKE_BOSS_PHASE))
