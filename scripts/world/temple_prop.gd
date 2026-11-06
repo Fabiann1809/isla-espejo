@@ -13,13 +13,24 @@ extends Node2D
 ##
 ## A GEYSER cycles idle, rumble, erupt and settle (`Tuning.TEMPLE_GEYSER_*`); with `hazard` on, a
 ## Hitbox over its footprint hurts while it erupts.
+##
+## The trap walk's traps always hurt, only through a Hitbox (`Tuning.TEMPLE_TRAP_*`), and never
+## block: SPIKES (flat, one cell) sleep, warn with their tips out and the slots glowing, rise and
+## sink on a timer; a SAW spins along a track of `track` cells from the prop's cell toward
+## `direction` (its groove is drawn on the floor) and hurts whoever stays on it every so often; a
+## ROLLING_ROCK rumbles up at the prop's cell, rolls `track` cells toward `direction`, breaks at
+## the lane's end and rises again after a pause. Their cells (`blocks_cells`) are kept free of
+## other props and spawns by the room generator, but a lane may cross them: the way opens between
+## their beats.
 
 enum Kind {
 	PILLAR_CARVED, PILLAR_BLOCK, COLUMN_LOW, COLUMN_BROKEN, STATUE_GUARDIAN, BRAZIER, BRAZIER_PEDESTAL,
 	TORCH_WALL, URN, VASE, BARREL, RUBBLE, ROCK_SMOKING, PLANT, VINES, BANNER, LAVA_FALL, GEYSER,
-	FACE_GATE, ALTAR_RUNE, EMBER_VENT,
+	FACE_GATE, ALTAR_RUNE, EMBER_VENT, SPIKES, SAW, ROLLING_ROCK,
 }
 enum GeyserPhase { IDLE, RUMBLE, ERUPT, SETTLE }
+enum SpikesPhase { DOWN, WARN, UP, RETRACT }
+enum RockPhase { SPAWN, ROLL, BREAK, WAIT }
 
 @export var kind: Kind = Kind.PILLAR_CARVED
 ## Mirrors the picture (the foot stays where it is).
@@ -28,6 +39,10 @@ enum GeyserPhase { IDLE, RUMBLE, ERUPT, SETTLE }
 @export var level := 0
 ## GEYSER only: true makes its eruption hurt Nico.
 @export var hazard := false
+## SAW and ROLLING_ROCK: cells of track or lane from the prop's cell (0 = the strip's default) and
+## the way it runs.
+@export var track := 0
+@export var direction := Vector2i.RIGHT
 
 const ART_DIR := "res://assets/sprites/temple_props/"
 const META_PATH := ART_DIR + "props.json"
@@ -40,7 +55,9 @@ const SOLID_KINDS: Array[Kind] = [
 	Kind.BRAZIER_PEDESTAL, Kind.URN, Kind.BARREL, Kind.ROCK_SMOKING, Kind.FACE_GATE, Kind.ALTAR_RUNE,
 ]
 ## Kinds lying on the floor: drawn over every floor and under every actor, never y-sorted.
-const FLOOR_KINDS: Array[Kind] = [Kind.RUBBLE, Kind.EMBER_VENT]
+const FLOOR_KINDS: Array[Kind] = [Kind.RUBBLE, Kind.EMBER_VENT, Kind.SPIKES]
+## The traps: they hurt on their own rhythm (never a body).
+const TRAP_KINDS: Array[Kind] = [Kind.SPIKES, Kind.SAW, Kind.ROLLING_ROCK]
 ## Fire kinds: where their glow sits (relative to the foot) and which light it is (see Tuning.TEMPLE_*):
 ## `fire` for flames, `lava` for molten rock and `gate` for the face gate's mouth (lava, wider).
 const LIGHTS := {
@@ -59,8 +76,11 @@ const STRIPS := {
 	Kind.BARREL: "barrel", Kind.RUBBLE: "rubble", Kind.ROCK_SMOKING: "rock_smoking", Kind.PLANT: "plant",
 	Kind.VINES: "vines", Kind.BANNER: "banner", Kind.LAVA_FALL: "lava_fall", Kind.GEYSER: "geyser",
 	Kind.FACE_GATE: "face_gate", Kind.ALTAR_RUNE: "altar_rune", Kind.EMBER_VENT: "ember_vent",
+	Kind.SPIKES: "spikes", Kind.SAW: "saw", Kind.ROLLING_ROCK: "rolling_rock",
 }
 const GEYSER_PHASE_NAMES: Array[StringName] = [&"idle", &"rumble", &"erupt", &"settle"]
+const SPIKES_PHASE_NAMES: Array[StringName] = [&"down", &"warn", &"up", &"retract"]
+const SAW_TRACK_STRIP := "saw_track"
 
 static var _meta: Dictionary = {}
 static var _frames_cache: Dictionary = {}
@@ -68,8 +88,13 @@ static var _frames_cache: Dictionary = {}
 var _sprite: AnimatedSprite2D
 var _light: Sprite2D
 var _hitbox: Hitbox
-var _phase: GeyserPhase = GeyserPhase.IDLE
+var _phase: int = 0
 var _phase_left := 0.0
+## The moving part of a saw or a rock (sprite and hitbox), its travel in px and where it is on it.
+var _mover: Node2D
+var _travel := 0.0
+var _along := 0.0
+var _hit_clock := 0.0
 
 
 func _ready() -> void:
@@ -80,8 +105,39 @@ func is_solid() -> bool:
 	return kind in SOLID_KINDS
 
 
+func is_trap() -> bool:
+	return kind in TRAP_KINDS
+
+
 func is_erupting() -> bool:
 	return kind == Kind.GEYSER and _phase == GeyserPhase.ERUPT
+
+
+## True while the trap can hurt: the spikes up, the saw always (it is never still), the rock rolling.
+func is_hazard_active() -> bool:
+	match kind:
+		Kind.SPIKES:
+			return _phase == SpikesPhase.UP
+		Kind.SAW:
+			return Tuning.TEMPLE_TRAPS_ENABLED
+		Kind.ROLLING_ROCK:
+			return _phase == RockPhase.ROLL
+	return is_erupting()
+
+
+## The spikes' phase (SpikesPhase) or the rock's (RockPhase), for tests and the arena.
+func phase() -> int:
+	return _phase
+
+
+## Where the moving part of a saw or a rock is, in the parent's coordinates (the prop's own for the rest).
+func mover_position() -> Vector2:
+	return position + _mover.position if _mover != null else position
+
+
+## Cells of a saw's track or a rock's lane (0 = the strip's default length).
+func track_length() -> int:
+	return track if track > 0 else int(spec().get("track_cells", 1))
 
 
 ## The strip's description from props.json (cell, frames, fps, foot, footprint, extras).
@@ -98,7 +154,7 @@ func footprint() -> Vector2:
 ## keep the lanes free. Empty for anything that does not block (a hazard geyser counts: its eruption does).
 func blocks_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
-	if not (is_solid() or (kind == Kind.GEYSER and hazard)):
+	if not (is_solid() or (kind == Kind.GEYSER and hazard) or is_trap()):
 		return cells
 	var size := footprint()
 	if size.x <= 0.0 or size.y <= 0.0:
@@ -110,6 +166,14 @@ func blocks_cells() -> Array[Vector2i]:
 	for y in range(first.y, last.y + 1):
 		for x in range(first.x, last.x + 1):
 			cells.append(Vector2i(x, y))
+	if kind == Kind.SAW or kind == Kind.ROLLING_ROCK:
+		# The whole track or lane, from the prop's cell on.
+		var start := cells.duplicate()
+		for i in range(1, track_length()):
+			for cell in start:
+				var next: Vector2i = cell + direction * i
+				if not cells.has(next):
+					cells.append(next)
 	return cells
 
 
@@ -120,16 +184,30 @@ func _build() -> void:
 		return
 	_foot_shadow()
 	_sprite = _make_sprite(info)
-	add_child(_sprite)
+	if kind == Kind.SAW or kind == Kind.ROLLING_ROCK:
+		_mover = Node2D.new()
+		_mover.name = "Mover"
+		_mover.add_child(_sprite)
+		add_child(_mover)
+	else:
+		add_child(_sprite)
 	if kind in FLOOR_KINDS:
 		z_index = RoomTheme.GROUND_FX_Z
 	if is_solid():
 		_collide(footprint(), _layer_bits())
-	set_physics_process(kind == Kind.GEYSER)
-	if kind == Kind.GEYSER:
-		_start_geyser(info)
-	elif LIGHTS.has(kind):
-		_light = _make_light(kind)
+	set_physics_process(kind == Kind.GEYSER or (is_trap() and Tuning.TEMPLE_TRAPS_ENABLED))
+	match kind:
+		Kind.GEYSER:
+			_start_geyser(info)
+		Kind.SPIKES:
+			_start_spikes()
+		Kind.SAW:
+			_start_saw(info)
+		Kind.ROLLING_ROCK:
+			_start_rock()
+		_:
+			if LIGHTS.has(kind):
+				_light = _make_light(kind)
 
 
 ## The strip as an AnimatedSprite2D with its foot on the origin, starting on a frame seeded by its place.
@@ -144,7 +222,14 @@ func _make_sprite(info: Dictionary) -> AnimatedSprite2D:
 	var foot: Array = info["foot"]
 	var foot_x: float = (cell[0] - foot[0]) if flip else foot[0]
 	sprite.offset = Vector2(-foot_x, -foot[1])
-	var anim: StringName = &"idle" if kind == Kind.GEYSER else &"default"
+	var anim: StringName = &"default"
+	match kind:
+		Kind.GEYSER:
+			anim = &"idle"
+		Kind.SPIKES:
+			anim = &"down"
+		Kind.ROLLING_ROCK:
+			anim = &"roll"
 	sprite.animation = anim
 	sprite.frame = posmod(hash(Vector2i(global_position)), sprite.sprite_frames.get_frame_count(anim))
 	sprite.play(anim)
@@ -267,17 +352,7 @@ func _start_geyser(info: Dictionary) -> void:
 	frames.set_animation_speed(&"erupt", frames.get_frame_count(&"erupt") / Tuning.TEMPLE_GEYSER_ERUPT)
 	frames.set_animation_speed(&"settle", frames.get_frame_count(&"settle") / Tuning.TEMPLE_GEYSER_SETTLE)
 	if hazard:
-		_hitbox = Hitbox.new()
-		_hitbox.name = "Hitbox"
-		_hitbox.damage = Tuning.TEMPLE_GEYSER_DAMAGE
-		_hitbox.collision_layer = 1 << (ENEMY_ATTACK_LAYER - 1)
-		_hitbox.collision_mask = 1 << (PLAYER_LAYER - 1)
-		var shape := CollisionShape2D.new()
-		var rectangle := RectangleShape2D.new()
-		rectangle.size = footprint()
-		shape.shape = rectangle
-		_hitbox.add_child(shape)
-		add_child(_hitbox)
+		_hitbox = _make_hitbox(footprint(), Vector2.ZERO, Tuning.TEMPLE_GEYSER_DAMAGE, self)
 	_phase = GeyserPhase.IDLE
 	_phase_left = Tuning.TEMPLE_GEYSER_IDLE
 	if not hazard:
@@ -287,9 +362,19 @@ func _start_geyser(info: Dictionary) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_phase_left -= delta
-	if _phase_left <= 0.0:
-		_enter_phase(((_phase + 1) % GeyserPhase.size()) as GeyserPhase)
+	match kind:
+		Kind.GEYSER:
+			_phase_left -= delta
+			if _phase_left <= 0.0:
+				_enter_phase(((_phase + 1) % GeyserPhase.size()) as GeyserPhase)
+		Kind.SPIKES:
+			_phase_left -= delta
+			if _phase_left <= 0.0:
+				_enter_spikes_phase(((_phase + 1) % SpikesPhase.size()) as SpikesPhase)
+		Kind.SAW:
+			_run_saw(delta)
+		Kind.ROLLING_ROCK:
+			_run_rock(delta)
 
 
 func _enter_phase(phase: GeyserPhase) -> void:
@@ -308,3 +393,147 @@ func _enter_phase(phase: GeyserPhase) -> void:
 		if _light != null:
 			_light.queue_free()
 			_light = null
+
+
+# --- traps ------------------------------------------------------------------------------------------
+## A Hitbox of `size` centred `offset` from `parent`'s origin, on the enemy_attack layer against the
+## player, inactive until its trap arms it.
+func _make_hitbox(size: Vector2, offset: Vector2, damage: int, parent: Node2D) -> Hitbox:
+	var hitbox := Hitbox.new()
+	hitbox.name = "Hitbox"
+	hitbox.damage = damage
+	hitbox.collision_layer = 1 << (ENEMY_ATTACK_LAYER - 1)
+	hitbox.collision_mask = 1 << (PLAYER_LAYER - 1)
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = size
+	shape.shape = rectangle
+	shape.position = offset
+	hitbox.add_child(shape)
+	parent.add_child(hitbox)
+	return hitbox
+
+
+## The strip's `hitbox` ([w, h, x, y] about the foot) as a Hitbox under `parent`.
+func _trap_hitbox(parent: Node2D) -> Hitbox:
+	var box: Array = spec().get("hitbox", [footprint().x, footprint().y, 0, 0])
+	return _make_hitbox(Vector2(box[0], box[1]), Vector2(box[2], box[3]), Tuning.TEMPLE_TRAP_DAMAGE, parent)
+
+
+## Every trap of a room keeps the full first beat, so a band of spikes rises together and the way
+## reads as one rhythm.
+func _start_spikes() -> void:
+	_hitbox = _trap_hitbox(self)
+	_phase = SpikesPhase.DOWN
+	_phase_left = Tuning.TEMPLE_SPIKES_DOWN
+	var frames := _sprite.sprite_frames
+	frames.set_animation_loop(&"retract", false)
+	frames.set_animation_speed(&"retract", frames.get_frame_count(&"retract") / maxf(0.05, Tuning.TEMPLE_SPIKES_RETRACT))
+	_sprite.play(&"down")
+
+
+func _enter_spikes_phase(phase: SpikesPhase) -> void:
+	_phase = phase
+	var durations: Array[float] = [Tuning.TEMPLE_SPIKES_DOWN, Tuning.TEMPLE_SPIKES_WARN,
+			Tuning.TEMPLE_SPIKES_UP, Tuning.TEMPLE_SPIKES_RETRACT]
+	_phase_left = durations[phase]
+	_sprite.play(SPIKES_PHASE_NAMES[phase])
+	if phase == SpikesPhase.UP:
+		_hitbox.activate()
+	else:
+		_hitbox.deactivate()
+
+
+## The saw: its groove along the track (flat, under the actors), the blade and its hitbox on the
+## mover, which runs from the prop's cell to the track's far end and back.
+func _start_saw(info: Dictionary) -> void:
+	var tile := float(TileArt.TILE)
+	_travel = (track_length() - 1) * tile
+	var groove := _meta_of(SAW_TRACK_STRIP)
+	if not groove.is_empty():
+		var vertical := direction.y != 0
+		for i in track_length():
+			var piece := AnimatedSprite2D.new()
+			piece.name = "Track%d" % i
+			piece.sprite_frames = _frames_of(SAW_TRACK_STRIP, groove)
+			piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			piece.z_as_relative = false
+			piece.z_index = RoomTheme.GROUND_FX_Z
+			# The groove tile is centred on its cell: the blade's centre runs along the cell centres.
+			var foot: Array = info["foot"]
+			var blade_center := Vector2(0, float(info["cell"][1]) / 2.0 - foot[1])
+			piece.position = blade_center + Vector2(direction) * i * tile
+			piece.rotation = PI / 2.0 if vertical else 0.0
+			piece.frame = posmod(i * 2, piece.sprite_frames.get_frame_count(&"default"))
+			piece.play(&"default")
+			add_child(piece)
+	_hitbox = _trap_hitbox(_mover)
+	if Tuning.TEMPLE_TRAPS_ENABLED:
+		_hitbox.activate()
+	_along = 0.0
+	_hit_clock = 0.0
+
+
+func _run_saw(delta: float) -> void:
+	if _travel <= 0.0:
+		return
+	_along = fmod(_along + delta * Tuning.TEMPLE_SAW_SPEED, 2.0 * _travel)
+	var t := _along / _travel
+	if t > 1.0:
+		t = 2.0 - t
+	# Eased at the ends, so the blade slows where it turns (a beat to cross behind it).
+	_mover.position = Vector2(direction) * _travel * smoothstep(0.0, 1.0, t)
+	_hit_clock += delta
+	if _hit_clock >= Tuning.TEMPLE_SAW_HIT_EVERY:
+		_hit_clock = 0.0
+		_hitbox.activate()
+
+
+## The rock: it rises at the prop's cell (the rumble is the warning), rolls down the lane, breaks
+## at its end and the lane rests before the next one.
+func _start_rock() -> void:
+	_travel = float((track_length() - 1) * TileArt.TILE)
+	_hitbox = _trap_hitbox(_mover)
+	var frames := _sprite.sprite_frames
+	frames.set_animation_loop(&"break", false)
+	frames.set_animation_loop(&"spawn", false)
+	frames.set_animation_speed(&"break", frames.get_frame_count(&"break") / maxf(0.05, Tuning.TEMPLE_ROCK_BREAK))
+	frames.set_animation_speed(&"spawn", frames.get_frame_count(&"spawn") / maxf(0.05, Tuning.TEMPLE_ROCK_SPAWN))
+	if Tuning.TEMPLE_TRAPS_ENABLED:
+		_enter_rock_phase(RockPhase.SPAWN)
+	else:
+		_phase = RockPhase.SPAWN
+		_sprite.play(&"spawn")
+		_sprite.pause()
+
+
+func _enter_rock_phase(phase: RockPhase) -> void:
+	_phase = phase
+	_sprite.visible = phase != RockPhase.WAIT
+	match phase:
+		RockPhase.SPAWN:
+			_mover.position = Vector2.ZERO
+			_phase_left = Tuning.TEMPLE_ROCK_SPAWN
+			_sprite.play(&"spawn")
+		RockPhase.ROLL:
+			_along = 0.0
+			_sprite.play(&"roll")
+			_hitbox.activate()
+		RockPhase.BREAK:
+			_phase_left = Tuning.TEMPLE_ROCK_BREAK
+			_sprite.play(&"break")
+			_hitbox.deactivate()
+		RockPhase.WAIT:
+			_phase_left = Tuning.TEMPLE_ROCK_RESPAWN
+
+
+func _run_rock(delta: float) -> void:
+	if _phase == RockPhase.ROLL:
+		_along = minf(_along + delta * Tuning.TEMPLE_ROCK_SPEED, _travel)
+		_mover.position = Vector2(direction) * _along
+		if _along >= _travel:
+			_enter_rock_phase(RockPhase.BREAK)
+		return
+	_phase_left -= delta
+	if _phase_left <= 0.0:
+		_enter_rock_phase(((_phase + 1) % RockPhase.size()) as RockPhase)

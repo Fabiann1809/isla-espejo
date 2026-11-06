@@ -904,6 +904,181 @@ def ember_vent(frame, n):
     return c
 
 
+# --- traps (the trap walk) ---------------------------------------------------------------------------
+IRON = (SMOKE_D, SMOKE_1, SMOKE_2, ASH)
+SPIKES_PHASES = {"down": (0, 4), "warn": (4, 8), "up": (8, 12), "retract": (12, 16)}
+SPIKE_SLOTS = ((4, 7), (10, 7), (4, 13), (10, 13))
+
+
+def spikes(frame, n):
+    """A floor plate with four slots: the spikes sleep below it, show their tips while the slots
+    glow red (the warning), stand full height, then sink back (a flat piece, one cell)."""
+    c = Canvas(16, 16)
+    phase = next(name for name, (a, b) in SPIKES_PHASES.items() if a <= frame < b)
+    local = frame - SPIKES_PHASES[phase][0]
+    shake = (0, 1, 0, -1)[local] if phase == "warn" else 0
+    # The plate: a darker slab inset in the floor, a lit edge north and west.
+    c.rect(1, 1, 14, 14, STONE_2)
+    c.hline(1, 14, 1, STONE_3)
+    c.vline(1, 1, 14, STONE_3)
+    c.hline(1, 14, 14, STONE_D)
+    c.vline(14, 1, 14, STONE_D)
+    for x, y in ((3, 3), (12, 3), (3, 12), (12, 12)):  # bolts
+        c.put(x, y, BRONZE_1)
+        c.put(x + 1, y, BRONZE_D)
+    height = {"down": 0, "warn": 2, "up": 6, "retract": (5, 3, 1, 0)[local]}[phase]
+    glow = {"down": None, "warn": (LAVA_2, LAVA_3, LAVA_4, LAVA_3)[local], "up": LAVA_1, "retract": LAVA_D}[phase]
+    for sx, sy in SPIKE_SLOTS:
+        # The slot (2x1, dark; it glows from below in the warning).
+        c.put(sx + shake, sy, glow if glow is not None else OUTLINE)
+        c.put(sx + 1 + shake, sy, glow if glow is not None else STONE_D)
+        if height <= 0:
+            continue
+        # The spike: a 2 px wide iron blade that narrows to its tip, its left side lit.
+        for k in range(height):
+            y = sy - 1 - k
+            wide = k < height - 2
+            c.put(sx + shake, y, IRON[2] if wide else IRON[3])
+            if wide:
+                c.put(sx + 1 + shake, y, IRON[1])
+        c.put(sx + shake, sy - height, ASH)
+    if phase == "up":
+        glint = SPIKE_SLOTS[local % 4]
+        c.put(glint[0], glint[1] - 6, LAVA_HI)
+    if phase == "down" and local == 2:  # a glint on a bolt while it sleeps
+        c.put(12, 3, GOLD_HI)
+    return c
+
+
+def saw(frame, n):
+    """A circular iron blade with eight teeth, spinning (the teeth step a quarter tooth per frame),
+    a bronze hub and a hot glint running along the rim."""
+    c = Canvas(18, 18)
+    cx, cy, r = 9.0, 9.0, 7.0
+    spin = frame / n  # turns per cycle
+    for y in range(18):
+        for x in range(18):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            d = math.hypot(dx, dy)
+            ang = (math.atan2(dy, dx) / math.tau + spin) % 1.0
+            tooth = (ang * 8) % 1.0 < 0.55
+            if d < r - 1.0 or (d < r + 1.0 and tooth):
+                if d < 2.2:
+                    col = BRONZE_2 if dx + dy < 0 else BRONZE_D
+                elif d < r - 1.0:
+                    col = IRON[2] if dx + dy < -1 else (IRON[1] if dx + dy < 2 else IRON[0])
+                else:
+                    col = IRON[3] if dx + dy < 0 else IRON[2]
+                c.put(x, y, col)
+    # Three spokes (holes) that turn with the blade.
+    for k in range(3):
+        a = (k / 3.0 + spin) * math.tau
+        hx, hy = int(cx + 4.0 * math.cos(a)), int(cy + 4.0 * math.sin(a))
+        c.put(hx, hy, IRON[0])
+    c.outline()
+    # A glint on the rim and a spark thrown off it.
+    a = (0.1 + spin * 2) * math.tau
+    c.put(int(cx + (r - 1.5) * math.cos(a)), int(cy + (r - 1.5) * math.sin(a)), LAVA_HI)
+    c.put(int(cx + (r + 1.5) * math.cos(a + 0.4)), int(cy + (r + 1.5) * math.sin(a + 0.4)), LAVA_4)
+    return c
+
+
+def saw_track(frame, n):
+    """One tile of the groove a saw runs along (horizontal; the game turns it for a vertical track):
+    a dark channel with lit lips and a glow that creeps along it."""
+    c = Canvas(16, 16)
+    c.hline(0, 15, 6, STONE_1)
+    c.hline(0, 15, 7, OUTLINE)
+    c.hline(0, 15, 8, CRUST_D)
+    c.hline(0, 15, 9, OUTLINE)
+    c.hline(0, 15, 10, STONE_HI)
+    for x in range(0, 16, 4):  # rivets along the lips
+        c.put((x + 1) % 16, 5, BRONZE_1)
+        c.put((x + 3) % 16, 11, BRONZE_D)
+    glow = (frame * 4) % 16
+    for k in range(3):
+        c.put((glow + k) % 16, 8, (LAVA_1, LAVA_2, LAVA_1)[k])
+    return c
+
+
+ROCK_PHASES = {"roll": (0, 4), "break": (4, 8), "spawn": (8, 12)}
+
+
+def rolling_rock(frame, n):
+    """A basalt boulder that rolls (its cracks and a chip turn with it), shatters against the end of
+    its lane (chunks fly, dust settles) and is pushed up again from a hole with a rumble of dust."""
+    c = Canvas(20, 20)
+    phase = next(name for name, (a, b) in ROCK_PHASES.items() if a <= frame < b)
+    local = frame - ROCK_PHASES[phase][0]
+    cx, cy, r = 10.0, 9.0, 7.5
+
+    def boulder(turn, chipped=False):
+        for y in range(20):
+            for x in range(20):
+                dx, dy = x + 0.5 - cx, y + 0.5 - cy
+                d = math.hypot(dx, dy)
+                if d >= r:
+                    continue
+                lit = math.hypot(dx + 2.5, dy + 2.5)
+                col = ASH if lit < 2.0 else (SMOKE_2 if lit < 5.0 else (SMOKE_1 if d < r - 1.5 or dx + dy < 0 else SMOKE_D))
+                c.put(x, y, col)
+        # Cracks and a bright chip that turn with the roll (a quarter turn per frame).
+        for k in range(3):
+            a = (k / 3.0 + turn) * math.tau
+            for step in (3.0, 4.5, 6.0):
+                c.put(int(cx + step * math.cos(a)), int(cy + step * math.sin(a)), SMOKE_D if step < 6.0 else OUTLINE)
+            c.put(int(cx + 5.0 * math.cos(a + 0.25)), int(cy + 5.0 * math.sin(a + 0.25)), STONE_1)
+        if chipped:
+            a = turn * math.tau
+            c.put(int(cx + 6.5 * math.cos(a)), int(cy + 6.5 * math.sin(a)), LAVA_3)
+
+    if phase == "roll":
+        boulder(local / 4.0, chipped=True)
+        c.outline()
+        # Dust kicked up behind (the lane's dust, drawn low so it reads at any direction).
+        c.put(2 + local, 17, ASH if local % 2 else SMOKE_2)
+        c.put(16 - local, 17, SMOKE_2)
+    elif phase == "break":
+        if local == 0:
+            boulder(0.0)
+            for x, y in ((9, 3), (10, 4), (10, 5), (9, 6), (11, 7), (12, 8), (6, 10), (7, 11), (8, 12), (13, 11), (14, 12)):
+                c.put(x, y, LAVA_2)
+            c.outline()
+        else:
+            spread = local * 2
+            chunks = ((-4, -3, 3, 3), (4, -4, 3, 2), (-5, 2, 2, 3), (5, 3, 3, 3), (0, -6, 2, 2), (-1, 5, 3, 2))
+            for ox, oy, w, h in chunks:
+                x0 = int(cx + ox * (1 + spread / 4.0)) - w // 2
+                y0 = int(cy + oy * (1 + spread / 4.0) + local * local) - h // 2
+                y0 = min(y0, 15)
+                c.rect(x0, y0, w, h, SMOKE_1)
+                c.put(x0, y0, SMOKE_2)
+            c.outline()
+            for k in range(4):
+                c.put(3 + k * 4 + local % 2, 16 - local + k % 2, ASH if (k + local) % 2 else SMOKE_2)
+    else:  # spawn: a hole in the floor with dust and shaking stones, the boulder pushing up at the end
+        c.ellipse(cx, 15.5, 7.0, 2.2, CRUST_D)
+        c.ellipse(cx, 15.0, 5.0, 1.4, OUTLINE)
+        if local >= 2:
+            # The crown of the boulder rising out of the hole.
+            rise = (3, 6)[local - 2]
+            for y in range(20):
+                for x in range(20):
+                    dx, dy = x + 0.5 - cx, y + 0.5 - (15.0 + r - rise)
+                    if math.hypot(dx, dy) < r and y < 15:
+                        lit = math.hypot(dx + 2.5, dy + 2.5)
+                        c.put(x, y, ASH if lit < 2.0 else (SMOKE_2 if lit < 5.0 else SMOKE_1))
+            c.outline()
+        shake = (0, 1, -1, 1)[local]
+        for x, y in ((3, 13), (16, 12), (5, 17), (15, 17)):
+            c.put(x + shake, y, STONE_2)
+            c.put(x + shake + 1, y, STONE_1)
+        for k in range(3):
+            c.put(4 + k * 5 + shake, 11 - local - k % 2, ASH if (k + local) % 2 else SMOKE_2)
+            c.put(5 + k * 5 - shake, 12 - local, SMOKE_1)
+    return c
+
+
 # name: (draw, frames, fps, foot, footprint, extra json)
 PROPS = {
     "pillar_carved": (pillar_carved, 4, 3.0, (10, 56), (14, 8), {}),
@@ -927,6 +1102,12 @@ PROPS = {
     "face_gate": (face_gate, 8, 6.0, (40, 61), (76, 10), {}),
     "altar_rune": (altar_rune, 6, 4.0, (18, 24), (30, 8), {}),
     "ember_vent": (ember_vent, 6, 6.0, (8, 11), (0, 0), {}),
+    # Traps: `hitbox` is [w, h, x, y] of the Hitbox relative to the foot; `track_cells` the default
+    # length of a saw's track or a rock's lane (cells); the saw's groove is the strip `track`.
+    "spikes": (spikes, 16, 8.0, (8, 12), (14, 8), {"phases": {k: list(v) for k, v in SPIKES_PHASES.items()}, "hitbox": [12, 12, 0, -4]}),
+    "saw": (saw, 4, 12.0, (9, 14), (14, 8), {"hitbox": [12, 12, 0, -5], "track": "saw_track", "track_cells": 4}),
+    "saw_track": (saw_track, 4, 4.0, (8, 8), (0, 0), {}),
+    "rolling_rock": (rolling_rock, 12, 10.0, (10, 17), (14, 8), {"phases": {k: list(v) for k, v in ROCK_PHASES.items()}, "hitbox": [12, 12, 0, -8], "track_cells": 8}),
 }
 
 

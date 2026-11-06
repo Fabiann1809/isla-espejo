@@ -420,6 +420,24 @@ const TEMPLE_GATE_LIGHT_RADIUS := 80.0
 ## Bounds of a temple light's flicker, as a factor of RUIN_LIGHT_FLICKER_SECONDS (picked per position).
 const TEMPLE_PROP_LIGHT_FLICKER_MIN := 0.8
 const TEMPLE_PROP_LIGHT_FLICKER_MAX := 1.4
+## The trap walk's traps (TempleProp.SPIKES, SAW and ROLLING_ROCK; they hurt only through a Hitbox).
+## Off: they stand still on their first frame and never hurt. The damage of every trap; the spikes'
+## cycle in seconds (down, the warning with the tips out and the slots glowing, up, sinking back);
+## the saw's speed along its track (px/s) and how often it hurts whoever stays on it (s); the rock's
+## rumble before it rises (s), its speed (px/s), how long its shards lie (s) and how long the lane
+## stays empty before the next one (s).
+const TEMPLE_TRAPS_ENABLED := true
+const TEMPLE_TRAP_DAMAGE := 1
+const TEMPLE_SPIKES_DOWN := 2.4
+const TEMPLE_SPIKES_WARN := 0.7
+const TEMPLE_SPIKES_UP := 1.0
+const TEMPLE_SPIKES_RETRACT := 0.4
+const TEMPLE_SAW_SPEED := 40.0
+const TEMPLE_SAW_HIT_EVERY := 0.6
+const TEMPLE_ROCK_SPAWN := 0.8
+const TEMPLE_ROCK_SPEED := 56.0
+const TEMPLE_ROCK_BREAK := 0.5
+const TEMPLE_ROCK_RESPAWN := 1.4
 
 # --- Temple: level ---
 ## The lava sea around a temple map (LavaBackdrop) reaches this far past the rooms (tiles): wider

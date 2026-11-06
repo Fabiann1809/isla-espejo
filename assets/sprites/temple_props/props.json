@@ -225,8 +225,8 @@
   },
   "vines": {
     "cell": [
-      16,
-      28
+      18,
+      30
     ],
     "frames": 4,
     "fps": 4.0,
@@ -356,5 +356,122 @@
       0,
       0
     ]
+  },
+  "spikes": {
+    "cell": [
+      16,
+      16
+    ],
+    "frames": 16,
+    "fps": 8.0,
+    "foot": [
+      8,
+      12
+    ],
+    "footprint": [
+      14,
+      8
+    ],
+    "phases": {
+      "down": [
+        0,
+        4
+      ],
+      "warn": [
+        4,
+        8
+      ],
+      "up": [
+        8,
+        12
+      ],
+      "retract": [
+        12,
+        16
+      ]
+    },
+    "hitbox": [
+      12,
+      12,
+      0,
+      -4
+    ]
+  },
+  "saw": {
+    "cell": [
+      18,
+      18
+    ],
+    "frames": 4,
+    "fps": 12.0,
+    "foot": [
+      9,
+      14
+    ],
+    "footprint": [
+      14,
+      8
+    ],
+    "hitbox": [
+      12,
+      12,
+      0,
+      -5
+    ],
+    "track": "saw_track",
+    "track_cells": 4
+  },
+  "saw_track": {
+    "cell": [
+      16,
+      16
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      8,
+      8
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "rolling_rock": {
+    "cell": [
+      20,
+      20
+    ],
+    "frames": 12,
+    "fps": 10.0,
+    "foot": [
+      10,
+      17
+    ],
+    "footprint": [
+      14,
+      8
+    ],
+    "phases": {
+      "roll": [
+        0,
+        4
+      ],
+      "break": [
+        4,
+        8
+      ],
+      "spawn": [
+        8,
+        12
+      ]
+    },
+    "hitbox": [
+      12,
+      12,
+      0,
+      -8
+    ],
+    "track_cells": 8
   }
 }

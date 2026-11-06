@@ -1,7 +1,8 @@
 extends SceneTree
 ## The temple's own scenery (TempleProp): every kind builds from its strip and animates, neighbours
 ## are out of step, a solid prop blocks only its base and only the actors of its level, a hazard
-## geyser hurts while it erupts and flat pieces (vines, banners...) have no collision.
+## geyser hurts while it erupts, flat pieces (vines, banners...) have no collision, and the trap
+## walk's spikes, saw and rolling rock hurt on their rhythm through a Hitbox, never blocking.
 ## Run: godot --headless --path . --script res://tests/test_temple_props.gd
 
 var _ok := true
@@ -20,7 +21,7 @@ func _initialize() -> void:
 		_finish()
 		return
 	var kinds: Dictionary = _prop_script.get_script_constant_map()["Kind"]
-	_check(kinds.size() == 21, "TempleProp has 21 kinds (%d)" % kinds.size())
+	_check(kinds.size() == 24, "TempleProp has 24 kinds (%d)" % kinds.size())
 	_check(FileAccess.file_exists("res://assets/sprites/temple_props/props.json"), "props.json exists")
 
 	# Every kind builds and animates.
@@ -149,7 +150,88 @@ func _initialize() -> void:
 	await _frames(2)
 	_check(ambient.get_node_or_null("Hitbox") == null and ambient.blocks_cells().is_empty(),
 			"an ambient geyser has no hitbox and blocks no cell")
+	ambient.queue_free()
+	await _frames(1)
+
+	await _check_traps(kinds, room, player)
 	_finish()
+
+
+## The trap walk's traps: spikes on a timer with a warning, a saw along its track, a rock down its lane;
+## each hurts only through its Hitbox, blocks nobody and keeps its cells for the room generator.
+func _check_traps(kinds: Dictionary, room: Node, player: Node2D) -> void:
+	# Spikes: flat, no body, their cell is theirs; down (safe), warn (safe, tips out), up (hurts), retract.
+	var spikes: Node2D = _make(kinds["SPIKES"], Vector2(240 + 8, 160 - 4))
+	room.add_child(spikes)
+	player.global_position = Vector2(248, 152)
+	await _frames(2)
+	_check(_bodies_of(spikes) == 0 and spikes.z_index == RoomTheme.GROUND_FX_Z and spikes.blocks_cells() == [Vector2i(15, 9)],
+			"spikes are flat, have no body and keep their one cell (%s)" % [spikes.blocks_cells()])
+	_damaged = 0
+	var down_frames := int(ceil(Tuning.TEMPLE_SPIKES_DOWN * 60.0)) - 6
+	await _frames(down_frames)
+	_check(spikes.phase() == spikes.SpikesPhase.DOWN and _damaged == 0, "spikes sleep first and do not hurt (%d)" % _damaged)
+	await _frames(12)
+	_check(spikes.phase() == spikes.SpikesPhase.WARN and _sprite_of(spikes).animation == &"warn" and _damaged == 0,
+			"then they warn with their own frames, still harmless (%s)" % _sprite_of(spikes).animation)
+	await _frames(int(ceil(Tuning.TEMPLE_SPIKES_WARN * 60.0)) + 6)
+	_check(spikes.phase() == spikes.SpikesPhase.UP and spikes.is_hazard_active() and _damaged == 1,
+			"then they rise and hurt Nico standing on them (%d)" % _damaged)
+	await _frames(int(ceil((Tuning.TEMPLE_SPIKES_UP + Tuning.TEMPLE_SPIKES_RETRACT) * 60.0)) + 6)
+	_check(spikes.phase() == spikes.SpikesPhase.DOWN and not spikes.is_hazard_active() and _damaged == 1,
+			"and sink back, harmless again (%d)" % _damaged)
+	spikes.queue_free()
+	await _frames(1)
+
+	# The saw: its track of cells, its groove on the floor, the blade travelling along it, hurting on it.
+	var saw: Node2D = _make(kinds["SAW"], Vector2(208 + 8, 160 - 4))
+	saw.track = 4
+	saw.direction = Vector2i.RIGHT
+	room.add_child(saw)
+	player.global_position = Vector2(80, 80)
+	await _frames(2)
+	var saw_cells: Array[Vector2i] = saw.blocks_cells()
+	_check(_bodies_of(saw) == 0 and saw_cells == [Vector2i(13, 9), Vector2i(14, 9), Vector2i(15, 9), Vector2i(16, 9)],
+			"a saw has no body and keeps the cells of its track (%s)" % [saw_cells])
+	var grooves := 0
+	for child in saw.get_children():
+		if child is AnimatedSprite2D and String(child.name).begins_with("Track"):
+			grooves += 1
+	_check(grooves == 4 and saw.get_node("Mover/Hitbox") != null, "its groove runs the track and its hitbox rides the blade (%d pieces)" % grooves)
+	var first: Vector2 = saw.mover_position()
+	await _frames(30)
+	var later: Vector2 = saw.mover_position()
+	_check(later.x > first.x + 8.0 and later.y == first.y, "the blade travels along its track (%.0f -> %.0f)" % [first.x, later.x])
+	_damaged = 0
+	player.global_position = Vector2(232, 156)
+	await _frames(int(ceil(Tuning.TEMPLE_SAW_HIT_EVERY * 60.0)) + 60)
+	_check(_damaged >= 1, "it hurts Nico standing in its way (%d)" % _damaged)
+	saw.queue_free()
+	player.global_position = Vector2(80, 80)
+	await _frames(1)
+
+	# The rolling rock: it rumbles up, rolls down its lane, breaks at the end and comes again.
+	var rock: Node2D = _make(kinds["ROLLING_ROCK"], Vector2(128 + 8, 160 - 4))
+	rock.track = 6
+	rock.direction = Vector2i.RIGHT
+	room.add_child(rock)
+	await _frames(2)
+	_check(_bodies_of(rock) == 0 and rock.blocks_cells().size() == 6 and rock.blocks_cells()[5] == Vector2i(13, 9),
+			"a rock has no body and keeps the cells of its lane (%s)" % [rock.blocks_cells()])
+	_check(rock.phase() == rock.RockPhase.SPAWN and not rock.is_hazard_active(), "it starts rising, harmless")
+	await _frames(int(ceil(Tuning.TEMPLE_ROCK_SPAWN * 60.0)) + 6)
+	_check(rock.phase() == rock.RockPhase.ROLL and rock.is_hazard_active(), "then it rolls and hurts")
+	_damaged = 0
+	player.global_position = Vector2(184, 150)
+	var lane: float = float((rock.track - 1) * 16)
+	await _frames(int(ceil(lane / Tuning.TEMPLE_ROCK_SPEED * 60.0)) + 6)
+	_check(_damaged >= 1, "it hurts Nico in its lane (%d)" % _damaged)
+	_check(rock.phase() == rock.RockPhase.BREAK and rock.mover_position().x >= rock.position.x + lane - 1.0,
+			"and breaks at the lane's end (%s, %.0f)" % [rock.RockPhase.keys()[rock.phase()], rock.mover_position().x])
+	await _frames(int(ceil((Tuning.TEMPLE_ROCK_BREAK + Tuning.TEMPLE_ROCK_RESPAWN) * 60.0)) + 6)
+	_check(rock.phase() == rock.RockPhase.SPAWN and rock.mover_position() == rock.position,
+			"then rises again at the lane's start (%s)" % rock.RockPhase.keys()[rock.phase()])
+	rock.queue_free()
 
 
 func _finish() -> void:
@@ -164,11 +246,9 @@ func _make(kind: int, at: Vector2) -> Node2D:
 	return prop
 
 
+## The prop's own art (a saw's or a rock's rides on its Mover).
 func _sprite_of(prop: Node) -> AnimatedSprite2D:
-	for child in prop.get_children():
-		if child is AnimatedSprite2D:
-			return child
-	return null
+	return prop.find_child("Art", true, false) as AnimatedSprite2D
 
 
 func _bodies_of(prop: Node) -> int:

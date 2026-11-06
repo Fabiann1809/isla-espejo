@@ -43,14 +43,14 @@ DECKS = "=|bB"
 # TempleProp.Kind (keep in sync with scripts/world/temple_prop.gd).
 (PILLAR_CARVED, PILLAR_BLOCK, COLUMN_LOW, COLUMN_BROKEN, STATUE_GUARDIAN, BRAZIER, BRAZIER_PEDESTAL,
  TORCH_WALL, URN, VASE, BARREL, RUBBLE, ROCK_SMOKING, PLANT, VINES, BANNER, LAVA_FALL, GEYSER,
- FACE_GATE, ALTAR_RUNE, EMBER_VENT) = range(21)
+ FACE_GATE, ALTAR_RUNE, EMBER_VENT, SPIKES, SAW, ROLLING_ROCK) = range(24)
 STRIP = {
     PILLAR_CARVED: "pillar_carved", PILLAR_BLOCK: "pillar_block", COLUMN_LOW: "column_low",
     COLUMN_BROKEN: "column_broken", STATUE_GUARDIAN: "statue_guardian", BRAZIER: "brazier",
     BRAZIER_PEDESTAL: "brazier_pedestal", TORCH_WALL: "torch_wall", URN: "urn", VASE: "vase",
     BARREL: "barrel", RUBBLE: "rubble", ROCK_SMOKING: "rock_smoking", PLANT: "plant", VINES: "vines",
     BANNER: "banner", LAVA_FALL: "lava_fall", GEYSER: "geyser", FACE_GATE: "face_gate",
-    ALTAR_RUNE: "altar_rune", EMBER_VENT: "ember_vent",
+    ALTAR_RUNE: "altar_rune", EMBER_VENT: "ember_vent", SPIKES: "spikes", SAW: "saw", ROLLING_ROCK: "rolling_rock",
 }
 SOLID = {PILLAR_CARVED, PILLAR_BLOCK, COLUMN_LOW, COLUMN_BROKEN, STATUE_GUARDIAN, BRAZIER_PEDESTAL, URN,
          BARREL, ROCK_SMOKING, FACE_GATE, ALTAR_RUNE}
@@ -58,6 +58,10 @@ SOLID = {PILLAR_CARVED, PILLAR_BLOCK, COLUMN_LOW, COLUMN_BROKEN, STATUE_GUARDIAN
 HANGING = {VINES, TORCH_WALL, LAVA_FALL}
 # Kinds that may stand on a lava cell (they are the lava's own: vents, geysers, falls, smoking rocks, vines on a face).
 ON_LAVA = {VINES, LAVA_FALL, GEYSER, EMBER_VENT, ROCK_SMOKING, TORCH_WALL}
+# Traps: they always hurt (through a Hitbox, on a rhythm), never block, and may lie on a lane, since
+# the lane stays walkable between their beats. A saw's track and a rock's lane run `track` cells from
+# the prop's cell along `direction`; every cell of it is kept free of other props and spawns.
+TRAPS = {SPIKES, SAW, ROLLING_ROCK}
 
 with open("assets/sprites/temple_props/props.json", encoding="utf-8") as f:
     PROPS_META = json.load(f)
@@ -118,12 +122,27 @@ class Room:
         return cells
 
     # --- props -----------------------------------------------------------------------------------------------
-    def prop(self, kind, x, y, flip=False, hazard=False, level=None):
+    def prop(self, kind, x, y, flip=False, hazard=False, level=None, track=None, direction=None):
         c = self.at(x, y)
         if level is None:
             level = FLOOR_HEIGHT.get(c, 0)
-        self.props.append({"kind": kind, "cell": (x, y), "flip": flip, "hazard": hazard, "level": level})
+        self.props.append({"kind": kind, "cell": (x, y), "flip": flip, "hazard": hazard, "level": level,
+                           "track": track, "direction": direction})
         return self.props[-1]
+
+    def trap(self, kind, x, y, track=None, direction=(1, 0)):
+        """A trap at (x, y): spikes in that cell, a saw whose track or a rock whose lane starts there
+        and runs `track` cells (the strip's default when None) toward `direction`."""
+        return self.prop(kind, x, y, track=track, direction=direction if kind != SPIKES else None)
+
+    def track_cells(self, prop):
+        """The cells a trap covers: its own, plus its track or lane."""
+        x, y = prop["cell"]
+        if prop["kind"] == SPIKES:
+            return [(x, y)]
+        track = prop["track"] or PROPS_META[STRIP[prop["kind"]]].get("track_cells", 1)
+        dx, dy = prop["direction"] or (1, 0)
+        return [(x + dx * i, y + dy * i) for i in range(track)]
 
     def pair(self, kind, x, y, width=1, hazard=False):
         """The same prop twice, mirrored across the vertical axis, the second one facing the first."""
@@ -174,6 +193,8 @@ class Room:
     def blocks(self, prop):
         """The cells a prop's body (or a hazard geyser's eruption) covers, like TempleProp.blocks_cells."""
         kind = prop["kind"]
+        if kind in TRAPS:
+            return self.track_cells(prop)
         if not (kind in SOLID or (kind == GEYSER and prop["hazard"])):
             return []
         w, h = PROPS_META[STRIP[kind]]["footprint"]
@@ -246,7 +267,7 @@ class Room:
                     problems.append(f"props {STRIP[kind]} and {STRIP[blocked[(bx, by)]]} overlap at {(bx, by)}")
                 blocked[(bx, by)] = kind
                 gate_lane = self.boss and kind == FACE_GATE and bx in LANE_COLUMNS and by < LANE_ROWS[0]
-                if prop["level"] == self.base and self.is_lane(bx, by) and not gate_lane:
+                if prop["level"] == self.base and self.is_lane(bx, by) and not gate_lane and kind not in TRAPS:
                     problems.append(f"prop {STRIP[kind]} at {(x, y)} blocks the lane cell {(bx, by)}")
                 if bc in FLOOR_HEIGHT and (bx, by, FLOOR_HEIGHT[bc]) not in reached and bc != "~":
                     problems.append(f"prop {STRIP[kind]} at {(x, y)} stands on {(bx, by)}, which nobody reaches")
@@ -297,6 +318,10 @@ class Room:
                 block.append(f'level = {prop["level"]}')
             if prop["hazard"]:
                 block.append('hazard = true')
+            if prop["track"]:
+                block.append(f'track = {prop["track"]}')
+            if prop["direction"]:
+                block.append(f'direction = Vector2i({prop["direction"][0]}, {prop["direction"][1]})')
             text.append("\n".join(block) + "\n")
         if self.player_spawn:
             text.append(f'[node name="PlayerSpawn" type="Marker2D" parent="."]\nposition = Vector2{self.player_spawn}\n')
@@ -519,7 +544,7 @@ r.vines(5)
 r.plants(4)
 r.finish()
 
-# --- Trap walk: bridges over the sea to three landings, geysers erupting beside the way ------------------------
+# --- Trap walk: bridges over the sea to three landings; a rolling rock, spikes, saws and geysers on the way -------
 r = room("trap_walk", "TempleTrapWalk", [
     "#############....#############",  # 0
     "#~~~~~~~~~~~~||||~~~~~~~~~~~~#",  # 1
@@ -541,7 +566,16 @@ r = room("trap_walk", "TempleTrapWalk", [
     "#############....#############",  # 17
 ])
 r.want("EnemySpawns", 7, region=(6, 3, 23, 15))
-r.pair(GEYSER, 11, 4, hazard=True)        # the traps: on the landings, beside the way
+# The traps, each with a visible warning and a rhythm that leaves the way open between beats: a rock
+# rolls across the north landing (dust rumbles where it will rise), a band of spikes guards the step
+# down from it and the step down to the south bridge (the slots glow before they rise), two saws
+# sweep the walk's wings beside the west and east bridges, and geysers erupt beside the way.
+r.trap(ROLLING_ROCK, 10, 4, track=11, direction=(1, 0))
+for x in range(13, 17):
+    r.trap(SPIKES, x, 5)
+    r.trap(SPIKES, x, 11)
+r.trap(SAW, 9, 7, track=4, direction=(0, 1))
+r.trap(SAW, 20, 10, track=4, direction=(0, -1))
 r.pair(GEYSER, 11, 11, hazard=True)
 r.pair(GEYSER, 11, 14, hazard=True)
 r.pair(GEYSER, 11, 1)                     # ambient ones in the sea by the bridges
