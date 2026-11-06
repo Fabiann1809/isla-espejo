@@ -296,83 +296,82 @@ def column_broken(frame, n):
     return c
 
 
-GUARDIAN = """
-.............OOOOOO.............
-.............O4444O.............
-........OOOOOO4433OOOOOO........
-........O44444444444444O........
-.........O443333333333O.........
-.........O433333333333O.........
-.........O43OOOO3OOOO3O.........
-.........O43OEEO3OEEO3O.........
-.........O43OEEO3OEEO3O.........
-.........O43OOOO3OOOO3O.........
-.........O433333333333O.........
-.........O43OOOOOOOO33O.........
-.........O43O222222O33O.........
-.........O43OOOOOOOO33O.........
-.........O433333333333O.........
-.........O433333333333O.........
-.OOOOOOOOO444444444444OOOOOOOOO.
-.O4444444433333333333344444444O.
-.O4433333333333333333333333344O.
-.O43333O4333333333333332O33332O.
-.O43333O4333333333333332O33332O.
-.O43333O433333G33G333332O33332O.
-.O43333O4333333GG3333332O33332O.
-.O43333O4333333GG3333332O33332O.
-.O43333O433333G33G333332O33332O.
-.O43333O4333333333333332O33332O.
-.O43333O4333333333333332O33332O.
-.O43333OBBBBBBBGGBBBBBBBO33332O.
-.O43333OBBBBBBBGGBBBBBBBO33332O.
-.O43333O4333333333333332O33332O.
-.O44333O4333333333333332O33332O.
-.O43333O4333333333333332O33332O.
-.OOOOOOO4333333333333332OOOOOOO.
-.......O4333333OO3333332O.......
-.......O4333333OO3333332O.......
-.......O4333333OO3333332O.......
-.......O4333333OO3333332O.......
-.......O4333333OO3333332O.......
-.......O4333333OO3333332O.......
-.......OOOOOOOOOOOOOOOOOOO......
-"""
-
-
 def statue_guardian(frame, n):
-    """A guardian of stone on a plinth: a squat, square figure in a brimmed helm, arms at its sides, a bronze
-    belt and a gold glyph on its chest; its eyes glow with a slow pulse and moss sways on its shoulder."""
+    """A guardian of stone on a plinth: a domed, brimmed helm over a stern face, sloping pauldrons, a
+    chest that narrows to a bronze belt, arms held a little off the body with fists at the hips, a
+    kilt of slabs; its eyes glow with a slow pulse and moss sways on its shoulder."""
     c = Canvas(36, 52)
     pulse = (LAVA_4, LAVA_HI, LAVA_HI, LAVA_4)[frame % 4]
-    rows = [r for r in GUARDIAN.strip("\n").split("\n")]
-    key = {"O": OUTLINE, "4": STONE_4, "3": STONE_3, "2": STONE_2, "E": pulse, "B": BRONZE_2, "G": GOLD_HI}
-    c.ascii(rows, key, 2, 2)
-    # Shading: the right third of the body in shadow, a crack across the chest, chips on the helm.
-    for y in range(2, 42):
+    # Helm: a dome with a wide brim.
+    c.ellipse(18, 9.5, 7.5, 6.5, STONE_3)
+    c.ellipse(16, 8, 4.0, 3.0, STONE_4)
+    c.put(14, 6, STONE_HI)
+    c.put(15, 6, STONE_HI)
+    c.rect(8, 12, 20, 3, STONE_3)
+    c.hline(9, 26, 12, STONE_HI)
+    c.hline(8, 27, 14, STONE_2)
+    c.put(8, 12, CLEAR)
+    c.put(27, 12, CLEAR)
+    # Face under the brim: brow in shadow, glowing eyes, a grim mouth, a rounded jaw.
+    c.rect(12, 15, 12, 10, STONE_3)
+    c.hline(12, 23, 15, STONE_2)
+    c.hline(13, 22, 16, STONE_2)
+    for ex in (14, 20):
+        c.rect(ex - 1, 17, 4, 4, OUTLINE)
+        c.rect(ex, 18, 2, 2, pulse)
+    c.hline(15, 20, 23, OUTLINE)
+    for x, y in ((12, 24), (23, 24), (12, 15), (23, 15)):
+        c.put(x, y, CLEAR)
+    # Neck, pauldrons and a chest that narrows to the belt.
+    c.rect(16, 25, 4, 2, STONE_2)
+    for y in range(27, 41):
+        half = 11 - (y - 27) * 3 // 13
+        c.hline(18 - half, 17 + half, y, STONE_3)
+    c.ellipse(9.5, 29, 3.5, 2.6, STONE_4)
+    c.ellipse(26.5, 29, 3.5, 2.6, STONE_3)
+    c.hline(12, 23, 27, STONE_4)
+    # Arms held off the body, fists at the hips.
+    for x0, col in ((5, STONE_3), (28, STONE_2)):
+        c.rect(x0, 30, 3, 9, col)
+        c.rect(x0 - 1, 38, 4, 3, STONE_3 if x0 < 18 else STONE_2)
+        c.put(x0 + 1, 39, STONE_1)
+    c.vline(8, 30, 40, CLEAR)
+    c.vline(27, 30, 40, CLEAR)
+    # The chest glyph, the belt and its buckle.
+    glyph(c, 16, 30, 2, GOLD_HI)
+    c.rect(10, 35, 16, 2, BRONZE_2)
+    c.hline(10, 25, 36, BRONZE_D)
+    c.rect(17, 35, 2, 2, GOLD_HI)
+    # A kilt of slabs and the feet.
+    c.rect(11, 37, 14, 7, STONE_2)
+    c.vline(17, 37, 43, STONE_1)
+    c.vline(18, 37, 43, STONE_3)
+    c.hline(11, 24, 40, STONE_1)
+    c.rect(10, 43, 7, 2, STONE_3)
+    c.rect(19, 43, 7, 2, STONE_2)
+    # Shading: the right third of the body in shadow, chips and a crack.
+    for y in range(2, 45):
         for x in range(2, 34):
             p = c.get(x, y)
-            if p == STONE_4 and x > 26:
+            if p == STONE_4 and x > 24:
                 c.put(x, y, STONE_3)
-            elif p == STONE_3 and x > 27:
+            elif p == STONE_3 and x > 25:
                 c.put(x, y, STONE_2)
-    for x, y in ((19, 31), (20, 32), (21, 32), (22, 33), (14, 6), (27, 20)):
+    for x, y in ((20, 32), (21, 33), (22, 33), (14, 4), (24, 20), (13, 38)):
         c.put(x, y, JOINT)
-    c.hline(11, 22, 17, STONE_HI)
-    c.hline(10, 25, 5, STONE_HI)
     # The plinth under its feet.
-    stone_block(c, 3, 42, 30, 4, top=STONE_4)
-    stone_block(c, 1, 46, 34, 4, top=STONE_4)
+    stone_block(c, 3, 45, 30, 3, top=STONE_4)
+    stone_block(c, 1, 48, 34, 3, top=STONE_4)
     c.outline()
     # The glow spills onto the brow in the brightest frames; the chest glyph glints once a cycle.
     if frame % 4 in (1, 2):
-        c.hline(13, 16, 8, LAVA_2)
-        c.hline(19, 22, 8, LAVA_2)
+        c.hline(13, 16, 16, LAVA_2)
+        c.hline(19, 22, 16, LAVA_2)
     if frame % 4 == 3:
-        c.put(17, 24, RUNE_GLOW)
-        c.put(18, 24, RUNE_GLOW)
-    moss(c, ((5, 19), (28, 45)), frame, n)
-    embers(c, ((33, 44, 1),), frame, n, rise=3)
+        c.put(17, 31, RUNE_GLOW)
+        c.put(18, 31, RUNE_GLOW)
+    moss(c, ((7, 27), (28, 46)), frame, n)
+    embers(c, ((33, 45, 1),), frame, n, rise=3)
     return c
 
 
@@ -577,20 +576,34 @@ def plant(frame, n):
 
 
 def vines(frame, n):
-    """Vines hanging from a ledge above, their tips swaying."""
-    c = Canvas(16, 28)
+    """Vines hanging from a ledge above: a clump of moss where they root, strands of unequal length
+    that wander and curl at the tip, leaves on alternate sides; the free ends sway."""
+    c = Canvas(18, 30)
     s = [0, 1, 1, 0][frame % 4]
-    strands = ((2, 22, 0), (5, 26, 1), (8, 18, 0), (11, 25, 1), (14, 21, 0))
-    c.hline(0, 15, 0, MOSS_D)
-    c.hline(0, 15, 1, MOSS_1)
-    for x, length, phase in strands:
+    # Where they root: clumps of moss spilling over the ledge, not a bar.
+    for x, w, col in ((1, 4, MOSS_1), (6, 3, MOSS_2), (10, 5, MOSS_1), (16, 2, MOSS_2), (3, 2, MOSS_HI), (12, 2, MOSS_HI)):
+        c.hline(x, x + w - 1, 0, col)
+    for x in (2, 7, 11, 15):
+        c.put(x, 1, MOSS_D)
+    # (root x, length, drift period, phase, curl direction)
+    strands = ((2, 20, 9.0, 0, -1), (5, 27, 7.0, 2, 1), (8, 15, 11.0, 1, 1), (11, 24, 8.0, 3, -1), (14, 19, 10.0, 0, 1), (16, 12, 6.0, 1, -1))
+    for sx, length, period, phase, curl in strands:
         for y in range(1, length):
-            sway = s if y > length - 8 and (phase + frame) % 2 == 0 else 0
-            c.put(x + sway, y, MOSS_1 if y % 3 else MOSS_2)
-            if y % 4 == 2:
-                c.put(x + sway - 1, y, MOSS_2)
-                c.put(x + sway + 1, y + 1, MOSS_HI)
-        c.put(x + s, length, MOSS_HI)
+            drift = round(1.2 * math.sin((y + phase * 2) / period * math.tau))
+            sway = s * curl if y > length - 6 and (phase + frame) % 2 == 0 else 0
+            x = sx + drift + sway
+            c.put(x, y, MOSS_1 if (y + phase) % 3 else MOSS_D)
+            if (y + phase) % 5 == 2:  # a leaf
+                side = 1 if (y // 5 + phase) % 2 else -1
+                c.put(x + side, y, MOSS_2)
+                c.put(x + side * 2, y - 1, MOSS_HI)
+            elif (y + phase) % 7 == 4:
+                c.put(x - 1, y + 1, MOSS_2)
+        # The tip curls sideways and ends in a bright young leaf.
+        tip_x = sx + round(1.2 * math.sin((length + phase * 2) / period * math.tau)) + s * curl
+        c.put(tip_x, length, MOSS_2)
+        c.put(tip_x + curl, length, MOSS_HI)
+        c.put(tip_x + curl, length - 1, MOSS_2)
     c.outline()
     return c
 
