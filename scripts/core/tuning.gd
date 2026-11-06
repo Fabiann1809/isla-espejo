@@ -420,3 +420,67 @@ const TEMPLE_GATE_LIGHT_RADIUS := 80.0
 ## Bounds of a temple light's flicker, as a factor of RUIN_LIGHT_FLICKER_SECONDS (picked per position).
 const TEMPLE_PROP_LIGHT_FLICKER_MIN := 0.8
 const TEMPLE_PROP_LIGHT_FLICKER_MAX := 1.4
+
+# --- Temple: level ---
+## The lava sea around a temple map (LavaBackdrop) reaches this far past the rooms (tiles): wider
+## than the forest's margin, so the sea, its shelves and its islets show around the edge rooms.
+const TEMPLE_BACKDROP_MARGIN_TILES := 6
+## Frames per second of the lava's flow (every cell in step, so the sea reads as one current), of its
+## bursting bubbles, of the crust's pulsing glow and of the lava-lit feet of the cliffs (these three
+## start at random times, so neighbours never pulse together).
+const TEMPLE_LAVA_FPS := 5.0
+const TEMPLE_LAVA_BUBBLE_FPS := 6.0
+const TEMPLE_LAVA_GLOW_FPS := 3.0
+const TEMPLE_LAVA_FOOT_FPS := 4.0
+## Share of the open lava cells (away from any shore or bridge) that carry a bursting bubble.
+const TEMPLE_BACKDROP_BUBBLE_CHANCE := 0.035
+## Islets of rock in the sea: on or off, spacing of their spots (tiles), how far each spot wanders
+## (tiles), the chance that a spot gets one, their size in cells (min, max), tiles of open lava kept
+## between an islet and anything else, and rows of cliff face under their top (min, max; an islet that
+## pours a lava fall always has the most).
+const TEMPLE_BACKDROP_ISLETS := true
+const TEMPLE_BACKDROP_ISLET_STEP := 7
+const TEMPLE_BACKDROP_ISLET_JITTER := 3
+const TEMPLE_BACKDROP_ISLET_CHANCE := 0.6
+const TEMPLE_BACKDROP_ISLET_MIN := Vector2i(2, 2)
+const TEMPLE_BACKDROP_ISLET_MAX := Vector2i(5, 4)
+const TEMPLE_BACKDROP_ISLET_CLEAR_TILES := 2
+const TEMPLE_BACKDROP_ISLET_FACE_ROWS := Vector2i(1, 2)
+## Rock shelves along the north edge of the map (the lava falls pour over them into the sea): chance
+## per spot, their width in cells (min, max), how many rows of top reach into the view (min, max;
+## the first row always lies above it, so no shelf has a top edge) and the gap left between them.
+const TEMPLE_BACKDROP_SHELF_CHANCE := 0.75
+const TEMPLE_BACKDROP_SHELF_WIDTH := Vector2i(3, 6)
+const TEMPLE_BACKDROP_SHELF_ROWS := Vector2i(0, 2)
+const TEMPLE_BACKDROP_SHELF_GAP := Vector2i(1, 4)
+## Chance that an islet or a shelf pours a lava fall, px below the cliff's foot where the fall's splash
+## sits, chance of a smoking rock on an islet, of an ember vent on an inner cell of an islet, of a lone
+## smoking rock out in the lava (per islet spot), of a mossy cliff face and of a detail (moss, cracks,
+## pebbles, embers) on an inner cell.
+const TEMPLE_BACKDROP_FALL_CHANCE := 0.4
+const TEMPLE_BACKDROP_SHELF_FALL_CHANCE := 0.7
+const TEMPLE_BACKDROP_FALL_FOOT := 4.0
+const TEMPLE_BACKDROP_ROCK_CHANCE := 0.45
+const TEMPLE_BACKDROP_VENT_CHANCE := 0.12
+const TEMPLE_BACKDROP_LONE_ROCK_CHANCE := 0.08
+const TEMPLE_BACKDROP_MOSS_CHANCE := 0.3
+const TEMPLE_BACKDROP_DETAIL_CHANCE := 0.2
+## The crust (LavaBackdrop's shade over the sea): the lava darkens with distance from the rooms and
+## bridges, so the way reads bright and the far sea reads as cooled rock with glowing channels. Its
+## colour, how dark far out, tiles from the way where it starts and where it is darkest, how much
+## that edge wobbles (tiles), the wobble's frequency and how far the search for the way goes (tiles).
+const TEMPLE_BACKDROP_CRUST_COLOR := Color(0.1, 0.02, 0.02)
+const TEMPLE_BACKDROP_CRUST_ALPHA := 0.58
+const TEMPLE_BACKDROP_CRUST_NEAR_TILES := 1.5
+const TEMPLE_BACKDROP_CRUST_FAR_TILES := 7.5
+const TEMPLE_BACKDROP_CRUST_WOBBLE := 1.5
+const TEMPLE_BACKDROP_CRUST_FREQUENCY := 0.12
+const TEMPLE_BACKDROP_DEPTH := 14
+## The islets and shelves are darker, warmer rock than the rooms' stone: a tint over their tiles
+## (their lava-lit feet stay bright).
+const TEMPLE_BACKDROP_ISLET_TINT := Color(0.66, 0.52, 0.5)
+## Bridges and stairs between temple rooms: px from the top of a wall tile where the near (south)
+## rail's parapet stands (its y-sort point), and px past the top end of a staircase where each
+## brazier's foot stands (on the high room's wall, flanking the door: half a wall tile).
+const TEMPLE_BRIDGE_RAIL_BASE := 10.0
+const TEMPLE_STAIR_BRAZIER_LANDING := 8.0

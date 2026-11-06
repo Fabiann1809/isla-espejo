@@ -356,9 +356,11 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 
 
 ## A corridor between rooms of different height is a staircase: steps on its floor and a StairZone
-## that changes the level of whoever crosses it, in the direction from the low room to the high one.
+## that changes the level of whoever crosses it, in the direction from the low room to the high one,
+## from the lower room's level to the one above it (the Ruinas climb 0 to 1; the temple also 1 to 2).
 func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector2i) -> void:
-	if scenario.theme.wall_style != RoomTheme.WallStyle.ROCKS:
+	var style := scenario.theme.wall_style
+	if style != RoomTheme.WallStyle.ROCKS and style != RoomTheme.WallStyle.LAVA:
 		return
 	var from_height := layout.get_cell(coord).room_data.height
 	var to_height := layout.get_cell(coord + dir).room_data.height
@@ -366,6 +368,25 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 		return
 	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
 	var vertical := dir == Vector2i.DOWN
+	if style == RoomTheme.WallStyle.LAVA:
+		_dress_temple_stairs(parent, floor_rect, uphill, vertical, maxi(from_height, to_height))
+	else:
+		_dress_ruin_stairs(parent, floor_rect, uphill, vertical)
+	var zone := StairZone.new()
+	zone.direction = uphill
+	zone.low_level = mini(from_height, to_height)
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = floor_rect.size
+	shape.shape = rectangle
+	zone.add_child(shape)
+	zone.position = floor_rect.get_center()
+	parent.add_child(zone)
+
+
+## The Ruinas' staircase: steps between two stone parapets (the outermost cells of the corridor's
+## width, solid) with a torch on each at the top.
+func _dress_ruin_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertical: bool) -> void:
 	var steps: StringName = &"stairs_steps" if vertical else &"stairs_steps_h"
 	var tile := float(TileArt.TILE)
 	var stairs := Node2D.new()
@@ -405,24 +426,43 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 			top = Vector2(floor_rect.position.x if uphill.x < 0.0 else floor_rect.end.x - tile, rail.position.y)
 		torch.position = top
 		parent.add_child(torch)
-	var zone := StairZone.new()
-	zone.direction = uphill
-	var shape := CollisionShape2D.new()
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = floor_rect.size
-	shape.shape = rectangle
-	zone.add_child(shape)
-	zone.position = floor_rect.get_center()
-	parent.add_child(zone)
+
+
+## The temple's staircase: the bridge's rails stay (the corridor was painted as a bridge first) and
+## the whole deck between them becomes steps, with a brazier on a pedestal at the top on each side,
+## standing on the high room's wall where it flanks the door, so the way up is lit and the high end
+## reads as the landing.
+func _dress_temple_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertical: bool, top_level: int) -> void:
+	var stairs := scenario.theme.new_layer(parent, "Stairs%d" % parent.get_child_count())
+	scenario.theme.fill(stairs, _cells(floor_rect), &"stairs_up_steps" if vertical else &"stairs_side_steps")
+	var tile := float(TileArt.TILE)
+	var landing := Tuning.TEMPLE_STAIR_BRAZIER_LANDING
+	for side in [-1.0, 1.0]:
+		var foot: Vector2
+		if vertical:
+			foot.x = floor_rect.position.x - tile / 2.0 if side < 0.0 else floor_rect.end.x + tile / 2.0
+			foot.y = floor_rect.position.y - landing if uphill.y < 0.0 else floor_rect.end.y + landing
+		else:
+			foot.y = floor_rect.position.y - tile / 2.0 if side < 0.0 else floor_rect.end.y + tile / 2.0
+			foot.x = floor_rect.position.x - landing if uphill.x < 0.0 else floor_rect.end.x + landing
+		var brazier := TempleProp.new()
+		brazier.kind = TempleProp.Kind.BRAZIER_PEDESTAL
+		brazier.level = top_level
+		brazier.position = foot.round()
+		parent.add_child(brazier)
 
 
 ## A themed corridor: path tiles on the floor and the border tile (trees) along its walls.
 ## Only collision comes from the wall rectangles.
 func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> void:
-	# Grass under the whole corridor: the trees of its walls and the rounded path edges have
-	# transparent corners.
 	# Numbered names: siblings with the same name would be renamed by the engine.
 	var number := parent.get_child_count()
+	if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		_paint_bridge(parent, floor_rect, walls, number)
+		WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+		return
+	# Grass under the whole corridor: the trees of its walls and the rounded path edges have
+	# transparent corners.
 	var ground := scenario.theme.new_layer(parent, "CorridorGround%d" % number)
 	scenario.theme.fill(ground, _cells(floor_rect), scenario.theme.floor_tile)
 	for wall in walls:
@@ -437,6 +477,48 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 		else:
 			scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
 	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+
+
+## A temple corridor is a stone bridge over the lava: the sea runs under the whole rectangle (its
+## own animated layer, so a bridge has lava under it even with the backdrop off), flagstones on the
+## floor and a parapet with a post at each end on every wall. The parapets are flat with the floor,
+## except the near (south) one of a horizontal bridge, which stands with the actors and sorts by its
+## foot, so Nico walking along it is drawn behind it. Collision stays the wall rectangles'.
+func _paint_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], number: int) -> void:
+	# A corridor is shorter than it is wide: its walls say which way it runs.
+	var horizontal := walls[0].size.x > walls[0].size.y
+	var lava := LavaBackdrop.lava_layer("CorridorLava%d" % number)
+	lava.z_index = RoomTheme.FLOOR_Z
+	parent.add_child(lava)
+	LavaBackdrop.paint_lava(lava, _cells(floor_rect))
+	for wall in walls:
+		LavaBackdrop.paint_lava(lava, _cells(wall))
+	var layer := scenario.theme.new_layer(parent, "Corridor%d" % number)
+	scenario.theme.fill(layer, _cells(floor_rect), &"bridge_stone_deck_h" if horizontal else &"bridge_stone_deck_v")
+	for wall in walls:
+		if horizontal and wall.position.y > floor_rect.position.y:
+			_plant_bridge_rail(parent, wall, number)
+			continue
+		var role: StringName = &"bridge_stone_rail_n" if horizontal \
+				else (&"bridge_stone_rail_w" if wall.position.x < floor_rect.position.x else &"bridge_stone_rail_e")
+		var cells := _cells(wall)
+		scenario.theme.fill(layer, cells, role)
+		var post := TileArt.coords(&"bridge_stone_post")
+		layer.set_cell(cells.position, 0, post)
+		layer.set_cell(cells.end - Vector2i.ONE, 0, post)
+
+
+## The near parapet of a horizontal bridge: upright sprites on a node sorted by the parapet's foot.
+func _plant_bridge_rail(parent: Node, wall: Rect2, number: int) -> void:
+	var rail := Node2D.new()
+	rail.name = "BridgeRail%d" % number
+	rail.z_index = 0
+	rail.position = Vector2(wall.position.x, wall.position.y + Tuning.TEMPLE_BRIDGE_RAIL_BASE)
+	parent.add_child(rail)
+	var cells := int(wall.size.x / TileArt.TILE)
+	for ix in cells:
+		var role: StringName = &"bridge_stone_post" if ix == 0 or ix == cells - 1 else &"bridge_stone_rail_s"
+		rail.add_child(TileArt.sprite(role, Vector2(ix * TileArt.TILE, -Tuning.TEMPLE_BRIDGE_RAIL_BASE)))
 
 
 ## A corridor wall as a row of rock columns, like the rooms' walls (y-sorted with the actors).
@@ -467,19 +549,26 @@ func _plant_corridor_trees(parent: Node, wall: Rect2) -> void:
 		parent.add_child(TreeWall.tree(foot, rng))
 
 
-## The deep forest around and between the rooms (themed scenarios only).
+## The deep forest around and between the rooms (themed scenarios only): rock for the Ruinas, the
+## lava sea for the temple.
 func _build_backdrop() -> void:
 	if scenario.theme == null or not Tuning.BACKDROP_ENABLED:
 		return
 	var walkable := {}
 	for coord: Vector2i in layout.cells:
 		_mark(walkable, _cells(Rect2(cell_origin(coord), CELL_SIZE)))
-	for rect in _corridor_floors:
-		_mark(walkable, _cells(rect))
 	var taken := {}
 	for rect in _corridor_walls:
 		_mark(taken, _cells(rect))
-	var area := _cells(bounds).grow(Tuning.BACKDROP_MARGIN_TILES)
+	var area := _cells(bounds).grow(_backdrop_margin())
+	if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		# A bridge is lava too: the sea runs open under it, so the corridors are "taken", not islands.
+		for rect in _corridor_floors:
+			_mark(taken, _cells(rect))
+		LavaBackdrop.build(_map, area, walkable, taken, current_seed)
+		return
+	for rect in _corridor_floors:
+		_mark(walkable, _cells(rect))
 	if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		RockBackdrop.build(_map, area, walkable, taken, current_seed)
 		return
@@ -550,7 +639,8 @@ func _build_forest_shade(area: Rect2i) -> void:
 ## Dirt paths (doors and corridors) drawn with the rounded edges of the dirt patch instead of
 ## square tiles. Rooms and corridors are separate layers, so the edges are decided on the whole map.
 func _soften_paths() -> void:
-	if scenario.theme == null or not Tuning.SOFT_PATH_EDGES:
+	# The temple has no earth paths: its floors are stone and its corridors are bridges.
+	if scenario.theme == null or not Tuning.SOFT_PATH_EDGES or scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
 		return
 	var path_tile := TileArt.coords(scenario.theme.path_tile)
 	var path_center := TileArt.pattern(TileArt.DIRT_PATCH)[4]
@@ -629,6 +719,13 @@ func _paint_dirt(layers: Array[TileMapLayer], path: Dictionary, path_tile: Vecto
 		DirtArt.repaint_patch(patch, earth)
 
 
+## How far the backdrop (and the camera) reach past the rooms, in tiles: the temple's sea shows wider.
+func _backdrop_margin() -> int:
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		return Tuning.TEMPLE_BACKDROP_MARGIN_TILES
+	return Tuning.BACKDROP_MARGIN_TILES
+
+
 static func _mark(cells: Dictionary, rect: Rect2i) -> void:
 	for y in range(rect.position.y, rect.end.y):
 		for x in range(rect.position.x, rect.end.x):
@@ -657,8 +754,12 @@ func _add_shadows() -> void:
 			ActorShadow.attach(node, alpha)
 	if player != null:
 		ActorShadow.attach(player, alpha)
-## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void.
+## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void; for the
+## temple, solid collision around the sea, so nothing ever leaves the map.
 func _build_boundary() -> void:
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		_build_lava_boundary()
+		return
 	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED 			or scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		return
 	var boundary_script = load("res://scripts/world/forest_boundary.gd")
@@ -669,6 +770,23 @@ func _build_boundary() -> void:
 	add_child(_boundary)
 	move_child(_boundary, 0)
 	_boundary.generate(layout, bounds, current_seed)
+
+
+## Four invisible walls just outside the sea's area (the camera's limits).
+func _build_lava_boundary() -> void:
+	var area := bounds.grow(_backdrop_margin() * TileArt.TILE)
+	var thick := float(TileArt.TILE)
+	var rects: Array[Rect2] = [
+		Rect2(area.position.x - thick, area.position.y - thick, area.size.x + 2.0 * thick, thick),
+		Rect2(area.position.x - thick, area.end.y, area.size.x + 2.0 * thick, thick),
+		Rect2(area.position.x - thick, area.position.y, thick, area.size.y),
+		Rect2(area.end.x, area.position.y, thick, area.size.y),
+	]
+	_boundary = Node2D.new()
+	_boundary.name = "LavaBoundary"
+	add_child(_boundary)
+	move_child(_boundary, 0)
+	WallBuilder.add_walls(_boundary, rects, WallBuilder.WALL_COLOR, false)
 
 
 func _place_player() -> void:
@@ -684,11 +802,12 @@ func _place_player() -> void:
 		player.reset_for_new_map()
 	var start_room: Room = rooms[layout.start_cell]
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
-	Heights.set_level(player, Heights.LOW)
+	# Nico starts on the height of the start room (the ground, everywhere so far).
+	Heights.set_level(player, start_room.height)
 	if player.has_method("set_camera_limits"):
 		# The backdrop is painted this far past the rooms: the camera may show the top wall's crowns
 		# and the side walls of the edge rooms instead of cutting them at the room's line.
-		player.set_camera_limits(bounds.grow(Tuning.BACKDROP_MARGIN_TILES * TileArt.TILE))
+		player.set_camera_limits(bounds.grow(_backdrop_margin() * TileArt.TILE))
 	# A new map starts somewhere else: the camera jumps there instead of gliding across the world.
 	if player.has_method("snap_camera"):
 		player.snap_camera()
