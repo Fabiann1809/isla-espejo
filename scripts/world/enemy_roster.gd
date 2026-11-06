@@ -32,13 +32,15 @@ static func pick(pool: Array[PackedScene], size: int, map_seed: int, base_weight
 		total += weight
 	if total <= 0.0:
 		weights.fill(1.0)
-		total = remaining.size()
 
 	var picks: Array[PackedScene] = []
-	while picks.size() < size and total > 0.0:
-		var index := _draw(weights, total, rng)
+	while picks.size() < size:
+		# The total is summed again from what is left: subtracting the picked weight would drift
+		# (1e-16 instead of 0) and let a weight of 0 through once the positive ones are gone.
+		var index := _draw(weights, rng)
+		if index < 0:
+			break
 		picks.append(remaining[index])
-		total -= weights[index]
 		remaining.remove_at(index)
 		weights.remove_at(index)
 	return picks
@@ -57,15 +59,21 @@ static func enemy_id(scene: PackedScene) -> StringName:
 	return StringName(scene.resource_path.get_file().get_basename())
 
 
-## One weighted draw. A roll that lands past every weight (rounding) still picks something that
-## weighs more than 0.
-static func _draw(weights: Array[float], total: float, rng: RandomNumberGenerator) -> int:
+## One weighted draw among the weights above 0, or -1 when none is left. A roll that lands past
+## every weight (rounding) still picks the last one that weighs something.
+static func _draw(weights: Array[float], rng: RandomNumberGenerator) -> int:
+	var total := 0.0
+	var last_positive := -1
+	for i in weights.size():
+		if weights[i] > 0.0:
+			total += weights[i]
+			last_positive = i
+	if last_positive < 0:
+		return -1
 	var roll := rng.randf() * total
-	var last_positive := 0
 	for i in weights.size():
 		if weights[i] <= 0.0:
 			continue
-		last_positive = i
 		roll -= weights[i]
 		if roll < 0.0:
 			return i

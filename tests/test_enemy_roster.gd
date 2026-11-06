@@ -61,6 +61,25 @@ func _initialize() -> void:
 			ente_seen += 1
 	_check(grunt_seen == 0 and ente_seen == 0, "weight 0 never picked (grunt %d, ente %d of 50)" % [grunt_seen, ente_seen])
 
+	# --- a size over the positive weights stops at them; fractional weights must not drift past 0
+	# (0.1 + 0.2 + 0.3 minus each of them leaves 1e-16 in every order, not 0)
+	var fractional := {&"slime": 0.1, &"planta_tiradora": 0.2, &"esqueleto": 0.3}
+	for id in ENEMIES:
+		if not fractional.has(StringName(id)):
+			fractional[StringName(id)] = 0.0
+	var short_rosters := 0
+	var zero_picked := 0
+	for map_seed in range(1, 101):
+		var roster: Array = _roster.pick(pool, 6, map_seed, fractional, _plan_script.neutral())
+		if roster.size() == 3:
+			short_rosters += 1
+		for id in _ids(roster):
+			if fractional[id] <= 0.0:
+				zero_picked += 1
+	_check(short_rosters == 100 and zero_picked == 0,
+			"a size over the positive weights stops at them, never at a weight 0 (3-long rosters %d of 100, zero-weight picks %d)"
+			% [short_rosters, zero_picked])
+
 	# --- heavier enemies appear more often
 	var heavy_plan = _plan_script.neutral()
 	heavy_plan.enemy_weights = {&"esqueleto": 4.0}

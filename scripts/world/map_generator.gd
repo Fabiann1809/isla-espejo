@@ -229,9 +229,10 @@ static func _neighbour_heights(layout: MapLayout, coord: Vector2i) -> Array[int]
 	return heights
 
 
-## Rooms more than one level away from a neighbour's height weigh 0. If that leaves nothing, the
-## rooms at a neighbour's own height are tried, then any room, so the map is still built. Without
-## neighbour heights (or with every room within reach) the draw is exactly the one it always was.
+## Rooms more than one level away from any neighbour's height weigh 0. If that leaves nothing
+## (neighbours two levels apart and no room between them), the rooms at the height of at least one
+## neighbour are tried, then any room, so the map is still built. Without neighbour heights (or with
+## every room within reach) the draw is exactly the one it always was.
 static func _pick_room(scenario: ScenarioData, type: RoomData.RoomType, rng: RandomNumberGenerator,
 		weight_modifiers: Dictionary, used: Dictionary, neighbour_heights: Array[int] = []) -> RoomData:
 	var pool: Array[RoomData] = []
@@ -253,25 +254,33 @@ static func _pick_room(scenario: ScenarioData, type: RoomData.RoomType, rng: Ran
 			weight *= weight_modifiers.get(tag, 1.0)
 		weights.append(maxf(weight, 0.0))
 
-	var within_reach := _weights_at_heights(pool, weights, neighbour_heights, 1)
+	var within_reach := _weights_within_reach(pool, weights, neighbour_heights)
 	if _sum(within_reach) > 0.0:
 		return pool[_weighted_index(within_reach, rng)]
 	if _sum(weights) > 0.0:
-		var same_height := _weights_at_heights(pool, weights, neighbour_heights, 0)
+		var same_height := _weights_at_any_height(pool, weights, neighbour_heights)
 		if _sum(same_height) > 0.0:
 			return pool[_weighted_index(same_height, rng)]
 	return pool[_weighted_index(weights, rng)]
 
 
-## `weights` with a 0 for every room farther than `reach` levels from one of `heights` (no heights:
-## the weights as they are).
-static func _weights_at_heights(pool: Array[RoomData], weights: Array[float], heights: Array[int],
-		reach: int) -> Array[float]:
+## `weights` with a 0 for every room more than one level from any of `heights` (no heights: the
+## weights as they are).
+static func _weights_within_reach(pool: Array[RoomData], weights: Array[float], heights: Array[int]) -> Array[float]:
 	var result: Array[float] = weights.duplicate()
 	for i in pool.size():
 		for height in heights:
-			if absi(pool[i].height - height) > reach:
+			if absi(pool[i].height - height) > 1:
 				result[i] = 0.0
+	return result
+
+
+## `weights` with a 0 for every room whose height is not one of `heights`.
+static func _weights_at_any_height(pool: Array[RoomData], weights: Array[float], heights: Array[int]) -> Array[float]:
+	var result: Array[float] = weights.duplicate()
+	for i in pool.size():
+		if not heights.has(pool[i].height):
+			result[i] = 0.0
 	return result
 
 

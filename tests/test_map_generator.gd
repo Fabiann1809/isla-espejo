@@ -192,6 +192,26 @@ func _check_heights(base: ScenarioData) -> void:
 	_check(invalid == 0, "height-aware maps stay valid over 200 seeds (invalid: %d)" % invalid)
 	_check(raised > 0 and steps > 0, "raised rooms and one-level steps do appear (%d raised rooms, %d steps)" % [raised, steps])
 
+	# Neighbours two levels apart with nothing between them: the room at one neighbour's height is
+	# picked, never a room at neither (height 3 is only a probe here, beyond the editor's range).
+	var gap: ScenarioData = base.duplicate()
+	var gap_rooms: Array[RoomData] = []
+	for height in [0, 2, 3]:
+		var copy: RoomData = tall[0].duplicate()
+		copy.id = StringName("gap_h%d" % height)
+		copy.height = height
+		gap_rooms.append(copy)
+	gap.rooms = gap_rooms
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var picked_heights := {}
+	var neighbours: Array[int] = [0, 2]
+	for i in 200:
+		var room: RoomData = MapGenerator._pick_room(gap, RoomData.RoomType.COMBAT, rng, {}, {}, neighbours)
+		picked_heights[room.height] = picked_heights.get(room.height, 0) + 1
+	_check(picked_heights.has(0) and picked_heights.has(2) and not picked_heights.has(3),
+			"with neighbours at 0 and 2 and no room between, a room at one neighbour's height is picked (%s)" % [picked_heights])
+
 	# The layout check itself names the pair.
 	var layout := MapLayout.new()
 	layout.grid_size = Vector2i(1, 2)
