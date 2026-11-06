@@ -35,6 +35,8 @@ var roster: Array[PackedScene] = []
 ## Optional: the director's plan and the scenario's weights, applied to the waves like to any enemy.
 var director_plan: DirectorPlan
 var base_weights: Dictionary = {}
+## The map's seed (0 outside a Level): with the room's place, it seeds the waves' draws.
+var map_seed := 0
 
 var _rng := RandomNumberGenerator.new()
 ## Level -> its cells in the order the lava covers them, and the cells that flood first.
@@ -68,8 +70,9 @@ var _said_receding := false
 ## Adds a surge to a room whose RoomData has stages and returns it (null if the room has none, the
 ## feature is off or the room has no temple plan). `roster` is the map's enemy list for the waves.
 ## An empty `enemies` falls back to the roster or the scenario's pool found above the room (a Level),
-## then to `fallback_pool`.
-static func attach_to(target: Node, enemies: Array[PackedScene], fallback_pool: Array[PackedScene] = []) -> Node:
+## then to `fallback_pool`. `map_seed` joins the room's place in seeding the waves' draws, so the same
+## seed gives the same fight.
+static func attach_to(target: Node, enemies: Array[PackedScene], fallback_pool: Array[PackedScene] = [], map_seed := 0) -> Node:
 	if not Tuning.TEMPLE_SURGE_ENABLED or target == null or target.get("data") == null:
 		return null
 	if target.data.surge_stages <= 0:
@@ -81,6 +84,7 @@ static func attach_to(target: Node, enemies: Array[PackedScene], fallback_pool: 
 	surge.name = "LavaSurge"
 	surge.room = target
 	surge.roster = enemies if not enemies.is_empty() else _find_pool(target, fallback_pool)
+	surge.map_seed = map_seed
 	target.add_child(surge)
 	return surge
 
@@ -105,7 +109,7 @@ static func _find_pool(target: Node, fallback_pool: Array[PackedScene]) -> Array
 func _ready() -> void:
 	var shape := room.get_node("Shape")
 	plan = shape.plan if shape.plan != null else TemplePlan.parse(shape.rows)
-	_rng.seed = hash(Vector2i(room.global_position)) + 7
+	_rng.seed = hash([map_seed, Vector2i(room.global_position)]) + 7
 	logic = LavaSurgeLogic.new(room.data.surge_stages, room.data.kills_stage_1, room.data.kills_to_recede)
 	room.cleared.connect(_on_room_cleared)
 	Events.enemy_killed.connect(_on_enemy_killed)

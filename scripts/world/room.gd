@@ -92,12 +92,16 @@ func spawn_points(container: String) -> Array[Vector2]:
 	return points
 
 
-## Fills the room with `count` enemies from `pool`, on the EnemySpawns markers. With a director
-## `plan`, enemies are picked by the plan's weights and tuned by its multipliers.
+## Fills the room with `count` enemies from `pool`, on the EnemySpawns markers (or on `points`, local
+## positions, when given: a surge room's safe cells). With a director `plan`, enemies are picked by
+## the plan's weights and tuned by its multipliers.
 ## An enemy's id is the file name of its scene (grunt.tscn -> "grunt").
 func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenerator,
-		plan: DirectorPlan = null, base_weights: Dictionary = {}) -> void:
-	var points := spawn_points("EnemySpawns")
+		plan: DirectorPlan = null, base_weights: Dictionary = {}, points: Array[Vector2] = []) -> void:
+	if points.is_empty():
+		points = spawn_points("EnemySpawns")
+	else:
+		points = points.duplicate()
 	if pool.is_empty() or points.is_empty():
 		return
 	for i in range(points.size() - 1, 0, -1):

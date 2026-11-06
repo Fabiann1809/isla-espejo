@@ -255,8 +255,8 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 				return
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
-			room.spawn_enemies(roster, plan.adjust_count(count), rng, plan,
-					EnemyRoster.room_weights(scenario.enemy_weights, data.enemy_affinity))
+			var weights := EnemyRoster.room_weights(scenario.enemy_weights, data.enemy_affinity)
+			room.spawn_enemies(roster, plan.adjust_count(count), rng, plan, weights, _surge_spawn_points(room, weights))
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")
@@ -273,6 +273,24 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 			if not scenario.chest_scenes.is_empty():
 				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
 	RoomDressing.dress(room)
+
+
+## A surge room (RoomData.surge_stages > 0, the temple) gets its LavaSurge, fed with the map's roster,
+## the director's plan and the room's weights; its own enemies are born only on the cells that stay
+## safe when the lava is highest, so the fight is always reachable. Empty for any other room: the
+## room's markers are used.
+func _surge_spawn_points(room: Room, weights: Dictionary) -> Array[Vector2]:
+	var points: Array[Vector2] = []
+	if room.data.surge_stages <= 0 or not Tuning.TEMPLE_SURGE_ENABLED:
+		return points
+	var surge := LavaSurge.attach_to(room, roster, scenario.enemy_pool, current_seed)
+	if surge == null:
+		return points
+	surge.director_plan = plan
+	surge.base_weights = weights
+	for cell in surge.safe_spawn_cells():
+		points.append(Vector2(cell) * TileArt.TILE + Vector2.ONE * TileArt.TILE / 2.0)
+	return points
 
 
 ## The last combat room on the way to the boss, if the scenario has a mini boss.
@@ -365,6 +383,10 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 	var from_height := layout.get_cell(coord).room_data.height
 	var to_height := layout.get_cell(coord + dir).room_data.height
 	if from_height == to_height:
+		return
+	if absi(from_height - to_height) > 1:
+		# A staircase climbs one level: the generator never joins rooms two levels apart (MapLayout.validate).
+		push_error("No staircase between %s (height %d) and %s (height %d): two levels apart" % [coord, from_height, coord + dir, to_height])
 		return
 	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
 	var vertical := dir == Vector2i.DOWN
