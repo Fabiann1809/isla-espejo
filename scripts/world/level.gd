@@ -511,7 +511,7 @@ func _paint_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], number:
 	# A corridor is shorter than it is wide: its walls say which way it runs.
 	var horizontal := walls[0].size.x > walls[0].size.y
 	var lava := LavaBackdrop.lava_layer("CorridorLava%d" % number)
-	lava.z_index = RoomTheme.FLOOR_Z
+	lava.z_index = LavaBackdrop.SEA_Z
 	parent.add_child(lava)
 	LavaBackdrop.paint_lava(lava, _cells(floor_rect))
 	for wall in walls:
@@ -588,7 +588,19 @@ func _build_backdrop() -> void:
 		# A bridge is lava too: the sea runs open under it, so the corridors are "taken", not islands.
 		for rect in _corridor_floors:
 			_mark(taken, _cells(rect))
-		LavaBackdrop.build(_map, area, walkable, taken, current_seed)
+		# The islands are the rooms' stone, not their rectangles: the sea's crust and shores measure
+		# from the shapes' cells, so no rectangle shows around a room.
+		var stone := {}
+		for coord: Vector2i in layout.cells:
+			var room: Room = rooms[coord]
+			var shape := room.get_node_or_null("Shape")
+			var origin := Vector2i(cell_origin(coord)) / TileArt.TILE
+			if shape != null and shape.has_method("island_cells"):
+				for cell: Vector2i in shape.island_cells():
+					stone[origin + cell] = true
+			else:
+				_mark(stone, _cells(Rect2(cell_origin(coord), CELL_SIZE)))
+		LavaBackdrop.build(_map, area, stone, taken, current_seed, walkable)
 		return
 	for rect in _corridor_floors:
 		_mark(walkable, _cells(rect))

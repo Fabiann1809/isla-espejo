@@ -45,7 +45,7 @@ func _shoot_room(data: RoomData, theme: RoomTheme) -> void:
 	world.position = Vector2.ONE * MARGIN
 	viewport.add_child(world)
 	var lava := LavaBackdrop.lava_layer("Sea")
-	lava.z_index = RoomTheme.FLOOR_Z - 1
+	lava.z_index = LavaBackdrop.SEA_Z
 	world.add_child(lava)
 	var tiles := Vector2i(ROOM_SIZE) / TileArt.TILE
 	var margin_tiles := MARGIN / TileArt.TILE

@@ -236,6 +236,10 @@ func _build_themed_floor() -> void:
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(position))
+	# A lava-walled room is painted whole by its Shape (lava under the floors, at the sea's z):
+	# a ground of stone here would cover that lava, so its layers stay empty.
+	if theme.wall_style == RoomTheme.WallStyle.LAVA:
+		return
 	# Irregular patches of a second grass, continuous across rooms (sampled in world tiles).
 	var patches := FastNoiseLite.new()
 	patches.frequency = Tuning.GRASS_PATCH_FREQUENCY

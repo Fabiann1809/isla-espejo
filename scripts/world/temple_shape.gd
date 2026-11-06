@@ -4,8 +4,11 @@ extends Node2D
 ## three height levels over a sea of lava. The plan is text (`rows`, see TemplePlan for the alphabet)
 ## and this node, named `Shape` in the room scene, turns it into pictures, bodies, stairs and props.
 ##
-## Pictures are tile layers at the floor's z, bottom to top: the animated lava (a 4x4 macro plan of
-## 8 frames, all in step) with bubbles bursting at random over a few cells; the cliff faces on the
+## Pictures are tile layers at the floor's z, bottom to top: the animated lava (the sea's macro,
+## picked by WORLD tile through `LavaBackdrop.lava_animation`, at `LavaBackdrop.SEA_Z` like every
+## lava of the map, so the room's lava and the sea around it are one body with no seam at the room's
+## rectangle and the backdrop's drifting plates and crust lie over both) with bubbles bursting at
+## random over a few cells; the cliff faces on the
 ## south side of every drop (one row per level, moss on some, the foot lit by the lava where it
 ## stands in it); the floor of every level in its own stone (macro plans of slabs) with moss, cracks
 ## and glowing runes off the door lanes; the crust rims on the lava around every island, their cracks
@@ -60,7 +63,7 @@ func _ready() -> void:
 	_rng = RandomNumberGenerator.new()
 	_rng.seed = hash(Vector2i(global_position))
 	for layer_name in LAYER_NAMES:
-		_layers[layer_name] = _new_layer(layer_name)
+		_layers[layer_name] = _new_layer(layer_name, LavaBackdrop.SEA_Z if layer_name == "Lava" else RoomTheme.FLOOR_Z)
 	_find_faces()
 	_build_lava()
 	_build_faces()
@@ -81,6 +84,21 @@ func _ready() -> void:
 ## into lava there, so the room must plant no wall art on it.
 func hides_wall_at(cell: Vector2i) -> bool:
 	return plan != null and plan.errors.is_empty() and _is_wall(cell)
+
+
+## The island's cells (room tiles): everything of the plan that is not lava or the wall ring (floors,
+## stairs, masonry, pillar slots, decks). The sea measures its crust from them, never from the
+## room's rectangle.
+func island_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if plan == null or not plan.errors.is_empty():
+		return cells
+	for y in ROWS:
+		for x in COLUMNS:
+			var cell := Vector2i(x, y)
+			if not _is_wall(cell) and plan.cell_at(cell) != TemplePlan.LAVA:
+				cells.append(cell)
+	return cells
 
 
 # --- reading the plan for the pictures ----------------------------------------------------------------
@@ -228,10 +246,10 @@ func _find_faces() -> void:
 
 
 # --- pictures ------------------------------------------------------------------------------------------------------
-func _new_layer(layer_name: String) -> TileMapLayer:
+func _new_layer(layer_name: String, z: int) -> TileMapLayer:
 	var layer := TileMapLayer.new()
 	layer.name = layer_name
-	layer.z_index = RoomTheme.FLOOR_Z
+	layer.z_index = z
 	layer.tile_set = animated_tile_set()
 	layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	layer.scale = Vector2.ONE * TileArt.draw_scale()
@@ -254,13 +272,14 @@ func _paint_animated(layer_name: String, cell: Vector2i, animation: StringName) 
 	_layers[layer_name].set_cell(cell, 0, frames[0])
 
 
-## The lava sea under everything (a 4x4 macro plan, so no seam repeats every cell) and bubbles
-## bursting over a few open cells, each at its own moment.
+## The lava sea under everything (the sea's own macro, by world tile, so the room's lava continues
+## the sea around it) and bubbles bursting over a few open cells, each at its own moment.
 func _build_lava() -> void:
+	var origin := Vector2i((global_position / TILE).floor())
 	for y in ROWS:
 		for x in COLUMNS:
 			var cell := Vector2i(x, y)
-			_paint_animated("Lava", cell, StringName("lava_m_%d_%d" % [x % MACRO, y % MACRO]))
+			_paint_animated("Lava", cell, LavaBackdrop.lava_animation(origin + cell))
 			if _is_open_lava(cell) and not _is_deck(cell) and _rng.randf() < Tuning.TEMPLE_BUBBLE_SHARE:
 				_paint_animated("Bubbles", cell, &"lava_bubble_over")
 
@@ -391,8 +410,11 @@ func _build_bridges() -> void:
 				for end in [Vector2i.LEFT, Vector2i.RIGHT]:
 					if _is_deck(cell + end):
 						continue
-					for corner in [cell + end + Vector2i.UP, cell + end + Vector2i.DOWN]:
-						if _post_fits(corner):
+					# A post caps each rail: only at the deck's outer rows, never a row of posts
+					# across a wide deck's end.
+					for side in [Vector2i.UP, Vector2i.DOWN]:
+						var corner: Vector2i = cell + end + side
+						if not _is_deck(cell + side) and _post_fits(corner):
 							rails.add_child(_standing(post, corner))
 			else:
 				for side in [[Vector2i.LEFT, "w"], [Vector2i.RIGHT, "e"]]:
@@ -402,8 +424,9 @@ func _build_bridges() -> void:
 				for end in [Vector2i.UP, Vector2i.DOWN]:
 					if _is_deck(cell + end):
 						continue
-					for corner in [cell + end + Vector2i.LEFT, cell + end + Vector2i.RIGHT]:
-						if _post_fits(corner):
+					for side in [Vector2i.LEFT, Vector2i.RIGHT]:
+						var corner: Vector2i = cell + end + side
+						if not _is_deck(cell + side) and _post_fits(corner):
 							rails.add_child(_standing(post, corner))
 
 

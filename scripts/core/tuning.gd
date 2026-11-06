@@ -434,18 +434,37 @@ const TEMPLE_LAVA_GLOW_FPS := 3.0
 const TEMPLE_LAVA_FOOT_FPS := 4.0
 ## Share of the open lava cells (away from any shore or bridge) that carry a bursting bubble.
 const TEMPLE_BACKDROP_BUBBLE_CHANCE := 0.035
-## Islets of rock in the sea: on or off, spacing of their spots (tiles), how far each spot wanders
-## (tiles), the chance that a spot gets one, their size in cells (min, max), tiles of open lava kept
-## between an islet and anything else, and rows of cliff face under their top (min, max; an islet that
-## pours a lava fall always has the most).
+## The sea's lava is painted from three edge-matched macro variants of the sheet (8x8 tiles each):
+## every 8x8 block of the world picks one by a world-space noise of this frequency (per block), so the
+## pattern never repeats on a grid. 0 = always the first variant.
+const TEMPLE_LAVA_VARIANT_FREQUENCY := 0.4
+## Big plates of cooler crust drifting slowly over every lava of the map (the sea, the rooms' lava
+## and the bridges' alike; under every floor): a tiling noise picture of TEMPLE_BACKDROP_PLATE_SIZE
+## texels, one texel per TEMPLE_BACKDROP_PLATE_TEXEL px. Their colour and alpha (0 = off), the share
+## of the sea they cover, how soft their edge is (in noise units), the noise frequency (per texel)
+## and their drift (px/s, x and y).
+const TEMPLE_BACKDROP_PLATE_COLOR := Color(0.14, 0.03, 0.02)
+const TEMPLE_BACKDROP_PLATE_ALPHA := 0.32
+const TEMPLE_BACKDROP_PLATE_SIZE := 256
+const TEMPLE_BACKDROP_PLATE_TEXEL := 4
+const TEMPLE_BACKDROP_PLATE_COVER := 0.42
+const TEMPLE_BACKDROP_PLATE_EDGE := 0.1
+const TEMPLE_BACKDROP_PLATE_FREQUENCY := 0.028
+const TEMPLE_BACKDROP_PLATE_DRIFT := Vector2(2.5, 1.0)
+## Islets of rock in the sea: on or off, one islet tried per this many tiles of the sea (fewer with a
+## bigger number; the spots are random, never a grid), their size in cells (min, max: the blob is cut
+## from a box of that size, so it is irregular and smaller), the chance that a tried islet is a big
+## one (the upper half of the sizes), tiles of open lava kept between an islet and anything else,
+## rows of cliff face under their top (min, max; an islet that pours a lava fall always has the
+## most) and the chance that an islet carries a ruin (a broken column or a brazier) on its top.
 const TEMPLE_BACKDROP_ISLETS := true
-const TEMPLE_BACKDROP_ISLET_STEP := 7
-const TEMPLE_BACKDROP_ISLET_JITTER := 3
-const TEMPLE_BACKDROP_ISLET_CHANCE := 0.6
-const TEMPLE_BACKDROP_ISLET_MIN := Vector2i(2, 2)
-const TEMPLE_BACKDROP_ISLET_MAX := Vector2i(5, 4)
+const TEMPLE_BACKDROP_ISLET_PER_TILES := 120
+const TEMPLE_BACKDROP_ISLET_MIN := Vector2i(3, 3)
+const TEMPLE_BACKDROP_ISLET_MAX := Vector2i(10, 6)
+const TEMPLE_BACKDROP_ISLET_BIG_CHANCE := 0.35
 const TEMPLE_BACKDROP_ISLET_CLEAR_TILES := 2
-const TEMPLE_BACKDROP_ISLET_FACE_ROWS := Vector2i(1, 2)
+const TEMPLE_BACKDROP_ISLET_FACE_ROWS := Vector2i(1, 3)
+const TEMPLE_BACKDROP_RUIN_CHANCE := 0.35
 ## Rock shelves along the north edge of the map (the lava falls pour over them into the sea): chance
 ## per spot, their width in cells (min, max), how many rows of top reach into the view (min, max;
 ## the first row always lies above it, so no shelf has a top edge) and the gap left between them.
@@ -465,20 +484,25 @@ const TEMPLE_BACKDROP_VENT_CHANCE := 0.12
 const TEMPLE_BACKDROP_LONE_ROCK_CHANCE := 0.08
 const TEMPLE_BACKDROP_MOSS_CHANCE := 0.3
 const TEMPLE_BACKDROP_DETAIL_CHANCE := 0.2
-## The crust (LavaBackdrop's shade over the sea): the lava darkens with distance from the rooms and
-## bridges, so the way reads bright and the far sea reads as cooled rock with glowing channels. Its
-## colour, how dark far out, tiles from the way where it starts and where it is darkest, how much
-## that edge wobbles (tiles), the wobble's frequency and how far the search for the way goes (tiles).
+## The crust (LavaBackdrop's shade over the sea): the lava darkens with distance from the islands'
+## stone (the rooms' floors, not their rectangles) and the bridges, so the way reads bright and the
+## far sea reads as cooled rock with glowing channels. Its colour, how dark far out, tiles from the
+## stone where it starts and where it is darkest, how much that edge wobbles (tiles), the wobble's
+## frequency, how much a second, slower noise mottles the far crust (0..1: cooled regions darker,
+## channels lighter), the share of it that falls on the islets' rock (they stand out of the sea) and
+## how far the search for the stone goes (tiles).
 const TEMPLE_BACKDROP_CRUST_COLOR := Color(0.1, 0.02, 0.02)
-const TEMPLE_BACKDROP_CRUST_ALPHA := 0.58
-const TEMPLE_BACKDROP_CRUST_NEAR_TILES := 1.5
-const TEMPLE_BACKDROP_CRUST_FAR_TILES := 7.5
-const TEMPLE_BACKDROP_CRUST_WOBBLE := 1.5
-const TEMPLE_BACKDROP_CRUST_FREQUENCY := 0.12
-const TEMPLE_BACKDROP_DEPTH := 14
+const TEMPLE_BACKDROP_CRUST_ALPHA := 0.52
+const TEMPLE_BACKDROP_CRUST_NEAR_TILES := 2.0
+const TEMPLE_BACKDROP_CRUST_FAR_TILES := 9.0
+const TEMPLE_BACKDROP_CRUST_WOBBLE := 3.5
+const TEMPLE_BACKDROP_CRUST_FREQUENCY := 0.09
+const TEMPLE_BACKDROP_CRUST_MOTTLE := 0.45
+const TEMPLE_BACKDROP_CRUST_ON_ROCK := 0.4
+const TEMPLE_BACKDROP_DEPTH := 16
 ## The islets and shelves are darker, warmer rock than the rooms' stone: a tint over their tiles
 ## (their lava-lit feet stay bright).
-const TEMPLE_BACKDROP_ISLET_TINT := Color(0.66, 0.52, 0.5)
+const TEMPLE_BACKDROP_ISLET_TINT := Color(0.82, 0.7, 0.66)
 ## Bridges and stairs between temple rooms: px from the top of a wall tile where the near (south)
 ## rail's parapet stands (its y-sort point), and px past the top end of a staircase where each
 ## brazier's foot stands (on the high room's wall, flanking the door: half a wall tile).

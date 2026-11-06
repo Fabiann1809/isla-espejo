@@ -88,12 +88,13 @@ func _initialize() -> void:
 	var problems: Array = shape.plan.validate()
 	_check(problems.is_empty(), "the test plan is a valid design (%s)" % [problems])
 
-	# Layers exist, in draw order, all with the floor's z.
+	# Layers exist, in draw order, all with the floor's z (the lava at the sea's, under the floors).
 	var last_index := -1
 	var in_order := true
 	for layer_name in LAYERS:
 		var layer := shape.get_node_or_null(layer_name) as TileMapLayer
-		if layer == null or layer.z_index != RoomTheme.FLOOR_Z or layer.get_index() <= last_index:
+		var wanted_z: int = LavaBackdrop.SEA_Z if layer_name == "Lava" else RoomTheme.FLOOR_Z
+		if layer == null or layer.z_index != wanted_z or layer.get_index() <= last_index:
 			in_order = false
 			print("  layer %s: %s" % [layer_name, "missing" if layer == null else "index %d z %d" % [layer.get_index(), layer.z_index]])
 		else:
