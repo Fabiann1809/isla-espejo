@@ -491,7 +491,6 @@ const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
 ## the lava's light on the foot of a cliff, the glowing runes and the sheet's fires (brazier, torch).
 ## On: the temple's lava, glows and fires play their frames. Off: everything is painted still (first frame).
 const TEMPLE_SHAPE_ANIMATE := true
-const TEMPLE_LAVA_FPS := 6.0
 const TEMPLE_BUBBLE_FPS := 7.0
 const TEMPLE_RIM_GLOW_FPS := 3.0
 const TEMPLE_FOOT_GLOW_FPS := 5.0
