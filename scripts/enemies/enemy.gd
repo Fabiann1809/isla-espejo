@@ -94,10 +94,14 @@ var _status_tinted := false
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# An enemy lives on the height of the room that holds it.
+	# An enemy lives on the height of the floor it is born on: the platform's level in a temple
+	# room (Room.height_at), else the height of the room that holds it.
 	var level := Heights.level_of(self)
-	if get_parent() != null and "height" in get_parent():
-		level = get_parent().height
+	var parent := get_parent()
+	if parent != null and parent.has_method("height_at"):
+		level = parent.height_at(position)
+	elif parent != null and "height" in parent:
+		level = parent.height
 	Heights.set_level(self, level)
 	if data == null:
 		push_error("Enemy '%s' has no EnemyData assigned." % name)

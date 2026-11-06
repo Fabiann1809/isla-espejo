@@ -158,6 +158,19 @@ func home_rect() -> Rect2:
 	return Rect2(global_position, pixel_size())
 
 
+## The height level of the floor at `local` (room pixels): the Shape's plan where the room has one
+## with heights (a temple island), never below 0 (lava counts as the ground); otherwise the room's
+## own height. An enemy born here takes it (Enemy._ready).
+func height_at(local: Vector2) -> int:
+	var shape := get_node_or_null("Shape")
+	if shape != null and "plan" in shape and shape.plan != null:
+		var cell := Vector2i((local / TILE).floor())
+		var level: int = shape.plan.height_at(cell)
+		if level != TemplePlan.MASONRY_HEIGHT:
+			return clampi(level, Heights.LOW, Heights.TOP)
+	return height
+
+
 func register_enemy(enemy: Node) -> void:
 	enemies_alive += 1
 	_had_enemies = true
@@ -231,7 +244,9 @@ func _build_themed_floor() -> void:
 				ground.set_cell(cell, 0, TileArt.coords(theme.path_tile))
 				patch_layer.erase_cell(cell)
 				decor.erase_cell(cell)
-			elif not theme.forest_art_details and theme.wall_style != RoomTheme.WallStyle.ROCKS:
+			elif not theme.forest_art_details and theme.wall_style == RoomTheme.WallStyle.TREES:
+				# Rock walls are planted below; a lava-walled room has no wall art at all: its
+				# island's edge, drawn by the Shape, drops into the lava on the border.
 				border.set_cell(cell, 0, TileArt.coords(theme.border_tile))
 	_add_detail_groups(decor, rng)
 	_paint_door_paths(ground, decor, patch_layer)
@@ -348,10 +363,11 @@ func _plant_rock_wall(rng: RandomNumberGenerator) -> void:
 		rocks.add_child(RockWall.column(foot, rng))
 
 
-## Drops the feet of wall columns where the room's plan lets the rock lean on the wall (RuinShape).
+## Drops the feet of wall columns where the room's plan hides the wall: the rock leans on it
+## (RuinShape) or the island's edge drops into lava there (TempleShape). Duck-typed on `hides_wall_at`.
 func _without_hidden(feet: Array[Vector2]) -> Array[Vector2]:
-	var shape := get_node_or_null("Shape") as RuinShape
-	if shape == null:
+	var shape := get_node_or_null("Shape")
+	if shape == null or not shape.has_method("hides_wall_at"):
 		return feet
 	return feet.filter(func(foot: Vector2) -> bool:
 		return not shape.hides_wall_at(Vector2i(foot / TILE).clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)))

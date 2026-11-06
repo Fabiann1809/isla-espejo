@@ -484,3 +484,36 @@ const TEMPLE_BACKDROP_ISLET_TINT := Color(0.66, 0.52, 0.5)
 ## brazier's foot stands (on the high room's wall, flanking the door: half a wall tile).
 const TEMPLE_BRIDGE_RAIL_BASE := 10.0
 const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
+
+# --- Temple: shape ---
+## A temple room (TempleShape) is a stone island over a sea of lava. Frames per second of the lava's
+## flow (the 4x4 macro sea, all in step), its bubbles, the pulsing cracks of the crust along the rims,
+## the lava's light on the foot of a cliff, the glowing runes and the sheet's fires (brazier, torch).
+const TEMPLE_LAVA_FPS := 6.0
+const TEMPLE_BUBBLE_FPS := 7.0
+const TEMPLE_RIM_GLOW_FPS := 3.0
+const TEMPLE_FOOT_GLOW_FPS := 5.0
+const TEMPLE_RUNE_GLOW_FPS := 2.0
+const TEMPLE_FIRE_FPS := 7.0
+## Share of the open lava cells that bubble, of the cliff faces that hang moss, and of the floor cells
+## (off the door lanes) that carry moss, cracks and glowing runes (runes on levels 1 and 2 only).
+const TEMPLE_BUBBLE_SHARE := 0.04
+const TEMPLE_FACE_MOSS_SHARE := 0.25
+const TEMPLE_FLOOR_MOSS_SHARE := 0.05
+const TEMPLE_FLOOR_CRACK_SHARE := 0.03
+const TEMPLE_FLOOR_RUNE_SHARE := 0.015
+## Chance that a `p` cell holds a pillar of blocks instead of a carved one.
+const TEMPLE_PILLAR_BLOCK_CHANCE := 0.35
+## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
+## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava
+## cells (0 = none) with this many embers rising from it (0 = none), their life (s), their climb
+## (px/s, min and max), the upward pull (px/s²) and their colour.
+const TEMPLE_RIM_LIGHT_EVERY := 12
+const TEMPLE_RIM_LIGHT := Color(1.0, 0.45, 0.12, 0.2)
+const TEMPLE_RIM_LIGHT_RADIUS := 32.0
+const TEMPLE_EMBER_VENT_EVERY := 40
+const TEMPLE_EMBERS := 6
+const TEMPLE_EMBER_LIFETIME := 1.8
+const TEMPLE_EMBER_SPEED := Vector2(8.0, 18.0)
+const TEMPLE_EMBER_RISE := 14.0
+const TEMPLE_EMBER_COLOR := Color(1.0, 0.6, 0.2, 0.9)

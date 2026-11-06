@@ -112,19 +112,18 @@ func _initialize() -> void:
 	_check(player.global_position.x < 398.0, "a high Nico is blocked by it (x = %.0f)" % player.global_position.x)
 	high_pillar.queue_free()
 
-	# A pillar on level 2 blocks only level-2 actors (needs Heights.block_layer).
-	if Heights.new().has_method("block_layer"):
-		var top_pillar: Node2D = _make(kinds["PILLAR_CARVED"], Vector2(400, 150))
-		top_pillar.level = 2
-		room.add_child(top_pillar)
-		await _frames(2)
-		await _walk(player, Vector2(370, 150), 1, "move_right", 40)
-		_check(player.global_position.x > 420.0, "a high Nico walks through a level-2 pillar (x = %.0f)" % player.global_position.x)
-		await _walk(player, Vector2(370, 150), 2, "move_right", 40)
-		_check(player.global_position.x < 398.0, "a level-2 Nico is blocked by it (x = %.0f)" % player.global_position.x)
-		top_pillar.queue_free()
-	else:
-		print("SKIP a pillar on level 2 blocks only level-2 actors (Heights has no block_layer yet)")
+	# A pillar on level 2 blocks only level-2 actors (Heights.block_layer).
+	var top_pillar: Node2D = _make(kinds["PILLAR_CARVED"], Vector2(400, 150))
+	top_pillar.level = 2
+	room.add_child(top_pillar)
+	await _frames(2)
+	_check(top_pillar.get_node("Body").collision_layer == 1 << (Heights.block_layer(2) - 1),
+			"a level-2 pillar's body is on the layer that blocks level 2")
+	await _walk(player, Vector2(370, 150), 1, "move_right", 40)
+	_check(player.global_position.x > 420.0, "a high Nico walks through a level-2 pillar (x = %.0f)" % player.global_position.x)
+	await _walk(player, Vector2(370, 150), 2, "move_right", 40)
+	_check(player.global_position.x < 398.0, "a level-2 Nico is blocked by it (x = %.0f)" % player.global_position.x)
+	top_pillar.queue_free()
 	Heights.set_level(player, 0)
 
 	# A hazard geyser hurts Nico only while erupting; an ambient one never does.

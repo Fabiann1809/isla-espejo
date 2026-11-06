@@ -191,15 +191,10 @@ static func _meta_of(strip_name: String) -> Dictionary:
 ## Collision bits of the prop's height level: the layer that blocks the actors standing on `level`,
 ## plus `world` on the ground so arrows and everyone else stop at it too.
 func _layer_bits() -> int:
-	var bits := 1 << (_block_layer(level) - 1)
+	var bits := 1 << (Heights.block_layer(level) - 1)
 	if level == 0:
 		bits |= WORLD_BITS
 	return bits
-
-
-# TODO(heights): use Heights.block_layer(level) once it lands (8, 9 or 10 for levels 0, 1 and 2).
-static func _block_layer(height_level: int) -> int:
-	return 8 + height_level
 
 
 ## A body over the footprint, centered on the foot, so only the base blocks.
