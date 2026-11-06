@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/event.tscn" id="1_furtw"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_ukltn"]
+
+[resource]
+script = ExtResource("2_ukltn")
+id = &"temple_event"
+type = 2
+scene = ExtResource("1_furtw")
+min_enemies = 0
+max_enemies = 0

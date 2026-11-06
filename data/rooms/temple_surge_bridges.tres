@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/surge_bridges.tscn" id="1_on27c"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_uvkf5"]
+
+[resource]
+script = ExtResource("2_uvkf5")
+id = &"temple_surge_bridges"
+scene = ExtResource("1_on27c")
+weight = 2.0
+tags = Array[StringName]([&"surge", &"bridges"])
+enemy_affinity = {
+&"arana_talladora": 0.0,
+&"gusano_puentes": 2.0,
+&"manta_hollin": 1.5,
+&"nucleo_cria": 0.0
+}
+surge_stages = 2
+kills_stage_1 = 4

@@ -1,6 +1,7 @@
 extends SceneTree
 ## The chapters are chained: the forest's exit leads to the ruins, whose map is built in the same level with
-## its own theme and tileset, and the player keeps what the boss gave.
+## its own theme and tileset, the ruins lead to the temple (the last chapter), and the player keeps what the
+## boss gave.
 ## `Level` and other autoload-using types must not be referenced here (autoload compile order).
 ## Run: godot --headless --path . --script res://tests/test_chapters.gd
 
@@ -15,8 +16,10 @@ func _initialize() -> void:
 	var events = root.get_node("Events")
 	var forest: Resource = load("res://data/scenarios/forest.tres")
 	var ruins: Resource = load("res://data/scenarios/ruins.tres")
+	var temple: Resource = load("res://data/scenarios/temple.tres")
 	_check(forest.next_scenario == ruins, "the forest leads to the ruins")
-	_check(ruins.next_scenario == null, "and the ruins are the last chapter so far")
+	_check(temple != null and ruins.next_scenario == temple, "the ruins lead to the temple")
+	_check(temple != null and temple.next_scenario == null, "and the temple is the last chapter")
 
 	var level: Node2D = load("res://scenes/levels/forest_level.tscn").instantiate()
 	level.seed_value = 11

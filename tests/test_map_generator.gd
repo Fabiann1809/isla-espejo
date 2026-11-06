@@ -149,6 +149,7 @@ func _initialize() -> void:
 
 	_check_heights(scenario)
 	_check_reference_layouts()
+	_check_real_scenarios()
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
@@ -226,6 +227,23 @@ func _check_heights(base: ScenarioData) -> void:
 			"validate() reports a height step > 1: %s" % [layout.validate()])
 	layout.get_cell(Vector2i(0, 0)).room_data = tall[1]
 	_check(layout.validate().is_empty(), "a one-level step is fine: %s" % [layout.validate()])
+
+
+## Every real scenario (the temple with its three heights too) builds valid maps: no room two
+## levels from a connected neighbour, every cell reached, the counts of special rooms right.
+func _check_real_scenarios() -> void:
+	for name in ["forest", "ruins", "temple"]:
+		var scenario: ScenarioData = load("res://data/scenarios/%s.tres" % name)
+		if scenario == null:
+			_check(false, "data/scenarios/%s.tres exists" % name)
+			continue
+		var bad := 0
+		for map_seed in range(1, 101):
+			var problems := MapGenerator.generate(scenario, map_seed).validate()
+			if not problems.is_empty():
+				bad += 1
+				printerr("%s, seed %d: %s" % [name, map_seed, problems])
+		_check(bad == 0, "%s maps stay valid over 100 seeds (invalid: %d)" % [name, bad])
 
 
 ## The forest and the ruins (heights 0 and 1 only) keep every layout they had before.

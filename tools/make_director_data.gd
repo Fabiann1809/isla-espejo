@@ -10,6 +10,9 @@ extends SceneTree
 ##   balanced   -> a mild mix of both
 ##   ranged     -> (extra, on top of the style) faster enemies and ambushes for a player who shoots
 ##                 from afar
+## The temple's rooms carry their own tags (surge, traps, heights, bridges, falls, court): an
+## aggressive player meets more lava surges and traps, a stealthy one more heights to hide on, a
+## shooter more bridges that close the distance.
 
 
 func _initialize() -> void:
@@ -19,7 +22,7 @@ func _initialize() -> void:
 	aggressive.health_multiplier = 1.4
 	aggressive.speed_multiplier = 1.1
 	aggressive.count_multiplier = 1.3
-	aggressive.room_weights = {&"ambush": 3.0, &"standard": 0.8}
+	aggressive.room_weights = {&"ambush": 3.0, &"standard": 0.8, &"surge": 1.5, &"traps": 1.3}
 	aggressive.island_line = "La isla endurece a sus criaturas."
 	aggressive.hints = ["Criaturas más resistentes y rápidas", "Más enemigos por sala", "Más emboscadas"]
 
@@ -27,7 +30,7 @@ func _initialize() -> void:
 	stealth.vision_multiplier = 1.6
 	stealth.patrol_multiplier = 2.0
 	stealth.count_multiplier = 1.0
-	stealth.room_weights = {&"watch": 5.0, &"ambush": 0.4}
+	stealth.room_weights = {&"watch": 5.0, &"ambush": 0.4, &"heights": 1.5, &"traps": 0.6}
 	stealth.island_line = "La isla afina sus sentidos."
 	stealth.hints = ["Enemigos que ven desde más lejos", "Patrullas más amplias", "Más salas vigiladas"]
 
@@ -44,7 +47,7 @@ func _initialize() -> void:
 	ranged.speed_multiplier = 1.25
 	ranged.vision_multiplier = 1.3
 	ranged.count_multiplier = 1.2
-	ranged.room_weights = {&"ambush": 2.0}
+	ranged.room_weights = {&"ambush": 2.0, &"bridges": 1.5}
 	ranged.island_line = "La isla aprende a acortar distancias."
 	ranged.hints = ["Criaturas más rápidas para alcanzarte", "Más emboscadas a corta distancia"]
 

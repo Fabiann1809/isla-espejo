@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/trap_walk.tscn" id="1_v4eyk"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_odqmm"]
+
+[resource]
+script = ExtResource("2_odqmm")
+id = &"temple_trap_walk"
+scene = ExtResource("1_v4eyk")
+weight = 0.8
+tags = Array[StringName]([&"traps"])
+min_enemies = 4
+max_enemies = 6
+enemy_affinity = {
+&"baldosa_hambrienta": 2.0,
+&"carcelero_cadenas": 2.0,
+&"carnero_basalto": 0.5,
+&"manos_abismo": 1.5,
+&"relojero_trampas": 3.0,
+&"rueda_devoradora": 0.5
+}

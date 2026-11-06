@@ -76,6 +76,9 @@ func _initialize() -> void:
 	scenario.objective_done = "Cruza el portal"
 	scenario.objective_flag = &"ruins_boss_defeated"
 	scenario.completion_text = "Capítulo 2 completado. El viaje de Nico continuará."
+	# The ruins lead to the temple (tools/make_temple_data.gd writes the temple and sets this too).
+	if ResourceLoader.exists("res://data/scenarios/temple.tres"):
+		scenario.next_scenario = load("res://data/scenarios/temple.tres")
 	ResourceSaver.save(scenario, "res://data/scenarios/ruins.tres")
 	print("ruins data written")
 	quit()

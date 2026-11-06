@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/sombra_errante.tscn" id="9_17cr1"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/murcielago.tscn" id="10_vbwlf"]
 [ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="11_tt8rx"]
+[ext_resource type="Resource" path="res://data/scenarios/temple.tres" id="12_e1vcw"]
 [ext_resource type="Script" path="res://scripts/world/room_data.gd" id="12_i5typ"]
 [ext_resource type="Resource" path="res://data/rooms/ruins_river.tres" id="13_wmivt"]
 [ext_resource type="Resource" path="res://data/rooms/ruins_terraces.tres" id="14_xjon4"]
@@ -35,6 +36,7 @@ min_main_path = 7
 max_main_path = 12
 side_rooms = 4
 reward_rooms = 2
+next_scenario = ExtResource("12_e1vcw")
 completion_text = "Capítulo 2 completado. El viaje de Nico continuará."
 objective = "Encuentra a la Serpiente de piedra"
 objective_done = "Cruza el portal"
@@ -49,7 +51,7 @@ enemy_weights = {
 &"murcielago": 4.0,
 &"sombra_errante": 3.0
 }
-npc_scene = ExtResource("24_traveler")
 exit_scene = ExtResource("11_tt8rx")
+npc_scene = ExtResource("24_traveler")
 chest_scenes = Array[PackedScene]([ExtResource("2_vkpyx"), ExtResource("3_e1vcw")])
 drops = Array[ExtResource("4_gc772")]([ExtResource("5_cmyky"), ExtResource("6_0ifpo"), ExtResource("7_kfhnh")])

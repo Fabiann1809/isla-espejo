@@ -147,9 +147,9 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** el escenario 2 es completable de inicio a jefe con la IA funcionando.
 
 ## 11. Escenario 3: Templo del Eclipse — A+B  ← 10
-- [ ] Tileset del templo y lava (caminos de piedra sobre lava, sin plataformas flotantes)
-- [ ] Salas con trampas
-- [ ] Enemigos del escenario colocados
+- [x] Tileset del templo y lava (caminos de piedra sobre lava; islas de piedra con tres niveles de altura, escaleras y puentes; nada flota en el aire sin roca debajo)
+- [x] Salas con trampas (13 salas: patio de pilares, islas, terrazas, pasarela de trampas, cascadas de lava, tres salas de marea de lava, santuario, evento, especial; `tools/make_temple_rooms.py` y `tools/make_temple_data.gd`)
+- [x] Enemigos del escenario colocados (los 25 enemigos del templo en `temple.tres`, elenco de 10 por partida y afinidades por sala)
 - [ ] **Jefe: Guardián antiguo** (proyectiles, golpes, escudo / invocación): ya existe con su arte (golem de piedra) y los ataques del jefe base (`scenes/enemies/ancient_guardian.tscn`); faltan sus ataques propios y el escenario 3
 - [ ] Al derrotarlo: fragmento violeta y habilidad **Sombra**
 - [ ] NPC **Mercader** con 3 estados de diálogo (solo diálogo, sin tienda)
