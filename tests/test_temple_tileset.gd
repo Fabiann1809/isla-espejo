@@ -31,9 +31,16 @@ const TILES: Array[String] = [
 	"bridge_stone_rail_e", "bridge_stone_rail_w", "bridge_stone_post",
 	"bridge_wood_deck_h", "bridge_wood_deck_v", "bridge_wood_rail_n", "bridge_wood_rail_s",
 	"bridge_wood_rail_e", "bridge_wood_rail_w", "bridge_rope_post",
+	# one floor set per height level, as single tiles and as 4x4 macro plans
+	"floor0_a", "floor0_f", "floor0_moss_a", "floor0_crack_b", "floor1_a", "floor1_f",
+	"floor2_a", "floor2_f", "floor2_moss_b", "floor2_crack_a", "floor2_rune_a",
+	"floor0_m_0_0", "floor0_m_3_3", "floor1_m_0_0", "floor1_m_3_3", "floor2_m_0_0", "floor2_m_3_3",
+	"lava_m_0_0", "lava_m_3_3", "lava_bubble_over",
+	"moss_over_a", "moss_over_c", "floor0_crack_over_a", "floor2_crack_over_b",
 ]
 const PATTERNS_47: Array[String] = ["lava_rim", "ledge"]
-const ANIMATIONS := {"lava_flow": 8, "lava_bubble": 6, "floor_rune_glow": 4, "lava_rim_glow": 4, "cliff_foot_lava_m": 4}
+const ANIMATIONS := {"lava_flow": 8, "lava_bubble": 6, "floor_rune_glow": 4, "lava_rim_glow": 4, "cliff_foot_lava_m": 4,
+		"lava_m_0_0": 8, "lava_m_3_3": 8, "lava_bubble_over": 6, "floor2_rune_glow": 4}
 const FLOORS: Array[String] = ["floor_a", "floor_b", "floor_c", "floor_d", "floor_e", "floor_f"]
 
 var _ok := true
@@ -113,6 +120,24 @@ func _initialize() -> void:
 	# The game asks for roles: with this profile active 'grass' is a flagstone floor.
 	TileArt.use_profile(profile)
 	_check(TileArt.coords(TileArt.GRASS) == profile.tiles[&"floor_a"], "asking for 'grass' gives the temple floor")
+
+	# The 47-tile blobs: TileArt's mask order is the sheet's, and a mask picks its tile.
+	var parsed: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/tilesets/temple/temple_tiles.json"))
+	var sheet_masks: Array[int] = []
+	for mask in parsed["blob_masks"]:
+		sheet_masks.append(int(mask))
+	_check(TileArt.blob_masks() == sheet_masks and sheet_masks.size() == 47, "TileArt.blob_masks() is the sheet's order of 47 masks")
+	var rim: Array[Vector2i] = profile.pattern(&"lava_rim")
+	_check(TileArt.blob47_tile(&"lava_rim", 255) == rim[4] and TileArt.blob47_tile(&"lava_rim", 4 | 8 | 16) == rim[0]
+			and TileArt.blob47_tile(&"ledge", 255 ^ 8) == profile.pattern(&"ledge")[9],
+			"blob47_tile gives the centre, the top-left corner and the SE inner corner")
+	_check(TileArt.blob47_tile(&"lava_rim", 1 | 2) == TileArt.blob47_tile(&"lava_rim", 1)
+			and TileArt.blob47_tile(&"lava_rim", 1 | 2) != rim[4], "a stray corner bit does not change the tile")
+	var island := func(cell: Vector2i) -> bool: return cell.x >= 0 and cell.y >= 0
+	_check(TileArt.blob_mask(island, Vector2i.ZERO) == 4 | 8 | 16 and TileArt.blob_mask(island, Vector2i(3, 3)) == 255,
+			"blob_mask reads the 8 neighbours of a cell")
+	_check(TileArt.blob_tile(&"lava_rim", &"lava_rim_inner", island, Vector2i.ZERO) == rim[0],
+			"the first 13 tiles still serve TileArt.blob_tile")
 	TileArt.use_profile(null)
 	_finish()
 

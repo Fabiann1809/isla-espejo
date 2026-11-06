@@ -8,12 +8,26 @@ tools/make_tileset_temple.gd turns into the tileset profile. With --preview it a
 contact sheet, a sample 30x18 composition and GIFs of every animation to <folder> (not part of the
 game). Every tile is deterministic (fixed seeds) and uses only the colours of tools/temple_palette.py.
 
+Lava: the sea is a macro pattern of 4x4 tiles (a 64 px period): dark cooled plates drifting on
+molten channels, hot only along the cracks. `lava_m_<cx>_<cy>` (cx, cy in 0..3) is one animation of 8
+frames per macro cell; paint cell (x, y) of the map with `lava_m_<x mod 4>_<y mod 4>` and every frame
+is seamless. `lava_flow` is the same lava folded into one self-seamless 16 px tile (8 frames) and
+`lava_a..d` are still variants of it; `lava_bubble` (6 frames) is a bubble on that tile and
+`lava_bubble_over` the bubble alone, to lay over the macro lava.
+
+Floors: a level has its own tone so the eye reads the height: level 0 dark and grey, level 1 the
+rosy mid stone, level 2 the palest and warmest. `floor<L>_m_<cx>_<cy>` is a 4x4 macro plan of large
+flagstones whose slabs cross the tile borders (paint cell (x, y) with cx = x mod 4, cy = y mod 4);
+`floor<L>_a..f` are single seamless tiles, `floor<L>_moss_*`, `floor<L>_crack_*` their details.
+`floor_*` (no level) is level 1.
+
 Blob patterns (`lava_rim`, `ledge`) have 47 tiles, one per distinct 8-neighbour mask once a corner
 only counts when both edges beside it are inside (bits N=1 NE=2 E=4 SE=8 S=16 SW=32 W=64 NW=128,
 "inside" = the cell belongs to the area: lava for the rim, the high plateau for the ledge). Their
-order is `BLOB_MASKS` (also written to the json): first the nine-slice in reading order and the four
-inner corners (SE, SW, NE, NW), exactly as `TileArt.blob_tile` expects (with `<name>_inner` holding
-those four), then the other 34 masks in ascending order.
+order is `BLOB_MASKS` (also written to the json, and mirrored by `TileArt.blob47_tile`): first the
+nine-slice in reading order and the four inner corners (SE, SW, NE, NW), exactly as
+`TileArt.blob_tile` expects (with `<name>_inner` holding those four), then the other 34 masks in
+ascending order.
 """
 import json
 import math
@@ -31,6 +45,8 @@ OUT = os.path.join(ROOT, "assets", "tilesets", "temple")
 PREVIEW = sys.argv[sys.argv.index("--preview") + 1] if "--preview" in sys.argv else None
 T = 16
 COLUMNS = 16
+MACRO = 4  # tiles per side of a macro pattern
+MN = MACRO * T  # its period in pixels
 
 # --- blob masks -------------------------------------------------------------------------------------
 N, NE, E, SE, S, SW, W, NW = 1, 2, 4, 8, 16, 32, 64, 128
@@ -134,7 +150,7 @@ def periodic_noise(rng, n=T, cell=4, octaves=2):
 
 
 def ridged(field):
-    """Bright along the 0.5 contour of a field: a web of veins."""
+    """Bright along the 0.5 contour of a field: a web of channels between plates."""
     return [[1.0 - 2.0 * abs(v - 0.5) for v in row] for row in field]
 
 
@@ -146,75 +162,148 @@ def band(v, steps):
     return steps[-1][1]
 
 
+def quantile_steps(values, shares):
+    """Thresholds so that each (colour, share) of `shares` covers that share of `values`."""
+    ordered = sorted(values)
+    steps, acc = [], 0.0
+    for colour, share in shares[:-1]:
+        acc += share
+        steps.append((ordered[min(len(ordered) - 1, int(acc * len(ordered)))], colour))
+    steps.append((9.0, shares[-1][0]))
+    return steps
+
+
+def cut(img, name_fn, size=MACRO):
+    """The 16 px tiles of a macro image, (name, tile) in reading order."""
+    tiles = []
+    for cy in range(size):
+        for cx in range(size):
+            tiles.append((name_fn(cx, cy), img.crop((cx * T, cy * T, cx * T + T, cy * T + T))))
+    return tiles
+
+
 # --- floors -------------------------------------------------------------------------------------------
-LIGHTER = {STONE_D: STONE_1, STONE_1: STONE_2, STONE_2: STONE_3, STONE_3: STONE_4, STONE_4: STONE_HI, STONE_HI: STONE_HI}
-DARKER = {STONE_HI: STONE_4, STONE_4: STONE_3, STONE_3: STONE_2, STONE_2: STONE_1, STONE_1: STONE_D, STONE_D: STONE_D}
+## The stone of each height level: slab tones (mid, dark, pale) with the lit bevel, the shade and the
+## joint of each, from the dark grey ground to the pale warm top.
+LEVEL_TONES = {
+    0: {"tones": [(SMOKE_2, ASH, SMOKE_1)] * 7 + [(SMOKE_1, SMOKE_2, SMOKE_D)] * 2 + [(ASH, ASH, SMOKE_2)],
+        "joint": SMOKE_D, "outer_shade": SMOKE_1, "pit": (SMOKE_1, ASH), "crack": (SMOKE_D, ASH),
+        "moss": (MOSS_D, MOSS_1, MOSS_2)},
+    1: {"tones": [(STONE_3, STONE_4, STONE_1)] * 7 + [(STONE_2, STONE_3, STONE_1)] * 2 + [(STONE_4, STONE_HI, STONE_2)],
+        "joint": JOINT, "outer_shade": STONE_1, "pit": (STONE_2, STONE_4), "crack": (STONE_D, STONE_4),
+        "moss": (MOSS_D, MOSS_1, MOSS_2)},
+    2: {"tones": [(STONE_4, STONE_HI, STONE_2)] * 7 + [(STONE_3, STONE_4, STONE_2)] * 2 + [(STONE_HI, STONE_HI, STONE_3)],
+        "joint": STONE_1, "outer_shade": STONE_2, "pit": (STONE_3, STONE_HI), "crack": (STONE_1, STONE_HI),
+        "moss": (MOSS_1, MOSS_2, MOSS_HI)},
+}
+
+
+def draw_slab(img, rng, x0, y0, x1, y1, tone, level, outer_shade=False):
+    """One flagstone from (x0, y0) inclusive to (x1, y1) exclusive, with its joint on the top and
+    left, a lit bevel inside it, a shade on the bottom and right and a soft corner."""
+    base, lit, shade = tone
+    joint = LEVEL_TONES[level]["joint"]
+    if outer_shade:
+        shade = LEVEL_TONES[level]["outer_shade"]
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if x == x0 or y == y0:
+                c = joint
+            elif y == y1 - 1 or x == x1 - 1:
+                c = shade
+            elif y == y0 + 1 or x == x0 + 1:
+                c = lit
+            else:
+                c = base
+            put(img, x % img.width, y % img.height, c)
+    for cx, cy in ((x1 - 1, y0 + 1), (x0 + 1, y1 - 1), (x1 - 1, y1 - 1)):
+        put(img, cx % img.width, cy % img.height, joint)
+    put(img, (x0 + 1) % img.width, (y0 + 1) % img.height, base)
+    if rng.random() < 0.3 and x1 - x0 > 6 and y1 - y0 > 6:  # a pit of wear
+        dark, pale = LEVEL_TONES[level]["pit"]
+        px, py = rng.randrange(x0 + 3, x1 - 3), rng.randrange(y0 + 3, y1 - 3)
+        put(img, px, py, dark)
+        put(img, px + 1, py + 1, pale)
 
 
 def slab_layout(kind, rng):
-    """Rows of slabs: list of (y0, y1, [(x0, x1), ...]) inside the tile, joints at x0-1 / y0-1."""
+    """Rows of slabs inside one tile: (y0, y1, [(x0, x1), ...]); x0/y0 hold the joint."""
     if kind == "2x2":
-        return [(1, 8, [(1, 8), (9, 16)]), (9, 16, [(1, 8), (9, 16)])]
+        return [(0, 8, [(0, 8), (8, 16)]), (8, 16, [(0, 8), (8, 16)])]
     if kind == "3x2":
-        return [(1, 8, [(1, 6), (7, 11), (12, 16)]), (9, 16, [(1, 6), (7, 11), (12, 16)])]
+        return [(0, 8, [(0, 6), (6, 11), (11, 16)]), (8, 16, [(0, 6), (6, 11), (11, 16)])]
     if kind == "brick":
-        return [(1, 8, [(1, 8), (9, 16)]), (9, 16, [(1, 4), (5, 12), (13, 16)])]
+        return [(0, 8, [(0, 8), (8, 16)]), (8, 16, [(0, 4), (4, 12), (12, 16)])]
     if kind == "brick3":
-        return [(1, 8, [(1, 6), (7, 11), (12, 16)]), (9, 16, [(1, 3), (4, 9), (10, 16)])]
-    if kind == "split":  # 2x2 with one slab cut in two
-        cut = rng.choice([0, 1, 2, 3])
-        rows = [(1, 8, [(1, 8), (9, 16)]), (9, 16, [(1, 8), (9, 16)])]
-        y0, y1, cols = rows[cut // 2]
-        x0, x1 = cols[cut % 2]
-        mid = (x0 + x1) // 2
-        cols[cut % 2] = (x0, mid)
-        cols.insert(cut % 2 + 1, (mid + 1, x1))
-        return rows
+        return [(0, 8, [(0, 6), (6, 11), (11, 16)]), (8, 16, [(0, 3), (3, 9), (9, 16)])]
+    if kind == "tall":
+        return [(0, 16, [(0, 8), (8, 16)])]
+    if kind == "wide":
+        return [(0, 8, [(0, 16)]), (8, 16, [(0, 16)])]
     raise ValueError(kind)
 
 
-def floor_tile(seed, kind="2x2", tones=None, moss=0.0, crack=False, rune=None, glow=None):
-    """Flagstones: joints on the tile's top and left (JOINT), every slab lit on its top-left, shaded
-    STONE_1 on its bottom-right, so the bottom/right edge of any floor meets the joint of the next."""
+def floor_tile(seed, kind="2x2", level=1, moss=0.0, crack=False, rune=None, glow=None):
+    """A self-seamless flagstone tile: joints on its top and left, the shade of every slab on its
+    bottom and right, so any two floors of a level meet without a seam."""
     rng = random.Random(seed)
     img = blank()
-    fill(img, 0, 0, T, T, JOINT)
-    tones = tones or [STONE_2, STONE_2, STONE_3, STONE_3, STONE_3, STONE_2, STONE_4, STONE_1]
-    noise = periodic_noise(rng, cell=2, octaves=1)
+    tones = LEVEL_TONES[level]["tones"]
     for y0, y1, cols in slab_layout(kind, rng):
         for x0, x1 in cols:
-            base = rng.choice(tones)
-            for y in range(y0, y1):
-                for x in range(x0, x1):
-                    c = base
-                    if noise[y][x] > 0.72:
-                        c = LIGHTER[base]
-                    elif noise[y][x] < 0.22:
-                        c = DARKER[base]
-                    if y == y1 - 1 or x == x1 - 1:
-                        c = STONE_1
-                    elif y == y0 or x == x0:
-                        c = LIGHTER[base]
-                    put(img, x, y, c)
-            # chamfered corners of each slab
-            for cx, cy in ((x0, y0), (x1 - 1, y0), (x0, y1 - 1), (x1 - 1, y1 - 1)):
-                put(img, cx, cy, JOINT if (cx, cy) != (x0, y0) else DARKER[base])
-            if rng.random() < 0.3:  # a pit in the slab
-                px, py = rng.randrange(x0 + 2, max(x0 + 3, x1 - 2)), rng.randrange(y0 + 2, max(y0 + 3, y1 - 2))
-                put(img, px, py, DARKER[base])
-                put(img, px + 1, py + 1, LIGHTER[base])
+            draw_slab(img, rng, x0, y0, x1, y1, rng.choice(tones), level, outer_shade=True)
     if moss > 0.0:
-        moss_over(img, rng, moss)
+        moss_over(img, rng, moss, LEVEL_TONES[level]["moss"])
     if crack:
-        crack_over(img, rng)
+        crack_over(img, rng, LEVEL_TONES[level]["crack"])
     if rune is not None:
-        rune_over(img, rune, glow)
+        rune_over(img, rune, glow, LEVEL_TONES[level]["crack"][0])
     return img
 
 
-def moss_over(img, rng, amount):
+def floor_macro(seed, level):
+    """A 64x64 plan of large flagstones (12 to 24 px) in staggered rows, periodic, so cut into 16
+    tiles it paints a floor with no 16 px grid in it."""
+    rng = random.Random(seed)
+    img = blank(MN, MN)
+    heights = rng.choice([[12, 20, 16, 16], [16, 12, 20, 16], [20, 16, 12, 16], [16, 20, 12, 16]])
+    tones = LEVEL_TONES[level]["tones"]
+    y = 0
+    for h in heights:
+        widths = rng.choice([[16, 24, 12, 12], [20, 12, 16, 16], [12, 20, 20, 12], [24, 16, 12, 12], [16, 16, 20, 12]])
+        offset = rng.randrange(0, MN)
+        x = offset
+        for w in widths:
+            draw_slab(img, rng, x, y, x + w, y + h, rng.choice(tones), level)
+            x += w
+        y += h
+    moss = LEVEL_TONES[level]["moss"]
+    for _ in range(3):  # a touch of moss in a joint
+        mx, my = rng.randrange(MN), rng.randrange(MN)
+        for i in range(rng.randrange(2, 4)):
+            put(img, (mx + i) % MN, my, moss[1])
+            if rng.random() < 0.5:
+                put(img, (mx + i) % MN, (my + 1) % MN, moss[0])
+    return img
+
+
+def moss_overlay(seed, amount, moss):
+    """Moss alone, transparent elsewhere, to lay over any floor (the macro plans included)."""
+    img = blank()
+    moss_over(img, random.Random(seed), amount, moss)
+    return img
+
+
+def crack_overlay(seed, level):
+    """A crack alone, in the level's colours, to lay over any floor."""
+    img = blank()
+    crack_over(img, random.Random(seed), LEVEL_TONES[level]["crack"])
+    return img
+
+
+def moss_over(img, rng, amount, moss):
     """Moss creeping along the joints and into the slabs' corners."""
-    spots = int(5 + amount * 14)
+    spots = int(4 + amount * 12)
     for _ in range(spots):
         x, y = rng.randrange(1, 15), rng.randrange(1, 15)
         length = rng.randrange(2, 6)
@@ -223,20 +312,21 @@ def moss_over(img, rng, amount):
             px, py = (x + i, y) if along_x else (x, y + i)
             if not (1 <= px <= 14 and 1 <= py <= 14):
                 break
-            put(img, px, py, MOSS_1 if rng.random() < 0.7 else MOSS_2)
+            put(img, px, py, moss[1] if rng.random() < 0.7 else moss[2])
             if rng.random() < 0.4:
-                put(img, px + (0 if along_x else 1), py + (1 if along_x else 0), MOSS_D)
-            if rng.random() < 0.25:
-                put(img, px, py - 1, MOSS_HI if rng.random() < 0.3 else MOSS_2)
+                put(img, px + (0 if along_x else 1), py + (1 if along_x else 0), moss[0])
+            if rng.random() < 0.2:
+                put(img, px, py - 1, moss[2])
 
 
-def crack_over(img, rng):
+def crack_over(img, rng, colours):
     """A crack across the slabs: a dark line with a lit edge under it."""
+    dark, pale = colours
     x, y = rng.randrange(2, 6), rng.randrange(1, 4)
     for _ in range(rng.randrange(9, 14)):
-        put(img, x, y, STONE_D)
+        put(img, x, y, dark)
         if rng.random() < 0.6:
-            put(img, x + 1, y + 1, STONE_4)
+            put(img, x + 1, y + 1, pale)
         step = rng.random()
         if step < 0.45:
             y += 1
@@ -246,7 +336,7 @@ def crack_over(img, rng):
             x += 1
             y += 1
         if rng.random() < 0.3:
-            put(img, x - 1, y, STONE_D)
+            put(img, x - 1, y, dark)
         if not (1 <= x <= 14 and 1 <= y <= 14):
             break
 
@@ -259,14 +349,14 @@ RUNES = {
 }
 
 
-def rune_over(img, rune, glow=None):
+def rune_over(img, rune, glow=None, groove=STONE_D):
     """A carved glyph in the middle of the tile: a dark groove with its fill (bronze, or a glow frame)."""
     fill_colour = glow if glow is not None else BRONZE_1
     ox, oy = 4, 4
     cells = [(ox + x, oy + y) for y, row in enumerate(RUNES[rune]) for x, ch in enumerate(row) if ch == "#"]
     for x, y in cells:  # the groove's shadow, down and right of the glyph
         if (x + 1, y + 1) not in cells:
-            put(img, x + 1, y + 1, STONE_D)
+            put(img, x + 1, y + 1, groove)
     for x, y in cells:
         put(img, x, y, fill_colour)
     if glow == RUNE_GLOW:  # at the peak of the pulse, a halo of gold specks
@@ -278,81 +368,75 @@ def rune_over(img, rune, glow=None):
 
 
 # --- lava ---------------------------------------------------------------------------------------------
-## Share of the lava's surface each tone takes, darkest plate to white-hot vein.
-LAVA_SHARES = [(LAVA_1, 0.07), (LAVA_2, 0.24), (LAVA_3, 0.38), (LAVA_4, 0.22), (LAVA_HI, 0.075), (LAVA_CORE, 0.015)]
+## Share of the surface each tone takes, from the cooled plates to the white-hot knots of the channels.
+LAVA_SHARES = [(CRUST_1, 0.33), (LAVA_D, 0.19), (LAVA_1, 0.15), (LAVA_2, 0.12), (LAVA_3, 0.10),
+               (LAVA_4, 0.06), (LAVA_HI, 0.038), (LAVA_CORE, 0.012)]
+FLOW_FRAMES = 8
 
 
-def lava_fields(seed=11):
-    """A fine web of veins (ridged noise) over a slow swell, wrapping at 16 px, and the thresholds
-    that give each tone its share of the surface."""
-    rng = random.Random(seed)
-    web = ridged(periodic_noise(rng, cell=4, octaves=2))
-    slow = periodic_noise(rng, cell=8, octaves=1)
-    field = [[web[y][x] * 0.75 + slow[y][x] * 0.25 for x in range(T)] for y in range(T)]
-    values = sorted(v for row in field for v in row)
-    steps, acc = [], 0.0
-    for colour, share in LAVA_SHARES[:-1]:
-        acc += share
-        steps.append((values[min(len(values) - 1, int(acc * len(values)))], colour))
-    steps.append((9.0, LAVA_SHARES[-1][0]))
-    return field, steps
+class Lava:
+    """A periodic lava field of `n` px: plates (slow ridged noise) with cracks on them, molten channels
+    between them whose shimmer drifts 2 px per frame (a seamless loop of 8 frames)."""
+
+    def __init__(self, n, seed=11):
+        rng = random.Random(seed)
+        self.n = n
+        self.plates = ridged(periodic_noise(rng, n=n, cell=n // 2, octaves=3))
+        self.cracks = ridged(periodic_noise(rng, n=n, cell=max(4, n // 8), octaves=2))
+        self.speck = periodic_noise(rng, n=n, cell=max(2, n // 16), octaves=2)
+        self.flow = periodic_noise(rng, n=T, cell=8, octaves=2)
+        self.steps = quantile_steps([self.value(x, y, 0) for y in range(n) for x in range(n)], LAVA_SHARES)
+        self.plate_level = self.steps[0][0]
+
+    def value(self, x, y, frame):
+        shimmer = self.flow[(y - 2 * frame) % T][(x - 2 * frame) % T] - 0.5
+        pulse = 0.02 * math.sin(2 * math.pi * frame / FLOW_FRAMES)
+        return self.plates[y][x] * 0.8 + shimmer * 0.3 + pulse
+
+    def colour(self, x, y, frame, detail=0.0):
+        v = self.value(x, y, frame) + detail
+        c = band(v, self.steps)
+        if v < self.plate_level:  # a cooled plate: specks of darker crust and dim cracks
+            crack = self.cracks[y][x]
+            if crack > 0.95:
+                c = LAVA_2 if crack > 0.985 else LAVA_1
+            elif crack > 0.9:
+                c = LAVA_D
+            elif self.speck[y][x] < 0.38:
+                c = CRUST_D
+        return c
+
+    def frame(self, k, detail_field=None):
+        img = blank(self.n, self.n)
+        for y in range(self.n):
+            for x in range(self.n):
+                detail = 0.0
+                if detail_field is not None:
+                    w = min(x, self.n - 1 - x, y, self.n - 1 - y)
+                    detail = (detail_field[y][x] - 0.5) * 0.2 * (0.0 if w < 2 else 1.0)
+                put(img, x, y, self.colour(x, y, k, detail))
+        return img
 
 
-LAVA_FIELD, LAVA_STEPS = lava_fields()
-
-
-def lava_pixel(x, y, shift=0, pulse=0.0, detail=None, wobble=0):
-    sx = (x - shift) % T
-    sy = (y - wobble) % T
-    v = LAVA_FIELD[sy][sx] + pulse
-    if detail is not None:
-        v += detail
-    return band(v, LAVA_STEPS)
-
-
-def lava_tile(shift=0, pulse=0.0, detail_field=None, frame=0):
-    img = blank()
-    for y in range(T):
-        wobble = int(round(math.sin((frame / 8.0 + x_phase(y)) * 2 * math.pi)))
-        for x in range(T):
-            detail = None
-            if detail_field is not None:
-                w = min(x, T - 1 - x, y, T - 1 - y)
-                w = 0.0 if w < 2 else 1.0
-                detail = (detail_field[y][x] - 0.5) * 0.25 * w
-            put(img, x, y, lava_pixel(x, y, shift, pulse, detail, wobble))
-    return img
-
-
-def x_phase(y):
-    return y / float(T)
+LAVA_MACRO = Lava(MN, 11)
+LAVA_SMALL = Lava(T, 12)
 
 
 def lava_base_tiles():
-    """lava_a..d: the same field with a windowed detail of their own, so their borders are all equal."""
+    """lava_a..d: the small lava with a windowed detail of their own, so their borders are all equal."""
     tiles = []
     for i in range(4):
         rng = random.Random(100 + i)
-        tiles.append(lava_tile(0, 0.0, periodic_noise(rng, cell=4, octaves=2)))
+        tiles.append(LAVA_SMALL.frame(0, periodic_noise(rng, cell=4, octaves=2)))
     return tiles
 
 
-def lava_flow_frames(frames=8):
-    """A slow drift of 2 px per frame (16 px over the loop) while the veins breathe."""
+def bubble_frames(background):
+    """A bubble swells on the lava and pops: 6 frames over `background` (None = the bubble alone)."""
     result = []
-    for k in range(frames):
-        pulse = 0.03 * math.sin(2 * math.pi * k / frames)
-        result.append(lava_tile(2 * k, pulse, None, k))
-    return result
-
-
-def lava_bubble_frames():
-    """A bubble swells on the lava and pops: 6 frames."""
-    result = []
-    back = lava_base_tiles()[0]
     cx, cy = 8, 8
     for k in range(6):
-        img = back.copy()
+        img = background.copy() if background is not None else blank()
         if k < 4:
             r = [1.4, 2.4, 3.4, 4.0][k]
             for y in range(T):
@@ -375,8 +459,7 @@ def lava_bubble_frames():
         elif k == 4:  # pop: a ring of splashes
             for a in range(10):
                 ang = a / 10.0 * 2 * math.pi
-                px, py = int(round(cx + 4.3 * math.cos(ang))), int(round(cy + 4.3 * math.sin(ang)))
-                put(img, px, py, LAVA_CORE if a % 2 == 0 else LAVA_HI)
+                put(img, int(round(cx + 4.3 * math.cos(ang))), int(round(cy + 4.3 * math.sin(ang))), LAVA_CORE if a % 2 == 0 else LAVA_HI)
                 put(img, int(round(cx + 6.2 * math.cos(ang))), int(round(cy + 6.2 * math.sin(ang))), LAVA_HI if a % 3 == 0 else LAVA_4)
             for dx, dy in ((0, 0), (-1, 0), (0, -1), (1, 0), (0, 1)):
                 put(img, cx + dx, cy + dy, LAVA_2)
@@ -400,9 +483,10 @@ def blob_context(mask):
     return inside
 
 
-def distance_to_outside(inside, x, y):
-    """Distance from pixel (x, y) of the centre tile to the nearest outside cell (99 = none)."""
-    best = 99.0
+def nearest_outside(inside, x, y):
+    """(distance, dx, dy) from pixel (x, y) of the centre tile to the nearest outside cell, dx/dy
+    being where that cell lies (-1, 0, 1); distance 99 when every cell is inside."""
+    best = (99.0, 0, 0)
     px, py = x + 0.5, y + 0.5
     for (cx, cy), is_in in inside.items():
         if is_in:
@@ -410,8 +494,14 @@ def distance_to_outside(inside, x, y):
         x0, y0 = cx * T, cy * T
         dx = max(x0 - px, 0.0, px - (x0 + T))
         dy = max(y0 - py, 0.0, py - (y0 + T))
-        best = min(best, math.hypot(dx, dy))
+        d = math.hypot(dx, dy)
+        if d < best[0]:
+            best = (d, cx, cy)
     return best
+
+
+def distance_to_outside(inside, x, y):
+    return nearest_outside(inside, x, y)[0]
 
 
 RIM_RNG = random.Random(31)
@@ -421,21 +511,36 @@ RIM_CRACK = ridged(periodic_noise(random.Random(77), cell=4, octaves=2))
 ## Above this the crack web is a 1 px line; above the second, its hottest knots.
 CRACK_LEVEL = 0.9
 CRACK_HOT = 0.965
+GLOW_REACH = 8.0
 
 
 def rim_tile(mask):
     """Cooled crust on a lava cell where it touches the floor (or a cliff's foot): a dark contact
-    line, a crust of plates split by dim cracks and a melting edge; transparent over the open lava."""
+    line, a crust of plates split by dim cracks, a melting edge, then a hot glow fading into the
+    open lava (dithered, so the lava's animation shows through it)."""
     inside = blob_context(mask)
     img = blank()
     for y in range(T):
         for x in range(T):
             d = distance_to_outside(inside, x, y)
             width = 4.5 + RIM_WIDTH[y][x] * 3.0
-            if d >= width:
+            if d >= width + GLOW_REACH:
                 continue
             if d < 1.0:
                 c = CRUST_D
+            elif d >= width:
+                heat = 1.0 - (d - width) / GLOW_REACH
+                checker = (x + y) % 2 == 0
+                if heat > 0.7:
+                    c = LAVA_4 if RIM_SPECK[y][x] > 0.75 else LAVA_3
+                elif heat > 0.4:
+                    c = LAVA_3 if checker else LAVA_2
+                elif heat > 0.2 and checker:
+                    c = LAVA_2
+                elif heat > 0.0 and checker and RIM_SPECK[y][x] > 0.5:
+                    c = LAVA_1
+                else:
+                    continue
             elif d >= width - 1.2:
                 c = LAVA_1 if RIM_SPECK[y][x] > 0.55 else LAVA_D
             elif RIM_CRACK[y][x] > CRACK_LEVEL and d > 1.5:
@@ -465,64 +570,66 @@ LEDGE_NOISE = periodic_noise(random.Random(45), cell=2, octaves=1)
 
 
 def ledge_tile(mask):
-    """The lit lip of a raised block, on the high cell along every side that drops."""
+    """The 2 px lip of a raised block on the high cell: lit on the sides that face the light (north
+    and west), a dark outline with a lit line inside it where the block drops away south or east."""
     inside = blob_context(mask)
     img = blank()
     for y in range(T):
         for x in range(T):
-            d = distance_to_outside(inside, x, y)
+            d, ox, oy = nearest_outside(inside, x, y)
+            if d >= 2.0:
+                continue
+            shadow_side = oy > 0 or (oy == 0 and ox > 0)
             if d < 1.0:
-                corner = get_count_outside(inside, x, y) >= 2
-                put(img, x, y, STONE_4 if corner or LEDGE_NOISE[y][x] > 0.9 else STONE_HI)
-            elif d < 2.0 and LEDGE_NOISE[y][x] > 0.18:
-                put(img, x, y, STONE_4)
-            elif d < 3.0 and LEDGE_NOISE[y][x] > 0.8:
-                put(img, x, y, STONE_4)
+                c = OUTLINE if shadow_side else STONE_HI
+            else:
+                c = STONE_HI if shadow_side else STONE_4
+                if LEDGE_NOISE[y][x] > 0.9:
+                    c = STONE_4 if shadow_side else STONE_3
+            put(img, x, y, c)
     return img
-
-
-def get_count_outside(inside, x, y):
-    """How many outside cells touch pixel (x, y): 2 at an outer corner (so it can be chamfered)."""
-    count = 0
-    px, py = x + 0.5, y + 0.5
-    for (cx, cy), is_in in inside.items():
-        if is_in:
-            continue
-        x0, y0 = cx * T, cy * T
-        dx = max(x0 - px, 0.0, px - (x0 + T))
-        dy = max(y0 - py, 0.0, py - (y0 + T))
-        if math.hypot(dx, dy) < 1.0 and (dx > 0 or dy > 0):
-            count += 1
-    return count
 
 
 # --- cliff faces ----------------------------------------------------------------------------------------
 FACE_NOISE = periodic_noise(random.Random(52), n=48, cell=3, octaves=2)
+COURSE = 8  # px per course of carved blocks
+BLOCK = 12  # px per block along a course
 
 
 def cliff_face(side, top, bottom, course0=0, lit_frame=None, moss_seed=None, x_offset=0):
-    """A row of a cliff face: stone courses 4 px high with staggered joints. `top`: the dark line
-    under the plateau; `bottom`: the base on the lower floor; `lit_frame`: the foot standing in lava,
-    lit from below (4 flicker frames). `side` is 'l', 'm' or 'r' (the ends have an outline)."""
+    """A row of a cliff face: courses of carved blocks 8 px high and 12 px wide, staggered, with
+    deep joints (a dark line and its shadow). `top`: the dark line under the plateau; `bottom`: the
+    dark band where the face meets the lower floor; `lit_frame`: the foot standing in lava, lit from
+    below over its last 8 px (4 flicker frames). `side` is 'l', 'm' or 'r' (the ends are outlined)."""
     img = blank()
     for y in range(T):
-        course = course0 + y // 4
-        row = y % 4
-        joint_offset = (course % 2) * 4 + (x_offset % 8)
+        course = course0 + y // COURSE
+        row = y % COURSE
+        joint_offset = (course % 2) * (BLOCK // 2) + x_offset
         for x in range(T):
-            n = FACE_NOISE[(y + course0 * 4) % 48][(x + x_offset) % 48]
+            n = FACE_NOISE[(y + course0 * COURSE) % 48][(x + x_offset) % 48]
+            along = (x + joint_offset) % BLOCK
             if row == 0:
-                c = CLIFF_1 if n > 0.2 else CLIFF_D
+                c = CLIFF_D
             elif row == 1:
-                c = CLIFF_3 if n > 0.2 else CLIFF_2
-            else:
-                c = CLIFF_2 if n > 0.12 else CLIFF_1
-                if n > 0.7 and row == 2:
-                    c = CLIFF_3
-            if row != 0 and (x + joint_offset) % 8 == 0:
+                c = CLIFF_3 if n > 0.15 else CLIFF_2
+            elif row == COURSE - 1:
                 c = CLIFF_1
-            elif row != 0 and (x + joint_offset) % 8 == 1:
-                c = CLIFF_3 if row == 1 else CLIFF_2
+            else:
+                c = CLIFF_2 if n > 0.1 else CLIFF_1
+                if n > 0.85:
+                    c = CLIFF_3
+            if row != 0:
+                if along == 0:
+                    c = CLIFF_D
+                elif along == 1:
+                    c = CLIFF_1 if row != 1 else CLIFF_2
+                elif along == BLOCK - 1 and row not in (1, COURSE - 1):
+                    c = CLIFF_3 if n > 0.4 else CLIFF_2
+            # a carved notch in the middle of some blocks
+            block_id = ((x + joint_offset) // BLOCK + course * 7 + x_offset) % 5
+            if block_id in (1, 3) and row in (3, 4) and along in (5, 6):
+                c = CLIFF_1 if (row == 3) == (along == 5) else CLIFF_D
             put(img, x, y, c)
     if top:
         for x in range(T):
@@ -530,69 +637,80 @@ def cliff_face(side, top, bottom, course0=0, lit_frame=None, moss_seed=None, x_o
             put(img, x, 1, CLIFF_D if FACE_NOISE[1][(x + x_offset) % 48] > 0.5 else CLIFF_1)
     if bottom:
         for x in range(T):
-            put(img, x, 15, OUTLINE)
+            put(img, x, 13, CLIFF_1 if FACE_NOISE[13][(x + x_offset) % 48] > 0.35 else CLIFF_D)
             put(img, x, 14, CLIFF_D)
+            put(img, x, 15, OUTLINE)
     if lit_frame is not None:
-        glow_lines = [[3, 4, 3, 2], [4, 3, 2, 3], [3, 2, 3, 4], [2, 3, 4, 3]][lit_frame]
-        for x in range(T):
-            n = FACE_NOISE[(x + x_offset) % 48][lit_frame * 7 % 48]
-            lit = glow_lines[x % 4] + (1 if n > 0.66 else 0)
-            put(img, x, 15, LAVA_1 if n > 0.35 else LAVA_D)
-            put(img, x, 14, LAVA_D if n > 0.5 else CLIFF_LAVA_LIT)
-            for y in range(14 - lit, 14):
-                current = get(img, x, y)
-                if current[:3] == CLIFF_1[:3] or current[:3] == CLIFF_D[:3]:
-                    put(img, x, y, CLIFF_3 if y < 14 - lit + 1 else CLIFF_LAVA_LIT)
-                else:
-                    put(img, x, y, CLIFF_LAVA_LIT if y >= 14 - lit + 1 else CLIFF_3)
-            # embers on the stone
-            if n > 0.9:
-                put(img, x, 13 - lit, LAVA_2)
+        underlight(img, lit_frame, x_offset)
     if side == "l":
         for y in range(T):
             put(img, 0, y, OUTLINE)
-            if get(img, 1, y)[:3] not in (LAVA_1[:3], LAVA_D[:3], CLIFF_LAVA_LIT[:3]):
+            if get(img, 1, y)[:3] not in (LAVA_1[:3], LAVA_2[:3], LAVA_3[:3], LAVA_D[:3]):
                 put(img, 1, y, CLIFF_D)
     elif side == "r":
         for y in range(T):
             put(img, 15, y, OUTLINE)
-            if get(img, 14, y)[:3] not in (LAVA_1[:3], LAVA_D[:3], CLIFF_LAVA_LIT[:3]):
+            if get(img, 14, y)[:3] not in (LAVA_1[:3], LAVA_2[:3], LAVA_3[:3], LAVA_D[:3]):
                 put(img, 14, y, CLIFF_D)
     if moss_seed is not None:
-        moss_hang(img, moss_seed, from_top=top or course0 == 0)
+        vines_hang(img, moss_seed, from_top=top)
     return img
 
 
-def moss_hang(img, seed, from_top=True):
-    """Strands of moss hanging down the face from its top, with a cap along the edge."""
+def underlight(img, frame, x_offset):
+    """The lava's light climbing the foot of a face: lapping lava on the last row, then an orange
+    glow fading upward over 6 to 8 px, higher or lower per column as it flickers."""
+    wobble = [[2, 1, 0, 1], [1, 0, 1, 2], [0, 1, 2, 1], [1, 2, 1, 0]][frame]
+    for x in range(T):
+        n = FACE_NOISE[(x + x_offset) % 48][(frame * 11 + 3) % 48]
+        reach = 6 + wobble[(x + x_offset) % 4] + (1 if n > 0.7 else 0)
+        put(img, x, 15, LAVA_3 if n > 0.6 or frame % 2 == 0 and n > 0.4 else LAVA_2)
+        put(img, x, 14, LAVA_2 if n > 0.5 else LAVA_1)
+        for i in range(2, reach):
+            y = 15 - i
+            heat = 1.0 - (i - 2) / float(reach - 2)
+            current = get(img, x, y)[:3]
+            dark = current in (CLIFF_D[:3], OUTLINE[:3], CLIFF_1[:3])
+            if heat > 0.75:
+                c = LAVA_D if dark else LAVA_1
+            elif heat > 0.5:
+                c = LAVA_D if dark else (LAVA_1 if (x + y) % 2 == 0 else CLIFF_LAVA_LIT)
+            elif heat > 0.25:
+                c = CLIFF_1 if dark else (CLIFF_3 if (x + y) % 2 == 0 else CLIFF_LAVA_LIT)
+            else:
+                c = CLIFF_1 if dark else (CLIFF_3 if (x + y) % 2 == 0 else CLIFF_2)
+            put(img, x, y, c)
+        if n > 0.9:
+            put(img, x, 15 - reach, LAVA_2)
+
+
+def vines_hang(img, seed, from_top=True):
+    """Vines dripping down the face from its lip, with leaves and a bright tip, and moss on the edge."""
     rng = random.Random(seed)
+    start = 1 if from_top else 0
     for x in range(1, 15):
-        if rng.random() < 0.55:
-            put(img, x, 1 if from_top else 0, MOSS_1 if rng.random() < 0.6 else MOSS_2)
+        if rng.random() < 0.5:
+            put(img, x, start, MOSS_1 if rng.random() < 0.6 else MOSS_2)
+            if rng.random() < 0.3:
+                put(img, x, start + 1, MOSS_D)
     for _ in range(rng.randrange(2, 4)):
         x = rng.randrange(2, 14)
-        length = rng.randrange(4, 10) if from_top else rng.randrange(2, 5)
-        for y in range(1 if from_top else 0, min(T - 2, length + 1)):
-            c = MOSS_1 if rng.random() < 0.6 else MOSS_2
-            put(img, x, y, c)
-            if rng.random() < 0.35:
-                put(img, x + 1, y, MOSS_D)
+        length = rng.randrange(5, 13) if from_top else rng.randrange(2, 6)
+        sway = 0
+        for y in range(start, min(T - 2, start + length)):
             if rng.random() < 0.2:
-                put(img, x - 1, y, MOSS_2)
-        put(img, x, min(T - 2, length + 1), MOSS_HI if rng.random() < 0.5 else MOSS_D)
+                sway = max(-1, min(1, sway + rng.choice((-1, 1))))
+            px = x + sway
+            put(img, px, y, MOSS_1 if rng.random() < 0.65 else MOSS_D)
+            if rng.random() < 0.3:
+                put(img, px + rng.choice((-1, 1)), y, MOSS_2)
+        put(img, x + sway, min(T - 2, start + length), MOSS_HI if rng.random() < 0.6 else MOSS_2)
 
 
 # --- shadows, stairs, bridges ---------------------------------------------------------------------------
-def shadow_tile(levels):
-    """`levels`: alpha per row, with a checker dither between rows of different alpha."""
+def shadow_tile(a):
     img = blank()
-    for y in range(T):
-        a = levels[y]
-        nxt = levels[min(T - 1, y + 1)]
-        for x in range(T):
-            value = a if (x + y) % 2 == 0 else (a + nxt) // 2
-            if value > 0:
-                put(img, x, y, alpha(OUTLINE, value))
+    fill(img, 0, 0, T, T, alpha(OUTLINE, a))
     return img
 
 
@@ -677,7 +795,7 @@ def stone_post():
 
 def stone_deck(horizontal=True):
     """Flagstones of a bridge: two courses of narrow slabs across the walking direction."""
-    img = floor_tile(90 if horizontal else 91, "3x2", tones=[STONE_2, STONE_3, STONE_3, STONE_2])
+    img = floor_tile(90 if horizontal else 91, "3x2", level=1)
     if not horizontal:
         img = img.transpose(Image.TRANSPOSE)
     return img
@@ -770,7 +888,7 @@ def boulder(seed, small=False):
     rng = random.Random(seed)
     img = blank()
     w, h = (10, 8) if small else (14, 12)
-    cx, cy = 8, 9 if small else 9
+    cx, cy = 8, 9
     for y in range(T):
         for x in range(T):
             if ((x + 0.5 - cx) / (w / 2)) ** 2 + ((y + 0.5 - cy) / (h / 2)) ** 2 <= 1.0:
@@ -791,11 +909,13 @@ def boulder(seed, small=False):
 def rocks_heap(seed):
     img = blank()
     rng = random.Random(seed)
+    lighter = {STONE_1: STONE_2, STONE_2: STONE_3, STONE_3: STONE_4}
+    darker = {STONE_1: STONE_D, STONE_2: STONE_1, STONE_3: STONE_2}
     for (x, y, w, h, tone) in ((1, 8, 7, 6, STONE_2), (7, 6, 8, 8, STONE_3), (4, 3, 7, 6, STONE_2), (10, 9, 5, 5, STONE_1)):
         fill(img, x, y, x + w, y + h, tone)
         for k in range(x, x + w):
-            put(img, k, y, LIGHTER[tone])
-            put(img, k, y + h - 1, DARKER[tone])
+            put(img, k, y, lighter[tone])
+            put(img, k, y + h - 1, darker[tone])
         put(img, x, y, JOINT)
         put(img, x + w - 1, y + h - 1, JOINT)
     for _ in range(4):
@@ -805,7 +925,6 @@ def rocks_heap(seed):
 
 
 def flame(img, cx, base_y, height, frame, colours):
-    rng = random.Random(frame * 7 + height)
     for y in range(height):
         half = max(1, int((height - y) / height * 2.6 + 0.5)) - (1 if y < 2 else 0)
         sway = int(round(math.sin((frame / 3.0 + y / 6.0) * 2 * math.pi) * 0.8)) if y > height // 2 else 0
@@ -943,7 +1062,7 @@ def patch_tiles(mask_list, inner_colours, seed):
     result = []
     for mask in mask_list:
         inside = blob_context(mask)
-        img = floor_tile(seed + mask, "2x2")
+        img = floor_tile(seed + mask, "2x2", level=1)
         for y in range(T):
             for x in range(T):
                 d = distance_to_outside(inside, x, y)
@@ -959,10 +1078,12 @@ def patch_tiles(mask_list, inner_colours, seed):
 
 # --- the sheet ----------------------------------------------------------------------------------------------
 def build_tiles():
-    """Returns (ordered list of (name, image), patterns {name: [names]}, animations {name: [names]})."""
+    """Returns (ordered list of (name, image), patterns {name: [names]}, animations {name: [names]},
+    aliases {name: name})."""
     tiles = []
     patterns = {}
     animations = {}
+    aliases = {}
 
     def add(name, img):
         assert img.size == (T, T), (name, img.size)
@@ -984,26 +1105,53 @@ def build_tiles():
         add(name + "_top", img.crop((0, 0, T, T)))
         add(name + "_base", img.crop((0, T, T, 2 * T)))
 
-    # floors
-    add("floor_a", floor_tile(1, "2x2"))
-    add("floor_b", floor_tile(2, "2x2"))
-    add("floor_c", floor_tile(3, "3x2"))
-    add("floor_d", floor_tile(4, "brick"))
-    add("floor_e", floor_tile(5, "brick3"))
-    add("floor_f", floor_tile(6, "split"))
-    add("floor_moss_a", floor_tile(7, "2x2", moss=0.4))
-    add("floor_moss_b", floor_tile(8, "brick", moss=0.7))
-    add("floor_crack_a", floor_tile(9, "2x2", crack=True))
-    add("floor_crack_b", floor_tile(10, "3x2", crack=True))
+    # floors: level 1 under the plain names, then every level under its own
+    kinds = ["2x2", "2x2", "3x2", "brick", "brick3", "tall"]
+    for i, (letter, kind) in enumerate(zip("abcdef", kinds)):
+        add("floor_" + letter, floor_tile(1 + i, kind, level=1))
+        aliases["floor1_" + letter] = "floor_" + letter
+    add("floor_moss_a", floor_tile(7, "2x2", level=1, moss=0.4))
+    add("floor_moss_b", floor_tile(8, "brick", level=1, moss=0.7))
+    add("floor_crack_a", floor_tile(9, "2x2", level=1, crack=True))
+    add("floor_crack_b", floor_tile(10, "3x2", level=1, crack=True))
+    for detail in ("moss_a", "moss_b", "crack_a", "crack_b"):
+        aliases["floor1_" + detail] = "floor_" + detail
     for rune in "abcd":
-        add("floor_rune_" + rune, floor_tile(11, "2x2", rune=rune))
-    add_frames("floor_rune_glow", [floor_tile(11, "2x2", rune="a", glow=g) for g in (BRONZE_2, GOLD_HI, RUNE_GLOW, GOLD_HI)])
+        add("floor_rune_" + rune, floor_tile(11, "2x2", level=1, rune=rune))
+        aliases["floor1_rune_" + rune] = "floor_rune_" + rune
+    add_frames("floor_rune_glow", [floor_tile(11, "2x2", level=1, rune="a", glow=g) for g in (BRONZE_2, GOLD_HI, RUNE_GLOW, GOLD_HI)])
+    for level in (0, 2):
+        for i, (letter, kind) in enumerate(zip("abcdef", kinds)):
+            add("floor%d_%s" % (level, letter), floor_tile(1 + i + 20 * level, kind, level=level))
+        add("floor%d_moss_a" % level, floor_tile(7 + 20 * level, "2x2", level=level, moss=0.4))
+        add("floor%d_moss_b" % level, floor_tile(8 + 20 * level, "brick", level=level, moss=0.7))
+        add("floor%d_crack_a" % level, floor_tile(9 + 20 * level, "2x2", level=level, crack=True))
+        add("floor%d_crack_b" % level, floor_tile(10 + 20 * level, "3x2", level=level, crack=True))
+    for rune in "abcd":
+        add("floor2_rune_" + rune, floor_tile(51, "2x2", level=2, rune=rune))
+    add_frames("floor2_rune_glow", [floor_tile(51, "2x2", level=2, rune="a", glow=g) for g in (BRONZE_2, GOLD_HI, RUNE_GLOW, GOLD_HI)])
+    for level in (0, 1, 2):
+        for name, img in cut(floor_macro(80 + level, level), lambda cx, cy, level=level: "floor%d_m_%d_%d" % (level, cx, cy)):
+            add(name, img)
+    # details as overlays, so they lie on the macro plans without breaking their slabs
+    add("moss_over_a", moss_overlay(13, 0.4, LEVEL_TONES[1]["moss"]))
+    add("moss_over_b", moss_overlay(14, 0.7, LEVEL_TONES[1]["moss"]))
+    add("moss_over_c", moss_overlay(15, 0.5, LEVEL_TONES[2]["moss"]))
+    for level in (0, 1, 2):
+        add("floor%d_crack_over_a" % level, crack_overlay(16 + level, level))
+        add("floor%d_crack_over_b" % level, crack_overlay(19 + level, level))
 
-    # lava
-    for name, img in zip("abcd", lava_base_tiles()):
+    # lava: the macro sea (16 animations), the folded small tile and its stills and bubbles
+    macro_frames = [LAVA_MACRO.frame(k) for k in range(FLOW_FRAMES)]
+    for cy in range(MACRO):
+        for cx in range(MACRO):
+            add_frames("lava_m_%d_%d" % (cx, cy), [f.crop((cx * T, cy * T, cx * T + T, cy * T + T)) for f in macro_frames])
+    small = lava_base_tiles()
+    for name, img in zip("abcd", small):
         add("lava_" + name, img)
-    add_frames("lava_flow", lava_flow_frames())
-    add_frames("lava_bubble", lava_bubble_frames())
+    add_frames("lava_flow", [LAVA_SMALL.frame(k) for k in range(FLOW_FRAMES)])
+    add_frames("lava_bubble", bubble_frames(small[0]))
+    add_frames("lava_bubble_over", bubble_frames(None))
 
     # blobs: rim (lava side) and ledge (plateau side)
     rim_names = []
@@ -1025,18 +1173,18 @@ def build_tiles():
         offset = {"l": 0, "m": 5, "r": 3}[side]
         add("cliff_face_" + side, cliff_face(side, True, True, 0, x_offset=offset))
         add("cliff_face2_top_" + side, cliff_face(side, True, False, 0, x_offset=offset))
-        add("cliff_face2_bot_" + side, cliff_face(side, False, True, 4, x_offset=offset))
-        add("cliff_face_mid_" + side, cliff_face(side, False, False, 4, x_offset=offset))
+        add("cliff_face2_bot_" + side, cliff_face(side, False, True, 2, x_offset=offset))
+        add("cliff_face_mid_" + side, cliff_face(side, False, False, 2, x_offset=offset))
         add("cliff_moss_" + side, cliff_face(side, True, True, 0, moss_seed=20 + offset, x_offset=offset))
         add("cliff_moss2_top_" + side, cliff_face(side, True, False, 0, moss_seed=30 + offset, x_offset=offset))
-        add("cliff_moss2_bot_" + side, cliff_face(side, False, True, 4, moss_seed=40 + offset, x_offset=offset))
+        add("cliff_moss2_bot_" + side, cliff_face(side, False, True, 2, moss_seed=40 + offset, x_offset=offset))
     for side in "lmr":
         offset = {"l": 0, "m": 5, "r": 3}[side]
-        add_frames("cliff_foot_lava_" + side, [cliff_face(side, False, False, 4, lit_frame=k, x_offset=offset) for k in range(4)])
+        add_frames("cliff_foot_lava_" + side, [cliff_face(side, False, False, 2, lit_frame=k, x_offset=offset) for k in range(4)])
 
-    # shadows
-    add("shadow_s_1", shadow_tile([120, 120, 115, 110, 105, 100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50]))
-    add("shadow_s_2", shadow_tile([48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4, 0, 0, 0, 0]))
+    # shadows: 40 % then 20 %
+    add("shadow_s_1", shadow_tile(102))
+    add("shadow_s_2", shadow_tile(51))
 
     # stairs
     add("stairs_up_steps", stairs_steps(True))
@@ -1065,7 +1213,7 @@ def build_tiles():
     # areas the game's roles ask for: a lava pond (opaque), moss and ash patches, a slab floor
     pond_names, pond_inner = [], []
     for i in range(13):
-        img = over(lava_base_tiles()[i % 4].copy(), rim_tile(BLOB_MASKS[i]))
+        img = over(small[i % 4].copy(), rim_tile(BLOB_MASKS[i]))
         add("lava_pond_%d" % i, img)
         (pond_names if i < 9 else pond_inner).append("lava_pond_%d" % i)
     patterns["pond"] = pond_names
@@ -1080,7 +1228,7 @@ def build_tiles():
         patterns[name + "_inner"] = names[9:]
     slab_names = []
     for i in range(9):
-        img = over(floor_tile(70 + i, "2x2", tones=[STONE_3, STONE_3, STONE_4, STONE_2]), ledge_tile(BLOB_MASKS[i]))
+        img = over(floor_tile(70 + i, "2x2", level=2), ledge_tile(BLOB_MASKS[i]))
         add("slab_floor_%d" % i, img)
         slab_names.append("slab_floor_%d" % i)
     patterns["slab_floor"] = slab_names
@@ -1104,10 +1252,10 @@ def build_tiles():
     add("ember_a", embers(10))
     add("ember_b", embers(11, warm=False))
     add("ash_a", ash(12))
-    return tiles, patterns, animations
+    return tiles, patterns, animations, aliases
 
 
-def write_sheet(tiles, patterns, animations):
+def write_sheet(tiles, patterns, animations, aliases):
     rows = (len(tiles) + COLUMNS - 1) // COLUMNS
     sheet = Image.new("RGBA", (COLUMNS * T, rows * T), CLEAR)
     coords = {}
@@ -1116,6 +1264,8 @@ def write_sheet(tiles, patterns, animations):
         sheet.paste(img, (c * T, r * T))
         if not name.startswith("_pad_"):
             coords[name] = [c, r]
+    for alias, name in aliases.items():
+        coords[alias] = coords[name]
     os.makedirs(OUT, exist_ok=True)
     sheet.save(os.path.join(OUT, "temple_sheet.png"))
     data = {"tile_size": T, "columns": COLUMNS, "tiles": coords,
@@ -1190,7 +1340,7 @@ def sample_map(coords, sheet, frame=0, scale=3):
             return 0
         return int(ch)
 
-    # cells covered by a face: (x, y) -> (tile base name, side, is_stairs)
+    # cells covered by a face: (x, y) -> (tile base name, side, ends on a floor, owner height)
     faces = {}
     for y in range(H):
         for x in range(W):
@@ -1218,44 +1368,43 @@ def sample_map(coords, sheet, frame=0, scale=3):
         for x in range(W):
             if height(x, y) < 0 and (x, y) not in faces and rng.random() < 0.04:
                 bubbles[(x, y)] = rng.randrange(6)
-    # 1. lava
+    # 1. lava: the macro sea, with bubbles laid over it
     for y in range(H):
         for x in range(W):
+            blit("lava_m_%d_%d_f%d" % (x % MACRO, y % MACRO, frame % FLOW_FRAMES), x, y)
             if (x, y) in bubbles:
-                blit("lava_bubble_f%d" % ((frame + bubbles[(x, y)]) % 6), x, y)
-            else:
-                blit("lava_flow_f%d" % (frame % 8), x, y)
+                blit("lava_bubble_over_f%d" % ((frame + bubbles[(x, y)]) % 6), x, y)
     # 2. faces
-    foot_phase = {}
     for (x, y), (kind, side, _, _) in faces.items():
         if kind == "foot":
-            foot_phase[(x, y)] = (x * 3 + y) % 4
-            blit("cliff_foot_lava_%s_f%d" % (side, (frame + foot_phase[(x, y)]) % 4), x, y)
+            blit("cliff_foot_lava_%s_f%d" % (side, (frame + (x * 3 + y)) % 4), x, y)
         else:
             blit(kind + side, x, y)
-    # 3. floors by level
-    floor_names = ["floor_a", "floor_b", "floor_c", "floor_d", "floor_e", "floor_f"]
+    # 3. floors by level: the macro plan, with a few details
     floors = {}
     for y in range(H):
         for x in range(W):
             h = height(x, y)
             if h < 0 or (x, y) in faces or SAMPLE[y][x] == "s":
                 continue
-            name = rng.choice(floor_names)
+            name = "floor%d_m_%d_%d" % (h, x % MACRO, y % MACRO)
             roll = rng.random()
+            detail = None
             if roll < 0.05:
-                name = rng.choice(["floor_moss_a", "floor_moss_b"])
-            elif roll < 0.09:
-                name = rng.choice(["floor_crack_a", "floor_crack_b"])
-            floors[(x, y)] = name
-    floors[(24, 6)] = "rune"
-    floors[(10, 2)] = "floor_rune_b"
-    for (x, y), name in floors.items():
+                detail = "moss_over_" + ("c" if h == 2 else rng.choice("ab"))
+            elif roll < 0.08:
+                detail = "floor%d_crack_over_%s" % (h, rng.choice("ab"))
+            floors[(x, y)] = (name, detail)
+    floors[(24, 6)] = ("rune", None)
+    for (x, y), (name, detail) in floors.items():
         if name == "rune":
-            blit("floor_rune_glow_f%d" % (frame % 4), x, y)
+            blit("floor2_rune_glow_f%d" % (frame % 4), x, y)
         else:
             blit(name, x, y)
+        if detail is not None:
+            blit(detail, x, y)
     # 4. rims on the lava cells around every island and face foot (the bridges' cells are lava too)
+
     def is_lava(nx, ny):
         return height(nx, ny) < 0 and (nx, ny) not in faces
 
@@ -1328,6 +1477,8 @@ def sample_map(coords, sheet, frame=0, scale=3):
 
 def animation_gifs(coords, sheet, animations, folder, scale=6):
     for name, names in animations.items():
+        if name.startswith("lava_m_") and name != "lava_m_0_0":
+            continue
         frames = []
         for frame_name in names:
             c, r = coords[frame_name]
@@ -1337,11 +1488,14 @@ def animation_gifs(coords, sheet, animations, folder, scale=6):
             frames.append(bg.resize((T * scale, T * scale), Image.NEAREST).convert("P", palette=Image.ADAPTIVE))
         frames[0].save(os.path.join(folder, "anim_%s.gif" % name), save_all=True, append_images=frames[1:],
                        duration=140, loop=0)
+    # the whole lava macro, looping
+    frames = [LAVA_MACRO.frame(k).resize((MN * 3, MN * 3), Image.NEAREST).convert("P", palette=Image.ADAPTIVE) for k in range(FLOW_FRAMES)]
+    frames[0].save(os.path.join(folder, "anim_lava_macro.gif"), save_all=True, append_images=frames[1:], duration=160, loop=0)
 
 
 def main():
-    tiles, patterns, animations = build_tiles()
-    sheet, coords = write_sheet(tiles, patterns, animations)
+    tiles, patterns, animations, aliases = build_tiles()
+    sheet, coords = write_sheet(tiles, patterns, animations, aliases)
     print("%d tiles, sheet %dx%d, %d patterns, %d animations" % (len(coords), sheet.width, sheet.height, len(patterns), len(animations)))
     if PREVIEW:
         os.makedirs(PREVIEW, exist_ok=True)
