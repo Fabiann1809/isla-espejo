@@ -396,3 +396,7 @@ const CANOPY_FADE_SPEED := 8.0
 ## In a surge room every walkable level-0 cell must have a stair up within this many steps (cells),
 ## so nobody is caught by the lava with no way up (TemplePlan.validate).
 const TEMPLE_SURGE_MAX_STAIR_DISTANCE := 9
+
+# --- Temple: tileset ---------------------------------------------------------------------------------
+## A warm, slightly orange light over the whole Templo del Eclipse (the lava's glow in the air).
+const TEMPLE_WORLD_TINT := Color(1.0, 0.93, 0.86)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RoomTheme" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_theme.gd" id="1_bjb0h"]
+[ext_resource type="Resource" path="res://data/tilesets/temple.tres" id="2_yo7x1"]
+
+[resource]
+script = ExtResource("1_bjb0h")
+tileset = ExtResource("2_yo7x1")
+floor_tile = &"floor_a"
+floor_variants = Array[StringName]([&"floor_b", &"floor_c", &"floor_d", &"floor_e", &"floor_f"])
+floor_variant_chance = 0.8
+decor_tiles = Array[StringName]([&"floor_moss_a", &"floor_moss_b", &"floor_crack_a", &"floor_crack_b", &"rubble_a", &"pebbles"])
+decor_chance = 0.04
+world_tint = Color(1, 0.93, 0.86, 1)
+ambient_life = false
+wall_style = 2
