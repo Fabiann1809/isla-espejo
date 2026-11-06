@@ -26,6 +26,27 @@ const PLAN := """
 #~~~~~~~~~~~~....~~~~~~~~~~~~#
 #############....#############
 """
+## A level-2 block straight north of level-0 floor: a 2 -> 0 drop onto ground Nico walks on.
+const DROP_PLAN := """
+#############....#############
+#............................#
+#............................#
+#............................#
+#.........22222..............#
+#.........22222..............#
+#............................#
+..............................
+..............................
+..............................
+..............................
+#............................#
+#............................#
+#............................#
+#............................#
+#............................#
+#............................#
+#############....#############
+"""
 const LAYERS := ["Lava", "Faces", "Floor0", "Floor1", "Floor2", "Rims", "Ledges", "Shadows", "Stairs", "Bridges"]
 
 var _ok := true
@@ -196,6 +217,29 @@ func _initialize() -> void:
 	_check(border.get_used_cells().is_empty() and room.get_node_or_null("WallRocks") == null
 			and room.get_node_or_null("WallTrees") == null, "no wall art is planted on hidden borders")
 	_check(room.get_node("Walls").get_child_count() == 8, "the room keeps its wall collision with four door gaps")
+
+	# A 2 -> 0 drop onto floor paints faces only where the plan reserves them (or over lava).
+	var drop_room: Node2D = load("res://scenes/levels/rooms/room_base.tscn").instantiate()
+	drop_room.theme = theme
+	drop_room.debug_label = false
+	drop_room.setup(data, doors)
+	var drop_shape: Node2D = shape_script.new()
+	drop_shape.name = "Shape"
+	drop_shape.rows = DROP_PLAN
+	drop_room.add_child(drop_shape)
+	root.add_child(drop_room)
+	await _frames(3)
+	_check(drop_shape.plan.errors.is_empty(), "the drop plan reads (%s)" % [drop_shape.plan.errors])
+	var drop_faces: TileMapLayer = drop_shape.get_node("Faces")
+	var painted := drop_faces.get_used_cells()
+	var stray := 0
+	for face_cell in painted:
+		# The border walls hide as lava: the floor's foot there is lava too.
+		var kind: String = drop_shape.plan.cell_at(face_cell)
+		if drop_shape.plan.face_rows(face_cell) <= 0 and kind != TemplePlan.LAVA and kind != "#":
+			stray += 1
+	_check(not painted.is_empty() and stray == 0,
+			"a 2->0 drop onto floor paints faces only on the plan's face cells (%d painted, %d stray)" % [painted.size(), stray])
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)

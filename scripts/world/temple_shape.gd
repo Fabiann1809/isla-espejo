@@ -157,13 +157,16 @@ func _casts_face(cell: Vector2i) -> bool:
 	return TemplePlan.FLOORS.has(c) or c == TemplePlan.PILLAR or TemplePlan.STAIRS.has(c) or c == TemplePlan.MASONRY
 
 
-## A cell a face may extend onto with its second and third rows: lava or plain floor of the lower
-## height (never a stair, a deck or a pillar slot, which must stay clear).
+## A cell a face may extend onto with its second and third rows: lava or masonry of the lower height,
+## where nothing walks, or a floor cell the plan itself reserves for a face (`face_rows` > 0). Plain
+## floor the plan lets Nico stand on never takes a face row, so the art agrees with the physics.
 func _takes_face_row(cell: Vector2i, below: int) -> bool:
 	if not TemplePlan.in_grid(cell) or _art_height(cell) != below:
 		return false
 	var c := plan.cell_at(cell)
-	return c == TemplePlan.LAVA or TemplePlan.FLOORS.has(c) or _is_wall(cell)
+	if c == TemplePlan.LAVA or _is_wall(cell):
+		return true
+	return TemplePlan.FLOORS.has(c) and plan.face_rows(cell) > 0
 
 
 ## True for the cells of the cross of lanes that joins the doors (kept free of floor details).
@@ -199,7 +202,8 @@ func _find_faces() -> void:
 			elif same.call(x - 1) and not same.call(x + 1):
 				side = "r"
 			var mossy := _rng.randf() < Tuning.TEMPLE_FACE_MOSS_SHARE
-			# The first row always lands on the cell south; the others only on plain lower ground.
+			# The first row always lands on the cell south; the others only where nothing walks (lava)
+			# or where the plan reserves the face (see _takes_face_row).
 			var cells: Array[Vector2i] = [south]
 			for row in range(1, drop):
 				var next := cell + Vector2i(0, 1 + row)
@@ -233,6 +237,8 @@ func _new_layer(layer_name: String) -> TileMapLayer:
 	return layer
 
 
+## Paints a still tile. Animated roles must go through `_paint_animated`: the animated tile set only
+## creates the first frame of an animation as a tile, so any other frame would paint nothing.
 func _paint(layer_name: String, cell: Vector2i, role: StringName, alternative := 0) -> void:
 	_layers[layer_name].set_cell(cell, 0, TileArt.coords(role), alternative)
 
@@ -537,7 +543,7 @@ func _spread(cells: Array[Vector2i], every: int) -> Array[Vector2i]:
 		pool[i] = pool[j]
 		pool[j] = tmp
 	var picked: Array[Vector2i] = []
-	for i in pool.size() / every:
+	for i in floori(float(pool.size()) / every):
 		picked.append(pool[i])
 	return picked
 
@@ -604,9 +610,13 @@ static func animated_tile_set() -> TileSet:
 				var frames := profile.animation(animation)
 				source.create_tile(coords)
 				source.set_tile_animation_columns(coords, 0)
+				# No pace (animation off, or an fps of 0 or less): the first frame, still.
+				var fps := _fps_of(animation)
+				if fps <= 0.0 or not Tuning.TEMPLE_SHAPE_ANIMATE:
+					continue
 				source.set_tile_animation_frames_count(coords, frames.size())
 				for i in frames.size():
-					source.set_tile_animation_frame_duration(coords, i, 1.0 / _fps_of(animation))
+					source.set_tile_animation_frame_duration(coords, i, 1.0 / fps)
 				if not String(animation).begins_with(IN_STEP_PREFIX):
 					source.set_tile_animation_mode(coords, TileSetAtlasSource.TILE_ANIMATION_MODE_RANDOM_START_TIMES)
 			elif not covered.has(coords):

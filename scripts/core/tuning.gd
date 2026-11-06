@@ -489,6 +489,8 @@ const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
 ## A temple room (TempleShape) is a stone island over a sea of lava. Frames per second of the lava's
 ## flow (the 4x4 macro sea, all in step), its bubbles, the pulsing cracks of the crust along the rims,
 ## the lava's light on the foot of a cliff, the glowing runes and the sheet's fires (brazier, torch).
+## On: the temple's lava, glows and fires play their frames. Off: everything is painted still (first frame).
+const TEMPLE_SHAPE_ANIMATE := true
 const TEMPLE_LAVA_FPS := 6.0
 const TEMPLE_BUBBLE_FPS := 7.0
 const TEMPLE_RIM_GLOW_FPS := 3.0
