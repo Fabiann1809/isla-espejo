@@ -417,3 +417,6 @@ const TEMPLE_FIRE_LIGHT_RADIUS := 48.0
 const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.4)
 const TEMPLE_LAVA_LIGHT_RADIUS := 56.0
 const TEMPLE_GATE_LIGHT_RADIUS := 80.0
+## Bounds of a temple light's flicker, as a factor of RUIN_LIGHT_FLICKER_SECONDS (picked per position).
+const TEMPLE_PROP_LIGHT_FLICKER_MIN := 0.8
+const TEMPLE_PROP_LIGHT_FLICKER_MAX := 1.4

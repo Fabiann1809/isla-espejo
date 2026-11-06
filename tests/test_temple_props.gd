@@ -53,6 +53,14 @@ func _initialize() -> void:
 	a.queue_free()
 	b.queue_free()
 
+	# A light's flicker depends only on its position, so a rebuilt light keeps its rhythm.
+	var flicker_a: float = _prop_script.flicker_seconds(Vector2(96, 96))
+	var flicker_b: float = _prop_script.flicker_seconds(Vector2(96, 96))
+	var flicker_low := Tuning.RUIN_LIGHT_FLICKER_SECONDS * Tuning.TEMPLE_PROP_LIGHT_FLICKER_MIN
+	var flicker_high := Tuning.RUIN_LIGHT_FLICKER_SECONDS * Tuning.TEMPLE_PROP_LIGHT_FLICKER_MAX
+	_check(flicker_a == flicker_b and flicker_a >= flicker_low and flicker_a <= flicker_high,
+			"light flicker is deterministic (%.3f, %.3f)" % [flicker_a, flicker_b])
+
 	# Vines, banners and the other flat or overhead kinds have no collision.
 	for flat in ["VINES", "BANNER", "LAVA_FALL", "EMBER_VENT", "PLANT", "RUBBLE"]:
 		var prop: Node2D = _make(kinds[flat], Vector2(64, 64))

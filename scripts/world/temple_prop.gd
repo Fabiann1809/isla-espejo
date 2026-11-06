@@ -250,10 +250,17 @@ func _make_light(of_kind: Kind) -> Sprite2D:
 	add_child(glow)
 	var dim := Color(color.r, color.g, color.b, color.a * (1.0 - Tuning.RUIN_LIGHT_FLICKER))
 	var tween := glow.create_tween().set_loops()
-	var seconds := Tuning.RUIN_LIGHT_FLICKER_SECONDS * randf_range(0.8, 1.4)
+	var seconds := flicker_seconds(light[0])
 	tween.tween_property(glow, "modulate", dim, seconds)
 	tween.tween_property(glow, "modulate", color, seconds)
 	return glow
+
+
+## The flicker half-cycle of a light at this spot: a fixed value per position, so a rebuilt light
+## (a geyser's next eruption) keeps its rhythm and the global RNG is left alone.
+static func flicker_seconds(at: Vector2) -> float:
+	var t := float(posmod(hash(Vector2i(at)) / 7, 1000)) / 1000.0
+	return Tuning.RUIN_LIGHT_FLICKER_SECONDS * lerpf(Tuning.TEMPLE_PROP_LIGHT_FLICKER_MIN, Tuning.TEMPLE_PROP_LIGHT_FLICKER_MAX, t)
 
 
 # --- geyser ---------------------------------------------------------------------------------------
@@ -292,8 +299,9 @@ func _physics_process(delta: float) -> void:
 
 func _enter_phase(phase: GeyserPhase) -> void:
 	_phase = phase
-	_phase_left = [Tuning.TEMPLE_GEYSER_IDLE, Tuning.TEMPLE_GEYSER_RUMBLE, Tuning.TEMPLE_GEYSER_ERUPT,
-			Tuning.TEMPLE_GEYSER_SETTLE][phase]
+	var durations: Array[float] = [Tuning.TEMPLE_GEYSER_IDLE, Tuning.TEMPLE_GEYSER_RUMBLE,
+			Tuning.TEMPLE_GEYSER_ERUPT, Tuning.TEMPLE_GEYSER_SETTLE]
+	_phase_left = durations[phase]
 	_sprite.play(GEYSER_PHASE_NAMES[phase])
 	if phase == GeyserPhase.ERUPT:
 		if _hitbox != null:
