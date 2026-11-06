@@ -250,7 +250,7 @@ func _make_light(of_kind: Kind) -> Sprite2D:
 	add_child(glow)
 	var dim := Color(color.r, color.g, color.b, color.a * (1.0 - Tuning.RUIN_LIGHT_FLICKER))
 	var tween := glow.create_tween().set_loops()
-	var seconds := flicker_seconds(light[0])
+	var seconds := flicker_seconds(global_position + Vector2(light[0]))
 	tween.tween_property(glow, "modulate", dim, seconds)
 	tween.tween_property(glow, "modulate", color, seconds)
 	return glow

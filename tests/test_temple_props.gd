@@ -61,6 +61,14 @@ func _initialize() -> void:
 	_check(flicker_a == flicker_b and flicker_a >= flicker_low and flicker_a <= flicker_high,
 			"light flicker is deterministic (%.3f, %.3f)" % [flicker_a, flicker_b])
 
+	# Props side by side flicker out of step: 32 px apart, most pairs get different values.
+	var different := 0
+	for i in 5:
+		var x := 96.0 + 64.0 * i
+		if _prop_script.flicker_seconds(Vector2(x, 96)) != _prop_script.flicker_seconds(Vector2(x + 32.0, 96)):
+			different += 1
+	_check(different >= 4, "braziers 32 px apart flicker out of step (%d of 5 pairs differ)" % different)
+
 	# Vines, banners and the other flat or overhead kinds have no collision.
 	for flat in ["VINES", "BANNER", "LAVA_FALL", "EMBER_VENT", "PLANT", "RUBBLE"]:
 		var prop: Node2D = _make(kinds[flat], Vector2(64, 64))
