@@ -549,3 +549,30 @@ const TEMPLE_SURGE_WARN_GLOW := 0.32
 const TEMPLE_SURGE_SEAL_COLOR := Color(1.0, 0.42, 0.1, 0.55)
 const TEMPLE_SURGE_RING_COLOR := Color(1.0, 0.5, 0.12, 0.9)
 const TEMPLE_SURGE_BUBBLE_COLOR := Color(1.0, 0.72, 0.25, 0.85)
+## A fight that cannot send a wave (no enemy to pick, no free cell) ends after this many wave intervals
+## once nothing is alive, so the doors never stay sealed for good.
+const TEMPLE_SURGE_STALL_INTERVALS := 3
+## Look of the surge: the ring warning a wave (radius px, how it closes in: start and end scale), the
+## puff when it appears (radius px, seconds), the bubbles on the edge (radius range px, seconds), the
+## glow on the cells that flood first (colour; its alpha is TEMPLE_SURGE_WARN_GLOW).
+const TEMPLE_SURGE_RING_RADIUS := 11.0
+const TEMPLE_SURGE_RING_SPAN := Vector2(1.5, 0.9)
+const TEMPLE_SURGE_PUFF_RADIUS := 14.0
+const TEMPLE_SURGE_PUFF_LIFE := 0.35
+const TEMPLE_SURGE_BUBBLE_RADIUS := Vector2(3.0, 6.0)
+const TEMPLE_SURGE_BUBBLE_LIFE := 0.5
+const TEMPLE_SURGE_WARN_GLOW_COLOR := Color(1.0, 0.5, 0.15)
+## The sealing fire: its alpha pulses between these values every this many seconds, fades in and out.
+const TEMPLE_SURGE_SEAL_PULSE_ALPHAS := Vector2(0.55, 1.0)
+const TEMPLE_SURGE_SEAL_PULSE_SECONDS := 0.35
+const TEMPLE_SURGE_SEAL_FADE_IN := 0.4
+const TEMPLE_SURGE_SEAL_FADE_OUT := 0.5
+## Steam over the floor the lava leaves: particles, life (s), speed (px/s), size (px), pull up (px/s2),
+## colour at the start and at the end.
+const TEMPLE_SURGE_STEAM_AMOUNT := 3
+const TEMPLE_SURGE_STEAM_LIFETIME := 1.0
+const TEMPLE_SURGE_STEAM_SPEED := Vector2(4.0, 10.0)
+const TEMPLE_SURGE_STEAM_SCALE := Vector2(2.0, 4.0)
+const TEMPLE_SURGE_STEAM_RISE := 6.0
+const TEMPLE_SURGE_STEAM_COLOR := Color(1.0, 0.85, 0.75, 0.5)
+const TEMPLE_SURGE_STEAM_FADE := Color(0.8, 0.8, 0.85, 0.0)

@@ -53,6 +53,10 @@ var _hitbox: Hitbox
 var _burn_clock := 0.0
 var _burn_queue: Array[Node] = []
 var _burning: Node
+## Instance ids of what the lava aimed at: a death of one of them is not a kill.
+var _lava_victims := {}
+var _seal_pulses: Array[Tween] = []
+var _stalled := 0
 var _burn_frames := 0
 var _incoming := 0
 var _bubble_clock := 0.0
@@ -63,7 +67,9 @@ var _said_receding := false
 
 ## Adds a surge to a room whose RoomData has stages and returns it (null if the room has none, the
 ## feature is off or the room has no temple plan). `roster` is the map's enemy list for the waves.
-static func attach_to(target: Node, enemies: Array[PackedScene]) -> Node:
+## An empty `enemies` falls back to the roster or the scenario's pool found above the room (a Level),
+## then to `fallback_pool`.
+static func attach_to(target: Node, enemies: Array[PackedScene], fallback_pool: Array[PackedScene] = []) -> Node:
 	if not Tuning.TEMPLE_SURGE_ENABLED or target == null or target.get("data") == null:
 		return null
 	if target.data.surge_stages <= 0:
@@ -74,9 +80,26 @@ static func attach_to(target: Node, enemies: Array[PackedScene]) -> Node:
 	var surge := LavaSurge.new()
 	surge.name = "LavaSurge"
 	surge.room = target
-	surge.roster = enemies
+	surge.roster = enemies if not enemies.is_empty() else _find_pool(target, fallback_pool)
 	target.add_child(surge)
 	return surge
+
+
+static func _find_pool(target: Node, fallback_pool: Array[PackedScene]) -> Array[PackedScene]:
+	var node := target.get_parent()
+	while node != null:
+		var roster: Variant = node.get("roster")
+		if roster is Array and not roster.is_empty():
+			var found: Array[PackedScene] = []
+			found.assign(roster)
+			return found
+		var scenario: Variant = node.get("scenario")
+		if scenario != null and scenario.get("enemy_pool") is Array and not scenario.enemy_pool.is_empty():
+			var pool: Array[PackedScene] = []
+			pool.assign(scenario.enemy_pool)
+			return pool
+		node = node.get_parent()
+	return fallback_pool
 
 
 func _ready() -> void:
@@ -84,7 +107,6 @@ func _ready() -> void:
 	plan = shape.plan if shape.plan != null else TemplePlan.parse(shape.rows)
 	_rng.seed = hash(Vector2i(room.global_position)) + 7
 	logic = LavaSurgeLogic.new(room.data.surge_stages, room.data.kills_stage_1, room.data.kills_to_recede)
-	room.clear_held = true
 	room.cleared.connect(_on_room_cleared)
 	Events.enemy_killed.connect(_on_enemy_killed)
 	_build_flood()
@@ -273,6 +295,7 @@ func _physics_process(delta: float) -> void:
 		_update_overlay()
 		_update_warning(delta)
 		_update_burning(delta)
+		_check_stall()
 	_run_hitbox()
 
 
@@ -280,12 +303,16 @@ func _watch_for_trigger() -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null:
 		return
+	# Nothing left to fight before Nico stepped in: the room is simply cleared, no trap is sprung.
+	if room.cleared_once:
+		return
 	var local := room.to_local(player.global_position)
 	if not Rect2(Vector2.ZERO, room.pixel_size()).has_point(local):
 		return
 	for door in room.open_doors:
 		if local.distance_to(DOOR_POINTS[door]) <= Tuning.TEMPLE_SURGE_TRIGGER_DEPTH:
 			return
+	room.clear_held = true
 	logic.start()
 	_seal_doors()
 
@@ -311,13 +338,23 @@ func _on_event(event: StringName) -> void:
 				_open_doors()
 
 
+## A fight that cannot go on: nothing can be sent as a wave and nothing is alive. Without enemies to
+## pick it is won at once; with no free cell, after a few wave intervals.
+func _check_stall() -> void:
+	if logic.state != LavaSurgeLogic.State.FIGHT or room.enemies_alive > 0 or _incoming > 0:
+		return
+	if roster.is_empty() or _stalled >= Tuning.TEMPLE_SURGE_STALL_INTERVALS:
+		logic.win_now()
+
+
 func _on_room_cleared() -> void:
 	if logic.state == LavaSurgeLogic.State.DONE:
 		_open_doors()
 
 
 func _on_enemy_killed(enemy: Node) -> void:
-	if enemy == _burning or not is_instance_valid(enemy) or not room.is_ancestor_of(enemy):
+	if not is_instance_valid(enemy) or _lava_victims.has(enemy.get_instance_id()) \
+			or not room.is_ancestor_of(enemy):
 		return
 	logic.on_kill()
 
@@ -333,6 +370,7 @@ func _update_warning(delta: float) -> void:
 	var level := mini(logic.stage, 1)
 	var ramp := 1.0 - logic.warning_left() / Tuning.TEMPLE_SURGE_WARN_SECONDS
 	_glow.cells = _first_ring(level)
+	_glow.tint = Tuning.TEMPLE_SURGE_WARN_GLOW_COLOR
 	_glow.alpha = Tuning.TEMPLE_SURGE_WARN_GLOW * (0.35 + 0.65 * ramp) * (0.6 + 0.4 * sin(_time * 9.0))
 	_glow.queue_redraw()
 	_bubble_clock -= delta
@@ -342,8 +380,8 @@ func _update_warning(delta: float) -> void:
 		var cell := edge[_rng.randi_range(0, edge.size() - 1)]
 		var ring := Ring.new()
 		ring.bubble = true
-		ring.radius = _rng.randf_range(3.0, 6.0)
-		ring.life = 0.5
+		ring.radius = _rng.randf_range(Tuning.TEMPLE_SURGE_BUBBLE_RADIUS.x, Tuning.TEMPLE_SURGE_BUBBLE_RADIUS.y)
+		ring.life = Tuning.TEMPLE_SURGE_BUBBLE_LIFE
 		ring.color = Tuning.TEMPLE_SURGE_BUBBLE_COLOR
 		ring.position = Vector2(cell * TILE) + Vector2(_rng.randf_range(2.0, 14.0), _rng.randf_range(2.0, 14.0))
 		ring.z_index = RoomTheme.GROUND_FX_Z
@@ -408,8 +446,10 @@ func _seal_fire(rect: Rect2, door: Vector2i) -> void:
 	add_child(bar)
 	_seal_nodes.append(bar)
 	var pulse := bar.create_tween().set_loops()
-	pulse.tween_property(bar, "modulate:a", 1.0, 0.35)
-	pulse.tween_property(bar, "modulate:a", 0.55, 0.35)
+	_seal_pulses.append(pulse)
+	var alphas := Tuning.TEMPLE_SURGE_SEAL_PULSE_ALPHAS
+	pulse.tween_property(bar, "modulate:a", alphas.y, Tuning.TEMPLE_SURGE_SEAL_PULSE_SECONDS)
+	pulse.tween_property(bar, "modulate:a", alphas.x, Tuning.TEMPLE_SURGE_SEAL_PULSE_SECONDS)
 	var horizontal := door.y != 0
 	var count := int((rect.size.x if horizontal else rect.size.y) / TILE)
 	for i in count:
@@ -421,7 +461,7 @@ func _seal_fire(rect: Rect2, door: Vector2i) -> void:
 			prop.position = Vector2(rect.get_center().x, rect.position.y + TILE * (i + 1.0) - 2.0)
 		prop.modulate.a = 0.0
 		room.add_child(prop)
-		prop.create_tween().tween_property(prop, "modulate:a", 1.0, 0.4)
+		prop.create_tween().tween_property(prop, "modulate:a", 1.0, Tuning.TEMPLE_SURGE_SEAL_FADE_IN)
 		_seal_nodes.append(prop)
 
 
@@ -432,11 +472,14 @@ func _open_doors() -> void:
 	for body in _seals:
 		body.queue_free()
 	_seals.clear()
+	for pulse in _seal_pulses:
+		pulse.kill()
+	_seal_pulses.clear()
 	for node in _seal_nodes:
 		if is_instance_valid(node):
 			var canvas := node as CanvasItem
 			var fade := canvas.create_tween()
-			fade.tween_property(canvas, "modulate:a", 0.0, 0.5)
+			fade.tween_property(canvas, "modulate:a", 0.0, Tuning.TEMPLE_SURGE_SEAL_FADE_OUT)
 			fade.tween_callback(canvas.queue_free)
 	_seal_nodes.clear()
 
@@ -504,6 +547,7 @@ func _run_hitbox() -> void:
 			continue
 		var hurtbox := target.get_node("Hurtbox") as Node2D
 		_burning = target
+		_lava_victims[target.get_instance_id()] = true
 		_burn_frames = Tuning.TEMPLE_SURGE_HIT_FRAMES
 		_hitbox.global_position = hurtbox.global_position
 		_hitbox.activate()
@@ -512,6 +556,11 @@ func _run_hitbox() -> void:
 
 func _finish_burn() -> void:
 	_hitbox.deactivate()
+	# One that survived the burn is a normal enemy again: killing it later counts.
+	if is_instance_valid(_burning):
+		var health: Variant = _burning.get("health")
+		if health == null or not health.is_dead():
+			_lava_victims.erase(_burning.get_instance_id())
 	_burning = null
 
 
@@ -519,14 +568,21 @@ func _finish_burn() -> void:
 func _request_wave() -> void:
 	var free_slots: int = room.data.max_alive - room.enemies_alive - _incoming
 	var count := mini(room.data.wave_size, free_slots)
-	if count <= 0 or roster.is_empty():
+	if roster.is_empty():
+		_stalled += 1
+		return
+	if count <= 0:
 		return
 	var cells := _pick_wave_cells(count)
+	if cells.is_empty():
+		_stalled += 1
+		return
+	_stalled = 0
 	var picks := Room.pick_enemies(roster, cells.size(), _rng, director_plan, base_weights)
 	for i in cells.size():
 		_incoming += 1
 		var ring := Ring.new()
-		ring.radius = 11.0
+		ring.radius = Tuning.TEMPLE_SURGE_RING_RADIUS
 		ring.life = Tuning.TEMPLE_SURGE_SPAWN_WARN
 		ring.color = Tuning.TEMPLE_SURGE_RING_COLOR
 		ring.position = Vector2(cells[i] * TILE) + Vector2(TILE / 2.0, TILE / 2.0)
@@ -534,8 +590,10 @@ func _request_wave() -> void:
 		room.add_child(ring)
 		var scene := picks[i]
 		var cell := cells[i]
-		get_tree().create_timer(Tuning.TEMPLE_SURGE_SPAWN_WARN).timeout.connect(
-				func() -> void: _spawn_enemy(scene, cell))
+		# A tween of this node dies with it (a freed map never spawns).
+		var wait := create_tween()
+		wait.tween_interval(Tuning.TEMPLE_SURGE_SPAWN_WARN)
+		wait.tween_callback(_spawn_enemy.bind(scene, cell))
 
 
 ## Safe cells at least `SPAWN_MIN_DISTANCE` cells from Nico and clear of other enemies and chosen cells.
@@ -587,8 +645,8 @@ func _spawn_enemy(scene: PackedScene, cell: Vector2i) -> void:
 	room.register_enemy(enemy)
 	var puff := Ring.new()
 	puff.bubble = true
-	puff.radius = 14.0
-	puff.life = 0.35
+	puff.radius = Tuning.TEMPLE_SURGE_PUFF_RADIUS
+	puff.life = Tuning.TEMPLE_SURGE_PUFF_LIFE
 	puff.color = Tuning.TEMPLE_SURGE_RING_COLOR
 	puff.position = enemy.position
 	puff.z_index = RoomTheme.GROUND_FX_Z
@@ -600,29 +658,28 @@ func _spawn_enemy(scene: PackedScene, cell: Vector2i) -> void:
 func _steam(cell: Vector2i) -> void:
 	var steam := CPUParticles2D.new()
 	steam.position = Vector2(cell * TILE) + Vector2(TILE / 2.0, TILE / 2.0)
-	steam.amount = 3
-	steam.lifetime = 1.0
+	steam.amount = Tuning.TEMPLE_SURGE_STEAM_AMOUNT
+	steam.lifetime = Tuning.TEMPLE_SURGE_STEAM_LIFETIME
 	steam.direction = Vector2.UP
 	steam.spread = 30.0
-	steam.gravity = Vector2(0, -6)
-	steam.initial_velocity_min = 4.0
-	steam.initial_velocity_max = 10.0
-	steam.scale_amount_min = 2.0
-	steam.scale_amount_max = 4.0
+	steam.gravity = Vector2(0, -Tuning.TEMPLE_SURGE_STEAM_RISE)
+	steam.initial_velocity_min = Tuning.TEMPLE_SURGE_STEAM_SPEED.x
+	steam.initial_velocity_max = Tuning.TEMPLE_SURGE_STEAM_SPEED.y
+	steam.scale_amount_min = Tuning.TEMPLE_SURGE_STEAM_SCALE.x
+	steam.scale_amount_max = Tuning.TEMPLE_SURGE_STEAM_SCALE.y
 	steam.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	steam.emission_rect_extents = Vector2(6, 4)
 	var fade := Gradient.new()
-	fade.colors = PackedColorArray([Color(1, 0.85, 0.75, 0.5), Color(0.8, 0.8, 0.85, 0.0)])
+	fade.colors = PackedColorArray([Tuning.TEMPLE_SURGE_STEAM_COLOR, Tuning.TEMPLE_SURGE_STEAM_FADE])
 	steam.color_ramp = fade
 	steam.z_index = RoomTheme.GROUND_FX_Z + 1
 	room.add_child(steam)
-	var timer := get_tree().create_timer(Tuning.TEMPLE_SURGE_STEAM_SECONDS)
-	timer.timeout.connect(func() -> void:
-		if is_instance_valid(steam):
-			steam.emitting = false
-			get_tree().create_timer(steam.lifetime + 0.1).timeout.connect(func() -> void:
-				if is_instance_valid(steam):
-					steam.queue_free()))
+	# The steam's own tween, so it goes with the particles if the map is freed.
+	var life := steam.create_tween()
+	life.tween_interval(Tuning.TEMPLE_SURGE_STEAM_SECONDS)
+	life.tween_callback(steam.set.bind("emitting", false))
+	life.tween_interval(steam.lifetime + 0.1)
+	life.tween_callback(steam.queue_free)
 
 
 # --- small drawings ----------------------------------------------------------------------------------------------------
@@ -630,11 +687,12 @@ func _steam(cell: Vector2i) -> void:
 class Glow extends Node2D:
 	var cells: Array[Vector2i] = []
 	var alpha := 0.0
+	var tint := Color.WHITE
 
 	func _draw() -> void:
 		for cell in cells:
 			draw_rect(Rect2(Vector2(cell * TemplePlan.TILE), Vector2.ONE * TemplePlan.TILE),
-					Color(1.0, 0.5, 0.15, alpha))
+					Color(tint, alpha))
 
 
 ## A ring that closes in on the spot where an enemy will appear, or a bubble that bursts.
@@ -657,7 +715,7 @@ class Ring extends Node2D:
 		if bubble:
 			draw_circle(Vector2.ZERO, radius * (0.4 + 0.6 * t), Color(color, color.a * (1.0 - t)))
 			return
-		var r := radius * (1.5 - 0.6 * t)
+		var r := radius * lerpf(Tuning.TEMPLE_SURGE_RING_SPAN.x, Tuning.TEMPLE_SURGE_RING_SPAN.y, t)
 		var flicker := 0.7 + 0.3 * sin(_age * 40.0)
 		draw_circle(Vector2.ZERO, r, Color(color.r, color.g, color.b, 0.18 * t))
 		draw_arc(Vector2.ZERO, r, 0.0, TAU, 24, Color(color, color.a * flicker), 2.0)

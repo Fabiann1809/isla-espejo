@@ -42,6 +42,14 @@ func on_kill() -> void:
 		kills += 1
 
 
+## The fight is won without more kills (nothing left to fight): the lava recedes now, whatever the stage.
+func win_now() -> void:
+	if state == State.FIGHT:
+		state = State.RECEDING
+		_timer = Tuning.TEMPLE_SURGE_RECEDE_SECONDS
+		_pending.append(&"recede")
+
+
 func flooded_levels() -> int:
 	return stage
 

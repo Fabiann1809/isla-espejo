@@ -39,6 +39,8 @@ var height := Heights.LOW
 
 ## While true the room does not report itself cleared (see release_clear).
 var clear_held := false
+## True once the room has reported itself cleared.
+var cleared_once := false
 
 var _had_enemies := false
 
@@ -193,6 +195,7 @@ func release_clear() -> void:
 
 func _check_cleared() -> void:
 	if enemies_alive == 0 and _had_enemies and not clear_held:
+		cleared_once = true
 		cleared.emit()
 		Events.room_cleared.emit(self)
 

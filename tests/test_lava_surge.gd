@@ -35,12 +35,13 @@ var _warned := 0
 
 
 func _initialize() -> void:
-	create_timer(230.0).timeout.connect(func() -> void:
+	create_timer(400.0).timeout.connect(func() -> void:
 		printerr("TIMEOUT")
 		quit(1))
 	await process_frame
 	_pure_logic()
 	await _node_tests()
+	await _fix_tests()
 	Engine.time_scale = 1.0
 	print("RESULT: " + ("OK" if _ok else "FAILED"))
 	quit(0 if _ok else 1)
@@ -288,6 +289,120 @@ func _node_tests() -> void:
 	seals_still = surge.get_children().filter(func(c: Node) -> bool: return c is StaticBody2D).size()
 	_check(seals_still == 0, "after the room is cleared the doors open (%d bodies)" % seals_still)
 	_check(_received.has(["receded", 0]), "lava_surge_receded was published")
+	_check(surge._seal_pulses.is_empty(), "the seal's pulse tweens are killed when the doors open")
+	room.queue_free()
+	await _frames(3)
+
+
+# --- fix round 1: no softlock, cleared without a trigger ----------------------------------------------------
+## A room that is all level-0 floor: nothing can ever be spawned on a safe level 1.
+func _flat_plan() -> String:
+	var lines: Array[String] = []
+	for y in 18:
+		var line := ""
+		for x in 30:
+			var ring := x == 0 or y == 0 or x == 29 or y == 17
+			var door := ((y == 0 or y == 17) and x >= 13 and x <= 16) or ((x == 0 or x == 29) and y >= 7 and y <= 10)
+			line += "." if (door or not ring) else "#"
+		lines.append(line)
+	return "\n" + "\n".join(lines) + "\n"
+
+
+## A one-stage surge room on the flat plan with one tough grunt, Nico at `nico_at`. Returns the pieces.
+func _flat_room(roster: Array[PackedScene], nico_at: Vector2) -> Dictionary:
+	var theme: Resource = load("res://data/themes/temple.tres")
+	var room: Node2D = load("res://scenes/levels/rooms/room_base.tscn").instantiate()
+	room.theme = theme
+	room.debug_label = false
+	var data: Resource = load("res://scripts/world/room_data.gd").new()
+	data.id = "surge_flat"
+	data.surge_stages = 1
+	data.kills_to_recede = 2
+	var doors: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+	room.setup(data, doors)
+	var shape: Node2D = load("res://scripts/world/temple_shape.gd").new()
+	shape.name = "Shape"
+	shape.rows = _flat_plan()
+	room.add_child(shape)
+	root.add_child(room)
+	var player: Node2D = load("res://scenes/player/player.tscn").instantiate()
+	player.position = nico_at
+	room.add_child(player)
+	await _frames(3)
+	player.health.set_max_health(99)
+	var grunt: Node2D = load("res://scenes/enemies/grunt.tscn").instantiate()
+	grunt.position = Vector2(120, 60)
+	room.add_child(grunt)
+	grunt.health.set_max_health(99)
+	room.register_enemy(grunt)
+	var surge = load("res://scripts/world/lava_surge.gd").attach_to(room, roster)
+	await _frames(3)
+	return {"room": room, "player": player, "grunt": grunt, "surge": surge}
+
+
+func _fix_tests() -> void:
+	var grunt_scene: PackedScene = load("res://scenes/enemies/grunt.tscn")
+	var none: Array[PackedScene] = []
+	var some: Array[PackedScene] = [grunt_scene]
+	var deep := Vector2(240, 150)
+
+	# The fallback pool is used when the roster is empty.
+	var parts := await _flat_room(none, Vector2(8, 152))
+	var fallback = load("res://scripts/world/lava_surge.gd").attach_to(parts["room"], none, some)
+	_check(fallback != null and fallback.roster.size() == 1, "an empty roster falls back to the given pool")
+	fallback.free()
+	parts["room"].queue_free()
+	await _frames(3)
+
+	# Empty roster: the surge is won as soon as the initial enemies are dead.
+	parts = await _flat_room(none, deep)
+	var room: Node2D = parts["room"]
+	var surge = parts["surge"]
+	var cleared := [0]
+	room.cleared.connect(func() -> void: cleared[0] += 1)
+	await _frames(int((Tuning.TEMPLE_SURGE_WARN_SECONDS + Tuning.TEMPLE_SURGE_RISE_SECONDS + 0.5) * 60))
+	_check(surge.logic.state == surge.logic.State.FIGHT, "flat room: the fight starts (%d)" % surge.logic.state)
+	_check(cleared[0] == 0, "the room is held while the lava is up")
+	parts["grunt"].health.take_damage(999)
+	await _frames(int((Tuning.TEMPLE_SURGE_RECEDE_SECONDS + 1.5) * 60))
+	_check(surge.logic.state == surge.logic.State.DONE, "an empty roster recedes after the room is cleared")
+	_check(cleared[0] >= 1 and surge.overlay_cell_count() == 0, "the room reports cleared and the lava is gone")
+	await _frames(40)
+	_check(surge.get_children().filter(func(c: Node) -> bool: return c is StaticBody2D).is_empty(), "the doors are open")
+	room.queue_free()
+	await _frames(3)
+
+	# A roster but no cell to spawn on: the failsafe recedes it after a few wave intervals.
+	parts = await _flat_room(some, deep)
+	room = parts["room"]
+	surge = parts["surge"]
+	_check(surge.safe_spawn_cells().is_empty(), "flat room: there is no safe cell to spawn on")
+	await _frames(int((Tuning.TEMPLE_SURGE_WARN_SECONDS + Tuning.TEMPLE_SURGE_RISE_SECONDS + 0.5) * 60))
+	parts["grunt"].health.take_damage(999)
+	await _frames(int((Tuning.TEMPLE_SURGE_WAVE_INTERVAL * 2.0) * 60))
+	_check(surge.logic.state == surge.logic.State.FIGHT, "before the stall limit the fight goes on")
+	await _frames(int((Tuning.TEMPLE_SURGE_WAVE_INTERVAL * 1.5 + Tuning.TEMPLE_SURGE_RECEDE_SECONDS + 1.5) * 60))
+	_check(surge.logic.state == surge.logic.State.DONE, "no spawnable cell does not softlock")
+	await _frames(40)
+	_check(surge.get_children().filter(func(c: Node) -> bool: return c is StaticBody2D).is_empty(), "the doors open after the failsafe")
+	room.queue_free()
+	await _frames(3)
+
+	# Enemies dead before Nico goes deep: the room reports cleared and the surge never springs.
+	parts = await _flat_room(some, Vector2(8, 152))
+	room = parts["room"]
+	surge = parts["surge"]
+	var reported := [0]
+	room.cleared.connect(func() -> void: reported[0] += 1)
+	parts["grunt"].health.take_damage(999)
+	await _frames(10)
+	_check(reported[0] == 1, "a room whose enemies die before the trigger still reports cleared")
+	parts["player"].global_position = room.global_position + deep
+	await _frames(60)
+	_check(surge.logic.state == surge.logic.State.IDLE and surge.get_children().filter(
+			func(c: Node) -> bool: return c is StaticBody2D).is_empty(), "a cleared room does not spring the surge")
+	room.queue_free()
+	await _frames(3)
 
 
 ## Kills `count` living enemies of the room by dealing lethal damage to their health (a real death).
