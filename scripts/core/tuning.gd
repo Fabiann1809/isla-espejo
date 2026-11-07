@@ -537,6 +537,28 @@ const TEMPLE_BACKDROP_ISLET_TINT := Color(0.82, 0.7, 0.66)
 const TEMPLE_BRIDGE_RAIL_BASE := 10.0
 const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
 
+# --- Temple: bridges ---
+## A temple corridor is a stone causeway over the lava (TempleBridge): a deck along the door lane and a
+## low parapet on each side, no posts but one at each end where the parapet meets a room (off: the
+## parapets end flush). A corridor longer than TEMPLE_LANDING_MIN_TILES gets a landing at mid-span (off
+## with TEMPLE_LANDINGS): a stone island TEMPLE_LANDING_TILES long along the corridor and as wide as
+## the lane plus the two parapet rows, with this many rows of cliff dropping into the lava on its
+## south side (0 = none, its ledge alone marks the edge) and a brazier on a pedestal on each side of
+## the way (off: bare).
+const TEMPLE_BRIDGE_END_POSTS := true
+const TEMPLE_LANDINGS := true
+const TEMPLE_LANDING_MIN_TILES := 10
+const TEMPLE_LANDING_TILES := 6
+const TEMPLE_LANDING_FACE_ROWS := 2
+const TEMPLE_LANDING_BRAZIERS := true
+## A corridor between rooms one level apart climbs on one stretch of steps and is a bridge at each
+## end's height on the rest (off: the whole corridor is steps, as the Ruinas' are): across the landing
+## when it has one (TEMPLE_LANDING_STAIR_TILES long), else at the high room's door (up to
+## TEMPLE_BRIDGE_STAIR_TILES long).
+const TEMPLE_BRIDGE_STAIR_STRETCH := true
+const TEMPLE_BRIDGE_STAIR_TILES := 4
+const TEMPLE_LANDING_STAIR_TILES := 2
+
 # --- Temple: shape ---
 ## A temple room (TempleShape) is a stone island over a sea of lava. Frames per second of the lava's
 ## flow (the 4x4 macro sea, all in step), its bubbles, the pulsing cracks of the crust along the rims,

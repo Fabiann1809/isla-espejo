@@ -49,6 +49,9 @@ var _completing := false
 ## Floor and wall rectangles of the corridors of the current map (world px), for the backdrop.
 var _corridor_floors: Array[Rect2] = []
 var _corridor_walls: Array[Rect2] = []
+## The temple's bridges of the current map (`TempleBridge`), in the corridors' order: their landings
+## are stone the backdrop keeps clear.
+var _bridges: Array = []
 var _boundary: Node2D
 
 
@@ -394,6 +397,7 @@ func _spawn_single(room: Room, scene: PackedScene, container: String) -> Node2D:
 func _build_corridors() -> void:
 	_corridor_floors.clear()
 	_corridor_walls.clear()
+	_bridges.clear()
 	var corridors := Node2D.new()
 	corridors.name = "Corridors"
 	corridors.y_sort_enabled = true
@@ -409,19 +413,16 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 	var floor_rect := corridor_floor(coord, dir)
 	if floor_rect.size.x <= 0.0 or floor_rect.size.y <= 0.0:
 		push_error("No corridor between %s and %s: the rooms touch or overlap" % [coord, coord + dir])
-	var walls: Array[Rect2] = []
-	if dir == Vector2i.RIGHT:
-		walls.append(Rect2(floor_rect.position.x, floor_rect.position.y - Room.WALL, floor_rect.size.x, Room.WALL))
-		walls.append(Rect2(floor_rect.position.x, floor_rect.end.y, floor_rect.size.x, Room.WALL))
-	else:
-		walls.append(Rect2(floor_rect.position.x - Room.WALL, floor_rect.position.y, Room.WALL, floor_rect.size.y))
-		walls.append(Rect2(floor_rect.end.x, floor_rect.position.y, Room.WALL, floor_rect.size.y))
+	var walls := _corridor_walls_of(floor_rect, dir)
 	_corridor_floors.append(floor_rect)
 	_corridor_walls.append_array(walls)
 
 	if scenario.theme != null:
-		_paint_corridor(parent, floor_rect, walls)
-		_dress_stairs(parent, floor_rect, coord, dir)
+		if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+			_build_bridge(parent, floor_rect, walls, coord, dir)
+		else:
+			_paint_corridor(parent, floor_rect, walls)
+			_dress_stairs(parent, floor_rect, coord, dir)
 		return
 	var floor_visual := ColorRect.new()
 	floor_visual.color = CORRIDOR_COLOR
@@ -433,12 +434,28 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 	WallBuilder.add_walls(parent, walls)
 
 
+## The two wall rectangles of a corridor, one tile thick, along its floor (first north or west).
+func _corridor_walls_of(floor_rect: Rect2, dir: Vector2i) -> Array[Rect2]:
+	var walls: Array[Rect2] = []
+	if dir == Vector2i.RIGHT:
+		walls.append(Rect2(floor_rect.position.x, floor_rect.position.y - Room.WALL, floor_rect.size.x, Room.WALL))
+		walls.append(Rect2(floor_rect.position.x, floor_rect.end.y, floor_rect.size.x, Room.WALL))
+	else:
+		walls.append(Rect2(floor_rect.position.x - Room.WALL, floor_rect.position.y, Room.WALL, floor_rect.size.y))
+		walls.append(Rect2(floor_rect.end.x, floor_rect.position.y, Room.WALL, floor_rect.size.y))
+	return walls
+
+
 ## A corridor between rooms of different height is a staircase: steps on its floor and a StairZone
 ## that changes the level of whoever crosses it, in the direction from the low room to the high one,
 ## from the lower room's level to the one above it (the Ruinas climb 0 to 1; the temple also 1 to 2).
+## The temple's corridors are bridges, flat or climbing, and are built whole by `_build_bridge`.
 func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector2i) -> void:
 	var style := scenario.theme.wall_style
-	if style != RoomTheme.WallStyle.ROCKS and style != RoomTheme.WallStyle.LAVA:
+	if style == RoomTheme.WallStyle.LAVA:
+		_build_bridge(parent, floor_rect, _corridor_walls_of(floor_rect, dir), coord, dir)
+		return
+	if style != RoomTheme.WallStyle.ROCKS:
 		return
 	var from_height := layout.get_cell(coord).room_data.height
 	var to_height := layout.get_cell(coord + dir).room_data.height
@@ -450,10 +467,7 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 		return
 	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
 	var vertical := dir == Vector2i.DOWN
-	if style == RoomTheme.WallStyle.LAVA:
-		_dress_temple_stairs(parent, floor_rect, uphill, vertical, maxi(from_height, to_height))
-	else:
-		_dress_ruin_stairs(parent, floor_rect, uphill, vertical)
+	_dress_ruin_stairs(parent, floor_rect, uphill, vertical)
 	var zone := StairZone.new()
 	zone.direction = uphill
 	zone.low_level = mini(from_height, to_height)
@@ -464,6 +478,20 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 	zone.add_child(shape)
 	zone.position = floor_rect.get_center()
 	parent.add_child(zone)
+
+
+## A temple corridor: a stone causeway over the lava (`TempleBridge`), with a landing at mid-span when
+## it is long and one stretch of steps when its rooms are one level apart. Two levels apart is a
+## layout error (the generator never makes it): nothing is built.
+func _build_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], coord: Vector2i, dir: Vector2i) -> void:
+	var from_height := layout.get_cell(coord).room_data.height
+	var to_height := layout.get_cell(coord + dir).room_data.height
+	if absi(from_height - to_height) > 1:
+		push_error("No staircase between %s (height %d) and %s (height %d): two levels apart" % [coord, from_height, coord + dir, to_height])
+		return
+	var bridge := TempleBridge.new(scenario.theme, floor_rect, walls, from_height, to_height, dir, _bridges.size())
+	bridge.build(parent)
+	_bridges.append(bridge)
 
 
 ## The Ruinas' staircase: steps between two stone parapets (the outermost cells of the corridor's
@@ -510,40 +538,11 @@ func _dress_ruin_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertic
 		parent.add_child(torch)
 
 
-## The temple's staircase: the bridge's rails stay (the corridor was painted as a bridge first) and
-## the whole deck between them becomes steps, with a brazier on a pedestal at the top on each side,
-## standing on the high room's wall where it flanks the door, so the way up is lit and the high end
-## reads as the landing.
-func _dress_temple_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertical: bool, top_level: int) -> void:
-	var stairs := scenario.theme.new_layer(parent, "Stairs%d" % parent.get_child_count())
-	stairs.modulate = Tuning.TEMPLE_FLOOR_MODULATE
-	scenario.theme.fill(stairs, _cells(floor_rect), &"stairs_up_steps" if vertical else &"stairs_side_steps")
-	var tile := float(TileArt.TILE)
-	var landing := Tuning.TEMPLE_STAIR_BRAZIER_LANDING
-	for side in [-1.0, 1.0]:
-		var foot: Vector2
-		if vertical:
-			foot.x = floor_rect.position.x - tile / 2.0 if side < 0.0 else floor_rect.end.x + tile / 2.0
-			foot.y = floor_rect.position.y - landing if uphill.y < 0.0 else floor_rect.end.y + landing
-		else:
-			foot.y = floor_rect.position.y - tile / 2.0 if side < 0.0 else floor_rect.end.y + tile / 2.0
-			foot.x = floor_rect.position.x - landing if uphill.x < 0.0 else floor_rect.end.x + landing
-		var brazier := TempleProp.new()
-		brazier.kind = TempleProp.Kind.BRAZIER_PEDESTAL
-		brazier.level = top_level
-		brazier.position = foot.round()
-		parent.add_child(brazier)
-
-
 ## A themed corridor: path tiles on the floor and the border tile (trees) along its walls.
 ## Only collision comes from the wall rectangles.
 func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> void:
 	# Numbered names: siblings with the same name would be renamed by the engine.
 	var number := parent.get_child_count()
-	if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
-		_paint_bridge(parent, floor_rect, walls, number)
-		WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
-		return
 	# Grass under the whole corridor: the trees of its walls and the rounded path edges have
 	# transparent corners.
 	var ground := scenario.theme.new_layer(parent, "CorridorGround%d" % number)
@@ -560,50 +559,6 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 		else:
 			scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
 	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
-
-
-## A temple corridor is a stone bridge over the lava: the sea runs under the whole rectangle (its
-## own animated layer, so a bridge has lava under it even with the backdrop off), flagstones on the
-## floor and a parapet with a post at each end on every wall. The parapets are flat with the floor,
-## except the near (south) one of a horizontal bridge, which stands with the actors and sorts by its
-## foot, so Nico walking along it is drawn behind it. Collision stays the wall rectangles'.
-func _paint_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], number: int) -> void:
-	# The walls of a horizontal corridor lie one above the other, a vertical one's side by side.
-	var horizontal := walls[0].position.y != walls[1].position.y
-	var lava := LavaBackdrop.lava_layer("CorridorLava%d" % number)
-	lava.z_index = LavaBackdrop.SEA_Z
-	lava.modulate = Tuning.TEMPLE_LAVA_MODULATE
-	parent.add_child(lava)
-	LavaBackdrop.paint_lava(lava, _cells(floor_rect))
-	for wall in walls:
-		LavaBackdrop.paint_lava(lava, _cells(wall))
-	var layer := scenario.theme.new_layer(parent, "Corridor%d" % number)
-	layer.modulate = Tuning.TEMPLE_FLOOR_MODULATE
-	scenario.theme.fill(layer, _cells(floor_rect), &"bridge_stone_deck_h" if horizontal else &"bridge_stone_deck_v")
-	for wall in walls:
-		if horizontal and wall.position.y > floor_rect.position.y:
-			_plant_bridge_rail(parent, wall, number)
-			continue
-		var role: StringName = &"bridge_stone_rail_n" if horizontal \
-				else (&"bridge_stone_rail_w" if wall.position.x < floor_rect.position.x else &"bridge_stone_rail_e")
-		var cells := _cells(wall)
-		scenario.theme.fill(layer, cells, role)
-		var post := TileArt.coords(&"bridge_stone_post")
-		layer.set_cell(cells.position, 0, post)
-		layer.set_cell(cells.end - Vector2i.ONE, 0, post)
-
-
-## The near parapet of a horizontal bridge: upright sprites on a node sorted by the parapet's foot.
-func _plant_bridge_rail(parent: Node, wall: Rect2, number: int) -> void:
-	var rail := Node2D.new()
-	rail.name = "BridgeRail%d" % number
-	rail.z_index = 0
-	rail.position = Vector2(wall.position.x, wall.position.y + Tuning.TEMPLE_BRIDGE_RAIL_BASE)
-	parent.add_child(rail)
-	var cells := int(wall.size.x / TileArt.TILE)
-	for ix in cells:
-		var role: StringName = &"bridge_stone_post" if ix == 0 or ix == cells - 1 else &"bridge_stone_rail_s"
-		rail.add_child(TileArt.sprite(role, Vector2(ix * TileArt.TILE, -Tuning.TEMPLE_BRIDGE_RAIL_BASE)))
 
 
 ## A corridor wall as a row of rock columns, like the rooms' walls (y-sorted with the actors).
@@ -647,9 +602,16 @@ func _build_backdrop() -> void:
 		_mark(taken, _cells(rect))
 	var area := _cells(bounds).grow(_backdrop_margin())
 	if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
-		# A bridge is lava too: the sea runs open under it, so the corridors are "taken", not islands.
+		# A bridge is lava too: the sea runs open under it, so the corridors are "taken", not islands;
+		# a landing is stone of its own, rimmed by the sea and kept clear of its islets.
 		for rect in _corridor_floors:
 			_mark(taken, _cells(rect))
+		var landings := {}
+		for bridge in _bridges:
+			for cell: Vector2i in bridge.taken_cells():
+				taken[cell] = true
+			for cell: Vector2i in bridge.stone_cells():
+				landings[cell] = true
 		# The islands are the rooms' stone, not their rectangles: the sea's crust and shores measure
 		# from the shapes' cells, so no rectangle shows around a room.
 		var stone := {}
@@ -662,6 +624,7 @@ func _build_backdrop() -> void:
 					stone[origin + cell] = true
 			else:
 				_mark(stone, _cells(room_rect(coord)))
+		stone.merge(landings)
 		LavaBackdrop.build(_map, area, stone, taken, current_seed, walkable)
 		return
 	for rect in _corridor_floors:

@@ -61,7 +61,9 @@ static var _plate_texture: ImageTexture
 ## (bridges: open lava under them, nothing standing on them), `rooms` the rooms' whole rectangles
 ## (the rooms paint their own lava and rims there, so the sea stays out of them) and `area` is in
 ## tiles; islets keep clear of all of them. With no `rooms`, `walkable` is taken as the rectangles.
-## Returns the `Backdrop` node.
+## A bridge's landing (`TempleBridge`) comes in both `walkable` and `taken`: stone the sea rims and
+## measures from, with no lava, bubble or islet of the sea under or beside it (the bridge paints
+## its own lava there). Returns the `Backdrop` node.
 static func build(parent: Node, area: Rect2i, walkable: Dictionary, taken: Dictionary, map_seed: int,
 		rooms: Dictionary = {}) -> Node2D:
 	if rooms.is_empty():
