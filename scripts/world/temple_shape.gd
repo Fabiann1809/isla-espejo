@@ -490,6 +490,9 @@ func _build_bridges() -> void:
 			var along_x := _deck_along_x(cell)
 			_paint("Bridges", cell, StringName("bridge_%s_deck_%s" % [material, "h" if along_x else "v"]))
 			var post: StringName = &"bridge_rope_post" if material == "wood" else &"bridge_stone_post"
+			# Rope bridges need their posts; stone ones only when Tuning asks for them (square stone
+			# posts on every shore read like scattered boxes).
+			var posts := material == "wood" or Tuning.TEMPLE_BRIDGE_END_POSTS
 			if along_x:
 				for side in [[Vector2i.UP, "n"], [Vector2i.DOWN, "s"]]:
 					var beside: Vector2i = cell + side[0]
@@ -502,7 +505,7 @@ func _build_bridges() -> void:
 					# across a wide deck's end.
 					for side in [Vector2i.UP, Vector2i.DOWN]:
 						var corner: Vector2i = cell + end + side
-						if not _is_deck(cell + side) and _post_fits(corner):
+						if posts and not _is_deck(cell + side) and _post_fits(corner):
 							rails.add_child(_standing(post, corner))
 			else:
 				for side in [[Vector2i.LEFT, "w"], [Vector2i.RIGHT, "e"]]:
@@ -514,7 +517,7 @@ func _build_bridges() -> void:
 						continue
 					for side in [Vector2i.LEFT, Vector2i.RIGHT]:
 						var corner: Vector2i = cell + end + side
-						if not _is_deck(cell + side) and _post_fits(corner):
+						if posts and not _is_deck(cell + side) and _post_fits(corner):
 							rails.add_child(_standing(post, corner))
 
 
@@ -594,15 +597,16 @@ func _build_pillars() -> void:
 			add_child(pillar)
 
 
-## A mark on each side of the top of every flight of stairs, on the high floor's corners past its
-## last step (as the corridors' staircases have), so the way up is easy to spot: a small brazier, or
-## a stone post where another brazier already burns within TEMPLE_STAIR_BRAZIER_SPACING cells, so a
-## room of many flights does not fill with fire. Neither blocks; a mark is left out where the corner
-## is not floor of the high level or a prop of the room already stands there.
+## A pair of small braziers on the high floor's corners past the last step of a flight of stairs, so
+## the way up is easy to spot. Only a few flights get one: none within TEMPLE_STAIR_BRAZIER_SPACING
+## cells of another pair, and at most TEMPLE_STAIR_BRAZIER_MAX_PAIRS per room, so a room of many
+## flights does not fill with small objects (the other flights stay bare; no posts). They do not block;
+## a brazier is left out where its corner is not floor of the high level or a prop already stands there.
 func _build_stair_braziers() -> void:
 	if not Tuning.TEMPLE_STAIR_TOP_BRAZIERS:
 		return
 	var count := 0
+	var pairs := 0
 	var lit: Array[Vector2i] = []
 	var near_fire := func(cell: Vector2i) -> bool:
 		for other in lit:
@@ -623,24 +627,25 @@ func _build_stair_braziers() -> void:
 				corners = [Vector2i(cells.position.x - 1, cells.position.y - 1), Vector2i(cells.position.x - 1, cells.end.y)]
 			Vector2i.RIGHT:
 				corners = [Vector2i(cells.end.x, cells.position.y - 1), Vector2i(cells.end.x, cells.end.y)]
-		# Both corners of a flight get the same mark, so the pair reads as a gate.
-		var fire := not corners.any(near_fire)
+		# Both corners of a flight get a brazier, so the pair reads as a gate; a flight near another
+		# pair, or past the room's budget, stays bare.
+		if corners.any(near_fire) or pairs >= Tuning.TEMPLE_STAIR_BRAZIER_MAX_PAIRS:
+			continue
+		var placed := false
 		for corner in corners:
 			if not _brazier_fits(corner, high):
 				continue
-			if fire:
-				var brazier := TempleProp.new()
-				brazier.name = "StairBrazier%d" % count
-				brazier.kind = TempleProp.Kind.BRAZIER
-				brazier.level = high
-				brazier.position = Vector2(corner) * TILE + Vector2(TILE / 2.0, TILE - 4.0)
-				add_child(brazier)
-				lit.append(corner)
-			else:
-				var post := _standing(&"bridge_stone_post", corner)
-				post.name = "StairPost%d" % count
-				add_child(post)
+			var brazier := TempleProp.new()
+			brazier.name = "StairBrazier%d" % count
+			brazier.kind = TempleProp.Kind.BRAZIER
+			brazier.level = high
+			brazier.position = Vector2(corner) * TILE + Vector2(TILE / 2.0, TILE - 4.0)
+			add_child(brazier)
+			lit.append(corner)
+			placed = true
 			count += 1
+		if placed:
+			pairs += 1
 
 
 ## Floor of `level` the plan lets someone stand on, with no prop of the room on it.

@@ -545,7 +545,7 @@ const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
 ## the lane plus the two parapet rows, with this many rows of cliff dropping into the lava on its
 ## south side (0 = none, its ledge alone marks the edge) and a brazier on a pedestal on each side of
 ## the way (off: bare).
-const TEMPLE_BRIDGE_END_POSTS := true
+const TEMPLE_BRIDGE_END_POSTS := false
 const TEMPLE_LANDINGS := true
 const TEMPLE_LANDING_MIN_TILES := 10
 const TEMPLE_LANDING_TILES := 6
@@ -588,7 +588,9 @@ const TEMPLE_LAVA_CLIFF_EXTRA_ROWS := 2
 const TEMPLE_EAST_SHADOWS := true
 const TEMPLE_STAIR_WALLS := true
 const TEMPLE_STAIR_TOP_BRAZIERS := true
-const TEMPLE_STAIR_BRAZIER_SPACING := 6
+const TEMPLE_STAIR_BRAZIER_SPACING := 10
+## At most this many flights of a room get a pair of braziers at their top (the rest stay bare).
+const TEMPLE_STAIR_BRAZIER_MAX_PAIRS := 2
 ## The ground shadow of Nico, the enemies and the NPCs on the temple's floors: its alpha (the stone
 ## needs more than the forest's SHADOW_ALPHA to keep them on the ground; < 0 = SHADOW_ALPHA), how
 ## much bigger than the forest's it is (1 = the same) and how many px below the feet it sits (the

@@ -161,7 +161,11 @@ func _check_bridges() -> void:
 			rails_ok = rails_ok and _covers(deck, cells, [rails[role], post])
 			var first := deck.get_cell_atlas_coords(cells.position - _offset(deck))
 			var last := deck.get_cell_atlas_coords(cells.end - Vector2i.ONE - _offset(deck))
-			posts_ok = posts_ok and first == post and last == post
+			# With end posts off (Tuning.TEMPLE_BRIDGE_END_POSTS) the rail runs to the end with no post.
+			if load("res://scripts/core/tuning.gd").TEMPLE_BRIDGE_END_POSTS:
+				posts_ok = posts_ok and first == post and last == post
+			else:
+				posts_ok = posts_ok and first != post and last != post
 		with_rails += 1 if rails_ok else 0
 		with_posts += 1 if posts_ok else 0
 		if horizontal:
@@ -175,7 +179,7 @@ func _check_bridges() -> void:
 	var horizontal_flat: int = _flat_corridors().filter(func(c: Array) -> bool: return c[1] == Vector2i.RIGHT).size()
 	_check(expected > 0 and bridges == expected and with_lava == expected,
 			"a same-height corridor is a bridge with lava under it (%d of %d, %d with lava)" % [bridges, expected, with_lava])
-	_check(with_rails == expected and with_posts == expected, "every bridge has stone rails with a post at each end (%d, %d of %d)" % [with_rails, with_posts, expected])
+	_check(with_rails == expected and with_posts == expected, "every bridge has stone rails, with end posts only if Tuning asks (%d, %d of %d)" % [with_rails, with_posts, expected])
 	_check(near_rail_upright == horizontal_flat, "the south rail of a horizontal bridge stands upright and y-sorted (%d of %d)" % [near_rail_upright, horizontal_flat])
 
 
