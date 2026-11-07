@@ -1,385 +1,148 @@
-"""Draws the art of Nico's skills pixel by pixel (light from the upper left, 1 px outline), so the
-zones they leave on the ground are no longer flat circles and arcs drawn in code.
+﻿"""Native-size skill art. Run python tools/make_skill_art.py [--preview folder].
 
-Writes into assets/sprites/skills/ (cells side by side, one per frame):
-    roots_start.png   96x96, 4 frames: the earth cracks in a ring and six root clumps burst out.
-    roots_loop.png    96x96, 4 frames (looping): the roots sway and their buds glow.
-    roots_end.png     96x96, 3 frames: the roots sink back into the ground.
-    current_wave.png  64x64, 6 frames, facing right: a crest of water rises, foams and dissolves
-                      into drops (the zone moves and turns it along the cast).
-    shadow_puff.png   32x32, 6 frames: a puff of violet smoke where Nico vanishes and reappears.
-    cast_burst.png    32x32, 4 frames: a white ring with sparks at Nico's feet when he casts; the
-                      game tints it with the skill's color.
-    icon_roots.png, icon_current.png, icon_shadow.png   24x24 HUD icons.
-
-    python tools/make_skill_art.py [--preview <folder>]
-Original art (no third-party source). Needs Pillow. Then build the frames:
-    godot --headless --path . --script res://tools/make_skill_frames.gd
+Preserves the SkillZone/frames contract: roots 96px 4/4/3, current 64px 6,
+shadow 32px 6, burst 32px 4, HUD icons 24px. Binary alpha, upper-left light.
+Editable timeline sources are rebuilt beside the PNGs.
 """
 import math
-import os
-import random
 import sys
+from PIL import Image, ImageDraw
+from ui_art_common import ROOT, canvas, edge, spark, save_set, aseprite, preview
 
-from PIL import Image
+OUT=ROOT/'assets/sprites/skills'
+WOOD=['#382327','#694030','#a16840','#d19a60']
+LEAF=['#345137','#63994a','#b4cf73']
+WATER=['#223554','#285b89','#358fb2','#78cbd3','#d7f1df']
+SMOKE=['#2b233c','#483454','#705275','#a482a2','#d5bbce']
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "sprites", "skills")
-PREVIEW = sys.argv[sys.argv.index("--preview") + 1] if "--preview" in sys.argv else None
+def poly(d,pts,c): d.polygon([(round(x),round(y)) for x,y in pts],fill=c)
 
-# Roots: the forest guardian's wood, with the skill's green.
-WOOD_OUT = (34, 15, 10, 255)
-WOOD_DK = (73, 38, 21, 255)
-WOOD = (115, 62, 36, 255)
-WOOD_HI = (150, 102, 62, 255)
-BUD = (70, 184, 58, 255)
-BUD_HI = (126, 217, 87, 255)
-EARTH = (62, 44, 30, 255)
-EARTH_DK = (40, 28, 18, 255)
-GREEN_RING = (77, 191, 77, 110)
-GREEN_RING_DK = (20, 60, 24, 140)
-# Current: deep water, lit water and foam.
-WATER_OUT = (24, 52, 120, 255)
-WATER_DK = (40, 90, 180, 255)
-WATER = (76, 140, 242, 255)
-WATER_HI = (150, 200, 255, 255)
-FOAM = (236, 246, 255, 255)
-# Shadow: violet smoke.
-SMOKE_OUT = (36, 18, 64, 255)
-SMOKE_DK = (90, 50, 140, 255)
-SMOKE = (140, 92, 200, 255)
-SMOKE_HI = (200, 165, 245, 255)
-# Cast burst: white, tinted by the game.
-BURST = (255, 255, 255, 255)
-BURST_SOFT = (255, 255, 255, 150)
+def root_piece(grow,sway,variant=0):
+    im=canvas(28); d=ImageDraw.Draw(im)
+    base=24; top=round(base-19*grow); lean=round(sway)
+    d.ellipse((3,22,24,26),fill=WOOD[0])
+    d.line((5,24,10,26,20,25,24,23),fill=WOOD[2])
+    # Broad twisting taproot and two unequal, tapering forks.
+    poly(d,[(10,24),(10,19),(7,15),(6,top+6),(8+lean,top+3),(10+lean,top+4),(10,14),(14,17),(15,12),(14+lean,top),(17+lean,top+2),(19,14),(17,20),(20,24)],WOOD[1])
+    d.line([(11,23),(13,20),(12,17),(9,14),(8+lean,top+5)],fill=WOOD[3],width=1)
+    d.line([(15,22),(16,18),(17,14),(16+lean,top+3)],fill=WOOD[2],width=2)
+    if grow>.45:
+        poly(d,[(18,18),(20,13),(23,10),(23,14),(20,19),(18,22)],WOOD[2])
+        d.line((19,18,22,13),fill=WOOD[3])
+        poly(d,[(8+lean,top+4),(4+lean,top+3),(3+lean,top),(7+lean,top+1)],LEAF[1])
+        d.point((4+lean,top),fill=LEAF[2])
+        poly(d,[(16+lean,top+3),(18+lean,top-1),(21+lean,top-2),(20+lean,top+2)],LEAF[0])
+        d.line((17+lean,top+2,20+lean,top-1),fill=LEAF[2])
+    return edge(im)
 
-
-def cell(size):
-    return Image.new("RGBA", (size, size), (0, 0, 0, 0))
-
-
-def put(img, x, y, color):
-    x, y = int(round(x)), int(round(y))
-    if 0 <= x < img.width and 0 <= y < img.height:
-        img.putpixel((x, y), color)
-
-
-def disc(img, cx, cy, r, color, ry=None):
-    ry = r if ry is None else ry
-    if r <= 0.0 or ry <= 0.0:
-        return
-    for y in range(int(cy - ry - 1), int(cy + ry + 2)):
-        for x in range(int(cx - r - 1), int(cx + r + 2)):
-            if ((x + 0.5 - cx) / r) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1.0:
-                put(img, x, y, color)
-
-
-def ring(img, cx, cy, r, width, color, ry=None, a0=0.0, a1=math.tau):
-    """An elliptic ring of `width` px (optionally only between the angles a0..a1, radians)."""
-    ry = r if ry is None else ry
-    for y in range(int(cy - ry - width - 1), int(cy + ry + width + 2)):
-        for x in range(int(cx - r - width - 1), int(cx + r + width + 2)):
-            dx, dy = (x + 0.5 - cx), (y + 0.5 - cy)
-            d = math.hypot(dx / r, dy / ry)
-            if 1.0 - width / r <= d <= 1.0:
-                ang = math.atan2(dy, dx) % math.tau
-                if a0 <= a1 and a0 <= ang <= a1 or a0 > a1 and (ang >= a0 or ang <= a1):
-                    put(img, x, y, color)
-
-
-def line(img, x0, y0, x1, y1, color, width=1):
-    steps = max(int(math.hypot(x1 - x0, y1 - y0) * 2), 1)
-    for i in range(steps + 1):
-        t = i / steps
-        x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
-        if width <= 1:
-            put(img, x, y, color)
-        else:
-            disc(img, x, y, width / 2.0, color)
-
-
-def outline(img, color):
-    """A 1 px edge of `color` around every opaque pixel (drawn into the transparent neighbours)."""
-    src = img.copy()
-    for y in range(img.height):
-        for x in range(img.width):
-            if src.getpixel((x, y))[3] > 0:
-                continue
-            for ox, oy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                nx, ny = x + ox, y + oy
-                if 0 <= nx < img.width and 0 <= ny < img.height and src.getpixel((nx, ny))[3] == 255:
-                    put(img, x, y, color)
-                    break
-
-
-def strip(frames, path):
-    sheet = Image.new("RGBA", (frames[0].width * len(frames), frames[0].height), (0, 0, 0, 0))
-    for i, frame in enumerate(frames):
-        sheet.paste(frame, (i * frame.width, 0))
-    sheet.save(path)
-    return sheet
-
-
-# --- Raíces --------------------------------------------------------------------------------------
-
-ROOT_SIZE = 96
-ROOT_RADIUS = 36.0
-ROOT_CLUMPS = 6
-
-
-def root_clump(img, bx, by, grow, sway, seed, lit):
-    """A clump of three roots rising from (bx, by): `grow` 0..1 is how far they are out of the
-    ground, `sway` -1..1 leans the tips, `lit` brightens the buds."""
-    rnd = random.Random(seed)
-    for k in range(3):
-        angle = -math.pi / 2 + (k - 1) * 0.55 + rnd.uniform(-0.2, 0.2) + sway * 0.18
-        length = (15 + rnd.uniform(0, 8)) * grow
-        x, y = bx, by
-        width = 4.0 if k == 1 else 2.5
-        segments = 3
-        for s in range(segments):
-            seg = length / segments
-            bend = rnd.uniform(-0.35, 0.35) + sway * 0.12
-            angle += bend
-            nx, ny = x + math.cos(angle) * seg, y + math.sin(angle) * seg
-            shade = WOOD_HI if (s == 0 and k == 0) else WOOD if s < 2 else WOOD_DK
-            if length > 0.0:
-                line(img, x, y, nx, ny, shade, width)
-            x, y = nx, ny
-            width = max(width - 0.5, 1.0)
-        if grow > 0.6:
-            bud = BUD_HI if lit else BUD
-            put(img, x, y, bud)
-            put(img, x + 1, y, bud)
-            put(img, x, y - 1, BUD_HI if lit else BUD_HI)
-    # The hole the roots came out of.
-    if grow > 0.0:
-        disc(img, bx, by + 1, 2.5 * min(grow * 1.5, 1.0), EARTH_DK, 1.5)
-
-
-def roots_frame(grow, sway, lit, ring_alpha, crack):
-    img = cell(ROOT_SIZE)
-    c = ROOT_SIZE / 2.0
-    # The green ring on the ground (dark rim first), flatter than a circle so it lies on the floor.
-    if ring_alpha > 0:
-        rim = GREEN_RING_DK[:3] + (int(GREEN_RING_DK[3] * ring_alpha),)
-        fill = GREEN_RING[:3] + (int(GREEN_RING[3] * ring_alpha),)
-        ring(img, c, c + 4, ROOT_RADIUS + 2, 4, rim, ROOT_RADIUS * 0.8 + 2)
-        ring(img, c, c + 4, ROOT_RADIUS, 2, fill, ROOT_RADIUS * 0.8)
-    # Cracks from the middle toward the clumps.
-    if crack > 0:
-        for i in range(ROOT_CLUMPS):
-            a = math.tau * i / ROOT_CLUMPS + 0.3
-            rnd = random.Random(100 + i)
-            x, y = c, c + 4
-            for s in range(4):
-                a += rnd.uniform(-0.3, 0.3)
-                r = ROOT_RADIUS * 0.22 * crack
-                nx, ny = x + math.cos(a) * r, y + math.sin(a) * r * 0.8
-                line(img, x, y, nx, ny, EARTH_DK if s % 2 else EARTH)
-                x, y = nx, ny
-    roots = cell(ROOT_SIZE)
-    for i in range(ROOT_CLUMPS):
-        a = math.tau * i / ROOT_CLUMPS + 0.3
-        bx = c + math.cos(a) * ROOT_RADIUS
-        by = c + 4 + math.sin(a) * ROOT_RADIUS * 0.8
-        root_clump(roots, bx, by, grow, sway, 7 + i, lit)
-    outline(roots, WOOD_OUT)
-    img.alpha_composite(roots)
-    return img
-
-
-def make_roots():
-    start = [
-        roots_frame(0.0, 0.0, False, 0.4, 0.5),
-        roots_frame(0.0, 0.0, False, 0.8, 1.0),
-        roots_frame(0.45, 0.3, False, 1.0, 1.0),
-        roots_frame(0.85, -0.2, False, 1.0, 1.0),
-    ]
-    loop = [
-        roots_frame(1.0, 0.0, True, 1.0, 1.0),
-        roots_frame(1.0, 0.5, False, 0.9, 1.0),
-        roots_frame(1.0, 0.0, True, 1.0, 1.0),
-        roots_frame(1.0, -0.5, False, 0.9, 1.0),
-    ]
-    end = [
-        roots_frame(0.7, 0.3, False, 0.7, 1.0),
-        roots_frame(0.35, -0.2, False, 0.4, 0.8),
-        roots_frame(0.0, 0.0, False, 0.15, 0.4),
-    ]
-    return {"roots_start": start, "roots_loop": loop, "roots_end": end}
-
-
-# --- Corriente -----------------------------------------------------------------------------------
-
-WAVE_SIZE = 64
-
-
-def wave_frame(i, total):
-    """A crest facing right: an arc of water whose front is at the cell's right, rising and foaming
-    through the first frames, then breaking into drops."""
-    img = cell(WAVE_SIZE)
-    t = i / (total - 1)
-    c = WAVE_SIZE / 2.0
-    rnd = random.Random(40 + i)
-    if t < 0.75:
-        # The arc: centered left of the cell, so its front is a bow; thicker as it grows.
-        spread = 0.55 + 0.35 * t
-        reach = 22 + 8 * t
-        thick = 7 + 4 * (1.0 - abs(t - 0.4) / 0.4)
-        a0, a1 = (-spread) % math.tau, spread
-        ring(img, c - 12, c, reach + thick, thick, WATER_DK, (reach + thick) * 0.9, a0, a1)
-        ring(img, c - 12, c, reach + thick - 2, thick - 4, WATER, (reach + thick - 2) * 0.9, a0, a1)
-        ring(img, c - 12, c - 1, reach + thick - 3, 2, WATER_HI, (reach + thick - 3) * 0.9, a0 + 0.15, a1 - 0.3)
-        # Foam along the crest.
-        for k in range(int(10 + 8 * t)):
-            a = rnd.uniform(-spread, spread)
-            r = reach + thick - rnd.uniform(0, 2.5)
-            put(img, c - 12 + math.cos(a) * r, c + math.sin(a) * r * 0.9, FOAM)
-        outline(img, WATER_OUT)
-    else:
-        # Breaking: the water scatters into drops that fall.
-        fall = (t - 0.75) / 0.25
-        for k in range(26):
-            a = rnd.uniform(-0.9, 0.9)
-            r = 30 + rnd.uniform(0, 8) + fall * 6
-            x, y = c - 12 + math.cos(a) * r, c + math.sin(a) * r * 0.9 + fall * 4
-            color = [WATER, WATER_HI, FOAM][k % 3]
-            put(img, x, y, color)
-            if k % 4 == 0:
-                put(img, x + 1, y, WATER_DK)
-    return img
-
-
-def make_wave():
-    return {"current_wave": [wave_frame(i, 6) for i in range(6)]}
-
-
-# --- Sombra --------------------------------------------------------------------------------------
-
-PUFF_SIZE = 32
-
-
-def puff_frame(i, total):
-    img = cell(PUFF_SIZE)
-    t = i / (total - 1)
-    c = PUFF_SIZE / 2.0
-    rnd = random.Random(60 + i)
-    size = 5 + 9 * t
-    blobs = 5
-    for k in range(blobs):
-        a = math.tau * k / blobs + t * 0.8
-        d = size * 0.55
-        x, y = c + math.cos(a) * d, c + 2 + math.sin(a) * d * 0.8 - t * 5
-        r = size * 0.5 * (1.0 - t * 0.35) + rnd.uniform(-1, 1)
-        if r <= 0.5:
-            continue
-        disc(img, x, y, r, SMOKE_DK)
-        disc(img, x - 1, y - 1, r * 0.6, SMOKE)
-        disc(img, x - 1.5, y - 1.5, r * 0.3, SMOKE_HI)
-    if t < 0.9:
-        outline(img, SMOKE_OUT)
-    # Thin out at the end: every other pixel goes.
-    if t > 0.6:
-        keep = 1.0 - (t - 0.6) / 0.4
-        for y in range(img.height):
-            for x in range(img.width):
-                if img.getpixel((x, y))[3] > 0 and rnd.random() > keep:
-                    put(img, x, y, (0, 0, 0, 0))
-    return img
-
-
-def make_puff():
-    return {"shadow_puff": [puff_frame(i, 6) for i in range(6)]}
-
-
-# --- Cast burst ----------------------------------------------------------------------------------
-
-BURST_SIZE = 32
-
-
-def burst_frame(i, total):
-    img = cell(BURST_SIZE)
-    t = i / (total - 1)
-    c = BURST_SIZE / 2.0
-    r = 4 + 10 * t
-    alpha = int(255 * (1.0 - t * 0.7))
-    ring(img, c, c + 6, r, 2, BURST[:3] + (alpha,), r * 0.45)
-    rnd = random.Random(80 + i)
+def roots_frame(g,phase,dust=0):
+    im=canvas(96); d=ImageDraw.Draw(im)
+    # Broken earth, not an opaque magic disc; keep the middle readable under Nico.
     for k in range(8):
-        a = math.tau * k / 8 + 0.2
-        d = r + 2 + t * 4
-        put(img, c + math.cos(a) * d, c + 6 + math.sin(a) * d * 0.45 - t * 6, BURST_SOFT[:3] + (alpha,))
-    return img
+        a=k*math.tau/8+.2
+        bx=round(48+32*math.cos(a)); by=round(54+24*math.sin(a))
+        d.line([(bx-5,by+3),(bx-2,by+1),(bx+2,by+3),(bx+6,by)],fill=WOOD[0])
+        d.point((bx-4,by+2),fill=WOOD[2])
+        if g>0:
+            r=root_piece(g,math.sin(phase+k)*1.4,k)
+            im.alpha_composite(r,(bx-14,by-24))
+        if dust:
+            for j in range(3):
+                x=bx-7+j*6; y=by-3-round(dust*(3+j*2))
+                d.rectangle((x,y,x+1,y+1),fill=WOOD[2 if j%2 else 1])
+    return im
 
+def wave_frame(i):
+    im=canvas(64); d=ImageDraw.Draw(im)
+    # A right-facing body, rolling scalloped crest, coherent trailing ribbons.
+    scale=[.65,.85,1,1,.8,.45][i]
+    upper=[]; lower=[]
+    for y in range(7,57):
+        t=(y-32)/25
+        front=round(38+13*(1-t*t)+math.sin(y*.4+i*.8)*1.4)
+        width=round((8+4*(1-t*t))*scale)
+        upper.append((front,y)); lower.append((front-width,y))
+    poly(d,upper+lower[::-1],WATER[1])
+    for y in range(10,54):
+        t=(y-32)/25; x=round(38+13*(1-t*t)+math.sin(y*.4+i*.8)*1.4)
+        d.line((x-round(8*scale),y,x-2,y),fill=WATER[2])
+        if (y+i*3)%14<9: d.line((x-2,y,x,y),fill=WATER[3])
+    for k in range(5):
+        y=13+k*9; x=round(39+11*(1-((y-32)/25)**2))
+        # Hooked foam lobes tumble along the leading edge.
+        y+= (i+k)%3-1
+        d.arc((x-5,y-4,x+2,y+3),180,450,fill=WATER[4],width=2)
+        d.point((x-3,y+1),fill=WATER[3])
+        x0=10+(k%3)*5+i%3*2
+        d.line([(x0,y+2),(x0+5,y),(x-8,y+2)],fill=WATER[1],width=2)
+        d.line((x0+2,y+1,x0+7,y),fill=WATER[3])
+    if i>=4:
+        # Break into separated ribbons rather than random single-pixel noise.
+        for y in (17,35,48): d.rectangle((35,y,58,y+2),fill=(0,0,0,0))
+    for k in range(7):
+        x=15+(k*13)%39; y=5+(k*17+i*3)%53
+        d.line((x,y,x+1,y-1),fill=WATER[3 if k%2 else 4])
+    return edge(im,WATER[0])
 
-def make_burst():
-    return {"cast_burst": [burst_frame(i, 4) for i in range(4)]}
+def puff_frame(i):
+    im=canvas(32); d=ImageDraw.Draw(im)
+    # The compact cloud opens into curling wisps; no stochastic dissolve.
+    for k in range(5):
+        a=k*math.tau/5+i*.15
+        spread=[3,5,7,8,10,11][i]
+        x=round(16+math.cos(a)*spread); y=round(18+math.sin(a)*spread*.65-i)
+        r=[4,5,5,4,3,2][i]
+        d.ellipse((x-r,y-r,x+r,y+r),fill=SMOKE[1])
+        d.arc((x-r,y-r,x+r-1,y+r-1),165,290,fill=SMOKE[3],width=1)
+        d.arc((x-r+2,y-r+2,x+r-1,y+r-1),170,330,fill=SMOKE[2],width=1)
+    if i<4:
+        d.ellipse((10,12-i,21,23-i),fill=SMOKE[1])
+        d.arc((10,11-i,20,21-i),150,340,fill=SMOKE[2],width=2)
+        d.arc((12,13-i,18,19-i),170,340,fill=SMOKE[3])
+    im=edge(im,SMOKE[0]); d=ImageDraw.Draw(im)
+    for k in range(3):
+        spark(d,5+k*10,6+(k*7+i*2)%16,SMOKE[3],i==2 and k==0)
+    return im
 
+def burst_frame(i):
+    im=canvas(32); d=ImageDraw.Draw(im); r=[5,9,12,14][i]
+    box=(16-r,21-r//2,16+r,21+r//2)
+    d.arc(box,185,350,fill='#b8c1b8',width=1)
+    d.arc(box,5,165,fill='#fbf4dd',width=1)
+    if i<3: d.arc((box[0]+1,box[1]+1,box[2]-1,box[3]-1),20,150,fill='#d8ded3')
+    for k in range(5):
+        a=k*math.tau/5+.25
+        x=round(16+(r+1)*math.cos(a)); y=round(21+(r*.5+2)*math.sin(a)-i)
+        spark(d,x,y,'#fbf4dd',i==1 and k<2)
+    return edge(im,'#474451')
 
-# --- Icons ---------------------------------------------------------------------------------------
-
-ICON = 24
-
-
-def icon_roots():
-    img = cell(ICON)
-    disc(img, 12, 18, 9, EARTH, 3.5)
-    roots = cell(ICON)
-    root_clump(roots, 12, 17, 1.0, 0.0, 3, True)
-    outline(roots, WOOD_OUT)
-    img.alpha_composite(roots)
-    return img
-
-
-def icon_current():
-    img = cell(ICON)
-    ring(img, 2, 12, 15, 7, WATER_DK, 13, (-0.9) % math.tau, 0.9)
-    ring(img, 2, 12, 13, 4, WATER, 11, (-0.8) % math.tau, 0.8)
-    ring(img, 2, 11, 12, 2, WATER_HI, 10, (-0.5) % math.tau, 0.6)
-    for k, a in enumerate((-0.7, -0.3, 0.1, 0.5, 0.8)):
-        put(img, 2 + math.cos(a) * 15.5, 12 + math.sin(a) * 13.5, FOAM)
-    outline(img, WATER_OUT)
-    return img
-
-
-def icon_shadow():
-    img = cell(ICON)
-    disc(img, 12, 12, 9, SMOKE_DK)
-    disc(img, 10, 10, 7, SMOKE)
-    disc(img, 9, 9, 3, SMOKE_HI)
-    # A bite of darkness: the crescent of a moon.
-    disc(img, 16, 10, 7, (0, 0, 0, 0))
-    outline(img, SMOKE_OUT)
-    # Two watching eyes in the dark of the bite.
-    put(img, 15, 11, SMOKE_HI)
-    put(img, 18, 11, SMOKE_HI)
-    return img
-
+def icons():
+    root=root_piece(.8,0).crop((2,2,26,26))
+    water=canvas(24); d=ImageDraw.Draw(water)
+    poly(d,[(3,17),(7,16),(9,11),(10,6),(13,3),(18,3),(21,6),(20,10),(17,11),(15,9),(16,7),(13,8),(13,12),(18,16),(21,17),(20,20),(4,20)],WATER[1])
+    poly(d,[(5,17),(10,15),(12,9),(14,6),(18,5),(20,6),(17,6),(15,8),(16,12),(20,17),(18,18),(6,18)],WATER[2])
+    d.line([(7,17),(11,16),(14,18),(18,18)],fill=WATER[3])
+    d.line([(10,10),(11,6),(14,4),(18,4),(20,6)],fill=WATER[4],width=1)
+    d.point((5,11),fill=WATER[3]); water=edge(water,WATER[0])
+    shadow=canvas(24); d=ImageDraw.Draw(shadow)
+    poly(d,[(6,6),(11,3),(16,4),(18,7),(15,6),(12,8),(11,12),(13,16),(18,17),(21,14),(20,19),(16,21),(10,20),(5,17),(3,12)],SMOKE[1])
+    d.line([(5,13),(5,9),(8,6),(11,5),(14,5)],fill=SMOKE[3],width=2)
+    d.line([(6,15),(9,18),(13,19),(17,18)],fill=SMOKE[2],width=2)
+    spark(d,18,10,SMOKE[4],True); shadow=edge(shadow,SMOKE[0])
+    return {'icon_roots':root,'icon_current':water,'icon_shadow':shadow}
 
 def main():
-    os.makedirs(OUT, exist_ok=True)
-    sets = {}
-    for maker in (make_roots, make_wave, make_puff, make_burst):
-        sets.update(maker())
-    sheets = {}
-    for name, frames in sets.items():
-        sheets[name] = strip(frames, os.path.join(OUT, name + ".png"))
-    icons = {"icon_roots": icon_roots(), "icon_current": icon_current(), "icon_shadow": icon_shadow()}
-    for name, icon in icons.items():
-        icon.save(os.path.join(OUT, name + ".png"))
-        sheets[name] = icon
-    print("skill art written to", os.path.normpath(OUT))
-    if PREVIEW:
-        os.makedirs(PREVIEW, exist_ok=True)
-        width = max(s.width for s in sheets.values())
-        height = sum(s.height + 4 for s in sheets.values())
-        contact = Image.new("RGBA", (width, height), (70, 110, 70, 255))
-        y = 0
-        for sheet in sheets.values():
-            contact.paste(sheet, (0, y), sheet)
-            y += sheet.height + 4
-        contact.resize((contact.width * 3, contact.height * 3), Image.NEAREST).save(os.path.join(PREVIEW, "skills_x3.png"))
+    sets={
+      'roots_start':[roots_frame(g,i,1 if i in (1,2) else 0) for i,g in enumerate((0,.28,.65,1))],
+      'roots_loop':[roots_frame(1,i*math.pi/2) for i in range(4)],
+      'roots_end':[roots_frame(g,i,0) for i,g in enumerate((.7,.35,0))],
+      'current_wave':[wave_frame(i) for i in range(6)],
+      'shadow_puff':[puff_frame(i) for i in range(6)],
+      'cast_burst':[burst_frame(i) for i in range(4)]}
+    for name,frames in sets.items(): save_set(OUT,name,frames,6 if name=='roots_loop' else 14)
+    aseprite(OUT/'source/roots.aseprite',[(tag,sets['roots_'+tag],fps) for tag,fps in [('start',12),('loop',6),('end',10)]])
+    for name,im in icons().items(): save_set(OUT,name,[im])
+    if '--preview' in sys.argv: preview('after',sys.argv[sys.argv.index('--preview')+1])
+    print('Skill art: 6 strips, 3 icons; native cells and frame counts preserved.')
 
-
-if __name__ == "__main__":
-    main()
+if __name__=='__main__': main()
