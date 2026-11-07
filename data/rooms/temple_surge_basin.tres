@@ -9,6 +9,7 @@ id = &"temple_surge_basin"
 scene = ExtResource("1_t0smv")
 weight = 2.0
 tags = Array[StringName]([&"surge"])
+max_enemies = 3
 enemy_affinity = {
 &"arana_talladora": 0.0,
 &"manta_hollin": 1.5,
@@ -17,3 +18,4 @@ enemy_affinity = {
 surge_stages = 1
 kills_stage_1 = 4
 kills_to_recede = 4
+max_alive = 4

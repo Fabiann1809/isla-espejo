@@ -133,7 +133,7 @@ func _node_tests() -> void:
 	data.kills_stage_1 = 2
 	data.kills_to_recede = 2
 	data.wave_size = 2
-	data.max_alive = 5
+	data.max_alive = 4
 	var doors: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
 	room.setup(data, doors)
 	var shape: Node2D = load("res://scripts/world/temple_shape.gd").new()
@@ -168,6 +168,12 @@ func _node_tests() -> void:
 	other.free()
 	await _frames(2)
 	Engine.time_scale = 1.0
+	# Every physics frame: the most enemies alive at once, and the most alive plus warning rings pending.
+	var peaks := {"alive": 0, "with_rings": 0}
+	physics_frame.connect(func() -> void:
+		if is_instance_valid(room) and is_instance_valid(surge):
+			peaks["alive"] = maxi(peaks["alive"], room.enemies_alive)
+			peaks["with_rings"] = maxi(peaks["with_rings"], room.enemies_alive + surge._incoming))
 	# Every enemy that enters the room after this point, with the cell Nico stood in at that moment.
 	var spawned: Array = []
 	room.child_entered_tree.connect(func(node: Node) -> void:
@@ -288,6 +294,8 @@ func _node_tests() -> void:
 	await _frames(20)
 	seals_still = surge.get_children().filter(func(c: Node) -> bool: return c is StaticBody2D).size()
 	_check(seals_still == 0, "after the room is cleared the doors open (%d bodies)" % seals_still)
+	_check(peaks["alive"] <= data.max_alive, "never more than max_alive enemies alive at once (peak %d of %d)" % [peaks["alive"], data.max_alive])
+	_check(peaks["with_rings"] <= data.max_alive, "pending warning rings count toward max_alive (peak %d of %d)" % [peaks["with_rings"], data.max_alive])
 	_check(_received.has(["receded", 0]), "lava_surge_receded was published")
 	_check(surge._seal_pulses.is_empty(), "the seal's pulse tweens are killed when the doors open")
 	room.queue_free()

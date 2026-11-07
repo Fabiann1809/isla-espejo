@@ -9,6 +9,7 @@ id = &"temple_surge_bridges"
 scene = ExtResource("1_on27c")
 weight = 2.0
 tags = Array[StringName]([&"surge", &"bridges"])
+max_enemies = 3
 enemy_affinity = {
 &"arana_talladora": 0.0,
 &"gusano_puentes": 2.0,
@@ -17,3 +18,5 @@ enemy_affinity = {
 }
 surge_stages = 2
 kills_stage_1 = 4
+kills_to_recede = 4
+max_alive = 4
