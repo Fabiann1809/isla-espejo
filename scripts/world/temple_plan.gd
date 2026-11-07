@@ -80,11 +80,17 @@ var _heights: Array[int] = []
 var _deck_ends := {}
 ## The `(x, y, level)` states the doors reach (see `_reach_from_doors`), computed once when asked.
 var _reached := {}
+## The text the plan was read from, the key of the shared collision cache.
+var _source := ""
+## Collision rectangles already worked out, shared by every plan read from the same text: a room design
+## is built again on every new map, and its rectangles never change. Key: [text, layer].
+static var _rects_cache := {}
 var _reached_done := false
 
 
 static func parse(text: String) -> TemplePlan:
 	var plan := TemplePlan.new()
+	plan._source = text
 	plan._read(text)
 	return plan
 
@@ -403,12 +409,30 @@ func _row_matches(start: Vector2i, width: int, matches: Callable) -> bool:
 ## The cells of the inner plan that need a body on `layer`, merged into rectangles in room pixels
 ## (greedy row runs merged downward, as RuinShape does). The ring is Room's own wall.
 func collision_rects(layer: int) -> Array[Rect2]:
+	var key := [_source, layer]
+	if errors.is_empty() and _source != "" and _rects_cache.has(key):
+		var cached: Array[Rect2] = []
+		cached.assign(_rects_cache[key])
+		return cached
+	var rects := _collision_rects(layer)
+	if errors.is_empty() and _source != "":
+		_rects_cache[key] = rects.duplicate()
+	return rects
+
+
+func _collision_rects(layer: int) -> Array[Rect2]:
 	var rects: Array[Rect2] = []
 	if _cells.is_empty():
 		return rects
 	var used := {}
+	# Whether each cell is on the layer, worked out once: growing the rectangles asks again and again.
+	var on := PackedByteArray()
+	on.resize(columns * rows)
+	for y in range(1, rows - 1):
+		for x in range(1, columns - 1):
+			on[y * columns + x] = 1 if _on_layer(Vector2i(x, y), layer) else 0
 	var member := func(cell: Vector2i) -> bool:
-		return is_inner(cell) and not used.has(cell) and _on_layer(cell, layer)
+		return is_inner(cell) and on[cell.y * columns + cell.x] == 1 and not used.has(cell)
 	for y in range(1, rows - 1):
 		for x in range(1, columns - 1):
 			var cell := Vector2i(x, y)

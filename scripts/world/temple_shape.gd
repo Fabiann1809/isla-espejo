@@ -46,6 +46,11 @@ var _rng: RandomNumberGenerator
 ## Cell covered by a cliff face -> {kind (tile prefix or "foot"), side ("l", "m", "r"), on_floor,
 ## owner (the height of the plateau that casts it)}.
 var _faces := {}
+## Per-cell caches filled once by _cache_cells (index y * columns + x): whether a ring cell is the
+## room's wall, and the art height of every cell. Big rooms ask both many times per cell.
+var _wall_cache := PackedByteArray()
+var _art_cache := PackedInt32Array()
+var _caches_ready := false
 var _layers := {}
 var _rim_cells: Array[Vector2i] = []
 
@@ -68,6 +73,7 @@ func _ready() -> void:
 		return
 	_rng = RandomNumberGenerator.new()
 	_rng.seed = hash(Vector2i(global_position))
+	_cache_cells()
 	for layer_name in LAYER_NAMES:
 		_layers[layer_name] = _new_layer(layer_name, LavaBackdrop.SEA_Z if layer_name == "Lava" else RoomTheme.FLOOR_Z)
 	_layers["LavaShadows"].z_index = LavaBackdrop.SEA_Z + 1
@@ -132,9 +138,27 @@ func island_cells() -> Array[Vector2i]:
 # --- reading the plan for the pictures ----------------------------------------------------------------
 ## A wall cell of the outer ring: every border cell but the gaps of the open doors (the room knows
 ## which are open; without a room, the plan's door cells).
+## Fills the wall and art-height caches once the plan is known (the room is already the parent, so
+## its open doors decide the ring). Same answers as the uncached functions, computed once per cell.
+func _cache_cells() -> void:
+	_caches_ready = false
+	var count := plan.columns * plan.rows
+	_wall_cache.resize(count)
+	_art_cache.resize(count)
+	# Both are filled with the cache off (art heights ask about walls and other cells), then switched on.
+	for y in plan.rows:
+		for x in plan.columns:
+			var cell := Vector2i(x, y)
+			_wall_cache[y * plan.columns + x] = 1 if _is_wall(cell) else 0
+			_art_cache[y * plan.columns + x] = _art_height(cell)
+	_caches_ready = true
+
+
 func _is_wall(cell: Vector2i) -> bool:
 	if not plan.in_grid(cell) or plan.is_inner(cell):
 		return false
+	if _caches_ready:
+		return _wall_cache[cell.y * plan.columns + cell.x] == 1
 	var parent := get_parent()
 	if parent != null and parent.has_method("is_wall_cell"):
 		return parent.is_wall_cell(cell)
@@ -144,6 +168,8 @@ func _is_wall(cell: Vector2i) -> bool:
 ## The height a cell shows: -1 for lava, the wall ring and the sea beyond the room; what lies under a
 ## deck; masonry is a block as tall as the top level; a stair shows its low end; else the plan's height.
 func _art_height(cell: Vector2i) -> int:
+	if _caches_ready and plan.in_grid(cell):
+		return _art_cache[cell.y * plan.columns + cell.x]
 	if not plan.in_grid(cell) or _is_wall(cell):
 		return TemplePlan.LAVA_HEIGHT
 	var c := plan.cell_at(cell)
