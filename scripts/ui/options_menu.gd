@@ -17,9 +17,10 @@ var controller_panel: ControllerPanel
 func _ready() -> void:
 	theme = UiKit.theme()
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	box.add_child(UiKit.label(UiText.t("options_title"), 18))
+	box.add_child(UiKit.menu_label(UiText.t("options_title"), 20, UiKit.GOLD))
+	box.add_child(UiKit.divider())
 
 	volume_slider = _slider_row(box, UiText.t("options_volume"))
 	music_slider = _slider_row(box, UiText.t("options_music"))
@@ -101,8 +102,8 @@ func refresh() -> void:
 func _slider_row(box: Container, text: String) -> HSlider:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	var label := UiKit.label(text, 14, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
-	label.custom_minimum_size.x = 80
+	var label := UiKit.menu_label(text, UiKit.FONT_SIZE, UiKit.LAVENDER, HORIZONTAL_ALIGNMENT_LEFT)
+	label.custom_minimum_size.x = 90
 	row.add_child(label)
 	var slider := HSlider.new()
 	slider.min_value = 0.0

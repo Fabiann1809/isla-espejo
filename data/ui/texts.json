@@ -7,7 +7,7 @@
 	"menu_options": "Configuración",
 	"menu_credits": "Créditos",
 	"menu_quit": "Abandonar la isla",
-	"menu_controls": "Mover: WASD  ·  Atacar: J  ·  Esquivar: Espacio  ·  Habilidades: 1 2 3  ·  Interactuar: E  ·  Pausa: Esc",
+	"menu_controls": "WASD Mover  ·  J Atacar  ·  ESPACIO Esquivar  ·  E Interactuar",
 	"pause_title": "Pausa",
 	"pause_resume": "Continuar",
 	"pause_menu": "Volver al menú",
