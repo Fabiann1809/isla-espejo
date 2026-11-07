@@ -11,6 +11,12 @@ extends Resource
 
 @export_group("Layout")
 @export var grid_size := Vector2i(5, 5)
+## Size of a grid cell in 16 px tiles: the room of the cell (RoomData.size_tiles, never bigger) is centred
+## in it. Both numbers are even.
+@export var cell_tiles := Vector2i(30, 18)
+## Tiles between the cells of two neighbours. A corridor is as long as the gap between the two doors
+## it joins: this plus what the two rooms leave free of their cells.
+@export var corridor_tiles := 3
 ## Length limits of the start-to-boss path, counting both ends.
 @export var min_main_path := 6
 @export var max_main_path := 11

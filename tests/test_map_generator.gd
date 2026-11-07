@@ -149,6 +149,7 @@ func _initialize() -> void:
 
 	_check_heights(scenario)
 	_check_reference_layouts()
+	_check_reference_geometry()
 	_check_real_scenarios()
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
@@ -256,6 +257,43 @@ func _check_reference_layouts() -> void:
 			if " ".join(_room_ids(layout)) != REFERENCE[name][map_seed]:
 				changed.append(map_seed)
 		_check(changed.is_empty(), "%s layouts are unchanged for seeds 1..20 (changed: %s)" % [name, changed])
+
+
+## The forest and the ruins keep the geometry they had before rooms had a size of their own: cells of
+## 480 x 288 px 48 px apart, every room filling its cell, every corridor 48 px long and one door wide.
+## The numbers are written out here on purpose; they are not read from the scenario. The temple is
+## still made of 30 x 18 rooms and keeps it too.
+func _check_reference_geometry() -> void:
+	var cell := Vector2(480, 288)
+	var stride := Vector2(528, 336)
+	for name in ["forest", "ruins", "temple"]:
+		var scenario: ScenarioData = load("res://data/scenarios/%s.tres" % name)
+		var level = load("res://scenes/levels/forest_level.tscn").instantiate()
+		level.scenario = scenario
+		_check(level.cell_size() == cell and level.stride() == stride,
+				"%s: the cell is 480 x 288 px and the stride 528 x 336 px" % name)
+		var bad_rooms := 0
+		var bad_corridors := 0
+		var corridors := 0
+		for map_seed in [1, 2, 3, 7, 12, 20]:
+			level.layout = MapGenerator.generate(scenario, map_seed)
+			for coord: Vector2i in level.layout.cells:
+				var origin := Vector2(coord) * stride
+				if level.cell_origin(coord) != origin or level.room_origin(coord) != origin \
+						or level.room_size(coord) != cell or level.room_rect(coord) != Rect2(origin, cell):
+					bad_rooms += 1
+				if level.layout.are_connected(coord, coord + Vector2i.RIGHT):
+					corridors += 1
+					if level.corridor_floor(coord, Vector2i.RIGHT) != Rect2(origin.x + 480.0, origin.y + 144.0 - 32.0, 48.0, 64.0):
+						bad_corridors += 1
+				if level.layout.are_connected(coord, coord + Vector2i.DOWN):
+					corridors += 1
+					if level.corridor_floor(coord, Vector2i.DOWN) != Rect2(origin.x + 240.0 - 32.0, origin.y + 288.0, 64.0, 48.0):
+						bad_corridors += 1
+		level.free()
+		_check(bad_rooms == 0, "%s: every room sits at its cell's origin and fills the cell (bad: %d)" % [name, bad_rooms])
+		_check(corridors > 20 and bad_corridors == 0,
+				"%s: every corridor floor is the 48 x 64 px gap between its doors (%d checked, bad: %d)" % [name, corridors, bad_corridors])
 
 
 func _check_variant(base: ScenarioData, label: String, tweak: Callable) -> void:

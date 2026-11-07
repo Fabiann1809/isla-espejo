@@ -8,9 +8,6 @@ signal generated(layout: MapLayout)
 ## The exit of the last chapter was taken (only with `end_after_last_chapter`): the journey is over.
 signal journey_ended
 
-const CELL_SIZE := Vector2(480, 288)
-const CORRIDOR_LENGTH := 48.0
-const STRIDE := CELL_SIZE + Vector2(CORRIDOR_LENGTH, CORRIDOR_LENGTH)
 const CORRIDOR_COLOR := Color(0.15, 0.22, 0.17)
 ## The forest shade's sort point: below every room, so it is drawn after all their floors.
 const SHADE_SORT_Y := 1000000.0
@@ -215,8 +212,73 @@ func room_at(coord: Vector2i) -> Room:
 	return rooms.get(coord)
 
 
+# --- geometry ------------------------------------------------------------------------------------------------------
+## The map is a grid of cells of `scenario.cell_tiles`, `scenario.corridor_tiles` apart. Each room is
+## centred in its cell, so a room smaller than the cell leaves a margin on every side and the corridor
+## that joins two neighbours spans the gap between their facing doors (the doors are the middle of each
+## room, which is the middle of the cell: neighbours always line up). All sizes are in world px.
+
+## Size of a grid cell.
+func cell_size() -> Vector2:
+	return Vector2(scenario.cell_tiles * TileArt.TILE)
+
+
+## Distance between the origins of two neighbouring cells.
+func stride() -> Vector2:
+	return cell_size() + Vector2.ONE * float(scenario.corridor_tiles * TileArt.TILE)
+
+
+## Top-left of the grid cell (not of its room: see `room_origin`).
 func cell_origin(coord: Vector2i) -> Vector2:
-	return Vector2(coord) * STRIDE
+	return Vector2(coord) * stride()
+
+
+## Size of the room of a cell, from its RoomData.
+func room_size(coord: Vector2i) -> Vector2:
+	return Vector2(layout.get_cell(coord).room_data.size_tiles * TileArt.TILE)
+
+
+## Top-left of the room of a cell: centred in the cell, on whole tiles.
+func room_origin(coord: Vector2i) -> Vector2:
+	var slack: Vector2i = scenario.cell_tiles - layout.get_cell(coord).room_data.size_tiles
+	return cell_origin(coord) + Vector2(slack / 2 * TileArt.TILE)
+
+
+## The room of a cell, walls included, in world px.
+func room_rect(coord: Vector2i) -> Rect2:
+	return Rect2(room_origin(coord), room_size(coord))
+
+
+## The floor of the corridor from the room at `coord` to its neighbour to the RIGHT or DOWN: from the
+## first room's edge to the second room's, one door wide.
+func corridor_floor(coord: Vector2i, dir: Vector2i) -> Rect2:
+	var from := room_rect(coord)
+	var to := room_rect(coord + dir)
+	var half_door := Room.DOOR_WIDTH / 2.0
+	if dir == Vector2i.RIGHT:
+		var y := cell_origin(coord).y + cell_size().y / 2.0
+		return Rect2(from.end.x, y - half_door, to.position.x - from.end.x, Room.DOOR_WIDTH)
+	var x := cell_origin(coord).x + cell_size().x / 2.0
+	return Rect2(x - half_door, from.end.y, Room.DOOR_WIDTH, to.position.y - from.end.y)
+
+
+## What is wrong with a room in this scenario's cell ("" when nothing): it is larger than the cell, or
+## the difference is odd, so it cannot be centred on whole tiles.
+func room_fit_problem(room_data: RoomData) -> String:
+	var slack: Vector2i = scenario.cell_tiles - room_data.size_tiles
+	if slack.x < 0 or slack.y < 0:
+		return "Room '%s' (%s tiles) is larger than the cell (%s tiles) of scenario '%s'" % [room_data.id, room_data.size_tiles, scenario.cell_tiles, scenario.id]
+	if slack.x % 2 != 0 or slack.y % 2 != 0:
+		return "Room '%s' (%s tiles) cannot be centred on whole tiles in the cell (%s tiles): sizes must be even" % [room_data.id, room_data.size_tiles, scenario.cell_tiles]
+	return ""
+
+
+func _check_room_fits(room_data: RoomData) -> void:
+	var problem := room_fit_problem(room_data)
+	if problem != "":
+		push_error(problem)
+	var slack: Vector2i = scenario.cell_tiles - room_data.size_tiles
+	assert(slack.x % 2 == 0 and slack.y % 2 == 0, "room and cell sizes must have an even difference")
 
 
 func _clear() -> void:
@@ -238,7 +300,8 @@ func _build_rooms(rng: RandomNumberGenerator) -> void:
 		var room: Room = cell.room_data.scene.instantiate()
 		room.theme = scenario.theme
 		room.setup(cell.room_data, cell.doors)
-		room.position = cell_origin(coord)
+		_check_room_fits(cell.room_data)
+		room.position = room_origin(coord)
 		_map.add_child(room)
 		rooms[coord] = room
 		_populate(room, cell, rng)
@@ -343,22 +406,16 @@ func _build_corridors() -> void:
 
 
 func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
-	var origin := cell_origin(coord)
-	var half_door := Room.DOOR_WIDTH / 2.0
-	var floor_rect: Rect2
+	var floor_rect := corridor_floor(coord, dir)
+	if floor_rect.size.x <= 0.0 or floor_rect.size.y <= 0.0:
+		push_error("No corridor between %s and %s: the rooms touch or overlap" % [coord, coord + dir])
 	var walls: Array[Rect2] = []
 	if dir == Vector2i.RIGHT:
-		var y := origin.y + CELL_SIZE.y / 2.0
-		var x := origin.x + CELL_SIZE.x
-		floor_rect = Rect2(x, y - half_door, CORRIDOR_LENGTH, Room.DOOR_WIDTH)
-		walls.append(Rect2(x, y - half_door - Room.WALL, CORRIDOR_LENGTH, Room.WALL))
-		walls.append(Rect2(x, y + half_door, CORRIDOR_LENGTH, Room.WALL))
+		walls.append(Rect2(floor_rect.position.x, floor_rect.position.y - Room.WALL, floor_rect.size.x, Room.WALL))
+		walls.append(Rect2(floor_rect.position.x, floor_rect.end.y, floor_rect.size.x, Room.WALL))
 	else:
-		var x := origin.x + CELL_SIZE.x / 2.0
-		var y := origin.y + CELL_SIZE.y
-		floor_rect = Rect2(x - half_door, y, Room.DOOR_WIDTH, CORRIDOR_LENGTH)
-		walls.append(Rect2(x - half_door - Room.WALL, y, Room.WALL, CORRIDOR_LENGTH))
-		walls.append(Rect2(x + half_door, y, Room.WALL, CORRIDOR_LENGTH))
+		walls.append(Rect2(floor_rect.position.x - Room.WALL, floor_rect.position.y, Room.WALL, floor_rect.size.y))
+		walls.append(Rect2(floor_rect.end.x, floor_rect.position.y, Room.WALL, floor_rect.size.y))
 	_corridor_floors.append(floor_rect)
 	_corridor_walls.append_array(walls)
 
@@ -511,8 +568,8 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 ## except the near (south) one of a horizontal bridge, which stands with the actors and sorts by its
 ## foot, so Nico walking along it is drawn behind it. Collision stays the wall rectangles'.
 func _paint_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], number: int) -> void:
-	# A corridor is shorter than it is wide: its walls say which way it runs.
-	var horizontal := walls[0].size.x > walls[0].size.y
+	# The walls of a horizontal corridor lie one above the other, a vertical one's side by side.
+	var horizontal := walls[0].position.y != walls[1].position.y
 	var lava := LavaBackdrop.lava_layer("CorridorLava%d" % number)
 	lava.z_index = LavaBackdrop.SEA_Z
 	lava.modulate = Tuning.TEMPLE_LAVA_MODULATE
@@ -584,7 +641,7 @@ func _build_backdrop() -> void:
 		return
 	var walkable := {}
 	for coord: Vector2i in layout.cells:
-		_mark(walkable, _cells(Rect2(cell_origin(coord), CELL_SIZE)))
+		_mark(walkable, _cells(room_rect(coord)))
 	var taken := {}
 	for rect in _corridor_walls:
 		_mark(taken, _cells(rect))
@@ -599,12 +656,12 @@ func _build_backdrop() -> void:
 		for coord: Vector2i in layout.cells:
 			var room: Room = rooms[coord]
 			var shape := room.get_node_or_null("Shape")
-			var origin := Vector2i(cell_origin(coord)) / TileArt.TILE
+			var origin := Vector2i(room_origin(coord)) / TileArt.TILE
 			if shape != null and shape.has_method("island_cells"):
 				for cell: Vector2i in shape.island_cells():
 					stone[origin + cell] = true
 			else:
-				_mark(stone, _cells(Rect2(cell_origin(coord), CELL_SIZE)))
+				_mark(stone, _cells(room_rect(coord)))
 		LavaBackdrop.build(_map, area, stone, taken, current_seed, walkable)
 		return
 	for rect in _corridor_floors:
@@ -624,7 +681,7 @@ func _build_forest_shade(area: Rect2i) -> void:
 	var clearing := {}
 	for coord: Vector2i in layout.cells:
 		var room: Room = rooms[coord]
-		var origin := Vector2i(cell_origin(coord)) / TileArt.TILE
+		var origin := Vector2i(room_origin(coord)) / TileArt.TILE
 		for y in room.size_tiles.y:
 			for x in room.size_tiles.x:
 				if not room.is_wall_cell(Vector2i(x, y)):
@@ -780,7 +837,7 @@ func _compute_bounds() -> void:
 	bounds = Rect2()
 	var first := true
 	for coord: Vector2i in layout.cells:
-		var rect := Rect2(cell_origin(coord), CELL_SIZE)
+		var rect := room_rect(coord)
 		bounds = rect if first else bounds.merge(rect)
 		first = false
 
@@ -816,7 +873,7 @@ func _build_boundary() -> void:
 	_boundary.name = "ForestBoundary"
 	add_child(_boundary)
 	move_child(_boundary, 0)
-	_boundary.generate(layout, bounds, current_seed)
+	_boundary.generate(layout, bounds, current_seed, self)
 
 
 ## Four invisible walls just outside the sea's area (the camera's limits).

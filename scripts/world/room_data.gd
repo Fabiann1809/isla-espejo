@@ -19,6 +19,10 @@ enum RoomType { START, COMBAT, EVENT, REWARD, SPECIAL, BOSS }
 ## corridor between rooms of different height is a staircase, so the generator never joins rooms
 ## two levels apart. A raised room has no water, terraces or alcoves of its own.
 @export_range(0, 2) var height := 0
+## Size of the room in 16 px tiles, walls included. Both numbers are even (the doors, the 4 middle cells
+## of each edge, then centre exactly) and fit the scenario's `cell_tiles`; the room is centred in its
+## grid cell. A temple room's plan (TempleShape) must have exactly this size.
+@export var size_tiles := Vector2i(30, 18)
 
 @export_group("Enemies")
 @export var min_enemies := 2

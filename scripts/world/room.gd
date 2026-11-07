@@ -22,6 +22,8 @@ const FLOOR_COLORS := {
 	RoomData.RoomType.BOSS: Color(0.35, 0.18, 0.42),
 }
 
+## The room's size in tiles, walls included. `setup` takes it from the RoomData (even numbers: the doors
+## are the 4 middle cells of each edge).
 @export var size_tiles := Vector2i(30, 18)
 ## Shows the room type over the floor (debugging aid).
 @export var debug_label := true
@@ -48,6 +50,8 @@ var _had_enemies := false
 ## Call before adding the room to the tree.
 func setup(room_data: RoomData, doors: Array[Vector2i]) -> void:
 	data = room_data
+	if room_data != null:
+		size_tiles = room_data.size_tiles
 	open_doors = doors
 	height = room_data.height if room_data != null else Heights.LOW
 

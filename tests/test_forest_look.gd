@@ -115,7 +115,7 @@ func _initialize() -> void:
 	var tree_rects: Array = level.get_node("Map/Backdrop").get_meta("tree_rects", [])
 	var keep_clear: Array[Rect2] = []
 	for coord in level.layout.cells:
-		keep_clear.append(Rect2(level.cell_origin(coord), level.CELL_SIZE))
+		keep_clear.append(Rect2(level.cell_origin(coord), level.cell_size()))
 	keep_clear.append_array(level._corridor_floors)
 	keep_clear.append_array(level._corridor_walls)
 	var reaching := 0
