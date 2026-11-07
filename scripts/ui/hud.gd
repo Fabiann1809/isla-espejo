@@ -55,6 +55,10 @@ const SAVED_FADE := 0.6
 
 const GOLD_COLOR := Color(1.0, 0.8, 0.25)
 const BUFF_BAR_SIZE := Vector2(40, 3)
+const BUFF_ICON_SIZE := Vector2(12, 12)
+const BUFF_BAR_X := 16.0
+## Wide enough for the icon, the bar and the shield's "x2".
+const BUFF_ROW_WIDTH := 76.0
 
 var _fragment_icons := {}
 var _fragment_has_art := false
@@ -62,11 +66,9 @@ var _fragment_row: HBoxContainer
 var _gold_label: Label
 var _upgrade_row: HBoxContainer
 var _shop_catalog: ShopCatalog
-var _buff_row: Control
-var _buff_icon: ColorRect
-var _buff_fill: ColorRect
-var _buff_left := 0.0
-var _buff_total := 1.0
+## Holds one row per running buff; `_buff_rows` maps the buff id to its row's nodes and time.
+var _buff_box: Control
+var _buff_rows := {}
 var _objective: Label
 var _toast_queue: Array[String] = []
 var _toast_busy := false
@@ -100,6 +102,7 @@ func _ready() -> void:
 	_build_resources()
 	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
 	Events.player_buff_changed.connect(_on_buff_changed)
+	Events.player_buff_charges_changed.connect(_on_buff_charges_changed)
 	Events.objective_changed.connect(func(text: String) -> void: _objective.text = text)
 	Events.fragment_collected.connect(func(_id: StringName) -> void: _refresh_fragments())
 	_build_upgrades()
@@ -185,37 +188,86 @@ func _build_resources() -> void:
 	_gold_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	coin_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-	_buff_row = Control.new()
-	_buff_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	_buff_row.position = Vector2(-8 - 58, BUFF_ROW_Y)
-	_buff_icon = ColorRect.new()
-	_buff_icon.size = Vector2(8, 8)
-	_buff_row.add_child(_buff_icon)
+	_buff_box = Control.new()
+	_buff_box.name = "Buffs"
+	_buff_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_buff_box.position = Vector2(-8 - BUFF_ROW_WIDTH, BUFF_ROW_Y)
+	add_child(_buff_box)
+
+
+## One row per running buff, stacked top to bottom in the order they started: its icon (the art when it
+## exists, else a square in the buff's colour), a bar that shrinks with the time left and, for a shield,
+## the hits it can still absorb. Taking the same buff again only refills its bar.
+func _on_buff_changed(buff_id: StringName, duration: float, color: Color) -> void:
+	if duration <= 0.0:
+		if _buff_rows.has(buff_id):
+			_buff_rows[buff_id]["row"].queue_free()
+			_buff_rows.erase(buff_id)
+			_layout_buff_rows()
+		return
+	if not _buff_rows.has(buff_id):
+		_buff_rows[buff_id] = _build_buff_row(buff_id, color)
+		_layout_buff_rows()
+	var entry: Dictionary = _buff_rows[buff_id]
+	entry["left"] = duration
+	entry["total"] = maxf(duration, 0.01)
+	entry["fill"].size.x = BUFF_BAR_SIZE.x
+
+
+func _on_buff_charges_changed(buff_id: StringName, charges: int) -> void:
+	if _buff_rows.has(buff_id):
+		_buff_rows[buff_id]["charges"].text = "x%d" % charges
+
+
+func _build_buff_row(buff_id: StringName, color: Color) -> Dictionary:
+	var row := Control.new()
+	row.name = "Buff_%s" % buff_id
+	var path: String = Tuning.BUFF_ICON_PATH % buff_id
+	var icon: Control
+	if ResourceLoader.exists(path):
+		var picture := TextureRect.new()
+		picture.texture = load(path) as Texture2D
+		picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon = picture
+	else:
+		var square := ColorRect.new()
+		square.color = color
+		icon = square
+	icon.size = BUFF_ICON_SIZE
+	row.add_child(icon)
 	var track := ColorRect.new()
 	track.color = Color(0, 0, 0, 0.5)
 	track.size = BUFF_BAR_SIZE
-	track.position = Vector2(12, 3)
-	_buff_row.add_child(track)
-	_buff_fill = ColorRect.new()
-	_buff_fill.size = BUFF_BAR_SIZE
-	_buff_fill.position = Vector2(12, 3)
-	_buff_row.add_child(_buff_fill)
-	add_child(_buff_row)
-	_buff_row.hide()
+	track.position = Vector2(BUFF_BAR_X, 4)
+	row.add_child(track)
+	var fill := ColorRect.new()
+	fill.color = color
+	fill.size = BUFF_BAR_SIZE
+	fill.position = track.position
+	row.add_child(fill)
+	var charges := Label.new()
+	charges.position = Vector2(BUFF_BAR_X + BUFF_BAR_SIZE.x + 3, -2)
+	charges.add_theme_font_size_override("font_size", 10)
+	charges.add_theme_color_override("font_color", color.lightened(0.4))
+	row.add_child(charges)
+	_buff_box.add_child(row)
+	return {"row": row, "fill": fill, "charges": charges, "left": 0.0, "total": 1.0}
 
 
-func _on_buff_changed(_buff_id: StringName, duration: float, color: Color) -> void:
-	_buff_left = duration
-	_buff_total = maxf(duration, 0.01)
-	_buff_row.visible = duration > 0.0
-	_buff_icon.color = color
-	_buff_fill.color = color
+func _layout_buff_rows() -> void:
+	var index := 0
+	for id in _buff_rows:
+		_buff_rows[id]["row"].position = Vector2(0, index * Tuning.BUFF_ROW_HEIGHT)
+		index += 1
 
 
 func _process(delta: float) -> void:
-	if _buff_left > 0.0:
-		_buff_left = maxf(_buff_left - delta, 0.0)
-		_buff_fill.size.x = BUFF_BAR_SIZE.x * _buff_left / _buff_total
+	for id in _buff_rows:
+		var entry: Dictionary = _buff_rows[id]
+		entry["left"] = maxf(entry["left"] - delta, 0.0)
+		entry["fill"].size.x = BUFF_BAR_SIZE.x * entry["left"] / entry["total"]
 
 
 func _refresh_fragments() -> void:
