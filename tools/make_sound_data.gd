@@ -43,6 +43,19 @@ const VOLUMES := {
 	&"attack_trap": -10.0,
 	&"attack_charge": -6.0,
 	&"attack_dive": -8.0,
+	# Temple (tools/make_temple_audio.py): the files are normalised, these only balance the cues.
+	&"lava_bubble": -6.0,
+	&"lava_surge_warn": -2.0,
+	&"lava_surge_rise": -2.0,
+	&"lava_surge_recede": -4.0,
+	&"geyser": -2.0,
+	&"spikes": 0.0,
+	&"saw": -4.0,
+	&"rolling_rock": -3.0,
+	&"shop_buy": -6.0,
+	&"shop_denied": -6.0,
+	&"crit_hit": 0.0,
+	&"merchant_greet": -6.0,
 }
 ## Cue -> the cue whose sound it uses (enemy ids are the scene file names).
 const ALIASES := {
@@ -98,6 +111,7 @@ const ALIASES := {
 const MUSIC_VOLUMES := {
 	&"menu": -8.0,
 	&"forest": -10.0,
+	&"temple": -10.0,
 	&"boss": -9.0,
 }
 

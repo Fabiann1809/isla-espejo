@@ -142,6 +142,22 @@ func _connect_events() -> void:
 	Events.boss_health_changed.connect(_on_boss_health_changed)
 	Events.boss_defeated.connect(_on_boss_defeated)
 	Events.level_started.connect(_on_level_started)
+	# Temple: the lava surge is heard in the whole room, so these play at full volume.
+	Events.lava_surge_warned.connect(func(_room: Node, _stage: int) -> void: play(&"lava_surge_warn"))
+	Events.lava_surge_started.connect(func(_room: Node, _stage: int) -> void: play(&"lava_surge_rise"))
+	Events.lava_surge_receded.connect(func(_room: Node) -> void: play(&"lava_surge_recede"))
+	_connect_optional_events()
+
+
+## Signals another branch adds to Events (shop and crits): connected only when they exist, so this
+## script works before and after they land.
+func _connect_optional_events() -> void:
+	if Events.has_signal(&"shop_bought"):
+		Events.connect(&"shop_bought", func(_item_id) -> void: play(&"shop_buy"))
+	if Events.has_signal(&"shop_denied"):
+		Events.connect(&"shop_denied", func(_reason) -> void: play(&"shop_denied"))
+	if Events.has_signal(&"player_crit"):
+		Events.connect(&"player_crit", func(enemy, _damage) -> void: play(&"crit_hit", _where(enemy)))
 
 
 func _on_enemy_damaged(enemy: Node, _amount: int) -> void:
