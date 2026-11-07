@@ -150,6 +150,7 @@ func _initialize() -> void:
 	_check_heights(scenario)
 	_check_reference_layouts()
 	_check_reference_geometry()
+	_check_temple_geometry()
 	_check_real_scenarios()
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
@@ -261,12 +262,12 @@ func _check_reference_layouts() -> void:
 
 ## The forest and the ruins keep the geometry they had before rooms had a size of their own: cells of
 ## 480 x 288 px 48 px apart, every room filling its cell, every corridor 48 px long and one door wide.
-## The numbers are written out here on purpose; they are not read from the scenario. The temple is
-## still made of 30 x 18 rooms and keeps it too.
+## The numbers are written out here on purpose; they are not read from the scenario. The temple has
+## its own, wider geometry (see _check_temple_geometry).
 func _check_reference_geometry() -> void:
 	var cell := Vector2(480, 288)
 	var stride := Vector2(528, 336)
-	for name in ["forest", "ruins", "temple"]:
+	for name in ["forest", "ruins"]:
 		var scenario: ScenarioData = load("res://data/scenarios/%s.tres" % name)
 		var level = load("res://scenes/levels/forest_level.tscn").instantiate()
 		level.scenario = scenario
@@ -294,6 +295,49 @@ func _check_reference_geometry() -> void:
 		_check(bad_rooms == 0, "%s: every room sits at its cell's origin and fills the cell (bad: %d)" % [name, bad_rooms])
 		_check(corridors > 20 and bad_corridors == 0,
 				"%s: every corridor floor is the 48 x 64 px gap between its doors (%d checked, bad: %d)" % [name, corridors, bad_corridors])
+
+
+## The temple only: cells of 48 x 32 tiles (768 x 512 px), rooms of their own size centred in their cell,
+## and every corridor exactly the gap between two facing doors (so its length varies with the rooms).
+func _check_temple_geometry() -> void:
+	var scenario: ScenarioData = load("res://data/scenarios/temple.tres")
+	var level = load("res://scenes/levels/forest_level.tscn").instantiate()
+	level.scenario = scenario
+	var cell := Vector2(768, 512)
+	_check(level.cell_size() == cell, "temple: the cell is 768 x 512 px (48 x 32 tiles)")
+	var bad_rooms := 0
+	var bad_corridors := 0
+	var corridors := 0
+	var lengths := {}
+	for map_seed in [1, 2, 3, 7, 12, 20]:
+		level.layout = MapGenerator.generate(scenario, map_seed)
+		for coord: Vector2i in level.layout.cells:
+			var size: Vector2 = level.room_size(coord)
+			var centred: Vector2 = level.cell_origin(coord) + (cell - size) / 2.0
+			if level.room_origin(coord) != centred or size.x > cell.x or size.y > cell.y:
+				bad_rooms += 1
+			for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
+				if not level.layout.are_connected(coord, coord + dir):
+					continue
+				corridors += 1
+				var a: Rect2 = level.room_rect(coord)
+				var b: Rect2 = level.room_rect(coord + dir)
+				var floor_rect: Rect2 = level.corridor_floor(coord, dir)
+				var expected: Rect2
+				if dir == Vector2i.RIGHT:
+					var y: float = level.cell_origin(coord).y + cell.y / 2.0 - 32.0
+					expected = Rect2(a.end.x, y, b.position.x - a.end.x, 64.0)
+				else:
+					var x: float = level.cell_origin(coord).x + cell.x / 2.0 - 32.0
+					expected = Rect2(x, a.end.y, 64.0, b.position.y - a.end.y)
+				if floor_rect != expected:
+					bad_corridors += 1
+				lengths[int(max(floor_rect.size.x, floor_rect.size.y) / 16.0)] = true
+	level.free()
+	_check(bad_rooms == 0, "temple: every room is centred in its cell and fits it (bad: %d)" % bad_rooms)
+	_check(corridors > 20 and bad_corridors == 0,
+			"temple: every corridor fills the gap between its doors (%d checked, bad: %d)" % [corridors, bad_corridors])
+	_check(lengths.size() >= 3, "temple: corridors come in several lengths (%s tiles)" % [lengths.keys()])
 
 
 func _check_variant(base: ScenarioData, label: String, tweak: Callable) -> void:
