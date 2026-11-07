@@ -516,10 +516,8 @@ r = room("pillar_court", "TemplePillarCourt", [
 r.want("EnemySpawns", 9, region=(4, 7, 37, 23))
 r.prop(ALTAR_RUNE, 20, 3, level=1)       # the altar on the dais, behind the stairs' head
 r.pair(BRAZIER_PEDESTAL, 16, 4, level=1) # fires flanking the altar
-r.pair(PILLAR_CARVED, 14, 8)             # two rows of pillars framing the axis
-r.pair(PILLAR_CARVED, 14, 11)
-r.pair(PILLAR_CARVED, 14, 16)
-r.pair(PILLAR_CARVED, 14, 19)
+r.pair(PILLAR_CARVED, 14, 11)            # two pairs of tall pillars framing the axis, 8 rows apart
+r.pair(PILLAR_CARVED, 14, 19)            # (a pillar stands about 6 rows tall, so closer ones would overlap)
 r.pair(STATUE_GUARDIAN, 17, 24)          # guardians at the south door
 r.vines(4)
 r.plants(2)
