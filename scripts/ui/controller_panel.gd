@@ -23,14 +23,15 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	add_child(box)
-	box.add_child(UiKit.label(UiText.t("controller_title"), 18))
+	box.add_child(UiKit.menu_label(UiText.t("controller_title"), 20, UiKit.GOLD))
+	box.add_child(UiKit.divider())
 	qr_rect = TextureRect.new()
 	qr_rect.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	qr_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	box.add_child(qr_rect)
-	url_label = UiKit.label("", 11)
+	url_label = UiKit.menu_label("", 10)
 	box.add_child(url_label)
-	status_label = UiKit.label(UiText.t("controller_waiting"), 14)
+	status_label = UiKit.menu_label(UiText.t("controller_waiting"))
 	box.add_child(status_label)
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 6)

@@ -17,12 +17,13 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	box.add_child(UiKit.label(UiText.t("credits_title"), 18))
+	box.add_child(UiKit.menu_label(UiText.t("credits_title"), 20, UiKit.GOLD))
+	box.add_child(UiKit.divider())
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(420, 190)
+	scroll.custom_minimum_size = Vector2(420, 150)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(scroll)
-	body = UiKit.label(read_credits(), 12, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
+	body = UiKit.menu_label(read_credits(), 12, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.custom_minimum_size = Vector2(400, 0)
 	scroll.add_child(body)
