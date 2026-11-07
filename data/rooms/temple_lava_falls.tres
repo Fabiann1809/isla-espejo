@@ -12,7 +12,6 @@ tags = Array[StringName]([&"falls"])
 height = 1
 size_tiles = Vector2i(34, 24)
 enemy_affinity = {
-&"gusano_puentes": 0.5,
 &"manta_hollin": 3.0,
 &"ojo_sol": 1.5,
 &"salamandra_cristal": 2.0

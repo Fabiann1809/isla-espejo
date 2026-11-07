@@ -11,7 +11,6 @@ tags = Array[StringName]([&"bridges"])
 size_tiles = Vector2i(34, 24)
 enemy_affinity = {
 &"carnero_basalto": 0.5,
-&"gusano_puentes": 3.0,
-&"manta_hollin": 2.0,
+&"manta_hollin": 3.0,
 &"rueda_devoradora": 0.5
 }

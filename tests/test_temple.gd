@@ -1,10 +1,10 @@
 extends SceneTree
-## The Templo del Eclipse scenario: its data (25 enemies, a roster of 10, 13 room designs in three
+## The Templo del Eclipse scenario: its data (24 enemies, the bridge worm left out, a roster of 10, 13 room designs in three
 ## sizes centred in a 48x32 grid cell, surge rooms), every room plan a valid design of its room's
 ## size with its markers on spawn_ok cells, 30 seeds that build a
 ## map where every room is reached from the start (one staircase per level between neighbours), surge
 ## rooms in most maps, the full level built with every enemy on its island and on its platform's
-## level, each of the 25 enemies alive for 3 s in a temple room without leaving it or stepping in lava,
+## level, each of the 24 enemies alive for 3 s in a temple room without leaving it or stepping in lava,
 ## and the chapter chain: the ruins lead to the temple, which ends the journey.
 ## Run: godot --headless --path . --script res://tests/test_temple.gd
 ## `Level`/`Room` must not be referenced as types here (autoload compile order).
@@ -20,7 +20,7 @@ const ROOM_IDS := ["temple_start", "temple_boss", "temple_pillar_court", "temple
 		"temple_trap_walk", "temple_lava_falls", "temple_surge_basin", "temple_surge_tiers", "temple_surge_bridges",
 		"temple_sanctum", "temple_event", "temple_special"]
 const ENEMY_IDS := ["centinela_obsidiana", "carcelero_cadenas", "acolito_brasero", "verdugo_piedra", "duelista_maldito",
-		"salamandra_cristal", "gusano_puentes", "caracol_escoria", "carnero_basalto", "manta_hollin", "eco_espejo",
+		"salamandra_cristal", "caracol_escoria", "carnero_basalto", "manta_hollin", "eco_espejo",
 		"monje_sin_rostro", "mascara_parasita", "oraculo_ceniza", "custodio_sello", "ojo_sol", "campanero_bronce",
 		"rueda_devoradora", "arana_talladora", "forjador_condenado", "baldosa_hambrienta", "manos_abismo",
 		"vasija_poseida", "relojero_trampas", "nucleo_cria"]
@@ -63,7 +63,7 @@ func _check_data(scenario: ScenarioData) -> void:
 	ids.sort()
 	var wanted := ENEMY_IDS.duplicate()
 	wanted.sort()
-	_check(ids == wanted, "its pool holds the 25 temple enemies (%d)" % ids.size())
+	_check(ids == wanted, "its pool holds the 24 temple enemies, no bridge worm (%d)" % ids.size())
 	_check(scenario.roster_size == 10, "a map fields a roster of 10 (%d)" % scenario.roster_size)
 	_check(scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA, "it has the temple theme (lava walls)")
 	_check(scenario.grid_size == Vector2i(5, 5) and scenario.min_main_path == 6 and scenario.max_main_path == 9
@@ -357,7 +357,7 @@ func _check_level(scenario: ScenarioData) -> void:
 	_check(surge_ok, "exactly the surge rooms carry a LavaSurge (%d over %d maps)" % [surge_rooms, built])
 	var roster_ids: Array = level.roster.map(func(s: PackedScene) -> String: return s.resource_path.get_file().get_basename())
 	_check(level.roster.size() == 10 and roster_ids.all(func(id: String) -> bool: return id in ENEMY_IDS),
-			"the map's roster is 10 of the 25 (%s)" % [roster_ids])
+			"the map's roster is 10 of the 24 (%s)" % [roster_ids])
 	var enemies: Array = level.get_tree().get_nodes_in_group("enemies")
 	var in_roster := enemies.all(func(e: Node) -> bool: return not e.data.id in ENEMY_IDS or String(e.data.id) in roster_ids)
 	_check(in_roster, "every temple enemy on the map is in its roster")
@@ -422,7 +422,7 @@ func _check_enemies(scenario: ScenarioData) -> void:
 				if room.is_ancestor_of(leftover):
 					leftover.queue_free()
 		await physics_frame
-	_check(ran == ENEMY_IDS.size(), "each of the 25 enemies ran %.0f s in the pillar court (%d)" % [RUN_SECONDS, ran])
+	_check(ran == ENEMY_IDS.size(), "each of the 24 enemies ran %.0f s in the pillar court (%d)" % [RUN_SECONDS, ran])
 	_check(left == 0, "none of them left the room (%d did)" % left)
 	_check(in_lava == 0, "none of them (but flyers) stepped into lava (%d did)" % in_lava)
 	room.free()

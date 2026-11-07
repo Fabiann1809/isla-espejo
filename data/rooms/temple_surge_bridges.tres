@@ -13,8 +13,7 @@ size_tiles = Vector2i(42, 28)
 max_enemies = 3
 enemy_affinity = {
 &"arana_talladora": 0.0,
-&"gusano_puentes": 2.0,
-&"manta_hollin": 1.5,
+&"manta_hollin": 2.0,
 &"nucleo_cria": 0.0
 }
 surge_stages = 2
