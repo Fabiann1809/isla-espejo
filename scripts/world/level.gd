@@ -904,6 +904,9 @@ func _place_player() -> void:
 	# What only mattered on the map just left (a pull, a slow, cooldowns) is forgotten.
 	if player.has_method("reset_for_new_map"):
 		player.reset_for_new_map()
+	if "camera_look_ahead" in player:
+		var lead: float = scenario.theme.camera_look_ahead if scenario.theme != null else -1.0
+		player.camera_look_ahead = lead if lead >= 0.0 else Tuning.CAMERA_LOOK_AHEAD
 	var start_room: Room = rooms[layout.start_cell]
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
 	# Nico starts on the height of the start room (the ground, everywhere so far).

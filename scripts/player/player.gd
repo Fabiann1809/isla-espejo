@@ -90,6 +90,8 @@ var _flash_total := 0.0
 @onready var _hurtbox: Hurtbox = $Hurtbox
 ## Nico's art (the old colored square `Placeholder` stays hidden as a fallback).
 @onready var _body: AnimatedSprite2D = $Sprite
+## How far the camera leads Nico (px, 0 = off). The level sets it from its theme on every map.
+var camera_look_ahead := Tuning.CAMERA_LOOK_AHEAD
 @onready var _camera: Camera2D = $Camera2D
 @onready var _interact_area: Area2D = $InteractArea
 
@@ -346,11 +348,11 @@ func snap_camera() -> void:
 ## The camera leads Nico a little where he walks (or dodges), so the way ahead is seen first; it
 ## settles back over him when he stops.
 func _update_camera_lead(delta: float) -> void:
-	if Tuning.CAMERA_LOOK_AHEAD <= 0.0:
+	if camera_look_ahead <= 0.0:
 		return
 	var lead := Vector2.ZERO
 	if state == State.MOVE or state == State.DASH:
-		lead = (_action_dir if state == State.DASH else _move_dir.normalized()) * Tuning.CAMERA_LOOK_AHEAD
+		lead = (_action_dir if state == State.DASH else _move_dir.normalized()) * camera_look_ahead
 	_camera.position = _camera.position.lerp(lead, 1.0 - exp(-Tuning.CAMERA_LOOK_AHEAD_SPEED * delta))
 
 

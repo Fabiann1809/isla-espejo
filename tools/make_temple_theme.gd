@@ -19,6 +19,7 @@ func _initialize() -> void:
 	# The lava's warm light over everything, and no fireflies or leaves.
 	theme.world_tint = Tuning.TEMPLE_WORLD_TINT
 	theme.ambient_life = false
+	theme.camera_look_ahead = 0.0
 	ResourceSaver.save(theme, "res://data/themes/temple.tres")
 	print("theme written")
 	quit()

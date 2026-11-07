@@ -309,6 +309,9 @@ func _check_level(scenario: ScenarioData) -> void:
 			build_ms = Time.get_ticks_msec() - started
 		else:
 			level.generate(map_seed)
+		if built == 0:
+			_check(level.player != null and level.player.camera_look_ahead == 0.0,
+					"in the temple the camera does not lead Nico (no trembling)")
 		for i in 4:
 			await physics_frame
 		if level.rooms.size() != level.layout.cells.size() or not level.layout.validate().is_empty():

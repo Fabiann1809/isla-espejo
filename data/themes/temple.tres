@@ -13,4 +13,5 @@ decor_tiles = Array[StringName]([&"floor_moss_a", &"floor_moss_b", &"floor_crack
 decor_chance = 0.04
 world_tint = Color(1, 1, 1, 1)
 ambient_life = false
+camera_look_ahead = 0.0
 wall_style = 2

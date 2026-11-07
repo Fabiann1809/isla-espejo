@@ -33,6 +33,9 @@ const GROUND_FX_Z := -1
 ## and falling leaves of the forest) drifts around the camera.
 @export var world_tint := Tuning.WORLD_TINT
 @export var ambient_life := true
+## How far the camera leads Nico in this scenario (px): -1 keeps Tuning.CAMERA_LOOK_AHEAD, 0 turns it
+## off (the temple, where the lead made the picture tremble).
+@export var camera_look_ahead := -1.0
 enum WallStyle { TREES, ROCKS, LAVA }
 ## How the walls of rooms and corridors are drawn and what fills the space around the map: rows of
 ## trees over a forest, clusters of rock columns over solid rock (the Ruinas), or no wall art at all
