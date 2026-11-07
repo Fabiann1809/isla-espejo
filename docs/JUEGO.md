@@ -27,7 +27,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 | Mapas | Procedurales: el algoritmo coloca y conecta salas diseñadas a mano. Inicio y arena del jefe son fijos |
 | Enemigos | 6 con patrones distintos (ver sección 6) |
 | Jefes | 3 (ver sección 7) |
-| NPCs | 3: Anciano, Viajera, Mercader. **Solo diálogo** (sin tienda) |
+| NPCs | 3: Anciano, Viajera, Mercader. El Anciano y la Viajera solo hablan; el **Mercader tiene tienda** (ver recursos) |
 | Habilidades | 3 fijas, una por jefe, **sin combinaciones** |
 | IA | Capa 1 (perfil del jugador) y capa 2 (la isla reacciona). Ambas obligatorias |
 | Historia | Prólogo, 3 capítulos, final, con diálogos en el juego |
@@ -40,7 +40,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 ### Fuera del alcance
 - Recolección y construcción.
 - Multijugador (varios jugadores a la vez). El control por celular maneja al único Nico y no cuenta como multijugador.
-- Tienda del Mercader (es solo diálogo).
+- Más de una tienda o inventario complejo: el Mercader vende un catálogo corto y fijo.
 - Combinaciones de habilidades (extra opcional, ver sección 5).
 - Plataformas flotantes en el aire, sin roca debajo. El Templo del Eclipse sí tiene tres niveles de altura, sobre lava (caminos de piedra, escaleras y puentes).
 - Aprendizaje automático / redes neuronales (capa 3 de IA, extra opcional).
@@ -54,7 +54,7 @@ Un juego de exploración y combate donde los escenarios cambian en cada partida 
 - El Guardián de la isla se **fusiona con el último jefe** o queda como cinemática (extra).
 - **Muerte (decidido):** al morir Nico lo pierde todo (vida, recursos, mejoras temporales, fragmentos, habilidades y jefes derrotados) y vuelve a empezar desde la isla 1 con un mapa nuevo. Lo único que se conserva es el perfil del jugador, es decir, lo que la isla ha aprendido de él. Cada intento es el juego completo.
 - **Ataque a distancia (decidido):** Nico ya no usa espada. Ataca con arco (disparo manual en 8 direcciones) y el arma es un dato (`WeaponData`), así que se pueden añadir otras después.
-- **Recursos básicos (decidido):** en las islas se recogen objetos sencillos que solo valen durante la partida y se pierden al morir. No hay inventario complejo ni construcción. Los enemigos los dejan con poca probabilidad: **corazón** (cura 1; sale más si Nico está herido y hay uno garantizado tras una racha sin suerte), **orbe de flechas** (unos 12 s de disparos en abanico de 3 flechas) y **oro** (1 a 3 monedas, se atrae al acercarse). El oro por ahora solo se acumula; su uso será con el Mercader (se decide más adelante). Sin munición (el arco es infinito) ni experiencia por ahora.
+- **Recursos básicos (decidido):** en las islas se recogen objetos sencillos que solo valen durante la partida y se pierden al morir. No hay inventario complejo ni construcción. Los enemigos los dejan con poca probabilidad: **corazón** (cura 1; sale más si Nico está herido y hay uno garantizado tras una racha sin suerte), **orbe de flechas** (unos 12 s de disparos en abanico de 3 flechas) y **oro** (1 a 3 monedas, se atrae al acercarse). **El oro compra mejoras al Mercader** (decidido): donde aparece (la sala especial del bosque y, en el templo, su entrada y su sala especial), tras su diálogo, se abre su tienda (`data/shop/items.tres`): Poción (4 de oro, cura 1 corazón), Elixir (10, cura todo), Cuerda tensa (12, +1 daño del arco, hasta nivel 3), Ojo del halcón (10, +5% de crítico, hasta nivel 3) y Corazón de piedra (18, +1 corazón máximo, hasta nivel 2); cada nivel de una mejora cuesta un 50% más del precio base. Las mejoras duran el viaje: se guardan con la partida y se pierden al morir. Los disparos de Nico pueden ser **críticos** (5% de base, daño x2, número dorado). Un viaje da unas 23-29 monedas por capítulo (0,5 de probabilidad de caída x 2 de media por enemigo), así que Nico no puede comprarlo todo: lo que gasta en el bosque ya no lo tiene en el templo. Sin munición (el arco es infinito) ni experiencia por ahora.
 - **Alturas (decidido para las Ruinas):** el mapa 2 tiene dos niveles reales, bajo (ríos, fosos) y alto (terrazas, puentes), con colisión propia. Nico y los enemigos solo cambian de nivel por escaleras, los puentes se cruzan por encima del agua y las flechas viajan en el nivel de quien dispara. Las salas del bosque siguen planas. El Templo del Eclipse va más lejos: tres niveles (bajo, medio y alto) con escaleras entre ellos, islas de piedra sobre un mar de lava, puentes y salas a las que solo se llega por un puente, y salas donde la lava sube por etapas. Referencia de estilo: `docs/referencias/`.
 - **Enemigos por isla:** cada isla tiene su propio grupo de enemigos; algunos pueden repetirse entre islas si hace falta.
 

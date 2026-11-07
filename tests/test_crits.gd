@@ -110,7 +110,9 @@ func _crit_label(feel: Node) -> Label:
 func _shoot(player: Node, dummy: Node) -> void:
 	var before := _damages.size()
 	for attempt in 4:
-		player.global_position = dummy.global_position - Vector2(40, 0)
+		# Open ground every time: the dummy is knocked back and could end against a wall.
+		dummy.global_position = Vector2(340, 200)
+		player.global_position = Vector2(300, 200)
 		player.facing = Vector2.RIGHT
 		await _frames(30)
 		Input.action_press("attack")

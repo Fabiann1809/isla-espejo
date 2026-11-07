@@ -154,7 +154,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Enemigos del escenario colocados (los 25 enemigos del templo en `temple.tres`, elenco de 10 por partida y afinidades por sala)
 - [ ] **Jefe: Guardián antiguo** (proyectiles, golpes, escudo / invocación): ya existe con su arte (golem de piedra) y los ataques del jefe base (`scenes/enemies/ancient_guardian.tscn`); faltan sus ataques propios y el escenario 3
 - [ ] Al derrotarlo: fragmento violeta y habilidad **Sombra**
-- [ ] NPC **Mercader** con 3 estados de diálogo (solo diálogo, sin tienda)
+- [x] NPC **Mercader** con 3 estados de diálogo y **tienda** (decidido por el usuario, sustituye el "solo diálogo"): ya estaba en la sala especial del bosque; ahora también espera cerca de la entrada del templo y en su sala especial; tras hablar se abre `ShopMenu` y el oro compra pociones y mejoras del arco, el crítico y los corazones
 - [ ] Cierre de la historia
 
 **Hecho cuando:** el escenario 3 es completable y se obtiene el último fragmento.
@@ -228,7 +228,7 @@ Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustitu
 - [ ] Cuarto escenario
 - [ ] Guardián de la isla como jefe final separado
 - [ ] Mini-jefe adicional
-- [ ] Tienda del Mercader
+- [x] Tienda del Mercader (ahora dentro del alcance, ver el NPC Mercader del escenario 3)
 
 ## Punto de control
 Cuando las tareas 1 a 7 estén listas, **el escenario 1 debe poder jugarse completo**. Si no es así, se recorta contenido del escenario 3, **no** la IA.
