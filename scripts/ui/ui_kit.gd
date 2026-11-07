@@ -88,6 +88,11 @@ static func _frame(art: String, margin: int, tint := Color.WHITE, pad_x := 8.0, 
 	return box
 
 
+## The window frame with tighter padding, for small panels such as subtitles.
+static func panel_box(pad_x := 10.0, pad_y := 6.0) -> StyleBoxTexture:
+	return _frame("panel", 8, Color.WHITE, pad_x, pad_y)
+
+
 ## A thin square bar (slider track and fill).
 static func _bar(fill: Color, border: Color) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()

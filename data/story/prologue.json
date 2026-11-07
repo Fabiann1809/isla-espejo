@@ -1,9 +1,43 @@
 {
-	"lines": [
-		{"speaker": "", "text": "La tormenta llegó sin aviso.", "storm": true},
-		{"speaker": "", "text": "Cuando Nico abrió los ojos, el mar ya no estaba a su alrededor.", "storm": true},
-		{"speaker": "Nico", "text": "Mi brújula… está rota. ¿Qué es este lugar?"},
-		{"speaker": "Nico", "text": "No sé dónde estoy… pero tengo que volver a casa."}
+	"scenes": [
+		{
+			"id": "tormenta",
+			"video": "res://assets/video/prologue/01_tormenta.ogv",
+			"duration": 9.0,
+			"lines": [
+				{"speaker": "", "text": "La tormenta llegó sin aviso.", "at": 1.0, "until": 6.4, "place": "bottom"}
+			],
+			"sfx": [
+				{"at": 1.35, "cue": "thunder"},
+				{"at": 3.55, "cue": "thunder"},
+				{"at": 5.65, "cue": "thunder"},
+				{"at": 7.25, "cue": "thunder"}
+			]
+		},
+		{
+			"id": "despertar",
+			"video": "res://assets/video/prologue/02_despertar.ogv",
+			"duration": 10.57,
+			"lines": [
+				{"speaker": "", "text": "Cuando Nico abrió los ojos, el mar ya no estaba a su alrededor.", "at": 2.4, "until": 8.8, "place": "top"}
+			]
+		},
+		{
+			"id": "brujula",
+			"video": "res://assets/video/prologue/03_brujula.ogv",
+			"duration": 11.0,
+			"lines": [
+				{"speaker": "Nico", "text": "Mi brújula… está rota. ¿Qué es este lugar?", "at": 3.2, "until": 8.0, "place": "bottom"}
+			]
+		},
+		{
+			"id": "isla",
+			"video": "res://assets/video/prologue/04_isla.ogv",
+			"duration": 11.77,
+			"lines": [
+				{"speaker": "Nico", "text": "No sé dónde estoy… pero tengo que volver a casa.", "at": 3.0, "until": 9.4, "place": "bottom_right"}
+			]
+		}
 	],
-	"hint": "E / J: continuar   ·   Esc: saltar"
+	"hint": "E / J: siguiente escena   ·   Esc: saltar"
 }
