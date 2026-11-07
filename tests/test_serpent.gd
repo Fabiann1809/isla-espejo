@@ -177,8 +177,8 @@ func _test_charge() -> void:
 	_check(boss.state == boss.State.ATTACK and boss.step == boss.Step.WINDUP and lanes.size() == 1, "the charge is warned with a lane on the ground")
 	_check(_warned == [[&"stone_serpent", &"charge"]], "the warning is published (%s)" % [_warned])
 	if lanes.size() == 1:
-		_check(lanes[0].z_index == -1 and lanes[0].direction.dot(Vector2.RIGHT) > 0.99 and lanes[0].length > 120.0,
-				"the lane points at Nico, lies on the ground and reaches past him (%.0f px)" % lanes[0].length)
+		_check(lanes[0].z_index == RoomTheme.GROUND_FX_Z and lanes[0]._span.normalized().dot(Vector2.RIGHT) > 0.99 and lanes[0]._span.length() > 120.0,
+				"the lane points at Nico, lies on the ground and reaches past him (%.0f px)" % lanes[0]._span.length())
 	_check(boss._sprite.animation == &"charge_windup", "the serpent rears up while it warns")
 	await _frames(30)
 	_check(boss.step == boss.Step.WINDUP and boss.global_position.distance_to(ARENA) < 1.0 and _player.health.current == before,

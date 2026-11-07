@@ -43,6 +43,7 @@ func fade(seconds := 0.3) -> void:
 
 
 func _ready() -> void:
+	add_to_group("attack_lanes")
 	z_index = RoomTheme.GROUND_FX_Z
 
 

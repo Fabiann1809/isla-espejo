@@ -68,6 +68,7 @@ func _initialize() -> void:
 	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
 	scenario.npc_scene = load("res://scenes/npcs/traveler.tscn")
 	scenario.chest_scenes = chests
+	scenario.boss_scene = load("res://scenes/enemies/stone_serpent.tscn")
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
 	var drops: Array[ResourceData] = [load("res://data/resources/heart.tres"), load("res://data/resources/arrows.tres"),
 			load("res://data/resources/gold.tres")]

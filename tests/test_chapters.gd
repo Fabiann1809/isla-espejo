@@ -41,6 +41,27 @@ func _initialize() -> void:
 			shapes += 1
 	_check(shapes == level.rooms.size() and shapes > 3, "every room of the new map is a ruin cave (%d)" % shapes)
 	_check(level.get_node_or_null("Map/Backdrop/Rock") != null, "with the ruins' rock around it")
+	# The ruins end with their boss: the portal stays sealed until the serpent dies, then leads on.
+	var serpent: Node2D = null
+	for enemy in get_nodes_in_group("enemies"):
+		if enemy.get("data") != null and enemy.data.id == &"stone_serpent":
+			serpent = enemy
+	_check(serpent != null and level.scenario.boss_scene != null, "the ruins' boss room holds the stone serpent")
+	var portals := get_nodes_in_group("exit_portals")
+	_check(portals.size() == 1 and level.scenario.objective_flag == &"ruins_boss_defeated"
+			and portals[0].required_flag == &"ruins_boss_defeated", "the ruins' portal waits for ruins_boss_defeated")
+	_check(portals.size() == 1 and not portals[0].is_open(), "the ruins' portal is sealed while the serpent lives")
+	if serpent != null and portals.size() == 1:
+		var done := {"scenarios": []}
+		events.scenario_completed.connect(func(id: StringName) -> void: done.scenarios.append(id))
+		portals[0].get_node("Use").interact(null)
+		_check(done.scenarios.is_empty(), "using the sealed portal does not leave the ruins")
+		serpent.get_node("Hurtbox").receive_hit(999, serpent.global_position)
+		await _frames(3)
+		_check(portals[0].is_open(), "the portal opens when the serpent dies")
+		portals[0].get_node("Use").interact(null)
+		await create_timer(2.5).timeout
+		_check(done.scenarios == [&"ruins"] and level.scenario == temple, "and it leads to the temple")
 	level.free()
 	quit(0 if _ok else 1)
 

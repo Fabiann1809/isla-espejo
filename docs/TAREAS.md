@@ -139,10 +139,10 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Oscuridad por sala (capa de sombra con luces de cristales y antorchas) y animación sencilla (cascadas, llamas, cristales, destellos del agua), con sus valores e interruptores en `Tuning`
 - [x] Enemigos del escenario colocados (Bestia de la niebla, Sombra errante y Murciélago, con sus pesos en `ruins.tres`)
 - [x] Trampa de pinchos en 2 salas de combate (3 en la sala estrecha y 3 en la de cascadas, con arte de ruinas)
-- [ ] **Jefe: Serpiente de piedra** (embestida, veneno / proyectiles)
-- [ ] Al derrotarlo: fragmento azul y habilidad **Corriente**
+- [x] **Jefe: Serpiente de piedra** (embestida con carril avisado, escupe veneno en abanico y se desliza entre zonas; `scenes/enemies/stone_serpent.tscn`, `tests/test_serpent.gd`, en `ruins.tres` como `boss_scene`)
+- [x] Al derrotarlo: fragmento azul y habilidad **Corriente** (deja el fragmento, activa `ruins_boss_defeated` y abre el portal)
 - [x] NPC **Viajera** con 3 estados de diálogo (`scenes/npcs/traveler.tscn`, `data/dialogues/traveler.json`; espera en la sala de evento de las ruinas y después de la Serpiente dice sus últimas líneas)
-- [ ] Transición desde el escenario 1 y hacia el 3
+- [x] Transición desde el escenario 1 y hacia el 3 (el portal de las ruinas sigue sellado hasta vencer a la serpiente y lleva al templo, `tests/test_chapters.gd`)
 
 **Hecho cuando:** el escenario 2 es completable de inicio a jefe con la IA funcionando.
 
