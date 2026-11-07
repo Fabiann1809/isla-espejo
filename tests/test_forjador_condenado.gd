@@ -129,7 +129,11 @@ func _capped() -> void:
 	forger.data.drop_cooldown = 0.2
 	forger.data.block_lifetime = 30.0
 	var most := 0
-	for i in 480:
+	# Until the forger reaches its cap (or a generous limit: a loaded machine needs more frames), never
+	# past it.
+	for i in 1500:
+		if i >= 480 and most >= forger.data.max_blocks:
+			break
 		await physics_frame
 		_player.health.heal(_player.health.max_health)
 		# He keeps moving so no block shatters over him.
