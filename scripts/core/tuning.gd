@@ -377,7 +377,8 @@ const DASH_STRETCH_END := Vector2(0.9, 1.12)
 const DASH_STRETCH_SETTLE := 0.1
 ## The camera leads Nico this many px where he walks or dodges (0 = off), catching up at this
 ## speed (per second).
-const CAMERA_LOOK_AHEAD := 10.0
+## Off (0) in every map: the lead made the picture tremble. Kept as a switch.
+const CAMERA_LOOK_AHEAD := 0.0
 const CAMERA_LOOK_AHEAD_SPEED := 3.0
 
 # --- Casting a skill ---------------------------------------------------------------------------------

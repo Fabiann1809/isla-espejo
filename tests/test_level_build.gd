@@ -58,7 +58,7 @@ func _initialize() -> void:
 			"2D transforms snap to pixels at 480x270 with integer scaling")
 	_check(_level.player.get_node("Camera2D").zoom == Vector2(1, 1), "the camera keeps its zoom of 1 (the whole 480x270 view)")
 	_check(is_equal_approx(_level.player.camera_look_ahead, load("res://scripts/core/tuning.gd").CAMERA_LOOK_AHEAD),
-			"outside the temple the camera keeps its usual lead")
+			"outside the temple the camera follows Nico with no lead (Tuning.CAMERA_LOOK_AHEAD)")
 
 	var start_room = _level.rooms[layout.start_cell]
 	var spawn: Vector2 = start_room.global_position + start_room.player_spawn()
