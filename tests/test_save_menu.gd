@@ -179,13 +179,21 @@ func _test_hud_and_objective() -> void:
 	await process_frame
 	_check(objectives.size() > 0 and objectives[0] == "Encuentra al Guardián del bosque", "the HUD is told the objective")
 	var hud: CanvasLayer = level.get_node("Hud")
-	_check(hud._fragment_icons[&"green"].color == hud.FRAGMENT_MISSING, "fragment icons start dim")
+	_check(not _fragment_lit(hud, &"green"), "fragment icons start dim")
 
 	_state.set_flag(&"forest_boss_defeated")
 	_events.boss_defeated.emit(&"forest_guardian")
 	_state.collect_fragment(&"green")
 	_check(objectives.back() == "Cruza el portal", "the objective changes when the boss falls")
-	_check(hud._fragment_icons[&"green"].color == hud.FRAGMENT_COLORS[&"green"], "a collected fragment lights its icon")
+	_check(_fragment_lit(hud, &"green"), "a collected fragment lights its icon")
 	_check(level.get_node("PauseMenu") != null, "the level has a pause menu")
 	level.queue_free()
 	await process_frame
+
+
+## A fragment icon is the team's art (lit = full modulate) or the old colored square.
+func _fragment_lit(hud: Node, id: StringName) -> bool:
+	var icon: Control = hud._fragment_icons[id]
+	if icon is TextureRect:
+		return icon.modulate == Color.WHITE
+	return (icon as ColorRect).color == hud.FRAGMENT_COLORS[id]
