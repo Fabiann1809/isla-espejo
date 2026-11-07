@@ -398,6 +398,15 @@ func _update_interaction() -> void:
 		best.interact(self)
 
 
+## Freezes or frees the controls from outside (the chapter intro).
+func set_controls_locked(value: bool) -> void:
+	_locked = value
+	if value:
+		velocity = Vector2.ZERO
+	else:
+		_interact_block_left = 0.3
+
+
 func _on_dialogue_started(_dialogue_id: StringName) -> void:
 	_locked = true
 	velocity = Vector2.ZERO

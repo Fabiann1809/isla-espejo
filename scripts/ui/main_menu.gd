@@ -2,23 +2,37 @@ class_name MainMenu
 extends Control
 ## Title screen: start a new journey, continue the saved one, options, credits and quit.
 ## Texts come from data/ui/texts.json. Starting or continuing opens the first playable scene.
+##
+## The picture is the night forest of assets/ui/menu/ (drawn by tools/make_menu_art.py): Nico draws
+## his bow at a bat by the moon. Only a few things move: the bat, an arrow that keeps flying at it,
+## the lantern's glow and the fireflies. Every position below is in the game's 480x270 pixels.
 
 const GAME_SCENE := "res://scenes/levels/forest_level.tscn"
 ## A new journey starts with the storm (the prologue), which then opens GAME_SCENE.
 const PROLOGUE_SCENE := "res://scenes/ui/prologue.tscn"
-const NICO_FRAMES := "res://data/player/nico_frames.tres"
-## The night forest behind the menu: a sky from top to horizon, the moon, two rows of trees.
-const SKY_TOP := Color(0.03, 0.04, 0.1)
-const SKY_HORIZON := Color(0.16, 0.12, 0.28)
-const MOON := Color(0.95, 0.92, 0.8)
-const GROUND_Y := 196.0
-const GROUND := Color(0.04, 0.07, 0.06)
-const FAR_TREES := "res://assets/art_forest/boundary/canopy_sil_%d.png"
-const NEAR_TREES := ["res://assets/art_forest/boundary/dark_oak_silhouette.png",
-		"res://assets/art_forest/boundary/dark_round_silhouette.png",
-		"res://assets/art_forest/boundary/dark_mossy_silhouette.png",
-		"res://assets/art_forest/boundary/dark_grand_silhouette.png"]
-const FIREFLY := Color(1.0, 0.9, 0.45, 0.9)
+const ART := "res://assets/ui/menu/%s.png"
+const BAT_STRIP := "res://assets/sprites/murcielago/murcielago_idle.png"
+
+const BAT_CELL := 64
+const BAT_FRAMES := 4
+const BAT_POS := Vector2(318, 44)
+const NICO_POS := Vector2(58, 142)
+## Where the arrow leaves the bow, relative to Nico's picture (the bow hand).
+const NICO_GRIP := Vector2(66, 27)
+const LANTERN_POS := Vector2(60, 149)
+const TITLE_POS := Vector2(80, 28)
+const DIVIDER_POS := Vector2(77, 66)
+const SUBTITLE_RECT := Rect2(78, 74, 200, 18)
+const MENU_POS := Vector2(304, 100)
+const BUTTON_SIZE := Vector2(144, 26)
+const BUTTON_GAP := 2
+const FOOTER_POS := Vector2(70, 247)
+const FOOTER_SIZE := Vector2(340, 15)
+## The arrow flies for this long, then the bat flinches; the whole loop repeats.
+const SHOT_PAUSE := 1.6
+const SHOT_SECONDS := 0.75
+const SHOT_REST := 0.9
+const FIREFLY := Color(1.0, 0.95, 0.5, 0.9)
 
 var start_button: Button
 var continue_button: Button
@@ -28,8 +42,16 @@ var quit_button: Button
 var options: OptionsMenu
 var credits: CreditsScreen
 
-var _menu: VBoxContainer
+var _menu: Control
+var _footer: Control
+var _buttons: VBoxContainer
+var _cursor: TextureRect
 var _confirming_start := false
+var _bat: AnimatedSprite2D
+var _bat_halo: Sprite2D
+var _shot: Sprite2D
+var _glow: Sprite2D
+var _time := 0.0
 var _subtitle: Label
 
 
@@ -37,50 +59,10 @@ func _ready() -> void:
 	Sound.play_music(&"menu")
 	theme = UiKit.theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var background := ColorRect.new()
-	background.color = UiKit.BACKGROUND
-	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(background)
 	_add_scenery()
-
-	var title := UiKit.label(UiText.t("menu_title"), 32, Color(0.85, 0.8, 1.0))
-	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	title.offset_left = -200
-	title.offset_right = 200
-	title.offset_top = 12
-	add_child(title)
-	_subtitle = UiKit.label(UiText.t("menu_subtitle"), 13, UiKit.TEXT_DIM)
-	var subtitle := _subtitle
-	subtitle.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	subtitle.offset_left = -200
-	subtitle.offset_right = 200
-	subtitle.offset_top = 54
-	add_child(subtitle)
-
-	_add_nico()
-
-	_menu = VBoxContainer.new()
-	_menu.add_theme_constant_override("separation", 3)
-	_menu.set_anchors_preset(Control.PRESET_CENTER)
-	_menu.offset_left = -30
-	_menu.offset_right = 170
-	_menu.offset_top = -52
-	_menu.offset_bottom = 90
-	add_child(_menu)
-	start_button = _add_button(UiText.t("menu_start"), _on_start)
-	continue_button = _add_button(UiText.t("menu_continue"), _on_continue)
-	options_button = _add_button(UiText.t("menu_options"), func() -> void: _open(options))
-	credits_button = _add_button(UiText.t("menu_credits"), func() -> void: _open(credits))
-	quit_button = _add_button(UiText.t("menu_quit"), get_tree().quit)
-	continue_button.disabled = not SaveGame.has_save()
-
-	var controls := UiKit.label(UiText.t("menu_controls"), 10, UiKit.TEXT_DIM)
-	controls.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	controls.offset_left = -236
-	controls.offset_right = 236
-	controls.offset_top = -20
-	controls.offset_bottom = -4
-	add_child(controls)
+	_add_title()
+	_add_menu()
+	_add_footer()
 
 	options = OptionsMenu.new()
 	credits = CreditsScreen.new()
@@ -93,80 +75,100 @@ func _ready() -> void:
 	_focus_first()
 
 
-func _add_button(text: String, action: Callable) -> Button:
-	var button := UiKit.button(text, 200.0, 24.0)
-	button.pressed.connect(action)
-	_menu.add_child(button)
-	return button
+func _process(delta: float) -> void:
+	_time += delta
+	if _glow != null:
+		# A lantern flame never burns steadily: two slow waves and a quick one.
+		_glow.modulate.a = 0.82 + 0.1 * sin(_time * 3.1) + 0.05 * sin(_time * 11.3) + 0.03 * sin(_time * 23.0)
 
 
-## A night forest drawn with the game's own tree art, still except for the fireflies.
+func _picture(name: String, at: Vector2, centered := false) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = load(ART % name)
+	sprite.centered = centered
+	sprite.position = at
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(sprite)
+	return sprite
+
+
 func _add_scenery() -> void:
-	var sky := TextureRect.new()
-	var gradient := Gradient.new()
-	gradient.set_color(0, SKY_TOP)
-	gradient.set_color(1, SKY_HORIZON)
-	var texture := GradientTexture2D.new()
-	texture.gradient = gradient
-	texture.fill_from = Vector2(0, 0)
-	texture.fill_to = Vector2(0, 1)
-	texture.width = 4
-	texture.height = int(GROUND_Y)
-	sky.texture = texture
-	sky.stretch_mode = TextureRect.STRETCH_SCALE
-	sky.position = Vector2.ZERO
-	sky.size = Vector2(480, GROUND_Y)
-	add_child(sky)
+	var back := _picture("background", Vector2.ZERO)
+	back.name = "Backdrop"
+	_add_fireflies()
+	_glow = _picture("lantern_glow", Vector2.ZERO)
+	_bat_halo = _picture("bat_halo", BAT_POS + Vector2(BAT_CELL, BAT_CELL) / 2.0 + Vector2(0, 2), true)
+	_add_bat()
+	_picture("nico", NICO_POS).name = "Nico"
+	_add_shot()
 
-	var moon := Polygon2D.new()
-	var points := PackedVector2Array()
-	for i in 24:
-		points.append(Vector2.from_angle(TAU * i / 24.0) * 14.0)
-	moon.polygon = points
-	moon.color = MOON
-	moon.position = Vector2(400, 52)
-	add_child(moon)
-	for ring in [[1.5, 0.07], [2.1, 0.035]]:
-		var glow := Polygon2D.new()
-		glow.polygon = points
-		glow.scale = Vector2.ONE * ring[0]
-		glow.color = Color(MOON, ring[1])
-		glow.position = moon.position
-		add_child(glow)
 
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7
-	for i in 40:
-		var star := ColorRect.new()
-		star.size = Vector2.ONE
-		star.color = Color(1, 1, 1, rng.randf_range(0.25, 0.7))
-		star.position = Vector2(rng.randi_range(0, 479), rng.randi_range(0, int(GROUND_Y) - 50))
-		add_child(star)
-	# Far row: small dark crowns, tinted toward the sky so they read as distance.
-	for x in range(-10, 490, 22):
-		var far := _tree_sprite(FAR_TREES % rng.randi_range(1, 9), Color(0.22, 0.2, 0.38))
-		far.position = Vector2(x, GROUND_Y - 22 - rng.randi_range(0, 8))
-		add_child(far)
-	var ground := ColorRect.new()
-	ground.color = GROUND
-	ground.position = Vector2(0, GROUND_Y)
-	ground.size = Vector2(480, 270 - GROUND_Y)
-	add_child(ground)
-	# Near row: big trees on both sides, leaving the middle free for the menu.
-	for x in [-14, 18, 380, 420, 452]:
-		var near := _tree_sprite(NEAR_TREES[rng.randi_range(0, NEAR_TREES.size() - 1)], Color(0.06, 0.08, 0.1))
-		near.scale = Vector2(2, 2)
-		near.position = Vector2(x, GROUND_Y + 12 - near.texture.get_height() * 2)
-		add_child(near)
+func _add_bat() -> void:
+	var strip: Texture2D = load(BAT_STRIP)
+	var frames := SpriteFrames.new()
+	frames.add_animation(&"fly")
+	frames.set_animation_speed(&"fly", 8.0)
+	frames.set_animation_loop(&"fly", true)
+	for i in BAT_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = strip
+		atlas.region = Rect2(i * BAT_CELL, 0, BAT_CELL, BAT_CELL)
+		frames.add_frame(&"fly", atlas)
+	_bat = AnimatedSprite2D.new()
+	_bat.sprite_frames = frames
+	_bat.centered = false
+	_bat.position = BAT_POS
+	_bat.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(_bat)
+	_bat.play(&"fly")
+	var bob := create_tween().set_loops()
+	bob.tween_property(_bat, "offset:y", -2.0, 1.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob.tween_property(_bat, "offset:y", 2.0, 1.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
+
+## The arrow loops: leaves the bow, reaches the bat (which flinches), and a new one flies.
+func _add_shot() -> void:
+	_shot = _picture("shot", Vector2.ZERO, true)
+	_shot.hide()
+	var from := NICO_POS + NICO_GRIP + Vector2(10, -6)
+	var target := _bat_center()
+	var direction := (target - from).normalized()
+	_shot.rotation = direction.angle()
+	var loop := create_tween().set_loops()
+	loop.tween_interval(SHOT_PAUSE)
+	loop.tween_callback(func() -> void:
+		_shot.position = from
+		_shot.modulate.a = 1.0
+		_shot.show())
+	loop.tween_property(_shot, "position", target - direction * 16.0, SHOT_SECONDS)
+	loop.tween_callback(_on_arrow_hit)
+	loop.tween_property(_shot, "modulate:a", 0.0, 0.15)
+	loop.tween_callback(_shot.hide)
+	loop.tween_interval(SHOT_REST)
+
+
+func _bat_center() -> Vector2:
+	return BAT_POS + Vector2(BAT_CELL, BAT_CELL) / 2.0 + Vector2(0, 2)
+
+
+func _on_arrow_hit() -> void:
+	var flash := create_tween()
+	flash.tween_property(_bat, "modulate", Color(2.2, 1.5, 1.5), 0.05)
+	flash.tween_property(_bat, "modulate", Color.WHITE, 0.25)
+	var hop := create_tween()
+	hop.tween_property(_bat, "position", BAT_POS + Vector2(4, -3), 0.08)
+	hop.tween_property(_bat, "position", BAT_POS, 0.3).set_trans(Tween.TRANS_SINE)
+
+
+func _add_fireflies() -> void:
 	var fireflies := CPUParticles2D.new()
 	fireflies.texture = RoomDressing.pixel()
-	fireflies.amount = 24
+	fireflies.amount = 12
 	fireflies.lifetime = 5.0
 	fireflies.preprocess = 5.0
 	fireflies.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	fireflies.emission_rect_extents = Vector2(240, 50)
-	fireflies.position = Vector2(240, GROUND_Y - 30)
+	fireflies.emission_rect_extents = Vector2(120, 45)
+	fireflies.position = Vector2(240, 195)
 	fireflies.gravity = Vector2(0, -3)
 	fireflies.direction = Vector2.RIGHT
 	fireflies.spread = 180.0
@@ -184,26 +186,72 @@ func _add_scenery() -> void:
 	add_child(fireflies)
 
 
-func _tree_sprite(path: String, tint: Color) -> TextureRect:
-	var sprite := TextureRect.new()
-	sprite.texture = load(path)
-	sprite.modulate = tint
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return sprite
+func _add_title() -> void:
+	_picture("title", TITLE_POS).name = "Title"
+	_picture("divider", DIVIDER_POS).name = "Divider"
+	var subtitle := UiKit.menu_label(UiText.t("menu_subtitle"), 16, Color(0.82, 0.78, 0.96))
+	add_child(subtitle)
+	# Kept to report a damaged save in its place (see _on_continue).
+	_subtitle = subtitle
+	_place(subtitle, SUBTITLE_RECT)
 
 
-## Nico walking next to the menu (the same animation the game uses).
-func _add_nico() -> void:
-	var frames: SpriteFrames = load(NICO_FRAMES)
-	if frames == null:
-		return
-	var nico := AnimatedSprite2D.new()
-	nico.sprite_frames = frames
-	nico.scale = Vector2(2, 2)
-	nico.position = Vector2(100, GROUND_Y - 22)
-	add_child(nico)
-	nico.play(&"walk")
+func _add_menu() -> void:
+	_menu = Control.new()
+	_menu.position = MENU_POS
+	add_child(_menu)
+	_buttons = VBoxContainer.new()
+	_buttons.add_theme_constant_override("separation", BUTTON_GAP)
+	_menu.add_child(_buttons)
+	start_button = _add_button(UiText.t("menu_start"), _on_start)
+	continue_button = _add_button(UiText.t("menu_continue"), _on_continue)
+	options_button = _add_button(UiText.t("menu_options"), func() -> void: _open(options))
+	credits_button = _add_button(UiText.t("menu_credits"), func() -> void: _open(credits))
+	quit_button = _add_button(UiText.t("menu_quit"), get_tree().quit)
+	continue_button.disabled = not SaveGame.has_save()
+	# The gold arrow marks the selected button (keyboard focus or mouse hover).
+	_cursor = TextureRect.new()
+	_cursor.texture = load(ART % "arrow")
+	_cursor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cursor.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_menu.add_child(_cursor)
+
+
+func _add_button(text: String, action: Callable) -> Button:
+	var button := UiKit.button(text, BUTTON_SIZE.x, BUTTON_SIZE.y)
+	button.pressed.connect(action)
+	button.focus_entered.connect(_move_cursor.bind(button))
+	button.mouse_entered.connect(func() -> void:
+		if not button.disabled:
+			button.grab_focus())
+	_buttons.add_child(button)
+	return button
+
+
+func _move_cursor(button: Button) -> void:
+	_cursor.show()
+	# Buttons are laid out on the next frame; their slot is already known from the index.
+	_cursor.position = Vector2(4, button.get_index() * (BUTTON_SIZE.y + BUTTON_GAP) + (BUTTON_SIZE.y - 9) / 2.0)
+
+
+func _add_footer() -> void:
+	_footer = Control.new()
+	add_child(_footer)
+	var bar := _picture("footer", FOOTER_POS)
+	bar.name = "ControlsBar"
+	bar.reparent(_footer)
+	var controls := UiKit.menu_label(UiText.t("menu_controls"), UiKit.SMALL_FONT_SIZE, Color(0.72, 0.69, 0.91))
+	_footer.add_child(controls)
+	_place(controls, Rect2(FOOTER_POS + Vector2(0, 1), FOOTER_SIZE))
+
+
+## Puts a control in `rect` (set after it joins the tree, or its minimum size wins).
+func _place(control: Control, rect: Rect2) -> void:
+	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	control.position = rect.position
+	control.size = rect.size
+	if control is Label:
+		(control as Label).clip_text = true
 
 
 func _focus_first() -> void:
@@ -212,12 +260,14 @@ func _focus_first() -> void:
 
 func _open(panel: Control) -> void:
 	_menu.hide()
+	_footer.hide()
 	panel.open()
 
 
 func _on_panel_closed() -> void:
 	_menu.show()
 	_cancel_start_confirm()
+	_footer.show()
 	_focus_first()
 
 
@@ -233,6 +283,9 @@ func _on_start() -> void:
 	if SaveGame.has_save() and not _confirming_start:
 		_confirming_start = true
 		start_button.text = UiText.t("menu_start_confirm")
+		# Too long for the big font: two lines of fine print.
+		start_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		start_button.add_theme_font_size_override("font_size", UiKit.SMALL_FONT_SIZE)
 		return
 	SaveGame.new_game()
 	get_tree().change_scene_to_file(PROLOGUE_SCENE)

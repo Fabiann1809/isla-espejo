@@ -23,6 +23,11 @@ const SHADE_SORT_Y := 1000000.0
 ## After the last chapter (no `next_scenario`) the journey ends (`journey_ended`) instead of building
 ## a new map of the same scenario. The real game turns it on; the sandboxes keep looping.
 @export var end_after_last_chapter := false
+## Presents each island when its chapter starts: the camera shows the forest from afar and glides down to
+## Nico while the island's name appears (see ChapterIntro). The real game turns it on; sandboxes start at once.
+@export var chapter_intro := false
+## Plays the intro even without a screen (tests).
+var intro_in_headless := false
 
 ## Extra room tag -> weight multiplier, applied on top of the director's plan (debugging).
 var weight_modifiers := {}
@@ -53,6 +58,8 @@ var _corridor_walls: Array[Rect2] = []
 ## are stone the backdrop keeps clear.
 var _bridges: Array = []
 var _boundary: Node2D
+## The next map will be presented by the intro (its title card replaces the small chapter message).
+var _intro_requested := false
 
 
 func _ready() -> void:
@@ -81,8 +88,12 @@ func _ready() -> void:
 	canopy.name = "CanopyFade"
 	add_child(canopy)
 	_veil.color.a = 1.0
+	_intro_requested = _intro_allowed()
 	generate(seed_value)
-	_lift_veil()
+	if _intro_requested:
+		_start_intro()
+	else:
+		_lift_veil()
 
 
 ## Builds (or rebuilds) the map. Pass 0 for a random seed.
@@ -123,7 +134,7 @@ func generate(new_seed := 0) -> void:
 	_place_player()
 	_add_shadows()
 	generated.emit(layout)
-	if scenario.chapter_title != "":
+	if scenario.chapter_title != "" and not _intro_requested:
 		Events.message_requested.emit(scenario.chapter_title)
 	_announce_objective()
 
@@ -163,9 +174,49 @@ func _on_scenario_completed(_scenario_id: StringName) -> void:
 		return
 	if scenario.next_scenario != null:
 		scenario = scenario.next_scenario
+	_intro_requested = _intro_allowed()
+	generate(0)
+	_completing = false
+	if _intro_requested:
+		_start_intro()
+	else:
+		_lift_veil()
+
+
+## Debug/presentation shortcut: jumps to the next chapter without beating the boss.
+## Returns false on the last chapter (nothing to jump to) or while a change is already running.
+func skip_to_next_chapter() -> bool:
+	if _completing or scenario.next_scenario == null:
+		return false
+	_completing = true
+	await _fade_veil(1.0, Tuning.MAP_VEIL_FADE_OUT)
+	scenario = scenario.next_scenario
 	generate(0)
 	_completing = false
 	_lift_veil()
+	return true
+
+
+func _intro_allowed() -> bool:
+	if not chapter_intro or not Tuning.INTRO_ENABLED or OS.get_cmdline_user_args().has("--no-intro"):
+		return false
+	return intro_in_headless or DisplayServer.get_name() != "headless"
+
+
+## Lets the new map draw its first, slowest frames under the black, then hands over to the intro.
+func _start_intro() -> void:
+	_intro_requested = false
+	for i in Tuning.MAP_VEIL_HOLD_FRAMES:
+		await get_tree().process_frame
+	var intro := ChapterIntro.new()
+	intro.name = "ChapterIntro"
+	add_child(intro)
+	intro.start(self)
+
+
+## Fades the black cover out over `seconds` (0 = at once): the intro uses it for its slow opening.
+func reveal(seconds: float) -> void:
+	await _fade_veil(0.0, seconds)
 
 
 func _build_veil() -> void:

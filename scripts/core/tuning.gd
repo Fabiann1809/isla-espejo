@@ -196,6 +196,22 @@ const MAP_VEIL_FADE_OUT := 0.3
 const MAP_VEIL_FADE_IN := 0.45
 const MAP_VEIL_HOLD_FRAMES := 3
 
+# --- Chapter intro ----------------------------------------------------------------------------------
+## When an island's chapter starts, the camera shows the room where Nico appears from farther away (a bit of
+## its neighbours too) and glides in to Nico while the island's name appears (off = the game starts on Nico
+## at once, with a small message).
+const INTRO_ENABLED := true
+## Camera zoom of the first shot (smaller = farther away; the game itself plays at 1).
+const INTRO_ZOOM := 0.58
+## Seconds: the black fades out, the camera hovers, then glides to Nico; the title rises and leaves.
+const INTRO_FADE := 1.6
+const INTRO_HOLD := 2.2
+const INTRO_FLY := 5.0
+const INTRO_TITLE_IN := 0.9
+const INTRO_TITLE_SECONDS := 3.4
+const INTRO_TITLE_SIZE := 32
+const INTRO_SUBTITLE_SIZE := 16
+
 # --- Warnings --------------------------------------------------------------------------------------
 ## A dark ring around warning circles and skill areas, so they read on the bright grass (0 = off).
 const ZONE_OUTLINE_ALPHA := 0.55

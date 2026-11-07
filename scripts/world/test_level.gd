@@ -23,7 +23,8 @@ const MENU_SCENE := "res://scenes/ui/main_menu.tscn"
 @onready var _plan_info: Label = $Debug/PlanInfo
 @onready var _debug_layer: CanvasLayer = $Debug
 
-var _debug_tools := OS.has_feature("editor")
+## `--cheats` (after `--` on the command line) enables them in an exported build for a presentation.
+var _debug_tools := OS.has_feature("editor") or "--cheats" in OS.get_cmdline_user_args()
 
 
 func _ready() -> void:
@@ -43,6 +44,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		generate(0)
 	elif event.is_action_pressed("debug_unlock_skills"):
 		_unlock_all_skills()
+	elif event.is_action_pressed("debug_next_chapter"):
+		skip_to_next_chapter()
 
 
 ## After a death a new run starts here; after the ending the player goes back to the main menu.
