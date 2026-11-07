@@ -83,9 +83,125 @@ func _initialize() -> void:
 	rc.free()
 	_check(not Input.is_action_pressed("skill_2"), "exit tree releases the held actions")
 
+	await _test_phone_drives_the_ui(script)
+
 	await process_frame
 	print("PASS" if _ok else "FAIL")
 	quit(0 if _ok else 1)
+
+
+## Presses and releases a phone button the way the page does, with real time in between so the
+## mapper's minimum hold and the physics ticks run.
+func _tap(rc: Node, action: String) -> void:
+	rc.server.message_received.emit({"type": "action", "name": action, "pressed": true})
+	await create_timer(0.1).timeout
+	rc.server.message_received.emit({"type": "action", "name": action, "pressed": false})
+	await create_timer(0.1).timeout
+
+
+## One stick push in `direction` ((x, y) with a magnitude over the menu threshold) and back.
+func _flick(rc: Node, x: float, y: float) -> void:
+	rc.server.message_received.emit({"type": "move", "x": x, "y": y})
+	await create_timer(0.08).timeout
+	rc.server.message_received.emit({"type": "move", "x": 0.0, "y": 0.0})
+	await create_timer(0.08).timeout
+
+
+## Real menus, shop, dialogue and pause menu driven only by phone messages.
+func _test_phone_drives_the_ui(script: Script) -> void:
+	var rc = script.new()
+	root.add_child(rc)
+	await process_frame
+
+	# Main menu: the stick moves the focus, attack presses the focused button, dash goes back.
+	var menu: Control = (load("res://scenes/ui/main_menu.tscn") as PackedScene).instantiate()
+	root.add_child(menu)
+	await process_frame
+	await process_frame
+	var first: Control = menu.get_viewport().gui_get_focus_owner()
+	_check(first != null, "main menu has a focused button")
+	await _flick(rc, 0.0, 1.0)
+	var second: Control = menu.get_viewport().gui_get_focus_owner()
+	_check(second != null and second != first, "stick down moves the focus in the main menu")
+	await _flick(rc, 0.0, -1.0)
+	_check(menu.get_viewport().gui_get_focus_owner() == first, "stick up moves it back")
+	var guard := 0
+	while menu.get_viewport().gui_get_focus_owner() != menu.options_button and guard < 6:
+		await _flick(rc, 0.0, 1.0)
+		guard += 1
+	_check(menu.get_viewport().gui_get_focus_owner() == menu.options_button, "the stick reaches the options button")
+	await _tap(rc, "attack")
+	_check(menu.options.visible, "attack presses the focused main menu button (options opens)")
+	await _tap(rc, "dash")
+	_check(not menu.options.visible, "dash is back: it closes the options")
+	menu.queue_free()
+	await process_frame
+
+	# Shop: opens paused, the phone keeps working while paused, buys, closes.
+	var room: Node = load("res://scenes/levels/test_room.tscn").instantiate()
+	root.add_child(room)
+	await process_frame
+	await process_frame
+	var player: Node = room.get_node("Player")
+	var state: Node = root.get_node("GameState")
+	state.reset()
+	player.add_gold(-player.gold)
+	player.add_gold(30)
+	var shop: Node = load("res://scripts/ui/shop_menu.gd").new()
+	root.add_child(shop)
+	await process_frame
+	shop.open(player)
+	await process_frame
+	_check(shop.is_open() and paused, "the shop is open and the game paused")
+	await _flick(rc, 0.0, 1.0)
+	await _flick(rc, 0.0, 1.0)
+	_check(shop.get_viewport().gui_get_focus_owner() == shop.item_buttons[2], "stick moves the focus in the paused shop")
+	await _tap(rc, "attack")
+	_check(player.gold == 18, "attack buys exactly once (gold 30 -> 18)")
+	await _tap(rc, "interact")
+	_check(player.gold == 0, "interact buys too, once (the second level costs 18)")
+	await _tap(rc, "dash")
+	_check(not shop.is_open() and not paused, "dash closes the shop and resumes the game")
+	shop.open(player)
+	await process_frame
+	await _tap(rc, "pause")
+	_check(not shop.is_open() and not paused, "the phone's pause button closes the shop")
+	shop.queue_free()
+
+	# Dialogue: attack advances it line by line until it ends.
+	var dialogue: Node = root.get_node("Dialogue")
+	_check(dialogue.start(&"elder"), "a conversation starts")
+	await create_timer(0.4).timeout
+	var taps := 0
+	while dialogue.active and taps < 40:
+		await _tap(rc, "attack" if taps % 2 == 0 else "interact")
+		taps += 1
+		await create_timer(0.3).timeout
+	_check(not dialogue.active and taps > 1, "the phone advances the dialogue to its end (%d taps)" % taps)
+
+	# Pause menu: pause opens it, the stick and attack drive it, pause and dash resume.
+	var pause_menu: CanvasLayer = (load("res://scenes/ui/pause_menu.tscn") as PackedScene).instantiate()
+	room.add_child(pause_menu)
+	await process_frame
+	await _tap(rc, "pause")
+	_check(pause_menu.is_open() and paused, "the pause button pauses the game")
+	_check(pause_menu.get_viewport().gui_get_focus_owner() == pause_menu.resume_button, "resume has the focus")
+	await _flick(rc, 0.0, 1.0)
+	_check(pause_menu.get_viewport().gui_get_focus_owner() == pause_menu.options_button, "stick moves the focus while paused")
+	await _tap(rc, "attack")
+	_check(pause_menu.options.visible, "attack opens the options from the pause menu")
+	await _tap(rc, "dash")
+	_check(not pause_menu.options.visible and pause_menu.is_open(), "dash closes the options, the pause menu stays")
+	await _tap(rc, "dash")
+	_check(not pause_menu.is_open() and not paused, "dash from the pause menu resumes")
+	await _tap(rc, "pause")
+	_check(pause_menu.is_open() and paused, "pause pauses again")
+	await _tap(rc, "pause")
+	_check(not pause_menu.is_open() and not paused, "pause unpauses")
+
+	state.reset()
+	room.queue_free()
+	rc.free()
 
 
 func _check(cond: bool, label: String) -> void:

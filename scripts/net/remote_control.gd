@@ -6,9 +6,9 @@ extends Node
 ## button) or until the game quits.
 ##
 ## Paused game: phone messages keep being applied while the tree is paused (this node and the
-## server process always). They only press the gameplay actions (D3), which nothing reads while
-## paused, so the pause menu cannot be driven from the phone and Nico resumes with whatever the
-## phone holds when the game resumes.
+## server process always). The mapper also feeds InputEventActions (ui_*, pause), so the pause
+## menu, the shop, the dialogues and the main menu are driven from the phone; Nico resumes with
+## whatever the phone holds when the game resumes.
 
 signal controller_connected
 signal controller_disconnected

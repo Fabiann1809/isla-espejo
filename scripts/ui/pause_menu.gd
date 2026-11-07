@@ -55,7 +55,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("pause"):
+	# The phone's back button (ui_cancel) also resumes from the pause list itself; inside the
+	# options the options menu handles ui_cancel.
+	var back := is_open() and not options.visible and event.is_action_pressed("ui_cancel")
+	if not event.is_action_pressed("pause") and not back:
 		return
 	if is_open():
 		if options.is_controller_open():
