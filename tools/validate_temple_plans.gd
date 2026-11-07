@@ -4,7 +4,7 @@ extends SceneTree
 ## and never ports the rules. One source of truth: whatever `TemplePlan.validate` and `spawn_ok` say.
 ##
 ## Run: godot --headless --path . --script res://tools/validate_temple_plans.gd -- <in.json> <out.json>
-##   in.json:  {"<room id>": {"rows": "<18 lines>", "surge_stages": 0..2, "height": 0..2,
+##   in.json:  {"<room id>": {"rows": "<one line per tile row>", "size_tiles": [w, h] (optional), "surge_stages": 0..2, "height": 0..2,
 ##              "blocked": [[x, y, level], ...], "markers": [[x, y], ...]}, ...}
 ##   `blocked` (optional) are the cells every SOLID prop's footprint covers at its level, `markers` every
 ##   spawn, chest, NPC, boss, exit and player cell: `check_props` then judges the room with the props in place.
@@ -35,7 +35,8 @@ func _initialize() -> void:
 	var invalid := 0
 	for id in plans:
 		var spec: Dictionary = plans[id]
-		var result := check(spec["rows"], int(spec.get("surge_stages", 0)), int(spec.get("height", 0)))
+		var size := Vector2i(int(spec["size_tiles"][0]), int(spec["size_tiles"][1])) if spec.has("size_tiles") else Vector2i.ZERO
+		var result := check(spec["rows"], int(spec.get("surge_stages", 0)), int(spec.get("height", 0)), size)
 		if spec.has("blocked") and result["problems"].is_empty():
 			var blocked: Array[Vector3i] = []
 			for entry in spec["blocked"]:
@@ -56,10 +57,13 @@ func _initialize() -> void:
 
 
 ## The verdict on one plan: the design's problems (with the surge rules when `surge_stages` > 0 and a
-## complaint when its base height is not `height`), plus the cells for spawns and props.
-static func check(rows: String, surge_stages: int, height: int) -> Dictionary:
+## complaint when its base height is not `height`, or its size is not the room's `size_tiles` unless that
+## is zero), plus the cells for spawns and props.
+static func check(rows: String, surge_stages: int, height: int, size_tiles := Vector2i.ZERO) -> Dictionary:
 	var plan := TemplePlan.parse(rows)
 	var problems: Array = plan.validate(surge_stages)
+	if plan.errors.is_empty() and size_tiles != Vector2i.ZERO and plan.size_cells() != size_tiles:
+		problems.append("the plan is %d x %d cells, the room's size_tiles is %d x %d" % [plan.columns, plan.rows, size_tiles.x, size_tiles.y])
 	if plan.errors.is_empty() and plan.base_height != height:
 		problems.append("the plan's base height is %d, the room's is %d" % [plan.base_height, height])
 	var spawn_ok: Array = []
@@ -67,9 +71,9 @@ static func check(rows: String, surge_stages: int, height: int) -> Dictionary:
 	var heights: Array = []
 	if plan.errors.is_empty():
 		var regions: Dictionary = plan.level_regions()
-		for y in TemplePlan.ROWS:
+		for y in plan.rows:
 			var row: Array = []
-			for x in TemplePlan.COLUMNS:
+			for x in plan.columns:
 				var cell := Vector2i(x, y)
 				row.append(plan.height_at(cell))
 				if plan.spawn_ok(cell):
@@ -93,7 +97,7 @@ static func check_props(plan: TemplePlan, blocked: Array[Vector3i], markers: Arr
 		solid[state] = true
 	var before: Dictionary = plan._reach_from_doors()
 	var after := _reach_without(plan, solid)
-	var doors := TemplePlan.door_cells()
+	var doors := plan.door_cells()
 	for door_name in TemplePlan.DOOR_NAMES:
 		var cells: Array[Vector2i] = doors[door_name]
 		if not cells.any(func(c: Vector2i) -> bool: return after.has(Vector3i(c.x, c.y, plan.base_height))):
@@ -123,7 +127,7 @@ static func check_props(plan: TemplePlan, blocked: Array[Vector3i], markers: Arr
 static func _reach_without(plan: TemplePlan, solid: Dictionary) -> Dictionary:
 	var visited := {}
 	var queue: Array[Vector3i] = []
-	for cell in TemplePlan.door_cells()["north"]:
+	for cell in plan.door_cells()["north"]:
 		var start := Vector3i(cell.x, cell.y, plan.base_height)
 		if plan.is_walkable(cell, plan.base_height) and not solid.has(start):
 			queue.append(start)
@@ -162,8 +166,8 @@ static func approaches(plan: TemplePlan) -> Array[Dictionary]:
 				var cell := Vector2i(x, y)
 				_add_approach(plan, out, cell - dir, dir * -1, low, "the low end of the stair at (%d, %d), cell" % [x, y])
 				_add_approach(plan, out, cell + dir, dir, low + 1, "the high end of the stair at (%d, %d), cell" % [x, y])
-	for y in range(1, TemplePlan.ROWS - 1):
-		for x in range(1, TemplePlan.COLUMNS - 1):
+	for y in range(1, plan.rows - 1):
+		for x in range(1, plan.columns - 1):
 			var cell := Vector2i(x, y)
 			var c := plan.cell_at(cell)
 			if not TemplePlan.DECKS.has(c):
@@ -206,9 +210,9 @@ static func _run(plan: TemplePlan, cell: Vector2i, dir: Vector2i) -> int:
 
 
 static func _add_approach(plan: TemplePlan, out: Array[Dictionary], cell: Vector2i, dir: Vector2i, level: int, what: String) -> void:
-	if not TemplePlan.is_inner(cell) or plan.is_stair(cell) or not plan.is_walkable(cell, level):
+	if not plan.is_inner(cell) or plan.is_stair(cell) or not plan.is_walkable(cell, level):
 		return
 	out.append({"cell": cell, "level": level, "what": what})
 	var front := cell + dir
-	if TemplePlan.is_inner(front) and not plan.is_stair(front) and plan.is_walkable(front, level):
+	if plan.is_inner(front) and not plan.is_stair(front) and plan.is_walkable(front, level):
 		out.append({"cell": front, "level": level, "what": what + " (in front)"})

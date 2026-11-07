@@ -1,5 +1,6 @@
 extends SceneTree
-## TemplePlan (scripts/world/temple_plan.gd): a temple room's 18x30 text plan becomes heights per cell,
+## TemplePlan (scripts/world/temple_plan.gd): a temple room's text plan (any even size; the plans below
+## are the standard 18x30, the last section tries others) becomes heights per cell,
 ## cliff faces, collision rectangles per physics layer, stair zones and a validation of the design
 ## (doors reachable, stairs with free ends, no plain rectangle, surge rooms fair). Pure logic, no nodes.
 ## Run: godot --headless --path . --script res://tests/test_temple_plan.gd
@@ -283,8 +284,98 @@ func _initialize() -> void:
 	_check(not moat.spawn_ok(Vector2i(13, 0)) and not moat.spawn_ok(Vector2i(0, 8)) and not moat.spawn_ok(Vector2i(14, 17))
 			and moat.is_walkable(Vector2i(13, 0), 0), "spawn_ok rejects the door cells of the ring")
 
+	_check_sizes()
+
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
+
+
+# --- plans of other sizes -------------------------------------------------------------------------
+## The size comes from the text: every even size from 26x20 to 42x28 parses, centres its doors, validates
+## (lanes, relief over the inner area), and a plan with an odd, tiny or ragged size is an error.
+func _check_sizes() -> void:
+	for size: Vector2i in [Vector2i(30, 18), Vector2i(26, 20), Vector2i(34, 24), Vector2i(42, 28), Vector2i(8, 8)]:
+		var text := "
+".join(_sized_rows(size))
+		var plan := TemplePlan.parse(text)
+		var tag := "%dx%d" % [size.x, size.y]
+		_check(plan.errors.is_empty() and plan.columns == size.x and plan.rows == size.y and plan.size_cells() == size,
+				"a %s plan reads its size from its text (%s)" % [tag, plan.errors])
+		var doors := plan.door_cells()
+		var north: Array[Vector2i] = doors["north"]
+		var east: Array[Vector2i] = doors["east"]
+		_check(north[0] == Vector2i(size.x / 2 - 2, 0) and north[3] == Vector2i(size.x / 2 + 1, 0)
+				and east[0] == Vector2i(size.x - 1, size.y / 2 - 2) and east[3] == Vector2i(size.x - 1, size.y / 2 + 1)
+				and doors["south"][0] == Vector2i(size.x / 2 - 2, size.y - 1) and doors["west"][3] == Vector2i(0, size.y / 2 + 1),
+				"%s: the doors are the 4 middle cells of each edge" % tag)
+		_check(plan.is_door(north[0]) and plan.is_door(east[3]) and not plan.is_door(Vector2i(size.x / 2 - 3, 0))
+				and plan.in_grid(Vector2i(size.x - 1, size.y - 1)) and not plan.in_grid(Vector2i(size.x, 0))
+				and plan.is_inner(Vector2i(1, 1)) and not plan.is_inner(Vector2i(size.x - 1, 1)),
+				"%s: door, grid and inner tests follow the size" % tag)
+		if size.x < 20:
+			continue
+		_check(plan.validate().is_empty(), "a %s plan with relief and open lanes validates (%s)" % [tag, plan.validate()])
+		_check(plan.spawn_ok(Vector2i(size.x / 2, size.y / 2)) and not plan.spawn_ok(Vector2i(2, 2))
+				and not plan.spawn_ok(Vector2i(size.x / 2 - 2, 0)), "%s: spawn_ok accepts the centre, not lava or a door" % tag)
+		# A wall of masonry across the vertical lane cuts the center cross.
+		var cut := _sized_rows(size)
+		var y := size.y / 2 - 5
+		cut[y] = "#" + ".".repeat(size.x / 2 - 3) + "####" + ".".repeat(size.x / 2 - 3) + "#"
+		var cut_problems := TemplePlan.parse("
+".join(cut)).validate()
+		_check(cut_problems.any(func(p: String) -> bool: return p.contains("lane")), "%s: a cut lane is reported (%s)" % [tag, cut_problems])
+		# A plain floor is not enough: the 20% of relief is measured over the inner area of this size.
+		var plain := _sized_rows(size)
+		for r in range(1, size.y - 1):
+			plain[r] = plain[r][0] + ".".repeat(size.x - 2) + plain[r][size.x - 1]
+		var plain_problems := TemplePlan.parse("
+".join(plain)).validate()
+		_check(plain_problems.size() == 1 and plain_problems[0].contains("rectangle")
+				and plain_problems[0].contains("of %d inner cells" % ((size.x - 2) * (size.y - 2))),
+				"%s: a plain floor is rejected over %d inner cells (%s)" % [tag, (size.x - 2) * (size.y - 2), plain_problems])
+	var odd_columns := _sized_rows(Vector2i(30, 18))
+	for i in odd_columns.size():
+		odd_columns[i] += "#"
+	_check(TemplePlan.parse("
+".join(odd_columns)).errors.any(func(e: String) -> bool: return e.contains("31 columns")),
+			"an odd number of columns is an error")
+	_check(TemplePlan.parse("
+".join(_sized_rows(Vector2i(30, 18)).slice(0, 17))).errors.any(func(e: String) -> bool: return e.contains("17 rows")),
+			"an odd number of rows is an error")
+	_check(not TemplePlan.parse("").errors.is_empty() and not TemplePlan.parse("#
+#
+#
+#
+#
+#
+#
+#").errors.is_empty(),
+			"an empty plan or one narrower than 8 columns is an error")
+
+
+## A plan of `size` cells: the wall ring with its four doors, floor inside and, in each quadrant clear of
+## the lanes, a block of lava (so the floor is not a plain rectangle).
+func _sized_rows(size: Vector2i) -> Array:
+	var rows := []
+	var first_column := size.x / 2 - 2
+	var first_row := size.y / 2 - 2
+	for y in size.y:
+		var line := ""
+		for x in size.x:
+			var c := "."
+			var ring := x == 0 or y == 0 or x == size.x - 1 or y == size.y - 1
+			var on_column := x >= first_column and x < first_column + 4
+			var on_row := y >= first_row and y < first_row + 4
+			if ring and not ((y == 0 or y == size.y - 1) and on_column) and not ((x == 0 or x == size.x - 1) and on_row):
+				c = "#"
+			elif not ring and size.x >= 20 and not ring:
+				var dx := mini(x, size.x - 1 - x)
+				var dy := mini(y, size.y - 1 - y)
+				if dx >= 2 and dx <= size.x / 2 - 4 and dy >= 2 and dy <= size.y / 2 - 4:
+					c = "~"
+			line += c
+		rows.append(line)
+	return rows
 
 
 func _covers(rects: Array[Rect2], cell: Vector2i) -> bool:

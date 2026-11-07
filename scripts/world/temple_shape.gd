@@ -29,8 +29,6 @@ extends Node2D
 @export_multiline var rows := ""
 
 const TEMPLE_PROFILE := "res://data/tilesets/temple.tres"
-const COLUMNS := TemplePlan.COLUMNS
-const ROWS := TemplePlan.ROWS
 const TILE := TemplePlan.TILE
 const MACRO := 4
 const LAYER_NAMES := ["Lava", "Bubbles", "LavaShadows", "Faces", "Floor0", "Floor1", "Floor2", "FloorDetail", "Rims", "RimGlow",
@@ -62,6 +60,9 @@ func _ready() -> void:
 	if not TileArt.profile().tiles.has(&"lava_m_0_0"):
 		TileArt.use_profile(load(TEMPLE_PROFILE))
 	plan = TemplePlan.parse(rows)
+	var mismatch := size_problem(plan, get_parent())
+	if mismatch != "":
+		plan.errors.append(mismatch)
 	if not plan.errors.is_empty():
 		push_error("TempleShape: %s" % ", ".join(plan.errors))
 		return
@@ -96,6 +97,17 @@ func _apply_modulates() -> void:
 		_layers[layer_name].modulate = Tuning.TEMPLE_FLOOR_MODULATE
 
 
+## The plan's size must be its room's: "" when they agree (or the plan is unreadable, which reports
+## itself, or `room` is not a Room), else the message `_ready` raises.
+static func size_problem(plan: TemplePlan, room: Node) -> String:
+	if plan == null or not plan.errors.is_empty() or room == null or not "size_tiles" in room:
+		return ""
+	var wanted: Vector2i = room.size_tiles
+	if plan.size_cells() == wanted:
+		return ""
+	return "the plan is %d x %d cells but its room is %d x %d tiles (RoomData.size_tiles)" 			% [plan.columns, plan.rows, wanted.x, wanted.y]
+
+
 ## True for a border cell that is the room's wall (not an open door's gap): the island's edge drops
 ## into lava there, so the room must plant no wall art on it.
 func hides_wall_at(cell: Vector2i) -> bool:
@@ -109,8 +121,8 @@ func island_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	if plan == null or not plan.errors.is_empty():
 		return cells
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			if not _is_wall(cell) and plan.cell_at(cell) != TemplePlan.LAVA:
 				cells.append(cell)
@@ -121,18 +133,18 @@ func island_cells() -> Array[Vector2i]:
 ## A wall cell of the outer ring: every border cell but the gaps of the open doors (the room knows
 ## which are open; without a room, the plan's door cells).
 func _is_wall(cell: Vector2i) -> bool:
-	if not TemplePlan.in_grid(cell) or TemplePlan.is_inner(cell):
+	if not plan.in_grid(cell) or plan.is_inner(cell):
 		return false
 	var parent := get_parent()
 	if parent != null and parent.has_method("is_wall_cell"):
 		return parent.is_wall_cell(cell)
-	return not TemplePlan.is_door(cell)
+	return not plan.is_door(cell)
 
 
 ## The height a cell shows: -1 for lava, the wall ring and the sea beyond the room; what lies under a
 ## deck; masonry is a block as tall as the top level; a stair shows its low end; else the plan's height.
 func _art_height(cell: Vector2i) -> int:
-	if not TemplePlan.in_grid(cell) or _is_wall(cell):
+	if not plan.in_grid(cell) or _is_wall(cell):
 		return TemplePlan.LAVA_HEIGHT
 	var c := plan.cell_at(cell)
 	if c == TemplePlan.LAVA:
@@ -187,7 +199,7 @@ func _is_open_lava(cell: Vector2i) -> bool:
 ## A cell that casts a face south when the cell below it is lower: floors, pillar slots, stairs (their
 ## low end) and masonry. Decks stand on supports and lava is flat.
 func _casts_face(cell: Vector2i) -> bool:
-	if _is_wall(cell) or not TemplePlan.in_grid(cell):
+	if _is_wall(cell) or not plan.in_grid(cell):
 		return false
 	var c := plan.cell_at(cell)
 	return TemplePlan.FLOORS.has(c) or c == TemplePlan.PILLAR or TemplePlan.STAIRS.has(c) or c == TemplePlan.MASONRY
@@ -197,7 +209,7 @@ func _casts_face(cell: Vector2i) -> bool:
 ## where nothing walks, or a floor cell the plan itself reserves for a face (`face_rows` > 0). Plain
 ## floor the plan lets Nico stand on never takes a face row, so the art agrees with the physics.
 func _takes_face_row(cell: Vector2i, below: int) -> bool:
-	if not TemplePlan.in_grid(cell) or _art_height(cell) != below:
+	if not plan.in_grid(cell) or _art_height(cell) != below:
 		return false
 	var c := plan.cell_at(cell)
 	if c == TemplePlan.LAVA or _is_wall(cell):
@@ -207,12 +219,12 @@ func _takes_face_row(cell: Vector2i, below: int) -> bool:
 
 ## True for the cells of the cross of lanes that joins the doors (kept free of floor details).
 func _in_lanes(cell: Vector2i) -> bool:
-	return absi(cell.x - COLUMNS / 2) <= 2 or absi(cell.y - ROWS / 2) <= 2
+	return absi(cell.x - plan.columns / 2) <= 2 or absi(cell.y - plan.rows / 2) <= 2
 
 
 ## A `#` cell drawn as a built wall (cap and carved front) rather than a slab with a cliff.
 func _is_masonry_art(cell: Vector2i) -> bool:
-	return Tuning.TEMPLE_MASONRY_ART and TemplePlan.in_grid(cell) and not _is_wall(cell) \
+	return Tuning.TEMPLE_MASONRY_ART and plan.in_grid(cell) and not _is_wall(cell) \
 			and plan.cell_at(cell) == TemplePlan.MASONRY
 
 
@@ -230,15 +242,15 @@ func _block_height(cell: Vector2i) -> int:
 ## the lava's light climbing it. The receiving cells belong to the lower side.
 func _find_faces() -> void:
 	_faces.clear()
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			if not _casts_face(cell):
 				continue
 			var h := _art_height(cell)
 			var south := cell + Vector2i.DOWN
 			# A stair south of the edge is the ramp down it: no face (its steps would hide one anyway).
-			if not TemplePlan.in_grid(south) or TemplePlan.STAIRS.has(plan.cell_at(south)):
+			if not plan.in_grid(south) or TemplePlan.STAIRS.has(plan.cell_at(south)):
 				continue
 			var below := _art_height(south)
 			if below >= h:
@@ -311,8 +323,8 @@ func _paint_animated(layer_name: String, cell: Vector2i, animation: StringName) 
 ## the sea around it) and bubbles bursting over a few open cells, each at its own moment.
 func _build_lava() -> void:
 	var origin := Vector2i((global_position / TILE).floor())
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			_paint_animated("Lava", cell, LavaBackdrop.lava_animation(origin + cell))
 			if _is_open_lava(cell) and not _is_deck(cell) and _rng.randf() < Tuning.TEMPLE_BUBBLE_SHARE:
@@ -331,8 +343,8 @@ func _build_faces() -> void:
 ## The floor of every level in its own stone, cell (x, y) of the macro plan, and the details off the
 ## door lanes: moss, cracks (transparent overlays, so the slabs stay whole) and runes that glow.
 func _build_floors() -> void:
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			var h := _art_height(cell)
 			if h < 0 or _faces.has(cell):
@@ -359,8 +371,8 @@ func _build_floors() -> void:
 ## lava around it), with its cracks pulsing on the layer above. Never on a deck: the sea flows under it.
 func _build_rims() -> void:
 	_rim_cells.clear()
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			if not _is_open_lava(cell) or _is_deck(cell):
 				continue
@@ -377,15 +389,15 @@ func _build_rims() -> void:
 ## (never the face dropping from it), or when a deck continues the floor at that height. A masonry
 ## wall's cap brings its own rim.
 func _build_ledges() -> void:
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			var h := _art_height(cell)
 			var c := plan.cell_at(cell)
 			if h < 0 or _faces.has(cell) or _is_deck(cell) or TemplePlan.STAIRS.has(c) or _is_masonry_art(cell):
 				continue
 			var inside := func(n: Vector2i) -> bool:
-				if not TemplePlan.in_grid(n):
+				if not plan.in_grid(n):
 					return true
 				if _faces.has(n):
 					return _faces[n]["owner"] > h
@@ -417,8 +429,8 @@ func _build_shadows() -> void:
 					_paint("Shadows", below, &"shadow_s_1" if i == 1 else &"shadow_s_2")
 	if not Tuning.TEMPLE_EAST_SHADOWS:
 		return
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			if _shadow_fits(cell) and _block_height(cell + Vector2i.LEFT) > _art_height(cell):
 				_paint("ShadowsEast", cell, &"shadow_e_1")
@@ -426,7 +438,7 @@ func _build_shadows() -> void:
 
 ## Floor someone walks on, where a shadow may lie.
 func _shadow_fits(cell: Vector2i) -> bool:
-	if not TemplePlan.in_grid(cell) or _art_height(cell) < 0 or _faces.has(cell) or _is_deck(cell):
+	if not plan.in_grid(cell) or _art_height(cell) < 0 or _faces.has(cell) or _is_deck(cell):
 		return false
 	var c := plan.cell_at(cell)
 	return (TemplePlan.FLOORS.has(c) or c == TemplePlan.PILLAR) and not _is_wall(cell)
@@ -435,8 +447,8 @@ func _shadow_fits(cell: Vector2i) -> bool:
 ## Steps on every stair cell, turned to climb toward the stair's arrow, with a balustrade on each
 ## side of the flight that no other cell of the same flight continues.
 func _build_stairs() -> void:
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			var c := plan.cell_at(cell)
 			if not TemplePlan.STAIRS.has(c):
@@ -447,7 +459,7 @@ func _build_stairs() -> void:
 			if Tuning.TEMPLE_STAIR_WALLS:
 				for side in sides:
 					var beside: Vector2i = cell + side[0]
-					if not TemplePlan.in_grid(beside) or plan.cell_at(beside) != c:
+					if not plan.in_grid(beside) or plan.cell_at(beside) != c:
 						walls += side[1]
 			var role := StringName(("stairs_up_steps" if vertical else "stairs_side_steps") + ("_" + walls if walls != "" else ""))
 			match c:
@@ -469,8 +481,8 @@ func _build_bridges() -> void:
 	rails.name = "Rails"
 	rails.y_sort_enabled = true
 	add_child(rails)
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			if not _is_deck(cell):
 				continue
@@ -508,12 +520,12 @@ func _build_bridges() -> void:
 
 ## A rail stands beside a deck over lava or against a cliff, never over floor someone walks on.
 func _rail_fits(cell: Vector2i) -> bool:
-	return TemplePlan.in_grid(cell) and not _is_deck(cell) and (_is_open_lava(cell) or _faces.has(cell))
+	return plan.in_grid(cell) and not _is_deck(cell) and (_is_open_lava(cell) or _faces.has(cell))
 
 
 ## A post caps a rail on the floor at the deck's end.
 func _post_fits(cell: Vector2i) -> bool:
-	return TemplePlan.in_grid(cell) and not _is_wall(cell) and not _is_deck(cell) and not _faces.has(cell) \
+	return plan.in_grid(cell) and not _is_wall(cell) and not _is_deck(cell) and not _faces.has(cell) \
 			and _art_height(cell) >= 0 and not TemplePlan.STAIRS.has(plan.cell_at(cell))
 
 
@@ -568,8 +580,8 @@ func _build_stair_zones() -> void:
 ## A pillar on every `p` cell, standing at the cell's foot on the cell's level (its body is the prop's).
 func _build_pillars() -> void:
 	var count := 0
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in plan.rows:
+		for x in plan.columns:
 			var cell := Vector2i(x, y)
 			if plan.cell_at(cell) != TemplePlan.PILLAR:
 				continue
@@ -633,7 +645,7 @@ func _build_stair_braziers() -> void:
 
 ## Floor of `level` the plan lets someone stand on, with no prop of the room on it.
 func _brazier_fits(cell: Vector2i, level: int) -> bool:
-	if not TemplePlan.in_grid(cell) or _is_wall(cell) or _faces.has(cell) or not TemplePlan.FLOORS.has(plan.cell_at(cell)):
+	if not plan.in_grid(cell) or _is_wall(cell) or _faces.has(cell) or not TemplePlan.FLOORS.has(plan.cell_at(cell)):
 		return false
 	if plan.height_at(cell) != level:
 		return false
@@ -677,8 +689,8 @@ func _build_vents() -> void:
 	if Tuning.TEMPLE_EMBER_VENT_EVERY <= 0:
 		return
 	var open: Array[Vector2i] = []
-	for y in range(1, ROWS - 1):
-		for x in range(1, COLUMNS - 1):
+	for y in range(1, plan.rows - 1):
+		for x in range(1, plan.columns - 1):
 			var cell := Vector2i(x, y)
 			if plan.is_lava(cell) and _is_open_lava(cell):
 				open.append(cell)

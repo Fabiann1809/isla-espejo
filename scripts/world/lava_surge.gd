@@ -14,13 +14,7 @@ extends Node2D
 ## `Level._populate` calls `attach_to` for a surge room and puts the room's own enemies on
 ## `safe_spawn_cells()`.
 
-const COLUMNS := TemplePlan.COLUMNS
-const ROWS := TemplePlan.ROWS
 const TILE := TemplePlan.TILE
-const DOOR_POINTS := {
-	Vector2i.UP: Vector2(240, 0), Vector2i.DOWN: Vector2(240, 288),
-	Vector2i.LEFT: Vector2(0, 144), Vector2i.RIGHT: Vector2(480, 144),
-}
 const NEIGHBOURS_8: Array[Vector2i] = [
 	Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0),
 	Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1),
@@ -153,8 +147,8 @@ func _build_flood() -> void:
 	var lower := {}
 	for level in 2:
 		var cells := {}
-		for y in ROWS:
-			for x in COLUMNS:
+		for y in plan.rows:
+			for x in plan.columns:
 				var cell := Vector2i(x, y)
 				var c := plan.cell_at(cell)
 				if room.is_wall_cell(cell) or c == TemplePlan.LAVA or c == TemplePlan.MASONRY:
@@ -200,20 +194,20 @@ func _build_flood() -> void:
 	for cell in _candidates:
 		for n in NEIGHBOURS_8:
 			var other: Vector2i = cell + n
-			if _candidates.has(other) or not TemplePlan.in_grid(other):
+			if _candidates.has(other) or not plan.in_grid(other):
 				continue
 			if plan.is_lava(other) or room.is_wall_cell(other):
 				_border[other] = true
 
 
 func _is_liquid_for_flood(cell: Vector2i, lower: Dictionary) -> bool:
-	if not TemplePlan.in_grid(cell) or room.is_wall_cell(cell) or plan.is_lava(cell):
+	if not plan.in_grid(cell) or room.is_wall_cell(cell) or plan.is_lava(cell):
 		return true
 	return lower.has(cell)
 
 
 func _is_liquid(cell: Vector2i) -> bool:
-	if not TemplePlan.in_grid(cell) or room.is_wall_cell(cell) or plan.is_lava(cell):
+	if not plan.in_grid(cell) or room.is_wall_cell(cell) or plan.is_lava(cell):
 		return true
 	return _covered.has(cell)
 
@@ -315,7 +309,7 @@ func _watch_for_trigger() -> void:
 	if not Rect2(Vector2.ZERO, room.pixel_size()).has_point(local):
 		return
 	for door in room.open_doors:
-		if local.distance_to(DOOR_POINTS[door]) <= Tuning.TEMPLE_SURGE_TRIGGER_DEPTH:
+		if local.distance_to(_door_point(door)) <= Tuning.TEMPLE_SURGE_TRIGGER_DEPTH:
 			return
 	room.clear_held = true
 	logic.start()
@@ -405,6 +399,20 @@ func _first_ring(level: int) -> Array[Vector2i]:
 		if not ring.has(cell):
 			ring.append(cell)
 	return ring
+
+
+## The middle of a door's edge, in room pixels.
+func _door_point(door: Vector2i) -> Vector2:
+	var size: Vector2 = room.pixel_size()
+	var middle := size / 2.0
+	match door:
+		Vector2i.UP:
+			return Vector2(middle.x, 0.0)
+		Vector2i.DOWN:
+			return Vector2(middle.x, size.y)
+		Vector2i.LEFT:
+			return Vector2(0.0, middle.y)
+	return Vector2(size.x, middle.y)
 
 
 # --- seals -------------------------------------------------------------------------------------------------------------

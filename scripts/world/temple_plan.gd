@@ -1,6 +1,7 @@
 class_name TemplePlan
 extends RefCounted
-## The plan of a temple room: 18 rows of 30 characters, one per 16 px cell, read into a height per
+## The plan of a temple room: a grid of characters (as many rows as the room has tile rows, all of one
+## length; 18 rows of 30 for the standard room), one per 16 px cell, read into a height per
 ## cell, the cliff faces between levels, collision rectangles per physics layer, stair zones and a
 ## check of the design. Pure data: no nodes, no autoloads. A room is a stone island over lava with
 ## up to three height levels (0, 1, 2); the drawing, the physics bodies, the spawns and the lava
@@ -15,7 +16,9 @@ extends RefCounted
 ##   p  pillar slot: floor of the height of its west neighbour, filled later by a TempleProp
 ##
 ## The outer ring is the room's wall (Room draws and collides it): masonry, except the door gaps,
-## the 4 middle cells of each edge, which are floor of the room's base height.
+## the 4 middle cells of each edge, which are floor of the room's base height. The size comes from the
+## text itself (`columns` x `rows`, both even, so the doors centre on every edge) and must equal the
+## `size_tiles` of the RoomData the plan belongs to (TempleShape checks it).
 ##
 ## Faces: a cell directly south of a cell `d` levels higher (lava counts as -1) shows `d` rows of
 ## cliff face; it belongs to the lower side and is not walkable at its own height. A stair is never
@@ -26,8 +29,11 @@ extends RefCounted
 ## enter (raised cells and faces: the cliff a level-0 shot sees); 9 what level 1 may not enter;
 ## 10 what level 2 may not enter; 11 the height-2 cells (the cliff a level-1 shot sees).
 
+## The standard room's size, the default of RoomData.size_tiles: a plan's real size is `columns` x `rows`.
 const COLUMNS := 30
 const ROWS := 18
+## The smallest plan: a 4-cell door on each edge plus the ring around it.
+const MIN_SIZE := 8
 const TILE := 16
 const MAX_HEIGHT := 2
 const LAVA_HEIGHT := -1
@@ -51,9 +57,8 @@ const BLOCK_LEVEL_1_LAYER := 9
 const BLOCK_LEVEL_2_LAYER := 10
 const HEIGHT_2_LAYER := 11
 
-## The door gaps (Room.DOOR_WIDTH = 4 cells) are also the lanes that must stay passable.
-const LANE_FIRST_COLUMN := 13
-const LANE_FIRST_ROW := 7
+## The door gaps (Room.DOOR_WIDTH = 4 cells) are also the lanes that must stay passable: the 4 middle
+## columns and the 4 middle rows (see `lane_first_column`, `lane_first_row`).
 const LANE_WIDTH := 4
 const DOOR_NAMES := ["north", "east", "south", "west"]
 ## The share of the inner cells that must be something other than base-height floor.
@@ -65,6 +70,9 @@ const UNREACHABLE_LISTED := 3
 
 var base_height := 0
 var errors: Array[String] = []
+## The plan's size in cells, read from its text (the defaults until a plan is read).
+var columns := COLUMNS
+var rows := ROWS
 
 var _cells: Array[String] = []
 var _heights: Array[int] = []
@@ -81,37 +89,52 @@ static func parse(text: String) -> TemplePlan:
 	return plan
 
 
+## The first column of the north and south doors (and of the vertical lane): the 4 middle columns.
+func lane_first_column() -> int:
+	return columns / 2 - LANE_WIDTH / 2
+
+
+## The first row of the west and east doors (and of the horizontal lane): the 4 middle rows.
+func lane_first_row() -> int:
+	return rows / 2 - LANE_WIDTH / 2
+
+
+## The size in cells, as RoomData.size_tiles states it.
+func size_cells() -> Vector2i:
+	return Vector2i(columns, rows)
+
+
 ## The door cells of every edge, by name: 4 cells per door on the outer ring.
-static func door_cells() -> Dictionary:
+func door_cells() -> Dictionary:
 	var doors := {}
 	for name in DOOR_NAMES:
 		var cells: Array[Vector2i] = []
 		for i in LANE_WIDTH:
 			match name:
 				"north":
-					cells.append(Vector2i(LANE_FIRST_COLUMN + i, 0))
+					cells.append(Vector2i(lane_first_column() + i, 0))
 				"south":
-					cells.append(Vector2i(LANE_FIRST_COLUMN + i, ROWS - 1))
+					cells.append(Vector2i(lane_first_column() + i, rows - 1))
 				"west":
-					cells.append(Vector2i(0, LANE_FIRST_ROW + i))
+					cells.append(Vector2i(0, lane_first_row() + i))
 				"east":
-					cells.append(Vector2i(COLUMNS - 1, LANE_FIRST_ROW + i))
+					cells.append(Vector2i(columns - 1, lane_first_row() + i))
 		doors[name] = cells
 	return doors
 
 
-static func in_grid(cell: Vector2i) -> bool:
-	return cell.x >= 0 and cell.y >= 0 and cell.x < COLUMNS and cell.y < ROWS
+func in_grid(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < columns and cell.y < rows
 
 
-static func is_inner(cell: Vector2i) -> bool:
-	return cell.x > 0 and cell.y > 0 and cell.x < COLUMNS - 1 and cell.y < ROWS - 1
+func is_inner(cell: Vector2i) -> bool:
+	return cell.x > 0 and cell.y > 0 and cell.x < columns - 1 and cell.y < rows - 1
 
 
-static func is_door(cell: Vector2i) -> bool:
-	var on_lane_x := cell.x >= LANE_FIRST_COLUMN and cell.x < LANE_FIRST_COLUMN + LANE_WIDTH
-	var on_lane_y := cell.y >= LANE_FIRST_ROW and cell.y < LANE_FIRST_ROW + LANE_WIDTH
-	return ((cell.y == 0 or cell.y == ROWS - 1) and on_lane_x) or ((cell.x == 0 or cell.x == COLUMNS - 1) and on_lane_y)
+func is_door(cell: Vector2i) -> bool:
+	var on_lane_x := cell.x >= lane_first_column() and cell.x < lane_first_column() + LANE_WIDTH
+	var on_lane_y := cell.y >= lane_first_row() and cell.y < lane_first_row() + LANE_WIDTH
+	return ((cell.y == 0 or cell.y == rows - 1) and on_lane_x) or ((cell.x == 0 or cell.x == columns - 1) and on_lane_y)
 
 
 # --- reading ---------------------------------------------------------------------------------------------------------
@@ -120,18 +143,24 @@ func _read(text: String) -> void:
 	_heights.clear()
 	for line in text.strip_edges().split("\n"):
 		_cells.append(line.strip_edges())
-	if _cells.size() != ROWS:
-		errors.append("the plan has %d rows, it needs %d" % [_cells.size(), ROWS])
+	var wanted_rows := _cells.size()
+	if wanted_rows < MIN_SIZE or wanted_rows % 2 != 0:
+		errors.append("the plan has %d rows, it needs an even number of at least %d" % [wanted_rows, MIN_SIZE])
 		_cells.clear()
 		return
-	for y in ROWS:
-		if _cells[y].length() != COLUMNS:
-			errors.append("row %d has %d characters, it needs %d" % [y, _cells[y].length(), COLUMNS])
+	var wanted_columns := _cells[0].length()
+	for y in wanted_rows:
+		if _cells[y].length() != wanted_columns:
+			errors.append("row %d has %d characters, it needs %d (as many as row 0)" % [y, _cells[y].length(), wanted_columns])
+	if errors.is_empty() and (wanted_columns < MIN_SIZE or wanted_columns % 2 != 0):
+		errors.append("the plan has %d columns, it needs an even number of at least %d" % [wanted_columns, MIN_SIZE])
 	if not errors.is_empty():
 		_cells.clear()
 		return
-	for y in ROWS:
-		for x in COLUMNS:
+	rows = wanted_rows
+	columns = wanted_columns
+	for y in rows:
+		for x in columns:
 			if not ALPHABET.contains(_cells[y][x]):
 				errors.append("unknown character '%s' at (%d, %d)" % [_cells[y][x], x, y])
 	if not errors.is_empty():
@@ -145,8 +174,8 @@ func _read(text: String) -> void:
 ## The outer ring is masonry, except the doors: floor, all at the same height, which is the base.
 func _read_ring() -> void:
 	var door_heights: Array[int] = []
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in rows:
+		for x in columns:
 			var cell := Vector2i(x, y)
 			if is_inner(cell):
 				continue
@@ -166,12 +195,12 @@ func _read_ring() -> void:
 
 
 func _read_heights() -> void:
-	_heights.resize(ROWS * COLUMNS)
+	_heights.resize(rows * columns)
 	_heights.fill(0)
 	# Floors, lava, masonry and decks first; a pillar slot copies its west neighbour (resolved in
 	# the same pass, left to right); stairs last, from the cell they climb toward.
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in rows:
+		for x in columns:
 			var cell := Vector2i(x, y)
 			var c := cell_at(cell)
 			if FLOORS.has(c):
@@ -189,8 +218,8 @@ func _read_heights() -> void:
 					_heights[_index(cell)] = _heights[_index(west)]
 				else:
 					errors.append("the pillar slot at (%d, %d) needs floor to its west" % [x, y])
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in rows:
+		for x in columns:
 			var cell := Vector2i(x, y)
 			var c := cell_at(cell)
 			if not STAIRS.has(c):
@@ -213,8 +242,8 @@ func _read_heights() -> void:
 func _read_decks() -> void:
 	_deck_ends.clear()
 	var seen := {}
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in rows:
+		for x in columns:
 			var start := Vector2i(x, y)
 			var c := cell_at(start)
 			if seen.has(start) or not DECKS.has(c) or DECKS[c] == 0:
@@ -240,7 +269,7 @@ func _read_decks() -> void:
 
 
 func _index(cell: Vector2i) -> int:
-	return cell.y * COLUMNS + cell.x
+	return cell.y * columns + cell.x
 
 
 # --- cells -----------------------------------------------------------------------------------------------------------
@@ -316,8 +345,8 @@ func level_regions() -> Dictionary:
 	var regions := {}
 	for level in range(MAX_HEIGHT + 1):
 		var cells: Array[Vector2i] = []
-		for y in range(1, ROWS - 1):
-			for x in range(1, COLUMNS - 1):
+		for y in range(1, rows - 1):
+			for x in range(1, columns - 1):
 				if reached.has(Vector3i(x, y, level)):
 					cells.append(Vector2i(x, y))
 		regions[level] = cells
@@ -337,8 +366,8 @@ func _reach() -> Dictionary:
 func stairs() -> Array[Dictionary]:
 	var zones: Array[Dictionary] = []
 	var used := {}
-	for y in ROWS:
-		for x in COLUMNS:
+	for y in rows:
+		for x in columns:
 			var cell := Vector2i(x, y)
 			if used.has(cell) or not is_stair(cell):
 				continue
@@ -380,8 +409,8 @@ func collision_rects(layer: int) -> Array[Rect2]:
 	var used := {}
 	var member := func(cell: Vector2i) -> bool:
 		return is_inner(cell) and not used.has(cell) and _on_layer(cell, layer)
-	for y in range(1, ROWS - 1):
-		for x in range(1, COLUMNS - 1):
+	for y in range(1, rows - 1):
+		for x in range(1, columns - 1):
 			var cell := Vector2i(x, y)
 			if not member.call(cell):
 				continue
@@ -513,8 +542,8 @@ func _check_doors(reached: Dictionary, problems: Array[String]) -> void:
 ## would be dead ground where nothing may spawn. Reported one by one up to a few, then counted.
 func _check_reach(reached: Dictionary, problems: Array[String]) -> void:
 	var missing: Array[String] = []
-	for y in range(1, ROWS - 1):
-		for x in range(1, COLUMNS - 1):
+	for y in range(1, rows - 1):
+		for x in range(1, columns - 1):
 			for level in range(MAX_HEIGHT + 1):
 				if is_walkable(Vector2i(x, y), level) and not reached.has(Vector3i(x, y, level)):
 					missing.append("unreachable cell (%d, %d) at level %d" % [x, y, level])
@@ -545,10 +574,10 @@ func _check_stairs(problems: Array[String]) -> void:
 
 ## No plain rectangle: enough of the inner cells are something other than base-height floor.
 func _check_relief(problems: Array[String]) -> void:
-	var total := (ROWS - 2) * (COLUMNS - 2)
+	var total := (rows - 2) * (columns - 2)
 	var relief := 0
-	for y in range(1, ROWS - 1):
-		for x in range(1, COLUMNS - 1):
+	for y in range(1, rows - 1):
+		for x in range(1, columns - 1):
 			var c := cell_at(Vector2i(x, y))
 			if not (FLOORS.has(c) and FLOORS.find(c) == base_height):
 				relief += 1
@@ -563,11 +592,11 @@ func _check_lanes(reached: Dictionary, problems: Array[String]) -> void:
 	var cells := {}
 	for state in reached:
 		cells[Vector2i(state.x, state.y)] = true
-	for x in range(1, COLUMNS - 1):
-		if not range(LANE_FIRST_ROW, LANE_FIRST_ROW + LANE_WIDTH).any(func(y: int) -> bool: return cells.has(Vector2i(x, y))):
+	for x in range(1, columns - 1):
+		if not range(lane_first_row(), lane_first_row() + LANE_WIDTH).any(func(y: int) -> bool: return cells.has(Vector2i(x, y))):
 			problems.append("the lane rows are cut at x=%d" % x)
-	for y in range(1, ROWS - 1):
-		if not range(LANE_FIRST_COLUMN, LANE_FIRST_COLUMN + LANE_WIDTH).any(func(x: int) -> bool: return cells.has(Vector2i(x, y))):
+	for y in range(1, rows - 1):
+		if not range(lane_first_column(), lane_first_column() + LANE_WIDTH).any(func(x: int) -> bool: return cells.has(Vector2i(x, y))):
 			problems.append("the lane columns are cut at y=%d" % y)
 
 
