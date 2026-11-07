@@ -62,6 +62,7 @@ class Room:
         self.spawns = {}
         self.player_spawn = None
         self.reserved = set()   # cells that must stay floor (lanes, stairs fronts)
+        self.kept = set()       # cells no prop may use (a room's open corner for a scene RoomDressing adds)
         self.nooks = set()      # cells of the optional side spaces (no enemy spawns there)
         self.lanes()
 
@@ -274,7 +275,7 @@ class Room:
                 taken.add((px // TILE, py // TILE))
         if self.player_spawn:
             taken.add((self.player_spawn[0] // TILE, self.player_spawn[1] // TILE))
-        return taken
+        return taken | self.kept
 
     def can_put(self, kind, x, y, size=(1, 1), margin=0):
         taken = self.occupied()
@@ -674,6 +675,10 @@ r.finish()
 
 # --- Special: a shrine around the middle -----------------------------------------------------------------------------------------
 r = Room("special", "RuinsSpecial")
+# The Mercader's shop (RoomDressing) takes the north-east quarter: the floor there stays open and free of props.
+shop = {(x, y) for x in range(17, 25) for y in range(2, 8)}
+r.reserved |= shop
+r.kept |= shop
 r.edge_blobs(4, size=(1.6, 3.0))
 r.smooth()
 r.nook(STELE)
@@ -683,7 +688,7 @@ for wanted in ((8, 4), (21, 4), (8, 13), (21, 13)):
 for wanted in ((11, 5), (18, 12)):
     r.put_near(BRAZIER, wanted, radius=3)
 little(r, boulders=1)
-r.spawns = {"SpecialSpawn": [(240, 144)]}
+r.spawns = {"SpecialSpawn": [(344, 92)]}
 story(r, statues=1, vases=1, symbol=(13, 7), altar=(13, 3), banners=1)
 r.finish()
 

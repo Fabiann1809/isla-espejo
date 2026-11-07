@@ -920,7 +920,7 @@ r = room("special", "TempleSpecial", [
     "#~~~~~~~~~......~~~~~~~~~#",  # 18
     "###########....###########",  # 19
 ])
-r.marker("SpecialSpawn", 12, 12)
+r.marker("SpecialSpawn", 5, 14)    # the Mercader's shop: the south-west pocket, off the lanes
 r.prop(ALTAR_RUNE, 12, 2, level=2)       # the altar on the top of the ziggurat, behind the stair's head
 r.pair(BRAZIER_PEDESTAL, 9, 3, level=2)  # fires on the top tier
 r.pair(STATUE_GUARDIAN, 7, 2, level=1)   # guardians on the first tier's top corners

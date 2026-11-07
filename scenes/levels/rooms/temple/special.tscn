@@ -123,4 +123,4 @@ kind = 13
 [node name="SpecialSpawn" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="SpecialSpawn"]
-position = Vector2(200, 200)
+position = Vector2(88, 232)

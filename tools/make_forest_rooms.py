@@ -36,7 +36,7 @@ def footprint(kind, x, y, size=(1, 1)):
     return [(x + i, y + j) for i in range(size[0]) for j in range(size[1])]
 
 
-def scatter_props(filename, props, spawns, player_spawn, counts):
+def scatter_props(filename, props, spawns, player_spawn, counts, keep_clear=()):
     """Adds `counts` = [(kind, how_many)] extra props at deterministic random free spots: never on
     the central lanes, never next to another prop, never on or next to a spawn marker."""
     rng = random.Random(zlib.crc32(filename.encode()))
@@ -47,6 +47,7 @@ def scatter_props(filename, props, spawns, player_spawn, counts):
             for dx in (-1, 0, 1):
                 for dy in (-1, 0, 1):
                     taken.add((tx + dx, ty + dy))
+    taken.update(keep_clear)
     markers = [p for points in spawns.values() for p in points]
     if player_spawn:
         markers.append(player_spawn)
@@ -76,12 +77,12 @@ def scatter_props(filename, props, spawns, player_spawn, counts):
     return props + extra
 
 
-def build(filename, node_name, props, spawns=None, player_spawn=None, scatter=None):
+def build(filename, node_name, props, spawns=None, player_spawn=None, scatter=None, keep_clear=()):
     """props: [(kind, x, y)] or [(kind, x, y, (w, h))]; spawns: {container: [(x_px, y_px)]};
     scatter: [(kind, count)] extra decoration placed automatically (see scatter_props)."""
     spawns = spawns or {}
     if scatter:
-        props = scatter_props(filename, props, spawns, player_spawn, scatter)
+        props = scatter_props(filename, props, spawns, player_spawn, scatter, keep_clear)
     solid_tiles = set()
     for prop in props:
         kind, x, y = prop[0], prop[1], prop[2]
@@ -202,11 +203,13 @@ build("reward", "ForestReward",
              (BUSH, 8, 4), (BUSH, 20, 4), (BUSH, 8, 13), (BUSH, 20, 13), (PINE, 11, 2), (PINE, 18, 15)],
       spawns={"ChestSpawn": [(248, 152)]}, scatter=[(PINE, 8), (BUSH, 6)])
 
-# --- Special: a ring of round trees around a stump of logs -------------------------------------------------------------------
+# --- Special: the Mercader's shop. He stands in the north-east quarter, off the lanes, with his stall behind him (RoomDressing);
+# those tiles stay free of scattered props. A ring of round trees and stumps around the rest. -------------------------------------------------------------------
 build("special", "ForestSpecial",
-      props=[(LOGS, 8, 5), (LOGS, 20, 5), (LOGS, 8, 12), (LOGS, 20, 12),
+      props=[(LOGS, 8, 5), (LOGS, 8, 12), (LOGS, 20, 12),
              (TALL_ROUND_TREE, 4, 3), (TALL_ROUND_TREE, 25, 3), (TALL_ROUND_TREE, 4, 12), (TALL_ROUND_TREE, 25, 12),
              (TUFT, 12, 5), (TUFT, 17, 5), (TUFT, 12, 12), (TUFT, 17, 12)],
-      spawns={"SpecialSpawn": [(240, 144)]}, scatter=[(PINE, 8), (BUSH, 4)])
+      spawns={"SpecialSpawn": [(344, 92)]}, scatter=[(PINE, 8), (BUSH, 4)],
+      keep_clear=[(x, y) for x in range(17, 25) for y in range(2, 8)])
 
 print("forest rooms written and validated")
