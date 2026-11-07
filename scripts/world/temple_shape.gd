@@ -657,11 +657,11 @@ static func _fps_of(animation: StringName) -> float:
 	if name.begins_with(IN_STEP_PREFIX) or name == "lava_flow":
 		return Tuning.TEMPLE_LAVA_FPS
 	if name.begins_with("lava_bubble"):
-		return Tuning.TEMPLE_BUBBLE_FPS
+		return Tuning.TEMPLE_LAVA_BUBBLE_FPS
 	if name == "lava_rim_glow":
-		return Tuning.TEMPLE_RIM_GLOW_FPS
+		return Tuning.TEMPLE_LAVA_GLOW_FPS
 	if name.begins_with("cliff_foot_lava"):
-		return Tuning.TEMPLE_FOOT_GLOW_FPS
+		return Tuning.TEMPLE_LAVA_FOOT_FPS
 	if name.ends_with("rune_glow"):
 		return Tuning.TEMPLE_RUNE_GLOW_FPS
 	return Tuning.TEMPLE_FIRE_FPS

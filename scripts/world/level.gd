@@ -291,6 +291,8 @@ func _attach_surge_spawn_points(room: Room, weights: Dictionary) -> Array[Vector
 	surge.base_weights = weights
 	for cell in surge.safe_spawn_cells():
 		points.append(Vector2(cell) * TileArt.TILE + Vector2.ONE * TileArt.TILE / 2.0)
+	if points.is_empty():
+		push_warning("Surge room '%s' has no safe spawn cells: its enemies fall back to the editor markers" % room.data.id)
 	return points
 
 
