@@ -134,7 +134,9 @@ func _capped() -> void:
 		_player.health.heal(_player.health.max_health)
 		# He keeps moving so no block shatters over him.
 		_player.global_position = QUADRANT + Vector2(0, 30 * sin(i * 0.05))
-		most = maxi(most, _blocks().size())
+		# Its own blocks: a block left over from an earlier check (dropped as that forger was freed) can
+		# still stand in the room for a moment under load, and is not this forger's.
+		most = maxi(most, forger.blocks().size())
 	_check(most == forger.data.max_blocks, "it stops at %d blocks (most %d)" % [forger.data.max_blocks, most])
 	forger.queue_free()
 	await _clear_blocks()
