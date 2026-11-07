@@ -2,8 +2,7 @@
 
 [ext_resource type="Resource" path="res://data/rooms/forest_boss.tres" id="1_5vu37"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/forest_guardian.tscn" id="2_dqrix"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="3_k7olh"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="4_mxaao"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="3_k7olh"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/slime.tscn" id="24_slime"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/planta_tiradora.tscn" id="25_planta"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/esqueleto.tscn" id="26_esqueleto"]
@@ -60,5 +59,5 @@ miniboss_scene = ExtResource("27_ente")
 exit_scene = ExtResource("8_cxxwv")
 npc_scene = ExtResource("9_q2d2u")
 special_npc_scene = ExtResource("23_merchant")
-chest_scenes = Array[PackedScene]([ExtResource("3_k7olh"), ExtResource("4_mxaao")])
+chest_scenes = Array[PackedScene]([ExtResource("3_k7olh")])
 drops = Array[ExtResource("30_rd")]([ExtResource("31_heart"), ExtResource("32_arrows"), ExtResource("33_gold")])

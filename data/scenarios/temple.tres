@@ -2,8 +2,7 @@
 
 [ext_resource type="Resource" path="res://data/rooms/temple_boss.tres" id="1_ujrra"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ancient_guardian.tscn" id="2_cyrvs"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="3_a0yws"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="4_xrnwb"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="3_a0yws"]
 [ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="5_a55qm"]
 [ext_resource type="Resource" path="res://data/resources/heart.tres" id="6_28wuw"]
 [ext_resource type="Resource" path="res://data/resources/arrows.tres" id="7_36bw2"]
@@ -73,5 +72,5 @@ boss_scene = ExtResource("2_cyrvs")
 exit_scene = ExtResource("33_4flcf")
 start_npc_scene = ExtResource("47_3h4ei")
 special_npc_scene = ExtResource("47_3h4ei")
-chest_scenes = Array[PackedScene]([ExtResource("3_a0yws"), ExtResource("4_xrnwb")])
+chest_scenes = Array[PackedScene]([ExtResource("3_a0yws")])
 drops = Array[ExtResource("5_a55qm")]([ExtResource("6_28wuw"), ExtResource("7_36bw2"), ExtResource("8_p8jhx")])

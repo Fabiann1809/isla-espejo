@@ -2,8 +2,7 @@
 
 [ext_resource type="Resource" path="res://data/rooms/ruins_boss.tres" id="1_gc772"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/stone_serpent.tscn" id="2_cmyky"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heart.tscn" id="3_0ifpo"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest_heal.tscn" id="4_kfhnh"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="3_0ifpo"]
 [ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="5_nskt5"]
 [ext_resource type="Resource" path="res://data/resources/heart.tres" id="6_17cr1"]
 [ext_resource type="Resource" path="res://data/resources/arrows.tres" id="7_vbwlf"]
@@ -55,5 +54,5 @@ enemy_weights = {
 boss_scene = ExtResource("2_cmyky")
 exit_scene = ExtResource("12_l3tv5")
 npc_scene = ExtResource("14_ul8xy")
-chest_scenes = Array[PackedScene]([ExtResource("3_0ifpo"), ExtResource("4_kfhnh")])
+chest_scenes = Array[PackedScene]([ExtResource("3_0ifpo")])
 drops = Array[ExtResource("5_nskt5")]([ExtResource("6_17cr1"), ExtResource("7_vbwlf"), ExtResource("8_tt8rx")])

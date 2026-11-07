@@ -123,7 +123,7 @@ func _initialize() -> void:
 	scenario.enemy_weights = {}
 	scenario.roster_size = 10
 	scenario.boss_scene = load("res://scenes/enemies/ancient_guardian.tscn")
-	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
+	var chests: Array[PackedScene] = [load("res://scenes/world/chest.tscn")]
 	scenario.chest_scenes = chests
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
 	# The Mercader waits near the landing and again in the special room; the event room stays empty.

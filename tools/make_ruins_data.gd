@@ -65,7 +65,7 @@ func _initialize() -> void:
 			load("res://scenes/enemies/sombra_errante.tscn"), load("res://scenes/enemies/murcielago.tscn")]
 	scenario.enemy_pool = pool
 	scenario.enemy_weights = {&"bestia_de_la_niebla": 3.0, &"sombra_errante": 3.0, &"murcielago": 4.0}
-	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
+	var chests: Array[PackedScene] = [load("res://scenes/world/chest.tscn")]
 	scenario.npc_scene = load("res://scenes/npcs/traveler.tscn")
 	scenario.chest_scenes = chests
 	scenario.boss_scene = load("res://scenes/enemies/stone_serpent.tscn")

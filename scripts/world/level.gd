@@ -391,7 +391,10 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 			_spawn_single(room, scenario.special_npc_scene, "SpecialSpawn")
 		RoomData.RoomType.REWARD:
 			if not scenario.chest_scenes.is_empty():
-				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
+				var chest := _spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
+				if chest is Chest:
+					# Same map seed, same prize: the roll depends on the seed and the room only.
+					chest.rng.seed = current_seed * 31 + cell.coord.x * 7 + cell.coord.y + 4
 	RoomDressing.dress(room)
 
 
