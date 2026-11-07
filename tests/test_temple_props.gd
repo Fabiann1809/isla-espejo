@@ -40,6 +40,10 @@ func _initialize() -> void:
 			animated += 1
 		else:
 			print("  %s: frames %d playing %s" % [kind_name, frames, playing])
+		if kind_name in ["PILLAR_CARVED", "PILLAR_BLOCK"] and frames > 0:
+			var image: Image = sprite.sprite_frames.get_frame_texture(sprite.animation, 0).get_image()
+			_check(image.get_used_rect().size.y >= 96,
+					"%s stands at least three times Nico's 32 px height" % kind_name)
 		prop.queue_free()
 	_check(animated == kinds.size(), "every kind builds and animates (%d of %d)" % [animated, kinds.size()])
 	await process_frame

@@ -235,7 +235,10 @@ func _casts_face(cell: Vector2i) -> bool:
 ## where nothing walks, or a floor cell the plan itself reserves for a face (`face_rows` > 0). Plain
 ## floor the plan lets Nico stand on never takes a face row, so the art agrees with the physics.
 func _takes_face_row(cell: Vector2i, below: int) -> bool:
-	if not plan.in_grid(cell) or _art_height(cell) != below:
+	# The wall ring ends the room's physics, not its visible basalt foundation.
+	if not plan.in_grid(cell):
+		return below < 0
+	if _art_height(cell) != below:
 		return false
 	var c := plan.cell_at(cell)
 	if c == TemplePlan.LAVA or _is_wall(cell):

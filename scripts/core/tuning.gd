@@ -405,8 +405,8 @@ const TEMPLE_WORLD_TINT := Color.WHITE
 ## Multipliers over the temple's lava layers (the sea, the rooms' lava and bubbles, the bridges'
 ## lava) and its floor layers (floors, decks, stairs): darker and a little greyer, so the stone
 ## reads mid-grey and the lava bright but flat. Color.WHITE = off.
-const TEMPLE_LAVA_MODULATE := Color(0.82, 0.74, 0.70)
-const TEMPLE_FLOOR_MODULATE := Color(0.80, 0.80, 0.84)
+const TEMPLE_LAVA_MODULATE := Color(1.0, 0.94, 0.90)
+const TEMPLE_FLOOR_MODULATE := Color(0.90, 0.90, 0.94)
 ## Cap on stacking additive lights: a temple light (prop, rim or stair brazier) is not created when
 ## another temple light already burns closer than this many px (0 = no cap).
 const TEMPLE_LIGHT_MIN_SPACING := 28.0
@@ -472,7 +472,7 @@ const TEMPLE_LAVA_VARIANT_FREQUENCY := 0.4
 ## of the sea they cover, how soft their edge is (in noise units), the noise frequency (per texel)
 ## and their drift (px/s, x and y).
 const TEMPLE_BACKDROP_PLATE_COLOR := Color(0.14, 0.03, 0.02)
-const TEMPLE_BACKDROP_PLATE_ALPHA := 0.18
+const TEMPLE_BACKDROP_PLATE_ALPHA := 0.06
 const TEMPLE_BACKDROP_PLATE_SIZE := 256
 const TEMPLE_BACKDROP_PLATE_TEXEL := 4
 const TEMPLE_BACKDROP_PLATE_COVER := 0.42
@@ -520,7 +520,7 @@ const TEMPLE_BACKDROP_DETAIL_CHANCE := 0.2
 ## channels lighter), the share of it that falls on the islets' rock (they stand out of the sea) and
 ## how far the search for the stone goes (tiles).
 const TEMPLE_BACKDROP_CRUST_COLOR := Color(0.1, 0.02, 0.02)
-const TEMPLE_BACKDROP_CRUST_ALPHA := 0.52
+const TEMPLE_BACKDROP_CRUST_ALPHA := 0.18
 const TEMPLE_BACKDROP_CRUST_NEAR_TILES := 2.0
 const TEMPLE_BACKDROP_CRUST_FAR_TILES := 9.0
 const TEMPLE_BACKDROP_CRUST_WOBBLE := 3.5
@@ -546,6 +546,10 @@ const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
 ## south side (0 = none, its ledge alone marks the edge) and a brazier on a pedestal on each side of
 ## the way (off: bare).
 const TEMPLE_BRIDGE_END_POSTS := false
+## Decorative soffits and piers below causeways; no collision. False restores tile-only decks.
+const TEMPLE_BRIDGE_VOLUME := true
+const TEMPLE_BRIDGE_SOFFIT_PX := 10
+const TEMPLE_BRIDGE_PIER_EVERY := 6
 const TEMPLE_LANDINGS := true
 const TEMPLE_LANDING_MIN_TILES := 10
 const TEMPLE_LANDING_TILES := 6
@@ -584,7 +588,7 @@ const TEMPLE_PILLAR_BLOCK_CHANCE := 0.35
 const TEMPLE_MASONRY_ART := true
 const TEMPLE_DROP_SHADOWS := true
 ## Extra rock rows may occupy empty lava only, never floor, stairs or bridge decks.
-const TEMPLE_LAVA_CLIFF_EXTRA_ROWS := 2
+const TEMPLE_LAVA_CLIFF_EXTRA_ROWS := 3
 const TEMPLE_EAST_SHADOWS := true
 const TEMPLE_STAIR_WALLS := true
 const TEMPLE_STAIR_TOP_BRAZIERS := true

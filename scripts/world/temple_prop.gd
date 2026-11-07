@@ -62,10 +62,10 @@ const TRAP_KINDS: Array[Kind] = [Kind.SPIKES, Kind.SAW, Kind.ROLLING_ROCK]
 ## `fire` for flames, `lava` for molten rock and `gate` for the face gate's mouth (lava, wider).
 const LIGHTS := {
 	Kind.BRAZIER: [Vector2(0, -12), "fire"],
-	Kind.BRAZIER_PEDESTAL: [Vector2(0, -32), "fire"],
+	Kind.BRAZIER_PEDESTAL: [Vector2(0, -50), "fire"],
 	Kind.TORCH_WALL: [Vector2(0, -16), "fire"],
 	Kind.LAVA_FALL: [Vector2(0, -20), "lava"],
-	Kind.FACE_GATE: [Vector2(0, -24), "gate"],
+	Kind.FACE_GATE: [Vector2(0, -42), "gate"],
 	Kind.GEYSER: [Vector2(0, -14), "lava"],
 }
 ## The strip of each kind.

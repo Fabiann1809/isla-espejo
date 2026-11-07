@@ -136,8 +136,11 @@ func _initialize() -> void:
 	_check(shadows.get_used_cells().has(Vector2i(4, 10)) and not shadows.get_used_cells().has(Vector2i(4, 9)),
 			"shadows fall on the lower floor south of a face (%d cells)" % shadows.get_used_cells().size())
 	# The island's extra rock occupies empty lava only; a nearby walkable island cuts it short.
-	_check(faces.get_used_cells().has(Vector2i(28, 17)) and _frames_of(faces, Vector2i(28, 17)) == 4,
-			"a lava cliff has extra rock thickness and an animated illuminated foot")
+	var lava_foot := Vector2i(28, 15)
+	while faces.get_used_cells().has(lava_foot + Vector2i.DOWN):
+		lava_foot += Vector2i.DOWN
+	_check(lava_foot.y >= 18 and _frames_of(faces, lava_foot) == 4,
+			"a lava cliff extends past the room ring and ends in an animated illuminated foot")
 	_check(not faces.get_used_cells().has(Vector2i(4, 12)),
 			"the extra cliff stops before a walkable island")
 	var lava_shadows := shape.get_node("LavaShadows") as TileMapLayer

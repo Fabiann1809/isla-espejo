@@ -83,6 +83,7 @@ func build(parent: Node) -> void:
 	_place_landing()
 	_place_stairs()
 	_paint_lava(parent)
+	_paint_soffit(parent)
 	_paint_faces(parent)
 	var layer := theme.new_layer(parent, "Corridor%d" % number)
 	layer.modulate = Tuning.TEMPLE_FLOOR_MODULATE
@@ -214,6 +215,42 @@ func _side_spans() -> Dictionary:
 
 
 # --- pictures --------------------------------------------------------------------------------------
+## The south return, bearing piers and their shadow are below the deck, entirely over the sea.
+func _paint_soffit(parent: Node) -> void:
+	if not Tuning.TEMPLE_BRIDGE_VOLUME:
+		return
+	var root := Node2D.new()
+	root.name = "CausewayVolume%d" % number
+	root.z_index = RoomTheme.FLOOR_Z
+	parent.add_child(root)
+	var depth := Tuning.TEMPLE_BRIDGE_SOFFIT_PX
+	for along in range(_a0, _a0 + _len):
+		var cell := _cell(along, _c0 + LANE)
+		if landing.has_point(cell):
+			continue
+		var at := Vector2(cell * TILE)
+		if not _horizontal:
+			at.x += TILE
+			at.y += TILE - depth
+		var width := TILE if _horizontal else depth
+		_volume_rect(root, Rect2(at + Vector2(6, depth), Vector2(width + 4, 6)), Color("201216"))
+		_volume_rect(root, Rect2(at, Vector2(width, depth)), Color("331518"))
+		_volume_rect(root, Rect2(at, Vector2(width, 2)), Color("7e4a40"))
+		_volume_rect(root, Rect2(at + Vector2(1, 3), Vector2(width - 2, depth - 5)), Color("4f2221"))
+		if along % Tuning.TEMPLE_BRIDGE_PIER_EVERY == 0:
+			_volume_rect(root, Rect2(at + Vector2(2, depth), Vector2(width - 4, TILE)), Color("201216"))
+			_volume_rect(root, Rect2(at + Vector2(3, depth), Vector2(width - 6, TILE - 2)), Color("4f2221"))
+			_volume_rect(root, Rect2(at + Vector2(2, depth + TILE - 1), Vector2(width - 4, 1)), Color("ff8a1e"))
+
+
+static func _volume_rect(parent: Node, rect: Rect2, color: Color) -> void:
+	var polygon := Polygon2D.new()
+	polygon.polygon = PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end,
+			Vector2(rect.position.x, rect.end.y)])
+	polygon.color = color
+	parent.add_child(polygon)
+
+
 ## The sea under everything the bridge covers, the sea's own macro by world tile.
 func _paint_lava(parent: Node) -> void:
 	var lava := LavaBackdrop.lava_layer("CorridorLava%d" % number)
