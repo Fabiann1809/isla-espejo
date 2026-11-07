@@ -383,6 +383,8 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 				if portal.has_method("seal_with"):
 					# A chapter whose boss is not built yet keeps its way out open.
 					portal.seal_with(scenario.objective_flag if _has_boss() else &"")
+		RoomData.RoomType.START:
+			_spawn_single(room, scenario.start_npc_scene, "NpcSpawn")
 		RoomData.RoomType.EVENT:
 			_spawn_single(room, scenario.npc_scene, "NpcSpawn")
 		RoomData.RoomType.SPECIAL:

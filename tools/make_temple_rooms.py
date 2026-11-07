@@ -427,6 +427,8 @@ r = room("start", "TempleStart", [
     "###############....###############",  # 23
 ])
 r.spawn_at(17, 19)
+# The Mercader: one cell on the landing's east side, off the lanes and the props, close to Nico's start.
+r.want("NpcSpawn", 1, levels=(0,), region=(21, 14, 27, 18), first=(23, 16))
 r.pair(BRAZIER_PEDESTAL, 14, 20)         # the landing's fires, framing the way in
 r.pair(PILLAR_CARVED, 13, 9)             # a pair of pillars framing the way north
 r.pair(STATUE_GUARDIAN, 13, 3)           # guardians watching the north door
