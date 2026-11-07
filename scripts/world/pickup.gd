@@ -7,7 +7,13 @@ const BLINK_SECONDS := 3.0
 const MAGNET_SPEED := 150.0
 const BOB_HEIGHT := 1.5
 
+## The team's spinning gold coin (a horizontal strip of square frames); without the file the coin
+## is drawn with circles.
+const GOLD_ART := "res://assets/sprites/pickups/gold_coin_spin.png"
+
 var data: ResourceData
+## The coin's art, or null (gold only).
+var art: AnimatedSprite2D
 
 var _time := 0.0
 var _life_left := 0.0
@@ -23,6 +29,10 @@ func _ready() -> void:
 	add_to_group("pickups")
 	_life_left = data.lifetime
 	body_entered.connect(_on_body_entered)
+	if data.kind == ResourceData.Kind.GOLD:
+		art = StripArt.build(GOLD_ART, 10.0)
+		if art != null:
+			add_child(art)
 
 
 func _physics_process(delta: float) -> void:
@@ -57,10 +67,16 @@ func _on_body_entered(body: Node2D) -> void:
 func _draw() -> void:
 	if data == null:
 		return
-	if data.lifetime > 0.0 and _life_left < BLINK_SECONDS and int(_life_left * 6.0) % 2 == 0:
+	var blinked_off := data.lifetime > 0.0 and _life_left < BLINK_SECONDS and int(_life_left * 6.0) % 2 == 0
+	if art != null:
+		art.visible = not blinked_off
+		art.position = Vector2(0, -6 + sin(_time * 4.0) * BOB_HEIGHT)
+	if blinked_off:
 		return
 	var lift := Vector2(0, -4 + sin(_time * 4.0) * BOB_HEIGHT)
 	draw_circle(Vector2(0, 2), 3.0, Color(0, 0, 0, 0.3))
+	if art != null:
+		return
 	match data.kind:
 		ResourceData.Kind.HEAL:
 			draw_circle(lift + Vector2(-2.5, -1), 2.8, data.color)

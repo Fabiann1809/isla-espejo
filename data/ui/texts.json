@@ -52,5 +52,6 @@
 	"shop_bought": "Comprado: %s",
 	"shop_no_gold": "No te alcanza el oro.",
 	"shop_maxed_msg": "Ya no puedes mejorar eso más.",
-	"shop_full_health": "Ya tienes la vida completa."
+	"shop_full_health": "Ya tienes la vida completa.",
+	"hud_upgrade_level": "Nv%d"
 }

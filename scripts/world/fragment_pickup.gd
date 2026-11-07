@@ -15,7 +15,13 @@ extends Node2D
 	get:
 		return skill_message if skill_message != "" else UiText.t("skill_learned")
 
+## The team's picture of this fragment lying in the world (one picture or a strip of square
+## frames); without the file the glowing diamond is drawn.
+const WORLD_ART := "res://assets/sprites/fragments/fragment_%s_world.png"
+
 var _time := 0.0
+## The art that replaces the diamond, or null.
+var art: AnimatedSprite2D
 
 @onready var _gem: Polygon2D = $Gem
 @onready var _take: Interactable = $Take
@@ -25,12 +31,21 @@ func _ready() -> void:
 	add_to_group("fragments")
 	_gem.color = color
 	_take.interacted.connect(_on_taken)
+	art = StripArt.build(WORLD_ART % fragment_id)
+	if art != null:
+		_gem.hide()
+		add_child(art)
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	_gem.position.y = sin(_time * 3.0) * 2.0
-	_gem.modulate.a = 0.75 + 0.25 * sin(_time * 5.0)
+	var bob := sin(_time * 3.0) * 2.0
+	var glow := 0.75 + 0.25 * sin(_time * 5.0)
+	_gem.position.y = bob
+	_gem.modulate.a = glow
+	if art != null:
+		art.position.y = bob
+		art.modulate.a = glow
 
 
 func _on_taken(player: Node) -> void:
