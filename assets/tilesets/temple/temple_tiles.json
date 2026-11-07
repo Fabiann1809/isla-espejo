@@ -7957,6 +7957,582 @@
   "floor1_rune_d": [
    13,
    0
+  ],
+  "basalt_top_0": [
+   0,
+   135
+  ],
+  "basalt_top_1": [
+   1,
+   135
+  ],
+  "basalt_top_2": [
+   2,
+   135
+  ],
+  "basalt_top_3": [
+   3,
+   135
+  ],
+  "basalt_top_4": [
+   4,
+   135
+  ],
+  "basalt_top_5": [
+   5,
+   135
+  ],
+  "basalt_top_6": [
+   6,
+   135
+  ],
+  "basalt_top_7": [
+   7,
+   135
+  ],
+  "basalt_face_0": [
+   8,
+   135
+  ],
+  "basalt_face_1": [
+   9,
+   135
+  ],
+  "basalt_face_2": [
+   10,
+   135
+  ],
+  "basalt_face_3": [
+   11,
+   135
+  ],
+  "basalt_face_4": [
+   12,
+   135
+  ],
+  "basalt_face_5": [
+   13,
+   135
+  ],
+  "basalt_face_6": [
+   14,
+   135
+  ],
+  "basalt_face_7": [
+   15,
+   135
+  ],
+  "basalt_edge_0_0": [
+   0,
+   136
+  ],
+  "basalt_edge_0_1": [
+   1,
+   136
+  ],
+  "basalt_edge_0_2": [
+   2,
+   136
+  ],
+  "basalt_edge_0_3": [
+   3,
+   136
+  ],
+  "basalt_edge_0_4": [
+   4,
+   136
+  ],
+  "basalt_edge_0_5": [
+   5,
+   136
+  ],
+  "basalt_edge_0_6": [
+   6,
+   136
+  ],
+  "basalt_edge_0_7": [
+   7,
+   136
+  ],
+  "basalt_edge_0_8": [
+   8,
+   136
+  ],
+  "basalt_edge_0_9": [
+   9,
+   136
+  ],
+  "basalt_edge_0_10": [
+   10,
+   136
+  ],
+  "basalt_edge_0_11": [
+   11,
+   136
+  ],
+  "basalt_edge_0_12": [
+   12,
+   136
+  ],
+  "basalt_edge_0_13": [
+   13,
+   136
+  ],
+  "basalt_edge_0_14": [
+   14,
+   136
+  ],
+  "basalt_edge_0_15": [
+   15,
+   136
+  ],
+  "basalt_edge_1_0": [
+   0,
+   137
+  ],
+  "basalt_edge_1_1": [
+   1,
+   137
+  ],
+  "basalt_edge_1_2": [
+   2,
+   137
+  ],
+  "basalt_edge_1_3": [
+   3,
+   137
+  ],
+  "basalt_edge_1_4": [
+   4,
+   137
+  ],
+  "basalt_edge_1_5": [
+   5,
+   137
+  ],
+  "basalt_edge_1_6": [
+   6,
+   137
+  ],
+  "basalt_edge_1_7": [
+   7,
+   137
+  ],
+  "basalt_edge_1_8": [
+   8,
+   137
+  ],
+  "basalt_edge_1_9": [
+   9,
+   137
+  ],
+  "basalt_edge_1_10": [
+   10,
+   137
+  ],
+  "basalt_edge_1_11": [
+   11,
+   137
+  ],
+  "basalt_edge_1_12": [
+   12,
+   137
+  ],
+  "basalt_edge_1_13": [
+   13,
+   137
+  ],
+  "basalt_edge_1_14": [
+   14,
+   137
+  ],
+  "basalt_edge_1_15": [
+   15,
+   137
+  ],
+  "basalt_edge_2_0": [
+   0,
+   138
+  ],
+  "basalt_edge_2_1": [
+   1,
+   138
+  ],
+  "basalt_edge_2_2": [
+   2,
+   138
+  ],
+  "basalt_edge_2_3": [
+   3,
+   138
+  ],
+  "basalt_edge_2_4": [
+   4,
+   138
+  ],
+  "basalt_edge_2_5": [
+   5,
+   138
+  ],
+  "basalt_edge_2_6": [
+   6,
+   138
+  ],
+  "basalt_edge_2_7": [
+   7,
+   138
+  ],
+  "basalt_edge_2_8": [
+   8,
+   138
+  ],
+  "basalt_edge_2_9": [
+   9,
+   138
+  ],
+  "basalt_edge_2_10": [
+   10,
+   138
+  ],
+  "basalt_edge_2_11": [
+   11,
+   138
+  ],
+  "basalt_edge_2_12": [
+   12,
+   138
+  ],
+  "basalt_edge_2_13": [
+   13,
+   138
+  ],
+  "basalt_edge_2_14": [
+   14,
+   138
+  ],
+  "basalt_edge_2_15": [
+   15,
+   138
+  ],
+  "basalt_edge_3_0": [
+   0,
+   139
+  ],
+  "basalt_edge_3_1": [
+   1,
+   139
+  ],
+  "basalt_edge_3_2": [
+   2,
+   139
+  ],
+  "basalt_edge_3_3": [
+   3,
+   139
+  ],
+  "basalt_edge_3_4": [
+   4,
+   139
+  ],
+  "basalt_edge_3_5": [
+   5,
+   139
+  ],
+  "basalt_edge_3_6": [
+   6,
+   139
+  ],
+  "basalt_edge_3_7": [
+   7,
+   139
+  ],
+  "basalt_edge_3_8": [
+   8,
+   139
+  ],
+  "basalt_edge_3_9": [
+   9,
+   139
+  ],
+  "basalt_edge_3_10": [
+   10,
+   139
+  ],
+  "basalt_edge_3_11": [
+   11,
+   139
+  ],
+  "basalt_edge_3_12": [
+   12,
+   139
+  ],
+  "basalt_edge_3_13": [
+   13,
+   139
+  ],
+  "basalt_edge_3_14": [
+   14,
+   139
+  ],
+  "basalt_edge_3_15": [
+   15,
+   139
+  ],
+  "basalt_edge_4_0": [
+   0,
+   140
+  ],
+  "basalt_edge_4_1": [
+   1,
+   140
+  ],
+  "basalt_edge_4_2": [
+   2,
+   140
+  ],
+  "basalt_edge_4_3": [
+   3,
+   140
+  ],
+  "basalt_edge_4_4": [
+   4,
+   140
+  ],
+  "basalt_edge_4_5": [
+   5,
+   140
+  ],
+  "basalt_edge_4_6": [
+   6,
+   140
+  ],
+  "basalt_edge_4_7": [
+   7,
+   140
+  ],
+  "basalt_edge_4_8": [
+   8,
+   140
+  ],
+  "basalt_edge_4_9": [
+   9,
+   140
+  ],
+  "basalt_edge_4_10": [
+   10,
+   140
+  ],
+  "basalt_edge_4_11": [
+   11,
+   140
+  ],
+  "basalt_edge_4_12": [
+   12,
+   140
+  ],
+  "basalt_edge_4_13": [
+   13,
+   140
+  ],
+  "basalt_edge_4_14": [
+   14,
+   140
+  ],
+  "basalt_edge_4_15": [
+   15,
+   140
+  ],
+  "basalt_edge_5_0": [
+   0,
+   141
+  ],
+  "basalt_edge_5_1": [
+   1,
+   141
+  ],
+  "basalt_edge_5_2": [
+   2,
+   141
+  ],
+  "basalt_edge_5_3": [
+   3,
+   141
+  ],
+  "basalt_edge_5_4": [
+   4,
+   141
+  ],
+  "basalt_edge_5_5": [
+   5,
+   141
+  ],
+  "basalt_edge_5_6": [
+   6,
+   141
+  ],
+  "basalt_edge_5_7": [
+   7,
+   141
+  ],
+  "basalt_edge_5_8": [
+   8,
+   141
+  ],
+  "basalt_edge_5_9": [
+   9,
+   141
+  ],
+  "basalt_edge_5_10": [
+   10,
+   141
+  ],
+  "basalt_edge_5_11": [
+   11,
+   141
+  ],
+  "basalt_edge_5_12": [
+   12,
+   141
+  ],
+  "basalt_edge_5_13": [
+   13,
+   141
+  ],
+  "basalt_edge_5_14": [
+   14,
+   141
+  ],
+  "basalt_edge_5_15": [
+   15,
+   141
+  ],
+  "basalt_edge_6_0": [
+   0,
+   142
+  ],
+  "basalt_edge_6_1": [
+   1,
+   142
+  ],
+  "basalt_edge_6_2": [
+   2,
+   142
+  ],
+  "basalt_edge_6_3": [
+   3,
+   142
+  ],
+  "basalt_edge_6_4": [
+   4,
+   142
+  ],
+  "basalt_edge_6_5": [
+   5,
+   142
+  ],
+  "basalt_edge_6_6": [
+   6,
+   142
+  ],
+  "basalt_edge_6_7": [
+   7,
+   142
+  ],
+  "basalt_edge_6_8": [
+   8,
+   142
+  ],
+  "basalt_edge_6_9": [
+   9,
+   142
+  ],
+  "basalt_edge_6_10": [
+   10,
+   142
+  ],
+  "basalt_edge_6_11": [
+   11,
+   142
+  ],
+  "basalt_edge_6_12": [
+   12,
+   142
+  ],
+  "basalt_edge_6_13": [
+   13,
+   142
+  ],
+  "basalt_edge_6_14": [
+   14,
+   142
+  ],
+  "basalt_edge_6_15": [
+   15,
+   142
+  ],
+  "basalt_edge_7_0": [
+   0,
+   143
+  ],
+  "basalt_edge_7_1": [
+   1,
+   143
+  ],
+  "basalt_edge_7_2": [
+   2,
+   143
+  ],
+  "basalt_edge_7_3": [
+   3,
+   143
+  ],
+  "basalt_edge_7_4": [
+   4,
+   143
+  ],
+  "basalt_edge_7_5": [
+   5,
+   143
+  ],
+  "basalt_edge_7_6": [
+   6,
+   143
+  ],
+  "basalt_edge_7_7": [
+   7,
+   143
+  ],
+  "basalt_edge_7_8": [
+   8,
+   143
+  ],
+  "basalt_edge_7_9": [
+   9,
+   143
+  ],
+  "basalt_edge_7_10": [
+   10,
+   143
+  ],
+  "basalt_edge_7_11": [
+   11,
+   143
+  ],
+  "basalt_edge_7_12": [
+   12,
+   143
+  ],
+  "basalt_edge_7_13": [
+   13,
+   143
+  ],
+  "basalt_edge_7_14": [
+   14,
+   143
+  ],
+  "basalt_edge_7_15": [
+   15,
+   143
   ]
  },
  "patterns": {

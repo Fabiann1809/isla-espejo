@@ -366,7 +366,10 @@ func _build_faces() -> void:
 		if face["kind"] == "foot":
 			_paint_animated("Faces", cell, StringName(face["prefix"] + "foot_lava_" + face["side"]))
 		else:
-			_paint("Faces", cell, StringName(face["kind"] + face["side"]))
+			var role := StringName(face["kind"] + face["side"])
+			if Tuning.TEMPLE_BASALT_VARIANTS and face["prefix"] == "cliff_" and not "moss" in face["kind"]:
+				role = StringName("basalt_face_%d" % posmod(cell.x * 7 + cell.y * 3, 8))
+			_paint("Faces", cell, role)
 
 
 ## The floor of every level in its own stone, cell (x, y) of the macro plan, and the details off the
@@ -399,6 +402,15 @@ func _build_floors() -> void:
 ## The cooled crust on every lava cell that touches an island or a cliff's foot (a 47-tile blob by the
 ## lava around it), with its cracks pulsing on the layer above. Never on a deck: the sea flows under it.
 func _build_rims() -> void:
+	_layers["Rims"].modulate.a = Tuning.TEMPLE_SHORE_CRUST_ALPHA
+	_layers["RimGlow"].modulate.a = Tuning.TEMPLE_SHORE_CRACK_ALPHA
+	var stone := {}
+	for y in plan.rows:
+		for x in plan.columns:
+			var cell := Vector2i(x, y)
+			if not _is_open_lava(cell) or _is_deck(cell):
+				stone[cell] = true
+	LavaBackdrop.paint_shore(_layers["Rims"], stone)
 	_rim_cells.clear()
 	for y in plan.rows:
 		for x in plan.columns:

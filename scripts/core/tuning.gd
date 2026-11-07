@@ -486,13 +486,13 @@ const TEMPLE_BACKDROP_PLATE_DRIFT := Vector2(2.5, 1.0)
 ## rows of cliff face under their top (min, max; an islet that pours a lava fall always has the
 ## most) and the chance that an islet carries a ruin (a broken column or a brazier) on its top.
 const TEMPLE_BACKDROP_ISLETS := true
-const TEMPLE_BACKDROP_ISLET_PER_TILES := 120
-const TEMPLE_BACKDROP_ISLET_MIN := Vector2i(3, 3)
+const TEMPLE_BACKDROP_ISLET_PER_TILES := 230
+const TEMPLE_BACKDROP_ISLET_MIN := Vector2i(5, 4)
 const TEMPLE_BACKDROP_ISLET_MAX := Vector2i(10, 6)
-const TEMPLE_BACKDROP_ISLET_BIG_CHANCE := 0.35
+const TEMPLE_BACKDROP_ISLET_BIG_CHANCE := 0.65
 const TEMPLE_BACKDROP_ISLET_CLEAR_TILES := 2
 const TEMPLE_BACKDROP_ISLET_FACE_ROWS := Vector2i(1, 3)
-const TEMPLE_BACKDROP_RUIN_CHANCE := 0.35
+const TEMPLE_BACKDROP_RUIN_CHANCE := 0.65
 ## Rock shelves along the north edge of the map (the lava falls pour over them into the sea): chance
 ## per spot, their width in cells (min, max), how many rows of top reach into the view (min, max;
 ## the first row always lies above it, so no shelf has a top edge) and the gap left between them.
@@ -511,7 +511,7 @@ const TEMPLE_BACKDROP_ROCK_CHANCE := 0.45
 const TEMPLE_BACKDROP_VENT_CHANCE := 0.12
 const TEMPLE_BACKDROP_LONE_ROCK_CHANCE := 0.08
 const TEMPLE_BACKDROP_MOSS_CHANCE := 0.3
-const TEMPLE_BACKDROP_DETAIL_CHANCE := 0.2
+const TEMPLE_BACKDROP_DETAIL_CHANCE := 0.65
 ## The crust (LavaBackdrop's shade over the sea): the lava darkens with distance from the islands'
 ## stone (the rooms' floors, not their rectangles) and the bridges, so the way reads bright and the
 ## far sea reads as cooled rock with glowing channels. Its colour, how dark far out, tiles from the
@@ -674,3 +674,10 @@ const TEMPLE_SURGE_STEAM_SCALE := Vector2(2.0, 4.0)
 const TEMPLE_SURGE_STEAM_RISE := 6.0
 const TEMPLE_SURGE_STEAM_COLOR := Color(1.0, 0.85, 0.75, 0.5)
 const TEMPLE_SURGE_STEAM_FADE := Color(0.8, 0.8, 0.85, 0.0)
+
+## Pixel bands at every lava contact; zero width disables the effect.
+const TEMPLE_SHORE_WIDTH := 6
+const TEMPLE_BASALT_VARIANTS := true
+const TEMPLE_BACKDROP_OUTCROPS := true
+const TEMPLE_SHORE_CRUST_ALPHA := 0.25
+const TEMPLE_SHORE_CRACK_ALPHA := 0.2

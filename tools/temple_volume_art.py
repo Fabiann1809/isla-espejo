@@ -82,12 +82,8 @@ def finish_tiles(sheet, tiles, template):
         out=Image.new('RGBA',(16,16),CLIFF_D)
         d=ImageDraw.Draw(out)
         if name.startswith(('cliff_','masonry_')) and 'cap' not in name:
-            for x,y,w,h in ((-3,0,12,8),(10,0,10,8),(0,9,13,7),(14,9,8,7)):
-                d.polygon([(x,y+2),(x+2,y),(x+w-2,y),(x+w-1,y+2),
-                           (x+w-2,y+h-1),(x+2,y+h-1),(x,y+h-3)],fill=CLIFF_2)
-                d.line((x,y+2,x+2,y,x+w-3,y),fill=CLIFF_3)
-                d.line((x+2,y+1,x+w-4,y+1),fill=CLIFF_LIT)
-                d.line((x+w-2,y+2,x+w-2,y+h-2),fill=CLIFF_1)
+            out = basalt(sum(map(ord, name)))
+            d = ImageDraw.Draw(out)
             if 'moss' in name:
                 for x in (2,6,11):
                     for y in range(2,8+x%5):
@@ -101,20 +97,28 @@ def finish_tiles(sheet, tiles, template):
         elif name.startswith('stairs_'):
             out=Image.new('RGBA',(16,16),STAIR_D);d=ImageDraw.Draw(out)
             for y in range(0,16,4):
-                d.rectangle((0,y,15,y+1),fill=STONE_COOL_2)
-                d.line((0,y+1,15,y+1),fill=STAIR_1)
-                d.line((0,y+3,15,y+3),fill=OUTLINE)
+                d.rectangle((0,y,15,y+1),fill=STAIR_1)
+                d.line((0,y+2,15,y+2),fill=STAIR_HI)
+                d.line((0,y+3,15,y+3),fill=STAIR_2)
             if 'side' in name:
-                out=out.transpose(Image.Transpose.ROTATE_90);d=ImageDraw.Draw(out)
+                out=Image.new('RGBA',(16,16),STAIR_2);d=ImageDraw.Draw(out)
+                for x in range(0,16,4):
+                    d.polygon([(x,0),(x+2,0),(x+2,12),(x,15)],fill=STAIR_1)
+                    d.line((x+2,0,x+2,12),fill=STAIR_1)
+                    for joint in (5 + (x//4)%2*3, 13):
+                        d.line((x,joint,x+2,joint),fill=STAIR_2)
+                        d.line((x,joint+1,x+1,joint+1),fill=STAIR_HI)
+                    d.line((x,15,x+2,12),fill=STAIR_HI)
+                    d.line((x+3,0,x+3,15),fill=STONE_COOL_2)
             suffix=name.split('steps')[-1].strip('_') if 'steps' in name else name.rsplit('_',1)[-1]
             for side in suffix:
                 if side in 'lr':
-                    x=0 if side=='l' else 12
-                    d.rectangle((x,0,x+3,15),fill=STONE_D)
+                    x=0 if side=='l' else 14
+                    d.rectangle((x,0,x+1,15),fill=STONE_D)
                     d.line((x,0,x,15),fill=STONE_4)
                 if side in 'tb':
-                    y=0 if side=='t' else 12
-                    d.rectangle((0,y,15,y+3),fill=STONE_D)
+                    y=0 if side=='t' else 14
+                    d.rectangle((0,y,15,y+1),fill=STONE_D)
                     d.line((0,y,15,y),fill=STONE_4)
             # Stair topology is in the room plan; the treads fill its walkable cell.
             put(name,out)
@@ -138,3 +142,51 @@ def finish_tiles(sheet, tiles, template):
             continue
         out.putalpha(alpha)
         put(name,out)
+
+
+def basalt(seed, top=False):
+    rng = random.Random(seed)
+    out = Image.new('RGBA', (16,16), STONE_COOL_D if top else CLIFF_D)
+    d = ImageDraw.Draw(out)
+    for i in range(6 if top else 4):
+        x,y = rng.randrange(-5,16),rng.randrange(-6,16)
+        w,h = rng.randrange(8,16),rng.randrange(10,21)
+        points=[(x,y+2),(x+3,y),(x+w-2,y+1),(x+w,y+h-3),(x+w-3,y+h),(x+1,y+h-1)]
+        d.polygon(points,fill=rng.choice([STONE_COOL_1,STONE_COOL_2,CLIFF_2] if top else [CLIFF_1,CLIFF_2,STONE_COOL_D]))
+        d.line(points[:3],fill=STONE_COOL_3 if top else CLIFF_3)
+        d.line((x+1,y+3,x+2,y+h-3),fill=CLIFF_D)
+    return out
+
+
+def extra_rocks(sheet, data):
+    # Append visual roles without moving any existing atlas coordinates.
+    width, row = sheet.width // 16, sheet.height // 16
+    out = Image.new('RGBA',(sheet.width,sheet.height+144))
+    out.paste(sheet,(0,0))
+    for i in range(16):
+        name = ('basalt_top_' if i < 8 else 'basalt_face_') + str(i%8)
+        data['tiles'][name]=[i%width,row+i//width]
+        out.paste(basalt(801+i, i<8),(i%width*16,(row+i//width)*16))
+    return out
+
+
+def outcrop_edges(sheet, data):
+    width, row = sheet.width // 16, sheet.height // 16 - 8
+    for variant in range(8):
+        for mask in range(16):
+            tile = basalt(801+variant, True)
+            # Missing neighbours expose a chipped edge within the reserved footprint.
+            for y in range(16):
+                for x in range(16):
+                    north, east, south, west = [bool(mask & bit) for bit in (1,2,4,8)]
+                    inset = 1 + ((x*3+y*5+variant)%3 == 0)
+                    cut = ((not north and y < inset) or (not south and y > 15-inset)
+                           or (not west and x < inset) or (not east and x > 15-inset))
+                    cut |= not north and not west and x+y < 7
+                    cut |= not north and not east and 15-x+y < 7
+                    cut |= not south and not west and x+15-y < 6
+                    cut |= not south and not east and 30-x-y < 6
+                    if cut: tile.putpixel((x,y),CLEAR)
+            i=variant*16+mask
+            data['tiles'][f'basalt_edge_{variant}_{mask}']=[i%width,row+i//width]
+            sheet.paste(tile,(i%width*16,(row+i//width)*16))

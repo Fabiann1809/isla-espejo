@@ -285,6 +285,8 @@ func _paint_faces(parent: Node) -> void:
 			role = StringName("cliff_face2_top_" + side)
 		else:
 			role = StringName("cliff_face_mid_" + side)
+		if Tuning.TEMPLE_BASALT_VARIANTS and row < rows - 1:
+			role = StringName("basalt_face_%d" % posmod(cell.x * 7 + cell.y * 3, 8))
 		var frames := TileArt.profile().animation(role)
 		layer.set_cell(cell, 0, frames[0] if not frames.is_empty() else TileArt.coords(role))
 

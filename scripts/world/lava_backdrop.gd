@@ -97,9 +97,14 @@ static func build(parent: Node, area: Rect2i, walkable: Dictionary, taken: Dicti
 			rock[cell] = true
 		for cell: Vector2i in islet.feet:
 			feet[cell] = islet.feet[cell]
+			rock[cell] = true
 	var is_lava := func(cell: Vector2i) -> bool:
 		return not area.has_point(cell) or (not walkable.has(cell) and not rock.has(cell))
 	var rim := _paint_rim(root, area, walkable, taken, rooms, rock, is_lava)
+	var shore_stone := walkable.duplicate()
+	shore_stone.merge(taken)
+	shore_stone.merge(rock)
+	paint_shore(root, shore_stone)
 	_paint_islets(root, islets, rng)
 	_paint_glow(root, area, taken, rooms, rim, feet, is_lava, rng)
 	_place_props(root, islets, area, walkable, taken, rooms, rock, rng)
@@ -446,16 +451,24 @@ static func _paint_islets(root: Node2D, islets: Array, rng: RandomNumberGenerato
 	for islet: Dictionary in islets:
 		var mossy := rng.randf() < Tuning.TEMPLE_BACKDROP_MOSS_CHANCE
 		for cell: Vector2i in islet.tops:
-			layer.set_cell(cell, 0, TileArt.coords(StringName("floor0_m_%d_%d" % [posmod(cell.x, 4), posmod(cell.y, 4)])))
+			var border := 0
+			for i in 4:
+				if tops.has(cell + [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT][i]):
+					border |= 1 << i
+			layer.set_cell(cell, 0, TileArt.coords(StringName("basalt_edge_%d_%d" % [posmod(cell.x * 7 + cell.y * 3, 8), border])))
 			var mask := TileArt.blob_mask(on_top, cell)
 			if mask != 255:
-				edge.set_cell(cell, 0, TileArt.blob47_tile(&"ledge", mask))
-			elif rng.randf() < Tuning.TEMPLE_BACKDROP_DETAIL_CHANCE:
+				# Rubble softens the cut edge; no cut-stone coping on natural outcrops.
+				edge.set_cell(cell, 0, TileArt.coords(&"rubble_a" if posmod(cell.x + cell.y, 2) == 0 else &"rubble_b"))
+			elif rng.randf() < Tuning.TEMPLE_BACKDROP_DETAIL_CHANCE * 0.35:
 				edge.set_cell(cell, 0, TileArt.coords(DETAILS[rng.randi_range(0, DETAILS.size() - 1)]))
 		for cell: Vector2i in islet.faces:
 			var first: bool = islet.tops.has(cell + Vector2i.UP)
 			var tile := ("cliff_moss2_top_" if mossy else "cliff_face2_top_") if first else "cliff_face_mid_"
-			layer.set_cell(cell, 0, TileArt.coords(StringName(tile + islet.faces[cell])))
+			var role := StringName(tile + islet.faces[cell])
+			if Tuning.TEMPLE_BASALT_VARIANTS and not mossy:
+				role = StringName("basalt_face_%d" % posmod(cell.x * 7 + cell.y * 3, 8))
+			layer.set_cell(cell, 0, TileArt.coords(role))
 
 
 # --- shore and glow ---------------------------------------------------------------------------------
@@ -466,6 +479,7 @@ static func _paint_rim(root: Node2D, area: Rect2i, walkable: Dictionary, taken: 
 		rock: Dictionary, is_lava: Callable) -> Dictionary:
 	var layer := TileMapLayer.new()
 	layer.name = "Rim"
+	layer.modulate.a = Tuning.TEMPLE_SHORE_CRUST_ALPHA
 	layer.z_index = OVER_SEA_Z
 	TileArt.prepare_layer(layer)
 	root.add_child(layer)
@@ -520,6 +534,14 @@ static func _place_props(root: Node2D, islets: Array, area: Rect2i, walkable: Di
 	var kinds: Dictionary = prop_script.get_script_constant_map()["Kind"]
 	for islet: Dictionary in islets:
 		var tops: Dictionary = islet.tops
+		if Tuning.TEMPLE_BACKDROP_OUTCROPS:
+			var relief := Node2D.new()
+			relief.set_script(load("res://scripts/world/temple_outcrop.gd"))
+			relief.set("tops", tops)
+			relief.set("feet", islet.feet)
+			relief.set("fall", islet.fall)
+			relief.set("ruined", rng.randf() < Tuning.TEMPLE_BACKDROP_RUIN_CHANCE)
+			props.add_child(relief)
 		if islet.fall and not islet.feet.is_empty():
 			# Over the deepest column of cliff, its splash on the lava under the foot.
 			var columns: Array = islet.feet.keys()
@@ -539,7 +561,7 @@ static func _place_props(root: Node2D, islets: Array, area: Rect2i, walkable: Di
 			_add_prop(props, prop_script, kinds["ROCK_SMOKING"], Vector2(cell) * tile + Vector2(tile / 2.0, tile - 4.0), rng)
 		if rng.randf() < Tuning.TEMPLE_BACKDROP_RUIN_CHANCE and not standing.is_empty():
 			var cell: Vector2i = standing.pop_at(rng.randi_range(0, standing.size() - 1))
-			var kind: int = kinds["COLUMN_BROKEN"] if rng.randf() < 0.7 else kinds["BRAZIER"]
+			var kind: int = kinds["COLUMN_BROKEN"]
 			_add_prop(props, prop_script, kind, Vector2(cell) * tile + Vector2(tile / 2.0, tile - 4.0), rng)
 		# Vents crack the inner cells; a thin islet with none uses its standing cells.
 		for cell in (inner if not inner.is_empty() else standing):
@@ -650,3 +672,14 @@ static func _depths(area: Rect2i, walkable: Dictionary, taken: Dictionary) -> Di
 				depth[next] = depth[cell] + 1
 				frontier.append(next)
 	return depth
+
+
+## Shared contact bands: all positions are whole pixels and every band uses the temple palette.
+static func paint_shore(parent: Node2D, stone: Dictionary) -> void:
+	if Tuning.TEMPLE_SHORE_WIDTH <= 0:
+		return
+	var shore := Node2D.new()
+	shore.set_script(load("res://scripts/world/temple_shore.gd"))
+	shore.name = "ShoreContact"
+	shore.set("stone", stone)
+	parent.add_child(shore)

@@ -10,7 +10,7 @@ import sys
 from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 sys.dont_write_bytecode = True
 import adapt_temple_art_v2 as art
-from temple_volume_art import finish_tiles
+from temple_volume_art import finish_tiles, extra_rocks, outcrop_edges
 
 
 def texture(region, size=(16, 16), brightness=1.0):
@@ -144,6 +144,10 @@ def finish():
             else:
                 put(name,material(mask,stone,.5))
     finish_tiles(sheet, tiles, template)
+    sheet = extra_rocks(sheet, data)
+    outcrop_edges(sheet, data)
+    covered.update(name for name in tiles if name.startswith("basalt_"))
+    (art.TERRAIN / "temple_tiles.json").write_text(json.dumps(data, indent=1)+"\n")
     sheet.save(path)
     finish_props(lava)
     assert set(tiles) - covered == set(), sorted(set(tiles)-covered)
