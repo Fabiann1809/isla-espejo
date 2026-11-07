@@ -28,7 +28,7 @@ rows = "#############....#############
 #############....#############"
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(248, 60)
+position = Vector2(248, 44)
 script = ExtResource("2")
 kind = 19
 level = 2
@@ -47,36 +47,36 @@ flip = true
 level = 2
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(136, 107)
+position = Vector2(184, 75)
 script = ExtResource("2")
 kind = 4
-level = 1
+level = 2
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(344, 107)
+position = Vector2(296, 75)
 script = ExtResource("2")
 kind = 4
 flip = true
-level = 1
+level = 2
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(200, 28)
+position = Vector2(120, 28)
 script = ExtResource("2")
 kind = 8
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(280, 28)
+position = Vector2(360, 28)
 script = ExtResource("2")
 kind = 8
 flip = true
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(40, 92)
+position = Vector2(56, 92)
 script = ExtResource("2")
 kind = 2
 
 [node name="Prop9" type="Node2D" parent="."]
-position = Vector2(440, 92)
+position = Vector2(424, 92)
 script = ExtResource("2")
 kind = 2
 flip = true
@@ -156,22 +156,22 @@ kind = 14
 flip = true
 
 [node name="Prop23" type="Node2D" parent="."]
-position = Vector2(168, 252)
+position = Vector2(344, 252)
 script = ExtResource("2")
 kind = 13
 
 [node name="Prop24" type="Node2D" parent="."]
-position = Vector2(408, 204)
+position = Vector2(184, 252)
 script = ExtResource("2")
 kind = 13
 
 [node name="Prop25" type="Node2D" parent="."]
-position = Vector2(296, 236)
+position = Vector2(312, 188)
 script = ExtResource("2")
 kind = 13
 
 [node name="Prop26" type="Node2D" parent="."]
-position = Vector2(184, 188)
+position = Vector2(40, 76)
 script = ExtResource("2")
 kind = 13
 

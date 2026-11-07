@@ -50,13 +50,13 @@ kind = 4
 flip = true
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(104, 60)
+position = Vector2(136, 60)
 script = ExtResource("2")
 kind = 8
 level = 1
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(376, 60)
+position = Vector2(344, 60)
 script = ExtResource("2")
 kind = 8
 flip = true

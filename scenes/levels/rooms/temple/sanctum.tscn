@@ -14,7 +14,7 @@ rows = "#############....#############
 #~~##~~~~~~........~~.......~#
 #~~~~~~~~~~~.......~~~~||~~~~#
 #~~~~~~~~~~~.......~~~~||~~~~#
-#~~~.......................~~#
+#~~~........................~#
 ..............................
 ..............................
 ..............................
@@ -50,12 +50,12 @@ kind = 6
 flip = true
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(88, 107)
+position = Vector2(344, 107)
 script = ExtResource("2")
 kind = 4
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(392, 107)
+position = Vector2(424, 107)
 script = ExtResource("2")
 kind = 4
 flip = true
@@ -126,7 +126,7 @@ kind = 13
 flip = true
 
 [node name="Prop19" type="Node2D" parent="."]
-position = Vector2(104, 188)
+position = Vector2(312, 204)
 script = ExtResource("2")
 kind = 13
 flip = true
@@ -137,7 +137,7 @@ script = ExtResource("2")
 kind = 13
 
 [node name="Prop21" type="Node2D" parent="."]
-position = Vector2(136, 108)
+position = Vector2(120, 108)
 script = ExtResource("2")
 kind = 13
 

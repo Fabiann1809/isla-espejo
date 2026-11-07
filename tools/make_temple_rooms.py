@@ -285,6 +285,17 @@ class Room:
             cell = (self.player_spawn[0] // TILE, self.player_spawn[1] // TILE)
             if cell not in ok:
                 problems.append(f"the player spawn {self.player_spawn} is not on a spawn_ok cell")
+        if not problems:
+            # The props in place: Godot rebuilds the reachability with every solid footprint blocked.
+            solid = sorted({(bx, by, prop["level"]) for prop in self.props if prop["kind"] in SOLID
+                            for bx, by in self.blocks(prop)})
+            markers = {(px // TILE, py // TILE) for points in self.spawns.values() for px, py in points}
+            if self.player_spawn:
+                markers.add((self.player_spawn[0] // TILE, self.player_spawn[1] // TILE))
+            reply = run_godot({self.filename: {"rows": self.rows_text(), "surge_stages": self.surge_stages,
+                                               "height": self.height_hint, "blocked": solid,
+                                               "markers": sorted(markers)}})[self.filename]
+            problems.extend(reply["problems"])
         if problems:
             for problem in problems:
                 print(f"  {self.filename}: {problem}")
@@ -333,22 +344,28 @@ class Room:
             f.write("\n".join(text))
 
 
-def validate_all(rooms):
-    """Hands every plan to Godot (TemplePlan is the only judge) and keeps its answers on each room."""
+def run_godot(specs):
+    """Hands plans (and, when a spec has `blocked` and `markers`, the props in place) to Godot, where
+    TemplePlan is the only judge, and returns its answer for each."""
     godot = os.environ.get("GODOT") or shutil.which("godot")
     if not godot or not os.path.exists(godot):
         sys.exit("GODOT must point to the Godot executable (or `godot` must be in the PATH) to validate the plans")
     with tempfile.TemporaryDirectory() as folder:
         in_path, out_path = os.path.join(folder, "plans.json"), os.path.join(folder, "results.json")
         with open(in_path, "w", encoding="utf-8") as f:
-            json.dump({r.filename: {"rows": r.rows_text(), "surge_stages": r.surge_stages, "height": r.height_hint}
-                       for r in rooms}, f)
+            json.dump(specs, f)
         run = subprocess.run([godot, "--headless", "--path", ".", "--script", "res://tools/validate_temple_plans.gd",
                               "--", in_path, out_path], capture_output=True, text=True, encoding="utf-8", errors="replace")
         if not os.path.exists(out_path):
             sys.exit("the Godot validator wrote nothing:\n" + run.stdout + run.stderr)
         with open(out_path, encoding="utf-8") as f:
-            results = json.load(f)
+            return json.load(f)
+
+
+def validate_all(rooms):
+    """Hands every plan to Godot (TemplePlan is the only judge) and keeps its answers on each room."""
+    results = run_godot({r.filename: {"rows": r.rows_text(), "surge_stages": r.surge_stages, "height": r.height_hint}
+                         for r in rooms})
     for room in rooms:
         room.result = results[room.filename]
 
@@ -387,7 +404,7 @@ r = room("start", "TempleStart", [
 r.player_spawn = (240, 232)
 r.pair(BRAZIER_PEDESTAL, 11, 15)          # the landing's fires
 r.pair(STATUE_GUARDIAN, 9, 2)             # guardians watching the way north
-r.pair(URN, 6, 3)                         # on the galleries
+r.pair(URN, 8, 3)                         # on the galleries, clear of the stairs' heads
 r.pair(TORCH_WALL, 7, 6)                  # sconces on the galleries' faces
 r.prop(COLUMN_BROKEN, 3, 11)
 r.prop(RUBBLE, 4, 12)
@@ -460,8 +477,8 @@ r = room("pillar_court", "TemplePillarCourt", [
     "#############....#############",  # 17
 ])
 r.want("EnemySpawns", 7, region=(3, 5, 26, 14))
-r.prop(ALTAR_RUNE, 6, 2)                  # the altar on the west gallery
-r.pair(STATUE_GUARDIAN, 10, 2)            # guardians over the sunken way
+r.prop(ALTAR_RUNE, 7, 1)                  # the altar on the west gallery, behind the stairs' heads
+r.pair(STATUE_GUARDIAN, 10, 1)            # guardians over the sunken way, off the stairs' heads
 r.pair(BRAZIER_PEDESTAL, 11, 14)          # fires by the south way
 r.pair(URN, 24, 1)
 r.pair(TORCH_WALL, 4, 4)
@@ -495,7 +512,7 @@ r = room("isles", "TempleIsles", [
     "#############....#############",  # 17
 ])
 r.want("EnemySpawns", 7, region=(2, 2, 27, 14))
-r.prop(ALTAR_RUNE, 25, 2)                 # the altar on the isle nobody reaches but by the bridge
+r.prop(ALTAR_RUNE, 25, 1)                 # the altar on the isle nobody reaches but by the bridge, behind its end
 r.pair(BRAZIER_PEDESTAL, 12, 5)
 r.pair(BRAZIER_PEDESTAL, 12, 13)
 r.prop(STATUE_GUARDIAN, 4, 4)
@@ -685,13 +702,13 @@ r = room("surge_tiers", "TempleSurgeTiers", [
 r.want("EnemySpawns", 6, levels=(2,))
 r.pair(BRAZIER_PEDESTAL, 9, 5)            # fires on the top
 r.pair(BRAZIER_PEDESTAL, 9, 12)
-r.pair(URN, 5, 3)
-r.pair(URN, 5, 14)
+r.pair(URN, 8, 3)
+r.pair(URN, 8, 14)
 r.pair(COLUMN_LOW, 1, 6)
 r.pair(COLUMN_LOW, 1, 11)
 r.pair(TORCH_WALL, 9, 13)
 r.pair(TORCH_WALL, 7, 15)
-r.prop(ALTAR_RUNE, 15, 11, level=2)
+r.prop(ALTAR_RUNE, 15, 8, level=2)        # the focal piece, off the stairs' heads
 r.prop(RUBBLE, 27, 5)
 r.vines(4)
 r.plants(3)
@@ -721,11 +738,11 @@ r = room("surge_bridges", "TempleSurgeBridges", [
 r.want("EnemySpawns", 6, levels=(2,))
 r.pair(BRAZIER_PEDESTAL, 11, 6)           # fires on the isle's corners
 r.pair(BRAZIER_PEDESTAL, 11, 10)
-r.pair(URN, 2, 4)
-r.pair(URN, 2, 13)
+r.pair(URN, 4, 4)                         # on the towers, beside the stairs' heads
+r.pair(URN, 4, 13)
 r.pair(TORCH_WALL, 9, 13)
-r.pair(COLUMN_BROKEN, 3, 6)
-r.prop(STATUE_GUARDIAN, 15, 6, level=2)
+r.pair(COLUMN_BROKEN, 6, 6)               # off the pockets' only entrance (the cliff faces wall the rest)
+r.prop(STATUE_GUARDIAN, 15, 8, level=2)   # the isle's guardian, not on the stair's head
 r.prop(GEYSER, 4, 11)
 r.prop(RUBBLE, 23, 1)
 r.vines(4)
@@ -740,7 +757,7 @@ r = room("sanctum", "TempleSanctum", [
     "#~~##~~~~~~........~~.......~#",  # 3
     "#~~~~~~~~~~~.......~~~~||~~~~#",  # 4
     "#~~~~~~~~~~~.......~~~~||~~~~#",  # 5
-    "#~~~.......................~~#",  # 6
+    "#~~~........................~#",  # 6
     "..............................",  # 7
     "..............................",  # 8
     "..............................",  # 9
@@ -756,7 +773,8 @@ r = room("sanctum", "TempleSanctum", [
 r.marker("ChestSpawn", 23, 2)
 r.pair(BRAZIER_PEDESTAL, 12, 6)
 r.pair(BRAZIER_PEDESTAL, 12, 11)
-r.pair(STATUE_GUARDIAN, 5, 6)
+r.prop(STATUE_GUARDIAN, 21, 6)            # the guardians flank the bridge's foot, never on it
+r.prop(STATUE_GUARDIAN, 26, 6, flip=True)
 r.prop(URN, 21, 1)
 r.prop(URN, 26, 3, flip=True)
 r.prop(COLUMN_BROKEN, 12, 12)
@@ -830,11 +848,11 @@ r = room("special", "TempleSpecial", [
     "#############....#############",  # 17
 ])
 r.marker("SpecialSpawn", 15, 11)
-r.prop(ALTAR_RUNE, 15, 3, level=2)        # the altar on the top of the ziggurat
+r.prop(ALTAR_RUNE, 15, 2, level=2)        # the altar on the top of the ziggurat, behind the stair's head
 r.pair(BRAZIER_PEDESTAL, 10, 3)
-r.pair(STATUE_GUARDIAN, 8, 6)
-r.pair(URN, 12, 1)
-r.pair(COLUMN_LOW, 2, 5)
+r.pair(STATUE_GUARDIAN, 11, 4)            # guardians on the top tier; row 6 is the level-1 wings' only way
+r.pair(URN, 7, 1)                        # off row 1 at the doors' pocket, which the raised tiers wall in
+r.pair(COLUMN_LOW, 3, 5)                  # leaves the nooks at the edge open
 r.pair(TORCH_WALL, 11, 5)
 r.pair(TORCH_WALL, 11, 7)
 r.pair(BANNER, 10, 2)

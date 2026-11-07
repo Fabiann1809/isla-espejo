@@ -41,7 +41,9 @@ func _initialize() -> void:
 		_finish()
 		return
 	_check_data(scenario)
+	_check_surge_data(scenario)
 	await _check_plans(scenario)
+	await _check_props_reach(scenario)
 	_check_layouts(scenario)
 	await _check_level(scenario)
 	await _check_enemies(scenario)
@@ -173,6 +175,70 @@ func _check_plans(scenario: ScenarioData) -> void:
 	_check(bad_plans == 0, "every temple room plan is a valid design of its room's base height")
 	_check(bad_markers == 0, "every marker is on a spawn_ok cell (%d markers)" % markers)
 	_check(few_spawns == 0, "every combat room has at least 6 enemy spawns")
+
+
+# --- props in place --------------------------------------------------------------------------------
+## Builds every room and rebuilds the reachability over (cell, level) with each solid prop's real footprint
+## (`TempleProp.blocks_cells()` at its level) blocked: every door reaches the others, nothing that was reachable
+## is cut off, every marker is reachable and every stair end and bridge end (and the cell in front) is free.
+func _check_props_reach(scenario: ScenarioData) -> void:
+	var validator: GDScript = load("res://tools/validate_temple_plans.gd")
+	var rooms: Array[RoomData] = [scenario.start_room, scenario.boss_room]
+	rooms.append_array(scenario.rooms)
+	var holder := Node2D.new()
+	root.add_child(holder)
+	var bad := 0
+	var solid_props := 0
+	var approaches := 0
+	for data in rooms:
+		var room: Node2D = data.scene.instantiate()
+		room.theme = _theme
+		room.debug_label = false
+		room.setup(data, ALL_DOORS.duplicate())
+		holder.add_child(room)
+		await physics_frame
+		var shape = room.get_node_or_null("Shape")
+		var blocked: Array[Vector3i] = []
+		for child in room.get_children():
+			if child.get_script() != null and child.has_method("blocks_cells") and child.is_solid():
+				solid_props += 1
+				for cell: Vector2i in child.blocks_cells():
+					blocked.append(Vector3i(cell.x, cell.y, child.level))
+		var markers: Array[Vector2i] = []
+		var points: Array[Vector2] = []
+		if data.type != RoomData.RoomType.BOSS:
+			points.append(room.player_spawn())
+		for container in MARKER_CONTAINERS:
+			points.append_array(room.spawn_points(container))
+		for point in points:
+			markers.append(Vector2i((point / TILE).floor()))
+		approaches += validator.approaches(shape.plan).size()
+		var problems: Array = validator.check_props(shape.plan, blocked, markers)
+		if not problems.is_empty():
+			bad += 1
+			printerr("%s: %s" % [data.id, problems])
+		room.queue_free()
+	holder.queue_free()
+	await process_frame
+	_check(solid_props > 40 and approaches > 20, "the check saw %d solid props and %d stair and bridge approaches" % [solid_props, approaches])
+	_check(bad == 0, "with every solid prop in place all doors, markers, stair ends and bridge ends stay reachable (%d rooms fail)" % bad)
+	# The check itself works: a statue on the sanctum's bridge foot is caught.
+	var sanctum_plan: Object = load("res://scripts/world/temple_plan.gd").parse(
+			(load("res://scenes/levels/rooms/temple/sanctum.tscn") as PackedScene).instantiate().get_node("Shape").rows)
+	var foot: Array[Vector3i] = [Vector3i(23, 6, 0), Vector3i(24, 6, 0)]
+	var none: Array[Vector2i] = []
+	_check(not validator.check_props(sanctum_plan, foot, none).is_empty(), "a solid prop at the foot of the sanctum's bridge is refused")
+
+
+# --- surge data ------------------------------------------------------------------------------------
+func _check_surge_data(scenario: ScenarioData) -> void:
+	for room in scenario.rooms:
+		if room.surge_stages > 0:
+			_check(room.wave_size == 2 and room.max_alive <= 4 and room.min_enemies == 2 and room.max_enemies == 3
+					and room.kills_stage_1 == 4 and room.kills_to_recede == 4,
+					"%s: waves of 2, at most 4 alive, 2 to 3 own enemies, 4 kills per stage" % room.id)
+			_check(room.max_alive >= room.max_enemies + room.wave_size - 1 and room.kills_stage_1 % room.wave_size == 0,
+					"%s: the kills are reachable with waves of 2" % room.id)
 
 
 # --- layouts ---------------------------------------------------------------------------------------

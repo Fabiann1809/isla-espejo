@@ -28,19 +28,19 @@ rows = "#############....#############
 #############....#############"
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(104, 44)
+position = Vector2(120, 28)
 script = ExtResource("2")
 kind = 19
 level = 1
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(168, 43)
+position = Vector2(168, 27)
 script = ExtResource("2")
 kind = 4
 level = 1
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(312, 43)
+position = Vector2(312, 27)
 script = ExtResource("2")
 kind = 4
 flip = true

@@ -54,26 +54,26 @@ flip = true
 level = 2
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(40, 76)
+position = Vector2(72, 76)
 script = ExtResource("2")
 kind = 8
 level = 1
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(440, 76)
+position = Vector2(408, 76)
 script = ExtResource("2")
 kind = 8
 flip = true
 level = 1
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(40, 220)
+position = Vector2(72, 220)
 script = ExtResource("2")
 kind = 8
 level = 1
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(440, 220)
+position = Vector2(408, 220)
 script = ExtResource("2")
 kind = 8
 flip = true
@@ -93,18 +93,19 @@ flip = true
 level = 1
 
 [node name="Prop11" type="Node2D" parent="."]
-position = Vector2(56, 108)
+position = Vector2(104, 108)
 script = ExtResource("2")
 kind = 3
 
 [node name="Prop12" type="Node2D" parent="."]
-position = Vector2(424, 108)
+position = Vector2(376, 108)
 script = ExtResource("2")
 kind = 3
 flip = true
+level = 1
 
 [node name="Prop13" type="Node2D" parent="."]
-position = Vector2(248, 107)
+position = Vector2(248, 139)
 script = ExtResource("2")
 kind = 4
 level = 2
