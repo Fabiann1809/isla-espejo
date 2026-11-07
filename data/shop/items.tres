@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="ShopCatalog" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/shop_catalog.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/world/shop_item.gd" id="2"]
+
+[sub_resource type="Resource" id="potion"]
+script = ExtResource("2")
+id = &"potion"
+display_name = "Poción"
+description = "Cura 1 corazón."
+price = 4
+kind = 0
+amount = 1
+icon_path = "res://assets/sprites/shop/potion.png"
+color = Color(0.9, 0.3, 0.35, 1)
+
+[sub_resource type="Resource" id="elixir"]
+script = ExtResource("2")
+id = &"elixir"
+display_name = "Elixir"
+description = "Te cura por completo."
+price = 10
+kind = 1
+icon_path = "res://assets/sprites/shop/elixir.png"
+color = Color(0.4, 0.8, 0.95, 1)
+
+[sub_resource type="Resource" id="taut_string"]
+script = ExtResource("2")
+id = &"taut_string"
+display_name = "Cuerda tensa"
+description = "+1 de daño con el arco."
+price = 12
+price_growth = 0.5
+kind = 2
+upgrade_id = &"bow_damage"
+max_level = 3
+icon_path = "res://assets/sprites/shop/taut_string.png"
+color = Color(0.85, 0.7, 0.45, 1)
+
+[sub_resource type="Resource" id="hawk_eye"]
+script = ExtResource("2")
+id = &"hawk_eye"
+display_name = "Ojo del halcón"
+description = "+5% de probabilidad de crítico."
+price = 10
+price_growth = 0.5
+kind = 2
+upgrade_id = &"crit_chance"
+max_level = 3
+icon_path = "res://assets/sprites/shop/hawk_eye.png"
+color = Color(1, 0.82, 0.15, 1)
+
+[sub_resource type="Resource" id="stone_heart"]
+script = ExtResource("2")
+id = &"stone_heart"
+display_name = "Corazón de piedra"
+description = "+1 corazón máximo."
+price = 18
+price_growth = 0.5
+kind = 2
+upgrade_id = &"max_health"
+max_level = 2
+icon_path = "res://assets/sprites/shop/stone_heart.png"
+color = Color(0.6, 0.6, 0.7, 1)
+
+[resource]
+script = ExtResource("1")
+items = Array[ExtResource("2")]([SubResource("potion"), SubResource("elixir"), SubResource("taut_string"), SubResource("hawk_eye"), SubResource("stone_heart")])
