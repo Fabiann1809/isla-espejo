@@ -315,6 +315,9 @@ func _foot_shadow() -> void:
 	add_child(shadow)
 
 
+const LIGHT_GROUP := &"temple_light"
+
+
 ## A flickering additive glow (see RuinProp._light) in the temple's fire or lava colour.
 func _make_light(of_kind: Kind) -> Sprite2D:
 	var light: Array = LIGHTS[of_kind]
@@ -327,7 +330,10 @@ func _make_light(of_kind: Kind) -> Sprite2D:
 			radius = Tuning.TEMPLE_GATE_LIGHT_RADIUS
 	if not Tuning.RUIN_LIGHTS_ENABLED or color.a <= 0.0:
 		return null
+	if is_inside_tree() and not light_spot_free(get_tree(), global_position + Vector2(light[0])):
+		return null
 	var glow := RuinLight.glow(color, Vector2.ONE * radius * 2.0)
+	glow.add_to_group(LIGHT_GROUP)
 	glow.name = "Light"
 	glow.position = light[0]
 	glow.z_as_relative = false
@@ -339,6 +345,18 @@ func _make_light(of_kind: Kind) -> Sprite2D:
 	tween.tween_property(glow, "modulate", dim, seconds)
 	tween.tween_property(glow, "modulate", color, seconds)
 	return glow
+
+
+## True when no temple light burns within Tuning.TEMPLE_LIGHT_MIN_SPACING px of `at` (world position):
+## the cap on how much additive light stacks in one place.
+static func light_spot_free(tree: SceneTree, at: Vector2) -> bool:
+	var spacing := Tuning.TEMPLE_LIGHT_MIN_SPACING
+	if spacing <= 0.0:
+		return true
+	for other in tree.get_nodes_in_group(LIGHT_GROUP):
+		if other is Node2D and not other.is_queued_for_deletion() and other.global_position.distance_to(at) < spacing:
+			return false
+	return true
 
 
 ## The flicker half-cycle of a light at this spot: a fixed value per position, so a rebuilt light

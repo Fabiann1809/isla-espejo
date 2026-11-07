@@ -398,8 +398,18 @@ const CANOPY_FADE_SPEED := 8.0
 const TEMPLE_SURGE_MAX_STAIR_DISTANCE := 9
 
 # --- Temple: tileset ---------------------------------------------------------------------------------
-## A warm, slightly orange light over the whole Templo del Eclipse (the lava's glow in the air).
-const TEMPLE_WORLD_TINT := Color(1.0, 0.93, 0.86)
+## Tint over the whole Templo del Eclipse. Neutral (white): the warm tint stacked with the additive
+## glows and burnt the high floors to pale pink. Set a colour here and regenerate
+## data/themes/temple.tres (tools/make_temple_theme.gd) to bring it back.
+const TEMPLE_WORLD_TINT := Color.WHITE
+## Multipliers over the temple's lava layers (the sea, the rooms' lava and bubbles, the bridges'
+## lava) and its floor layers (floors, decks, stairs): darker and a little greyer, so the stone
+## reads mid-grey and the lava bright but flat. Color.WHITE = off.
+const TEMPLE_LAVA_MODULATE := Color(0.82, 0.74, 0.70)
+const TEMPLE_FLOOR_MODULATE := Color(0.80, 0.80, 0.84)
+## Cap on stacking additive lights: a temple light (prop, rim or stair brazier) is not created when
+## another temple light already burns closer than this many px (0 = no cap).
+const TEMPLE_LIGHT_MIN_SPACING := 28.0
 
 # --- Temple: props ---
 ## A lava geyser (TempleProp.GEYSER) cycles idle, rumble, erupt and settle, in seconds; a hazard geyser
@@ -412,9 +422,9 @@ const TEMPLE_GEYSER_SETTLE := 0.6
 const TEMPLE_GEYSER_DAMAGE := 1
 ## Additive glows of the temple's fires and lava (alpha 0 = off) and their radii (px): fire for torches
 ## and braziers, lava for the falls, the geyser while it erupts and the gate's mouth.
-const TEMPLE_FIRE_LIGHT := Color(1.0, 0.62, 0.2, 0.28)
+const TEMPLE_FIRE_LIGHT := Color(1.0, 0.62, 0.2, 0.16)
 const TEMPLE_FIRE_LIGHT_RADIUS := 38.0
-const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.28)
+const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.14)
 const TEMPLE_LAVA_LIGHT_RADIUS := 56.0
 const TEMPLE_GATE_LIGHT_RADIUS := 80.0
 ## Bounds of a temple light's flicker, as a factor of RUIN_LIGHT_FLICKER_SECONDS (picked per position).
@@ -462,7 +472,7 @@ const TEMPLE_LAVA_VARIANT_FREQUENCY := 0.4
 ## of the sea they cover, how soft their edge is (in noise units), the noise frequency (per texel)
 ## and their drift (px/s, x and y).
 const TEMPLE_BACKDROP_PLATE_COLOR := Color(0.14, 0.03, 0.02)
-const TEMPLE_BACKDROP_PLATE_ALPHA := 0.32
+const TEMPLE_BACKDROP_PLATE_ALPHA := 0.18
 const TEMPLE_BACKDROP_PLATE_SIZE := 256
 const TEMPLE_BACKDROP_PLATE_TEXEL := 4
 const TEMPLE_BACKDROP_PLATE_COVER := 0.42
@@ -571,14 +581,14 @@ const TEMPLE_PROP_SHADOW_LEAN := 0.22
 ## cells (0 = none) with this many embers rising from it (0 = none), their life (s), their climb
 ## (px/s, min and max), the upward pull (px/s²) and their colour.
 const TEMPLE_RIM_LIGHT_EVERY := 12
-const TEMPLE_RIM_LIGHT := Color(1.0, 0.45, 0.12, 0.2)
+const TEMPLE_RIM_LIGHT := Color(1.0, 0.45, 0.12, 0.08)
 const TEMPLE_RIM_LIGHT_RADIUS := 32.0
 const TEMPLE_EMBER_VENT_EVERY := 40
-const TEMPLE_EMBERS := 6
+const TEMPLE_EMBERS := 3
 const TEMPLE_EMBER_LIFETIME := 1.8
 const TEMPLE_EMBER_SPEED := Vector2(8.0, 18.0)
 const TEMPLE_EMBER_RISE := 14.0
-const TEMPLE_EMBER_COLOR := Color(1.0, 0.6, 0.2, 0.9)
+const TEMPLE_EMBER_COLOR := Color(1.0, 0.6, 0.2, 0.55)
 
 # --- Temple: surge ---------------------------------------------------------------------------------
 ## Lava surge (LavaSurge, LavaSurgeLogic): the lava rises level by level in a `surge` room. Seconds of

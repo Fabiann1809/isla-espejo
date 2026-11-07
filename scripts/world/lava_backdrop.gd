@@ -75,6 +75,7 @@ static func build(parent: Node, area: Rect2i, walkable: Dictionary, taken: Dicti
 	rng.seed = hash(["lava_backdrop", map_seed])
 
 	var lava := lava_layer("Lava")
+	lava.modulate = Tuning.TEMPLE_LAVA_MODULATE
 	root.add_child(lava)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):

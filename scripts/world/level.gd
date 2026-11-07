@@ -459,6 +459,7 @@ func _dress_ruin_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertic
 ## reads as the landing.
 func _dress_temple_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertical: bool, top_level: int) -> void:
 	var stairs := scenario.theme.new_layer(parent, "Stairs%d" % parent.get_child_count())
+	stairs.modulate = Tuning.TEMPLE_FLOOR_MODULATE
 	scenario.theme.fill(stairs, _cells(floor_rect), &"stairs_up_steps" if vertical else &"stairs_side_steps")
 	var tile := float(TileArt.TILE)
 	var landing := Tuning.TEMPLE_STAIR_BRAZIER_LANDING
@@ -514,11 +515,13 @@ func _paint_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], number:
 	var horizontal := walls[0].size.x > walls[0].size.y
 	var lava := LavaBackdrop.lava_layer("CorridorLava%d" % number)
 	lava.z_index = LavaBackdrop.SEA_Z
+	lava.modulate = Tuning.TEMPLE_LAVA_MODULATE
 	parent.add_child(lava)
 	LavaBackdrop.paint_lava(lava, _cells(floor_rect))
 	for wall in walls:
 		LavaBackdrop.paint_lava(lava, _cells(wall))
 	var layer := scenario.theme.new_layer(parent, "Corridor%d" % number)
+	layer.modulate = Tuning.TEMPLE_FLOOR_MODULATE
 	scenario.theme.fill(layer, _cells(floor_rect), &"bridge_stone_deck_h" if horizontal else &"bridge_stone_deck_v")
 	for wall in walls:
 		if horizontal and wall.position.y > floor_rect.position.y:

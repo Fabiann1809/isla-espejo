@@ -70,6 +70,7 @@ func _ready() -> void:
 	for layer_name in LAYER_NAMES:
 		_layers[layer_name] = _new_layer(layer_name, LavaBackdrop.SEA_Z if layer_name == "Lava" else RoomTheme.FLOOR_Z)
 	_layers["LavaShadows"].z_index = LavaBackdrop.SEA_Z + 1
+	_apply_modulates()
 	_find_faces()
 	_build_lava()
 	_build_faces()
@@ -85,6 +86,14 @@ func _ready() -> void:
 	_build_stair_braziers()
 	_build_lights()
 	_build_vents()
+
+
+## Tuning's darkening of the lava and floor layers (Color.WHITE = off).
+func _apply_modulates() -> void:
+	for layer_name in ["Lava", "Bubbles"]:
+		_layers[layer_name].modulate = Tuning.TEMPLE_LAVA_MODULATE
+	for layer_name in ["Floor0", "Floor1", "Floor2", "Stairs", "Bridges"]:
+		_layers[layer_name].modulate = Tuning.TEMPLE_FLOOR_MODULATE
 
 
 ## True for a border cell that is the room's wall (not an open door's gap): the island's edge drops
@@ -648,9 +657,13 @@ func _build_lights() -> void:
 	lights.z_index = Tuning.RUIN_LIGHT_Z
 	add_child(lights)
 	for cell in _spread(_rim_cells, Tuning.TEMPLE_RIM_LIGHT_EVERY):
+		var spot := Vector2(cell) * TILE + Vector2.ONE * TILE / 2.0
+		if not TempleProp.light_spot_free(get_tree(), global_position + spot):
+			continue
 		var glow := RuinLight.glow(color, Vector2.ONE * Tuning.TEMPLE_RIM_LIGHT_RADIUS * 2.0)
-		glow.position = Vector2(cell) * TILE + Vector2.ONE * TILE / 2.0
+		glow.position = spot
 		lights.add_child(glow)
+		glow.add_to_group(TempleProp.LIGHT_GROUP)
 		var dim := Color(color.r, color.g, color.b, color.a * (1.0 - Tuning.RUIN_LIGHT_FLICKER))
 		var seconds := TempleProp.flicker_seconds(global_position + glow.position)
 		var tween := glow.create_tween().set_loops()

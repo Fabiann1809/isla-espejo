@@ -232,6 +232,7 @@ func _new_layer(layer_name: String) -> TileMapLayer:
 	layer.name = layer_name
 	layer.z_index = RoomTheme.GROUND_FX_Z
 	layer.tile_set = TempleShape.animated_tile_set()
+	layer.modulate = Tuning.TEMPLE_LAVA_MODULATE
 	layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	layer.scale = Vector2.ONE * TileArt.draw_scale()
 	add_child(layer)
