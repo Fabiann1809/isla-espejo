@@ -8,21 +8,26 @@ extends SceneTree
 
 const SHEET := "res://assets/sprites/serpiente/serpiente.png"
 const EXTRA := "res://assets/sprites/serpiente/serpiente_extra.png"
+## Drawn by tools/make_serpent_charge_art.py: the coil-back before a charge (4 frames) and the
+## lunging slither of the dash (6 frames, a loop), one row each.
+const WINDUP := "res://assets/sprites/serpiente/serpiente_charge_windup.png"
+const CHARGE := "res://assets/sprites/serpiente/serpiente_charge.png"
 const CELL := 64
 const COLS := 8
 
 ## Source cells: 1 coiled (side), 7 crawl, 8 reared up, 9 lunge, 10 venom in the mouth, 11 spitting,
 ## 12 hurt, 13 dying, 14 stone corpse, 15 hood open (rage).
 ## Extra cells: 0 idle breath, 1-4 crawl wave, 5 petrifying.
-## name -> [fps, loops, [[sheet ("s" source, "x" extra), cell], ...]]
+## name -> [fps, loops, [[sheet ("s" source, "x" extra, "w" windup, "c" charge), cell], ...]]
+## (StoneSerpent stretches charge_windup over the warning, whatever its fps.)
 const ANIMS := {
 	"idle": [3.0, true, [["s", 1], ["x", 0]]],
 	"walk": [8.0, true, [["x", 1], ["x", 2], ["x", 3], ["x", 4]]],
 	"run": [10.0, true, [["x", 1], ["x", 2], ["x", 3], ["x", 4]]],
 	# Generic attack (windup pose, then the lunge), kept for anything that plays "attack".
 	"attack": [8.0, false, [["s", 8], ["s", 9]]],
-	"charge_windup": [1.0, false, [["s", 8]]],
-	"charge": [1.0, false, [["s", 9]]],
+	"charge_windup": [6.0, false, [["w", 0], ["w", 1], ["w", 2], ["w", 3]]],
+	"charge": [14.0, true, [["c", 0], ["c", 1], ["c", 2], ["c", 3], ["c", 4], ["c", 5]]],
 	"spit_windup": [1.0, false, [["s", 10]]],
 	"spit": [1.0, false, [["s", 11]]],
 	"phase_two": [1.0, false, [["s", 15]]],
@@ -33,7 +38,7 @@ const ANIMS := {
 
 
 func _initialize() -> void:
-	var sheets := {"s": load(SHEET), "x": load(EXTRA)}
+	var sheets := {"s": load(SHEET), "x": load(EXTRA), "w": load(WINDUP), "c": load(CHARGE)}
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
 	for anim: String in ANIMS:

@@ -385,9 +385,16 @@ func _update_animation() -> void:
 	_sprite.speed_scale = 1.0
 	match step:
 		Step.WINDUP:
-			_hold_pose(&"charge_windup" if attack == Attack.CHARGE else &"spit_windup", 0)
+			if attack == Attack.CHARGE and _animated(&"charge_windup"):
+				_play_windup()
+			else:
+				_hold_pose(&"charge_windup" if attack == Attack.CHARGE else &"spit_windup", 0)
 		Step.STRIKE:
-			if attack == Attack.CHARGE and _slithering():
+			if attack == Attack.CHARGE and _animated(&"charge"):
+				# The drawn lunge cycle, for the whole dash.
+				if _sprite.animation != &"charge" or not _sprite.is_playing():
+					_sprite.play(&"charge")
+			elif attack == Attack.CHARGE and _slithering():
 				_sprite.speed_scale = Tuning.SERPENT_DASH_ANIM_SPEED
 				if _sprite.animation != &"run" or not _sprite.is_playing():
 					_sprite.play(&"run")
@@ -398,7 +405,22 @@ func _update_animation() -> void:
 				_sprite.play(&"idle")
 
 
-## After the lunge pose the dash is the crawl cycle, played fast.
+## True when the art has a real cycle for this pose (more than one frame), not a held pose.
+func _animated(anim: StringName) -> bool:
+	return _sprite.sprite_frames.has_animation(anim) and _sprite.sprite_frames.get_frame_count(anim) > 1
+
+
+## The coil-back plays once over the whole warning, so it ends as the dash starts.
+func _play_windup() -> void:
+	if _sprite.animation == &"charge_windup" and (_sprite.is_playing() or _sprite.frame > 0):
+		return
+	var frames := _sprite.sprite_frames
+	var length := frames.get_frame_count(&"charge_windup") / maxf(frames.get_animation_speed(&"charge_windup"), 0.001)
+	_sprite.play(&"charge_windup")
+	_sprite.speed_scale = length / maxf(_windup_total, 0.05)
+
+
+## Without a drawn lunge cycle: after the lunge pose the dash is the crawl cycle, played fast.
 func _slithering() -> bool:
 	return Tuning.SERPENT_CHARGE_MOTION and _dash_time >= Tuning.SERPENT_LUNGE_SECONDS 			and _sprite.sprite_frames.has_animation(&"run")
 

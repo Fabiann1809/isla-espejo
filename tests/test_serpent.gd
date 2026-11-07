@@ -180,11 +180,13 @@ func _test_charge() -> void:
 		_check(lanes[0].z_index == RoomTheme.GROUND_FX_Z and lanes[0]._span.normalized().dot(Vector2.RIGHT) > 0.99 and lanes[0]._span.length() > 120.0,
 				"the lane points at Nico, lies on the ground and reaches past him (%.0f px)" % lanes[0]._span.length())
 	_check(boss._sprite.animation == &"charge_windup", "the serpent rears up while it warns")
+	var windup_frame: int = boss._sprite.frame
 	await _frames(30)
 	_check(boss.step == boss.Step.WINDUP and boss.global_position.distance_to(ARENA) < 1.0 and _player.health.current == before,
 			"no move and no damage during the warning")
 	var base_offset: Vector2 = boss.data.sprite_offset
 	var base_scale: Vector2 = Vector2.ONE * boss.data.sprite_scale
+	_check(boss._sprite.frame > windup_frame, "the coil-back is animated, not one held frame (%d -> %d)" % [windup_frame, boss._sprite.frame])
 	_check(boss._sprite.position.x < base_offset.x and boss._sprite.scale.x > base_scale.x,
 			"while it warns it pulls back and squashes, only its picture (%s)" % boss._sprite.position)
 	var furthest := 0.0
@@ -196,7 +198,8 @@ func _test_charge() -> void:
 		furthest = maxf(furthest, boss.global_position.x - ARENA.x)
 		off_lane = maxf(off_lane, absf(boss.global_position.y - ARENA.y))
 		if boss.step == boss.Step.STRIKE:
-			saw_slither = saw_slither or (boss._sprite.animation == &"run" and boss._sprite.is_playing())
+			saw_slither = saw_slither or (boss._sprite.animation in [&"run", &"charge"] and boss._sprite.is_playing()
+					and boss._sprite.sprite_frames.get_frame_count(boss._sprite.animation) > 1)
 			stretched = stretched or boss._sprite.scale.x > base_scale.x * 1.05
 		ghosts = maxi(ghosts, _room.get_children().filter(func(n: Node) -> bool:
 				return n.get_child_count() == 1 and n.get_child(0) is Sprite2D and n.z_index == RoomTheme.GROUND_FX_Z).size())
