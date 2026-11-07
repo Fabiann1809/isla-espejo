@@ -158,6 +158,20 @@ func _on_scenario_completed(_scenario_id: StringName) -> void:
 	_lift_veil()
 
 
+## Debug/presentation shortcut: jumps to the next chapter without beating the boss.
+## Returns false on the last chapter (nothing to jump to) or while a change is already running.
+func skip_to_next_chapter() -> bool:
+	if _completing or scenario.next_scenario == null:
+		return false
+	_completing = true
+	await _fade_veil(1.0, Tuning.MAP_VEIL_FADE_OUT)
+	scenario = scenario.next_scenario
+	generate(0)
+	_completing = false
+	_lift_veil()
+	return true
+
+
 func _build_veil() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "MapVeil"
