@@ -26,13 +26,17 @@ static func buy(item: ShopItem, player: Node) -> Result:
 	if player == null or item == null:
 		return Result.NO_PLAYER
 	if is_maxed(item):
+		Events.shop_denied.emit(&"maxed")
 		return Result.MAXED
 	if item.kind != ShopItem.Kind.UPGRADE and player.health.current >= player.health.max_health:
+		Events.shop_denied.emit(&"full_health")
 		return Result.FULL_HEALTH
 	var price := price_of(item)
 	if player.gold < price:
+		Events.shop_denied.emit(&"no_gold")
 		return Result.NO_GOLD
 	player.add_gold(-price)
+	Events.shop_bought.emit(item.id)
 	match item.kind:
 		ShopItem.Kind.HEAL:
 			player.health.heal(item.amount)

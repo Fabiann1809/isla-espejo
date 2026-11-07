@@ -41,6 +41,10 @@ signal arrow_blocked(at: Vector2)
 signal player_hit_enemy(enemy: Node, damage: int)
 ## One of Nico's arrows crit `enemy` (`damage` is the multiplied damage the hit dealt), for the damage number and sound.
 signal player_crit(enemy: Node, damage: int)
+## The Mercader's shop: an item was bought, or a purchase was refused (`reason`: no_gold, maxed,
+## full_health). Sound and the HUD listen; the shop never plays a sound itself.
+signal shop_bought(item_id: StringName)
+signal shop_denied(reason: StringName)
 signal player_damaged(amount: int, source_position: Vector2)
 signal player_health_changed(current: int, maximum: int)
 signal player_died

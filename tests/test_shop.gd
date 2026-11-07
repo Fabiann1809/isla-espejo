@@ -90,15 +90,24 @@ func _test_buying(catalog: Resource, player: Node) -> void:
 	_check(player.gold == 100, "the test player has gold")
 	player.health.take_damage(3)
 	var before: int = player.health.current
+	var bought: Array = []
+	var denied: Array = []
+	var events: Node = root.get_node("Events")
+	events.shop_bought.connect(func(id: StringName) -> void: bought.append(id))
+	events.shop_denied.connect(func(reason: StringName) -> void: denied.append(reason))
 	_check(_shop.buy(catalog.find(&"potion"), player) == _result.BOUGHT, "a potion is bought")
+	_check(bought == [&"potion"], "buying announces the item on Events.shop_bought (for its sound) (%s)" % [bought])
 	_check(player.gold == 96 and player.health.current == before + 1, "it cost 4 gold and healed 1 heart")
 	_check(gold_events.back() == 96, "Events.player_gold_changed announces the new total")
 	_check(_shop.buy(catalog.find(&"elixir"), player) == _result.BOUGHT, "an elixir is bought")
 	_check(player.gold == 86 and player.health.current == player.health.max_health, "it cost 10 gold and healed everything")
+	var denied_before := denied.size()
 	_check(_shop.buy(catalog.find(&"potion"), player) == _result.FULL_HEALTH and player.gold == 86,
 			"healing at full health is refused and costs nothing")
 
 	var max_before: int = player.health.max_health
+	_check(denied.size() == denied_before + 1 and denied.back() == &"full_health",
+			"a refused purchase is announced on Events.shop_denied (%s)" % [denied])
 	_check(_shop.buy(catalog.find(&"taut_string"), player) == _result.BOUGHT, "the bow upgrade is bought")
 	_check(_state.upgrade_level(&"bow_damage") == 1 and player.bonus_damage == 1 and player.arrow_damage() == player.attack_damage + 1,
 			"+1 arrow damage per level, written in GameState")
