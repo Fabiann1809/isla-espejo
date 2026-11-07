@@ -33,6 +33,8 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	var map_seed := int(args[0]) if args.size() > 0 else 4242
 	_out = args[1] if args.size() > 1 else "user://"
+	# The pictures go there; make the folder if it does not exist yet.
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_out))
 	_shot_every = float(args[2]) if args.size() > 2 else 4.0
 	_max_rooms = int(args[3]) if args.size() > 3 else 999
 	await process_frame
