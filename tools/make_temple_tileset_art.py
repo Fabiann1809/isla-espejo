@@ -18,8 +18,15 @@ lava folded into one self-seamless 16 px tile (8 frames) and `lava_a..d` are sti
 `lava_bubble` (6 frames) is a bubble on that tile and `lava_bubble_over` the bubble alone, to lay
 over the macro lava.
 
-Floors: a level has its own tone so the eye reads the height: level 0 the darkest, dusty rose
-(STONE_0), level 1 the rosy mid stone, level 2 the palest and warmest. `floor<L>_m_<cx>_<cy>` is a 4x4 macro plan of large
+Floors: a level has its own tone so the eye reads the height: level 0 the darkest and coolest (a
+plum grey, STONE_COOL_*), level 1 the rosy mid stone, level 2 the palest and warmest (STONE_5,
+STONE_PALE). Every raised edge wears a 3 px lit lip (`ledge`, with a short dark side face on the
+east), the cliff faces are courses of blocks each lit on top and shaded under, the drop shadows
+(`shadow_s_1`, `shadow_s_2` south, `shadow_e_1` east) fade away from the platform, and the stairs
+(`stairs_up_steps[_l|_r|_lr]`, `stairs_side_steps[_t|_b|_tb]`) are pale steps with deep risers and
+a stepped balustrade on the sides that need one. A `#` masonry cell is a built wall: `masonry_cap`
+(a 47-blob, like `ledge`) on its top and `masonry_face*` / `masonry_foot_lava_*` on its front,
+named as the cliff tiles. `floor<L>_m_<cx>_<cy>` is a 4x4 macro plan of large
 flagstones whose slabs cross the tile borders (paint cell (x, y) with cx = x mod 4, cy = y mod 4);
 `floor<L>_a..f` are single seamless tiles, `floor<L>_moss_*`, `floor<L>_crack_*` their details.
 `floor_*` (no level) is level 1.
@@ -225,14 +232,15 @@ def cut(img, name_fn, size=MACRO):
 ## The stone of each height level: slab tones (mid, dark, pale) with the lit bevel, the shade and the
 ## joint of each, from the dark grey ground to the pale warm top.
 LEVEL_TONES = {
-    0: {"tones": [(STONE_0, STONE_2, STONE_1)] * 7 + [(STONE_1, STONE_0, STONE_D)] * 2 + [(STONE_2, STONE_3, STONE_1)],
-        "joint": STONE_D, "outer_shade": STONE_D, "pit": (STONE_D, STONE_2), "crack": (STONE_D, STONE_3),
+    0: {"tones": [(STONE_COOL_2, STONE_COOL_3, STONE_COOL_1)] * 7 + [(STONE_COOL_1, STONE_COOL_2, STONE_COOL_D)] * 2
+        + [(STONE_COOL_3, STONE_COOL_3, STONE_COOL_1)],
+        "joint": STONE_COOL_D, "outer_shade": STONE_COOL_D, "pit": (STONE_COOL_D, STONE_COOL_3), "crack": (STONE_COOL_D, STONE_COOL_3),
         "moss": (MOSS_D, MOSS_1, MOSS_2)},
     1: {"tones": [(STONE_3, STONE_4, STONE_1)] * 7 + [(STONE_2, STONE_3, STONE_1)] * 2 + [(STONE_4, STONE_HI, STONE_2)],
         "joint": JOINT, "outer_shade": STONE_1, "pit": (STONE_2, STONE_4), "crack": (STONE_D, STONE_4),
         "moss": (MOSS_D, MOSS_1, MOSS_2)},
-    2: {"tones": [(STONE_4, STONE_HI, STONE_2)] * 7 + [(STONE_3, STONE_4, STONE_2)] * 2 + [(STONE_HI, STONE_HI, STONE_3)],
-        "joint": STONE_1, "outer_shade": STONE_2, "pit": (STONE_3, STONE_HI), "crack": (STONE_1, STONE_HI),
+    2: {"tones": [(STONE_5, STONE_PALE, STONE_3)] * 7 + [(STONE_4, STONE_HI, STONE_3)] * 2 + [(STONE_HI, STONE_PALE, STONE_4)],
+        "joint": STONE_2, "outer_shade": STONE_2, "pit": (STONE_2, STONE_PALE), "crack": (STONE_1, STONE_PALE),
         "moss": (MOSS_1, MOSS_2, MOSS_HI)},
 }
 
@@ -645,23 +653,30 @@ def rim_glow_frames():
 LEDGE_NOISE = periodic_noise(random.Random(45), cell=2, octaves=1)
 
 
+LEDGE_LIP = 3  # px of lit lip along every raised edge
+
+
 def ledge_tile(mask):
-    """The 2 px lip of a raised block on the high cell: lit on the sides that face the light (north
-    and west), a dark outline with a lit line inside it where the block drops away south or east."""
+    """The lip of a raised block on the high cell, LEDGE_LIP px wide: a bright lit edge on the sides
+    that face the light (north and west, pale with a lit line inside it); on the south edge, where the
+    cliff face hangs under it, a dark outline with the lit lip above; on the east edge a short side
+    face (the block's east side seen from above: the lit lip, then two dark rows of stone)."""
     inside = blob_context(mask)
     img = blank()
     for y in range(T):
         for x in range(T):
             d, ox, oy = nearest_outside(inside, x, y)
-            if d >= 2.0:
+            if d >= LEDGE_LIP:
                 continue
-            shadow_side = oy > 0 or (oy == 0 and ox > 0)
-            if d < 1.0:
-                c = OUTLINE if shadow_side else STONE_HI
-            else:
-                c = STONE_HI if shadow_side else STONE_4
-                if LEDGE_NOISE[y][x] > 0.9:
-                    c = STONE_4 if shadow_side else STONE_3
+            worn = LEDGE_NOISE[y][x] > 0.9
+            if oy > 0:  # south: the face is under; outline, then the lit lip
+                c = OUTLINE if d < 1.0 else (STONE_PALE if d < 2.0 else STONE_4)
+            elif ox > 0:  # east: a side face in shade, the lip on top
+                c = OUTLINE if d < 1.0 else (STONE_1 if d < 2.0 else STONE_PALE)
+            else:  # north and west: lit
+                c = STONE_PALE if d < 1.0 else (STONE_HI if d < 2.0 else STONE_4)
+            if worn and d >= 1.0:
+                c = STONE_3 if oy > 0 or ox > 0 else STONE_4
             put(img, x, y, c)
     return img
 
@@ -685,23 +700,26 @@ def cliff_face(side, top, bottom, course0=0, lit_frame=None, moss_seed=None, x_o
         for x in range(T):
             n = FACE_NOISE[(y + course0 * COURSE) % 48][(x + x_offset) % 48]
             along = (x + joint_offset) % BLOCK
+            # Each course: a deep joint, the lit top edge of the block, its body, its shaded bottom.
             if row == 0:
                 c = CLIFF_D
             elif row == 1:
-                c = CLIFF_3 if n > 0.15 else CLIFF_2
+                c = CLIFF_LIT if n > 0.2 else CLIFF_3
             elif row == COURSE - 1:
                 c = CLIFF_1
+            elif row == COURSE - 2:
+                c = CLIFF_2 if n > 0.3 else CLIFF_1
             else:
-                c = CLIFF_2 if n > 0.1 else CLIFF_1
+                c = CLIFF_3 if n > 0.35 else CLIFF_2
                 if n > 0.85:
-                    c = CLIFF_3
+                    c = CLIFF_LIT
             if row != 0:
                 if along == 0:
                     c = CLIFF_D
                 elif along == 1:
-                    c = CLIFF_1 if row != 1 else CLIFF_2
+                    c = CLIFF_LIT if row == 1 else (CLIFF_3 if row < COURSE - 2 else CLIFF_2)
                 elif along == BLOCK - 1 and row not in (1, COURSE - 1):
-                    c = CLIFF_3 if n > 0.4 else CLIFF_2
+                    c = CLIFF_1
             # a carved notch in the middle of some blocks
             block_id = ((x + joint_offset) // BLOCK + course * 7 + x_offset) % 5
             if block_id in (1, 3) and row in (3, 4) and along in (5, 6):
@@ -710,7 +728,8 @@ def cliff_face(side, top, bottom, course0=0, lit_frame=None, moss_seed=None, x_o
     if top:
         for x in range(T):
             put(img, x, 0, OUTLINE)
-            put(img, x, 1, CLIFF_D if FACE_NOISE[1][(x + x_offset) % 48] > 0.5 else CLIFF_1)
+            put(img, x, 1, CLIFF_D)
+            put(img, x, 2, CLIFF_1 if FACE_NOISE[1][(x + x_offset) % 48] > 0.5 else CLIFF_D)
     if bottom:
         for x in range(T):
             put(img, x, 13, CLIFF_1 if FACE_NOISE[13][(x + x_offset) % 48] > 0.35 else CLIFF_D)
@@ -783,32 +802,171 @@ def vines_hang(img, seed, from_top=True):
         put(img, x + sway, min(T - 2, start + length), MOSS_HI if rng.random() < 0.6 else MOSS_2)
 
 
-# --- shadows, stairs, bridges ---------------------------------------------------------------------------
-def shadow_tile(a):
+# --- masonry ---------------------------------------------------------------------------------------------
+MASONRY_NOISE = periodic_noise(random.Random(58), n=48, cell=4, octaves=2)
+MASONRY_BLOCK = 8  # px per block of the cap, square
+
+
+def masonry_cap(mask):
+    """The capped top of a masonry wall (a 47-blob over the wall's cells): square carved blocks with a
+    lit top-left bevel and a shaded bottom-right one, a bronze stud on some, and a rim along every
+    outer edge (pale where it faces the light, a dark side face south and east)."""
+    inside = blob_context(mask)
     img = blank()
-    fill(img, 0, 0, T, T, alpha(OUTLINE, a))
+    for y in range(T):
+        for x in range(T):
+            bx, by = x % MASONRY_BLOCK, y % MASONRY_BLOCK
+            n = MASONRY_NOISE[y][x]
+            if bx == 0 or by == 0:
+                c = JOINT
+            elif bx == 1 or by == 1:
+                c = STONE_4
+            elif bx == MASONRY_BLOCK - 1 or by == MASONRY_BLOCK - 1:
+                c = STONE_1
+            else:
+                c = STONE_3 if n > 0.3 else STONE_2
+            block = (x // MASONRY_BLOCK + 2 * (y // MASONRY_BLOCK)) % 4
+            if block in (0, 3) and (bx, by) in ((4, 4), (5, 4), (4, 5), (5, 5)):
+                c = GOLD_HI if (bx, by) == (4, 4) else (BRONZE_2 if bx == 4 or by == 4 else BRONZE_D)
+            d, ox, oy = nearest_outside(inside, x, y)
+            if d < 1.0:
+                c = OUTLINE if (oy > 0 or ox > 0) else STONE_PALE
+            elif d < 2.0:
+                c = STONE_1 if oy > 0 else (STONE_D if ox > 0 else STONE_HI)
+            elif d < 3.0:
+                c = STONE_PALE if (oy > 0 or ox > 0) else STONE_4
+            put(img, x, y, c)
     return img
 
 
-def stairs_steps(up=True):
-    """Four steps of 4 px climbing north (or east when `up` is False): lit tread, dark riser."""
+def masonry_face(side, top, bottom, course0=0, lit_frame=None, moss_seed=None, x_offset=0):
+    """A row of a masonry wall's front: courses of large carved blocks (16 px wide, 8 high,
+    staggered) in the warm temple stone, lighter than a cliff, each block lit along its top and
+    shaded under it. `top`: the wall's frieze (a band of bronze notches under the cap); `bottom`:
+    the dark band where it meets the lower floor; `lit_frame`: the foot in lava, lit from below."""
+    img = blank()
+    for y in range(T):
+        course = course0 + y // COURSE
+        row = y % COURSE
+        joint_offset = (course % 2) * (T // 2) + x_offset
+        for x in range(T):
+            n = MASONRY_NOISE[(y + course0 * COURSE) % 48][(x + x_offset) % 48]
+            along = (x + joint_offset) % T
+            if row == 0:
+                c = JOINT
+            elif row == 1:
+                c = STONE_4 if n > 0.25 else STONE_3
+            elif row == COURSE - 1:
+                c = STONE_1
+            elif row == COURSE - 2:
+                c = STONE_2 if n > 0.4 else STONE_1
+            else:
+                c = STONE_3 if n > 0.45 else STONE_2
+            if row != 0:
+                if along == 0:
+                    c = JOINT
+                elif along == 1:
+                    c = STONE_1 if row > 1 else STONE_3
+                elif along == T - 1 and row not in (1, COURSE - 1):
+                    c = STONE_1
+            put(img, x, y, c)
+    if top:
+        for x in range(T):
+            put(img, x, 0, OUTLINE)
+            put(img, x, 1, STONE_D)
+            for y in (2, 3, 4, 5):
+                put(img, x, y, STONE_1 if y in (2, 5) else STONE_2)
+            if (x + x_offset) % 4 in (1, 2):
+                put(img, x, 3, BRONZE_1 if (x + x_offset) % 4 == 1 else BRONZE_D)
+                put(img, x, 4, BRONZE_D if (x + x_offset) % 4 == 1 else BRONZE_1)
+            put(img, x, 6, JOINT)
+    if bottom:
+        for x in range(T):
+            put(img, x, 13, STONE_1 if MASONRY_NOISE[13][(x + x_offset) % 48] > 0.35 else JOINT)
+            put(img, x, 14, STONE_D)
+            put(img, x, 15, OUTLINE)
+    if lit_frame is not None:
+        underlight(img, lit_frame, x_offset)
+    if side == "l":
+        for y in range(T):
+            put(img, 0, y, OUTLINE)
+            if get(img, 1, y)[:3] not in (LAVA_1[:3], LAVA_2[:3], LAVA_3[:3], LAVA_D[:3]):
+                put(img, 1, y, STONE_4 if y > 1 else STONE_D)
+    elif side == "r":
+        for y in range(T):
+            put(img, 15, y, OUTLINE)
+            if get(img, 14, y)[:3] not in (LAVA_1[:3], LAVA_2[:3], LAVA_3[:3], LAVA_D[:3]):
+                put(img, 14, y, STONE_D)
+    if moss_seed is not None:
+        vines_hang(img, moss_seed, from_top=top)
+    return img
+
+
+# --- shadows, stairs, bridges ---------------------------------------------------------------------------
+def shadow_tile(top, bottom):
+    """A platform's drop shadow on the floor south of its face: darkest against the foot of the cliff
+    (`top` alpha on the first rows), fading to `bottom` at the far edge."""
+    img = blank()
+    for y in range(T):
+        a = int(round(top + (bottom - top) * y / (T - 1)))
+        fill(img, 0, y, T, y + 1, alpha(OUTLINE, a))
+    return img
+
+
+def shadow_east_tile(width, strength):
+    """The shadow a platform casts east onto the lower floor: `width` px from the west edge, fading."""
+    img = blank()
+    for x in range(width):
+        a = int(round(strength * (1.0 - x / float(width))))
+        fill(img, x, 0, x + 1, T, alpha(OUTLINE, a))
+    return img
+
+
+STEP = 4  # px per step: a bright tread edge, the tread, two rows of dark riser
+STAIR_WALL = 3  # px of balustrade on a flight's side
+
+
+def stairs_steps(up=True, walls=""):
+    """Four steps of STEP px climbing north (or east when `up` is False), each a pale tread with a
+    bright edge over a deep dark riser, in a cooler stone than any floor. `walls` names the sides
+    that get a stepped balustrade ("l", "r", "lr" climbing north; "t", "b", "tb" climbing east)."""
     img = blank()
     rng = random.Random(8)
-    for i in range(4):
-        for j in range(4):
-            tone = [STONE_4, STONE_3, STONE_2, JOINT][j]
-            if j == 1 and rng.random() < 0.2:
-                tone = STONE_2
+    for i in range(T // STEP):
+        for j in range(STEP):
+            tone = [STAIR_HI, STAIR_1, STAIR_2, STAIR_D][j]
             for k in range(T):
+                c = tone
+                if j == 1 and rng.random() < 0.12:
+                    c = STAIR_2
+                if j == 0 and k % 6 == 5 - i:
+                    c = STAIR_1
                 if up:
-                    put(img, k, i * 4 + j, tone)
+                    put(img, k, i * STEP + j, c)
                 else:
-                    put(img, 15 - (i * 4 + j), k, tone)
-    for k in range(T):
-        if up:
-            put(img, k, 0, STONE_HI if k % 5 else STONE_4)
-        else:
-            put(img, 15, k, STONE_HI if k % 5 else STONE_4)
+                    put(img, T - 1 - (i * STEP + j), k, c)
+    for side in walls:
+        for k in range(T):
+            step = (k // STEP) % 2  # the balustrade's top steps with the flight
+            cols = [OUTLINE, STONE_HI if step == 0 else STONE_4, STONE_2]
+            for w, c in enumerate(cols):
+                if side == "l":
+                    put(img, w, k, c)
+                elif side == "r":
+                    put(img, T - 1 - w, k, c)
+                elif side == "t":
+                    put(img, k, w, c)
+                elif side == "b":
+                    put(img, k, T - 1 - w, c)
+            if k % STEP == 0:  # the joint between two blocks of the balustrade
+                if side == "l":
+                    put(img, 1, k, JOINT)
+                elif side == "r":
+                    put(img, T - 2, k, JOINT)
+                elif side == "t":
+                    put(img, k, 1, JOINT)
+                elif side == "b":
+                    put(img, k, T - 2, JOINT)
     return img
 
 
@@ -1259,15 +1417,40 @@ def build_tiles():
         offset = {"l": 0, "m": 5, "r": 3}[side]
         add_frames("cliff_foot_lava_" + side, [cliff_face(side, False, False, 2, lit_frame=k, x_offset=offset) for k in range(4)])
 
-    # shadows: 40 % then 20 %
-    add("shadow_s_1", shadow_tile(102))
-    add("shadow_s_2", shadow_tile(51))
+    # masonry: the capped top (a 47-blob) and the wall's front, as the cliff faces
+    cap_names = []
+    for i, mask in enumerate(BLOB_MASKS):
+        add("masonry_cap_%d" % i, masonry_cap(mask))
+        cap_names.append("masonry_cap_%d" % i)
+    patterns["masonry_cap"] = cap_names
+    patterns["masonry_cap_inner"] = cap_names[9:13]
+    for side in "lmr":
+        offset = {"l": 0, "m": 5, "r": 3}[side]
+        add("masonry_face_" + side, masonry_face(side, True, True, 0, x_offset=offset))
+        add("masonry_face2_top_" + side, masonry_face(side, True, False, 0, x_offset=offset))
+        add("masonry_face2_bot_" + side, masonry_face(side, False, True, 2, x_offset=offset))
+        add("masonry_face_mid_" + side, masonry_face(side, False, False, 2, x_offset=offset))
+        add("masonry_moss_" + side, masonry_face(side, True, True, 0, moss_seed=60 + offset, x_offset=offset))
+        add("masonry_moss2_top_" + side, masonry_face(side, True, False, 0, moss_seed=70 + offset, x_offset=offset))
+        add("masonry_moss2_bot_" + side, masonry_face(side, False, True, 2, moss_seed=80 + offset, x_offset=offset))
+    for side in "lmr":
+        offset = {"l": 0, "m": 5, "r": 3}[side]
+        add_frames("masonry_foot_lava_" + side, [masonry_face(side, False, False, 2, lit_frame=k, x_offset=offset) for k in range(4)])
 
-    # stairs
+    # shadows: south of a face (darkest against its foot, then fading) and east of a platform
+    add("shadow_s_1", shadow_tile(170, 110))
+    add("shadow_s_2", shadow_tile(85, 35))
+    add("shadow_e_1", shadow_east_tile(10, 150))
+
+    # stairs: the steps alone and with a balustrade on either side, plus the corridor's parapets
     add("stairs_up_steps", stairs_steps(True))
+    for walls in ("l", "r", "lr"):
+        add("stairs_up_steps_" + walls, stairs_steps(True, walls))
     add("stairs_up_rail_l", parapet_vertical(7, 13))
     add("stairs_up_rail_r", parapet_vertical(3, 9))
     add("stairs_side_steps", stairs_steps(False))
+    for walls in ("t", "b", "tb"):
+        add("stairs_side_steps_" + walls, stairs_steps(False, walls))
     add("stairs_side_rail_t", parapet_horizontal(7, 14, merlons=False))
     add("stairs_side_rail_b", parapet_horizontal(2, 9, merlons=False))
 

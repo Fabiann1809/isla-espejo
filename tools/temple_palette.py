@@ -22,12 +22,26 @@ STONE_3 = rgb("#8f5f59")
 STONE_4 = rgb("#a8766a")
 STONE_HI = rgb("#c99a86")
 JOINT = rgb("#3e2024")
+# The ground level's stone, cool and dark (a plum grey), so the floor under every platform reads as
+# the lowest; the top level's stone, paler and warmer than STONE_HI, so the highest reads as the top.
+STONE_COOL_D = rgb("#2d2529")
+STONE_COOL_1 = rgb("#443a3d")
+STONE_COOL_2 = rgb("#564a4c")
+STONE_COOL_3 = rgb("#6a5c5c")
+STONE_5 = rgb("#b8897a")
+STONE_PALE = rgb("#dcb8a0")
+# Stairs: a cooler, paler stone than any floor, so a flight stands out wherever it climbs.
+STAIR_D = rgb("#241a1d")
+STAIR_2 = rgb("#6f6460")
+STAIR_1 = rgb("#9c8f86")
+STAIR_HI = rgb("#e0d2c2")
 
 # Cliff faces: the same stone, darker and redder; lit from below by the lava near their foot.
 CLIFF_D = rgb("#201216")
 CLIFF_1 = rgb("#331518")
 CLIFF_2 = rgb("#4f2221")
 CLIFF_3 = rgb("#663631")
+CLIFF_LIT = rgb("#7e4a40")
 CLIFF_LAVA_LIT = rgb("#9f260e")
 
 # Lava: from the cooled crust at the rim to the white-hot core.

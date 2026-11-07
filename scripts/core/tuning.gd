@@ -544,6 +544,17 @@ const TEMPLE_FLOOR_CRACK_SHARE := 0.03
 const TEMPLE_FLOOR_RUNE_SHARE := 0.015
 ## Chance that a `p` cell holds a pillar of blocks instead of a carved one.
 const TEMPLE_PILLAR_BLOCK_CHANCE := 0.35
+## Reading the heights (each off = the plain look): a `#` masonry cell drawn as a built wall (capped
+## top, carved front) instead of a slab with a cliff; the shadow a platform casts south onto the
+## lower floor and the one it casts east; a balustrade on the open sides of every flight of stairs;
+## a mark (never blocking) on each top corner of every flight inside a room: a small brazier, or a
+## stone post when another brazier burns closer than this many cells (0 = always a brazier).
+const TEMPLE_MASONRY_ART := true
+const TEMPLE_DROP_SHADOWS := true
+const TEMPLE_EAST_SHADOWS := true
+const TEMPLE_STAIR_WALLS := true
+const TEMPLE_STAIR_TOP_BRAZIERS := true
+const TEMPLE_STAIR_BRAZIER_SPACING := 6
 ## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
 ## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava
 ## cells (0 = none) with this many embers rising from it (0 = none), their life (s), their climb

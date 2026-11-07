@@ -12,11 +12,16 @@ extends Node2D
 ## south side of every drop (one row per level, moss on some, the foot lit by the lava where it
 ## stands in it); the floor of every level in its own stone (macro plans of slabs) with moss, cracks
 ## and glowing runes off the door lanes; the crust rims on the lava around every island, their cracks
-## pulsing; the lip of every raised edge; the shadows the platforms cast south; the stairs' steps and
-## the bridges' decks. Rails and posts stand upright, y-sorted with the actors at z 0, so Nico walks
-## behind a bridge's near parapet. Pillars (`p` cells), lava lights along the rims and ember vents on
-## the lava are props of the room. The room's own wall (the outer ring) is drawn as lava: the island
-## floats, and `hides_wall_at` is true for every wall cell so no wall art is planted there.
+## pulsing; the lit lip of every raised edge; the shadows the platforms cast south and east; the
+## stairs' steps (with a balustrade on the open sides of a flight) and the bridges' decks. A `#`
+## masonry cell inside the room is a built wall: a capped top (`masonry_cap` blob) and a carved front
+## (`masonry_face*`, lit by the lava where it stands in it). Rails and posts stand upright, y-sorted
+## with the actors at z 0, so Nico walks behind a bridge's near parapet. Pillars (`p` cells), a
+## brazier at each top corner of every flight of stairs, lava lights along the rims and ember vents
+## on the lava are props of the room. The room's own wall (the outer ring) is drawn as lava: the
+## island floats, and `hides_wall_at` is true for every wall cell so no wall art is planted there.
+## Every extra of this kind has its switch in `Tuning` (`TEMPLE_MASONRY_ART`, `TEMPLE_*_SHADOWS`,
+## `TEMPLE_STAIR_WALLS`, `TEMPLE_STAIR_TOP_BRAZIERS`).
 ##
 ## Physics come from the plan alone (`TemplePlan.collision_rects`, one body per layer) plus one
 ## StairZone per flight; nothing here depends on the pictures.
@@ -29,7 +34,7 @@ const ROWS := TemplePlan.ROWS
 const TILE := TemplePlan.TILE
 const MACRO := 4
 const LAYER_NAMES := ["Lava", "Bubbles", "Faces", "Floor0", "Floor1", "Floor2", "FloorDetail", "Rims", "RimGlow",
-		"Ledges", "Shadows", "Stairs", "Bridges"]
+		"Ledges", "Shadows", "ShadowsEast", "Stairs", "Bridges"]
 const COLLISION_LAYERS: Array[int] = [TemplePlan.WORLD_LAYER, TemplePlan.LAVA_LAYER, TemplePlan.BLOCK_LEVEL_0_LAYER,
 		TemplePlan.BLOCK_LEVEL_1_LAYER, TemplePlan.BLOCK_LEVEL_2_LAYER, TemplePlan.HEIGHT_2_LAYER]
 const CARDINALS: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
@@ -76,6 +81,7 @@ func _ready() -> void:
 	_build_collision()
 	_build_stair_zones()
 	_build_pillars()
+	_build_stair_braziers()
 	_build_lights()
 	_build_vents()
 
@@ -194,6 +200,20 @@ func _in_lanes(cell: Vector2i) -> bool:
 	return absi(cell.x - COLUMNS / 2) <= 2 or absi(cell.y - ROWS / 2) <= 2
 
 
+## A `#` cell drawn as a built wall (cap and carved front) rather than a slab with a cliff.
+func _is_masonry_art(cell: Vector2i) -> bool:
+	return Tuning.TEMPLE_MASONRY_ART and TemplePlan.in_grid(cell) and not _is_wall(cell) \
+			and plan.cell_at(cell) == TemplePlan.MASONRY
+
+
+## The height of the block a cell belongs to, for the shadows: a face belongs to the plateau that
+## casts it, anything else shows its own art height.
+func _block_height(cell: Vector2i) -> int:
+	if _faces.has(cell):
+		return _faces[cell]["owner"]
+	return _art_height(cell)
+
+
 # --- faces -----------------------------------------------------------------------------------------------------------
 ## Every drop seen from the south: `h - below` rows of cliff under the plateau's edge (one per level),
 ## carved blocks with the ends outlined, moss on a share of them and, where the foot stands in lava,
@@ -222,6 +242,8 @@ func _find_faces() -> void:
 			elif same.call(x - 1) and not same.call(x + 1):
 				side = "r"
 			var mossy := _rng.randf() < Tuning.TEMPLE_FACE_MOSS_SHARE
+			# A masonry block shows a built wall's front; everything else a natural cliff.
+			var prefix := "masonry_" if _is_masonry_art(cell) else "cliff_"
 			# The first row always lands on the cell south; the others only where nothing walks (lava)
 			# or where the plan reserves the face (see _takes_face_row).
 			var cells: Array[Vector2i] = [south]
@@ -235,14 +257,15 @@ func _find_faces() -> void:
 				var into_lava := below < 0 and row == last
 				var kind: String
 				if cells.size() == 1:
-					kind = "foot" if into_lava else ("cliff_moss_" if mossy else "cliff_face_")
+					kind = "foot" if into_lava else (prefix + ("moss_" if mossy else "face_"))
 				elif row == 0:
-					kind = "cliff_moss2_top_" if mossy else "cliff_face2_top_"
+					kind = prefix + ("moss2_top_" if mossy else "face2_top_")
 				elif row == last:
-					kind = "foot" if into_lava else ("cliff_moss2_bot_" if mossy else "cliff_face2_bot_")
+					kind = "foot" if into_lava else (prefix + ("moss2_bot_" if mossy else "face2_bot_"))
 				else:
-					kind = "cliff_face_mid_"
-				_faces[cells[row]] = {"kind": kind, "side": side, "on_floor": row == last and not into_lava, "owner": h}
+					kind = prefix + "face_mid_"
+				_faces[cells[row]] = {"kind": kind, "side": side, "on_floor": row == last and not into_lava, "owner": h,
+						"prefix": prefix}
 
 
 # --- pictures ------------------------------------------------------------------------------------------------------
@@ -288,7 +311,7 @@ func _build_faces() -> void:
 	for cell in _faces:
 		var face: Dictionary = _faces[cell]
 		if face["kind"] == "foot":
-			_paint_animated("Faces", cell, StringName("cliff_foot_lava_" + face["side"]))
+			_paint_animated("Faces", cell, StringName(face["prefix"] + "foot_lava_" + face["side"]))
 		else:
 			_paint("Faces", cell, StringName(face["kind"] + face["side"]))
 
@@ -301,6 +324,10 @@ func _build_floors() -> void:
 			var cell := Vector2i(x, y)
 			var h := _art_height(cell)
 			if h < 0 or _faces.has(cell):
+				continue
+			if _is_masonry_art(cell):
+				# A built wall's capped top: its rim follows the wall's outline (a 47-blob).
+				_layers["Floor%d" % h].set_cell(cell, 0, TileArt.blob47_tile(&"masonry_cap", TileArt.blob_mask(_is_masonry_art, cell)))
 				continue
 			_paint("Floor%d" % h, cell, StringName("floor%d_m_%d_%d" % [h, x % MACRO, y % MACRO]))
 			var c := plan.cell_at(cell)
@@ -333,16 +360,17 @@ func _build_rims() -> void:
 			_rim_cells.append(cell)
 
 
-## The 2 px lip on the high side of every change of height: a neighbour counts as part of the block
+## The lit lip on the high side of every change of height: a neighbour counts as part of the block
 ## when it stands at the cell's level or higher, when it is the face of a plateau rising above it
-## (never the face dropping from it), or when a deck continues the floor at that height.
+## (never the face dropping from it), or when a deck continues the floor at that height. A masonry
+## wall's cap brings its own rim.
 func _build_ledges() -> void:
 	for y in ROWS:
 		for x in COLUMNS:
 			var cell := Vector2i(x, y)
 			var h := _art_height(cell)
 			var c := plan.cell_at(cell)
-			if h < 0 or _faces.has(cell) or _is_deck(cell) or TemplePlan.STAIRS.has(c):
+			if h < 0 or _faces.has(cell) or _is_deck(cell) or TemplePlan.STAIRS.has(c) or _is_masonry_art(cell):
 				continue
 			var inside := func(n: Vector2i) -> bool:
 				if not TemplePlan.in_grid(n):
@@ -357,32 +385,63 @@ func _build_ledges() -> void:
 				_layers["Ledges"].set_cell(cell, 0, TileArt.blob47_tile(&"ledge", mask))
 
 
-## Two bands of shade on the lower floor south of a face that ends on floor (a platform's drop shadow).
+## A platform's drop shadow on the lower floor: two bands south of a face that ends on floor (darkest
+## against the cliff's foot, fading away from it) and a band east of every cell whose west neighbour
+## belongs to a higher block, so the light from the upper left leaves every platform a shadow to its
+## south and east. Never on lava, a face, a deck or a stair.
 func _build_shadows() -> void:
-	for cell in _faces:
-		if not _faces[cell]["on_floor"]:
-			continue
-		for i in [1, 2]:
-			var below: Vector2i = cell + Vector2i(0, i)
-			if not TemplePlan.in_grid(below) or _art_height(below) < 0 or _faces.has(below) or _is_deck(below):
+	if Tuning.TEMPLE_DROP_SHADOWS:
+		for cell in _faces:
+			if not _faces[cell]["on_floor"]:
 				continue
-			_paint("Shadows", below, &"shadow_s_1" if i == 1 else &"shadow_s_2")
+			for i in [1, 2]:
+				var below: Vector2i = cell + Vector2i(0, i)
+				if _shadow_fits(below):
+					_paint("Shadows", below, &"shadow_s_1" if i == 1 else &"shadow_s_2")
+	if not Tuning.TEMPLE_EAST_SHADOWS:
+		return
+	for y in ROWS:
+		for x in COLUMNS:
+			var cell := Vector2i(x, y)
+			if _shadow_fits(cell) and _block_height(cell + Vector2i.LEFT) > _art_height(cell):
+				_paint("ShadowsEast", cell, &"shadow_e_1")
 
 
-## Steps on every stair cell, turned to climb toward the stair's arrow.
+## Floor someone walks on, where a shadow may lie.
+func _shadow_fits(cell: Vector2i) -> bool:
+	if not TemplePlan.in_grid(cell) or _art_height(cell) < 0 or _faces.has(cell) or _is_deck(cell):
+		return false
+	var c := plan.cell_at(cell)
+	return (TemplePlan.FLOORS.has(c) or c == TemplePlan.PILLAR) and not _is_wall(cell)
+
+
+## Steps on every stair cell, turned to climb toward the stair's arrow, with a balustrade on each
+## side of the flight that no other cell of the same flight continues.
 func _build_stairs() -> void:
 	for y in ROWS:
 		for x in COLUMNS:
 			var cell := Vector2i(x, y)
-			match plan.cell_at(cell):
+			var c := plan.cell_at(cell)
+			if not TemplePlan.STAIRS.has(c):
+				continue
+			var vertical := c == "^" or c == "v"
+			var sides: Array = [[Vector2i.LEFT, "l"], [Vector2i.RIGHT, "r"]] if vertical else [[Vector2i.UP, "t"], [Vector2i.DOWN, "b"]]
+			var walls := ""
+			if Tuning.TEMPLE_STAIR_WALLS:
+				for side in sides:
+					var beside: Vector2i = cell + side[0]
+					if not TemplePlan.in_grid(beside) or plan.cell_at(beside) != c:
+						walls += side[1]
+			var role := StringName(("stairs_up_steps" if vertical else "stairs_side_steps") + ("_" + walls if walls != "" else ""))
+			match c:
 				"^":
-					_paint("Stairs", cell, &"stairs_up_steps")
+					_paint("Stairs", cell, role)
 				"v":
-					_paint("Stairs", cell, &"stairs_up_steps", TileSetAtlasSource.TRANSFORM_FLIP_V)
+					_paint("Stairs", cell, role, TileSetAtlasSource.TRANSFORM_FLIP_V)
 				">":
-					_paint("Stairs", cell, &"stairs_side_steps")
+					_paint("Stairs", cell, role)
 				"<":
-					_paint("Stairs", cell, &"stairs_side_steps", TileSetAtlasSource.TRANSFORM_FLIP_H)
+					_paint("Stairs", cell, role, TileSetAtlasSource.TRANSFORM_FLIP_H)
 
 
 ## Decks (wood on the ground, stone when raised) with rails where lava or a cliff lies beside them: the
@@ -504,6 +563,69 @@ func _build_pillars() -> void:
 			pillar.level = plan.height_at(cell)
 			pillar.position = Vector2(cell) * TILE + Vector2(TILE / 2.0, TILE * 0.75)
 			add_child(pillar)
+
+
+## A mark on each side of the top of every flight of stairs, on the high floor's corners past its
+## last step (as the corridors' staircases have), so the way up is easy to spot: a small brazier, or
+## a stone post where another brazier already burns within TEMPLE_STAIR_BRAZIER_SPACING cells, so a
+## room of many flights does not fill with fire. Neither blocks; a mark is left out where the corner
+## is not floor of the high level or a prop of the room already stands there.
+func _build_stair_braziers() -> void:
+	if not Tuning.TEMPLE_STAIR_TOP_BRAZIERS:
+		return
+	var count := 0
+	var lit: Array[Vector2i] = []
+	var near_fire := func(cell: Vector2i) -> bool:
+		for other in lit:
+			if maxi(absi(other.x - cell.x), absi(other.y - cell.y)) < Tuning.TEMPLE_STAIR_BRAZIER_SPACING:
+				return true
+		return false
+	for stair in plan.stairs():
+		var cells: Rect2i = stair["cells"]
+		var direction: Vector2i = stair["direction"]
+		var high: int = stair["low_level"] + 1
+		var corners: Array[Vector2i] = []
+		match direction:
+			Vector2i.UP:
+				corners = [Vector2i(cells.position.x - 1, cells.position.y - 1), Vector2i(cells.end.x, cells.position.y - 1)]
+			Vector2i.DOWN:
+				corners = [Vector2i(cells.position.x - 1, cells.end.y), Vector2i(cells.end.x, cells.end.y)]
+			Vector2i.LEFT:
+				corners = [Vector2i(cells.position.x - 1, cells.position.y - 1), Vector2i(cells.position.x - 1, cells.end.y)]
+			Vector2i.RIGHT:
+				corners = [Vector2i(cells.end.x, cells.position.y - 1), Vector2i(cells.end.x, cells.end.y)]
+		# Both corners of a flight get the same mark, so the pair reads as a gate.
+		var fire := not corners.any(near_fire)
+		for corner in corners:
+			if not _brazier_fits(corner, high):
+				continue
+			if fire:
+				var brazier := TempleProp.new()
+				brazier.name = "StairBrazier%d" % count
+				brazier.kind = TempleProp.Kind.BRAZIER
+				brazier.level = high
+				brazier.position = Vector2(corner) * TILE + Vector2(TILE / 2.0, TILE - 4.0)
+				add_child(brazier)
+				lit.append(corner)
+			else:
+				var post := _standing(&"bridge_stone_post", corner)
+				post.name = "StairPost%d" % count
+				add_child(post)
+			count += 1
+
+
+## Floor of `level` the plan lets someone stand on, with no prop of the room on it.
+func _brazier_fits(cell: Vector2i, level: int) -> bool:
+	if not TemplePlan.in_grid(cell) or _is_wall(cell) or _faces.has(cell) or not TemplePlan.FLOORS.has(plan.cell_at(cell)):
+		return false
+	if plan.height_at(cell) != level:
+		return false
+	var parent := get_parent()
+	if parent != null:
+		for child in parent.get_children():
+			if child is TempleProp and Vector2i((child.position / TILE).floor()) == cell:
+				return false
+	return true
 
 
 ## Flickering lava lights spread along the rims (one every TEMPLE_RIM_LIGHT_EVERY rim cells), over the
@@ -660,7 +782,7 @@ static func _fps_of(animation: StringName) -> float:
 		return Tuning.TEMPLE_LAVA_BUBBLE_FPS
 	if name == "lava_rim_glow":
 		return Tuning.TEMPLE_LAVA_GLOW_FPS
-	if name.begins_with("cliff_foot_lava"):
+	if name.begins_with("cliff_foot_lava") or name.begins_with("masonry_foot_lava"):
 		return Tuning.TEMPLE_LAVA_FOOT_FPS
 	if name.ends_with("rune_glow"):
 		return Tuning.TEMPLE_RUNE_GLOW_FPS
