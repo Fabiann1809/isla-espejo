@@ -15,11 +15,16 @@ const CELL_FEET_ROW := 30.0
 @export var body_color := Color(0.75, 0.7, 0.6)
 @export var sprite_frames: SpriteFrames
 @export var sprite_scale := ART_SCALE
+## A merchant: once his conversation ends, the shop (ShopMenu) opens for the player who spoke to him.
+@export var opens_shop := false
 
 @onready var _talk: Interactable = $Talk
 @onready var _body: ColorRect = $Body
 @onready var _name: Label = $Name
 @onready var _sprite: AnimatedSprite2D = $Sprite
+
+var _shop: ShopMenu
+var _talker: Node
 
 
 func _ready() -> void:
@@ -38,7 +43,19 @@ func _ready() -> void:
 		_name.offset_top = _name.offset_bottom - 18.0
 	_name.text = Dialogue.load_dialogue(dialogue_id).get("speaker", "")
 	_talk.interacted.connect(_on_talk)
+	if opens_shop:
+		Events.dialogue_finished.connect(_on_dialogue_finished)
 
 
-func _on_talk(_player: Node) -> void:
+func _on_talk(player: Node) -> void:
+	_talker = player
 	Dialogue.start(dialogue_id)
+
+
+func _on_dialogue_finished(finished_id: StringName, _state: StringName) -> void:
+	if finished_id != dialogue_id or _talker == null or not Tuning.SHOP_ENABLED:
+		return
+	if _shop == null:
+		_shop = ShopMenu.new()
+		add_child(_shop)
+	_shop.open(_talker)

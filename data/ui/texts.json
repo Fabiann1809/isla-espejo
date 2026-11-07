@@ -41,5 +41,16 @@
 	"save_corrupt": "No se pudo leer la partida guardada.",
 	"temple_surge_warning": "¡La lava sube! Busca terreno alto.",
 	"temple_surge_rising": "La lava sigue subiendo…",
-	"temple_surge_receding": "La lava retrocede."
+	"temple_surge_receding": "La lava retrocede.",
+	"shop_title": "Tienda del Mercader",
+	"shop_gold": "Oro: %d",
+	"shop_price": "%d de oro",
+	"shop_level": "Nivel %d/%d",
+	"shop_maxed": "Máximo",
+	"shop_close": "Cerrar",
+	"shop_hint": "Flechas: elegir  ·  E: comprar  ·  Esc: cerrar",
+	"shop_bought": "Comprado: %s",
+	"shop_no_gold": "No te alcanza el oro.",
+	"shop_maxed_msg": "Ya no puedes mejorar eso más.",
+	"shop_full_health": "Ya tienes la vida completa."
 }

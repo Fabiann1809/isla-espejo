@@ -5,18 +5,18 @@
 			"Vaya, un cliente. Pocos llegan hasta aquí con las dos piernas enteras.",
 			{"speaker": "Nico", "text": "Busco la forma de volver a casa. ¿Sabes cómo se sale de la isla?"},
 			"¿Quieres seguir avanzando? Todo tiene un precio, viajero.",
-			"Tranquilo, hoy no te cobro nada. Pero la isla lleva la cuenta… y yo también."
+			"Tranquilo, mirar es gratis. Pero la isla lleva la cuenta… y yo también. Echa un vistazo a mi género."
 		],
 		"again": [
 			"Sigues en pie. Eso ya vale algo.",
 			"Sé cosas del camino, del bosque y de lo que hay más allá. Pero lo que se sabe se paga, y hoy no hago rebajas.",
-			"Vuelve cuando tengas algo que ofrecerme. Siempre hay algo que ofrecer."
+			"Si traes oro, tengo género. Siempre hay algo que ofrecer."
 		],
 		"final": [
 			{"speaker": "Nico", "text": "Vencí al Guardián. El fragmento verde ya brilla en mi brújula."},
 			"Un fragmento… Barato, comparado con lo que viene.",
 			"Dime, viajero: ¿nunca te preguntaste por qué la isla deja marchar a tan poca gente?",
-			"No me mires así. Yo solo vendo precios. Las respuestas se pagan aparte."
+			"No me mires así. Yo solo vendo precios. Las respuestas se pagan aparte… y mi género también."
 		]
 	},
 	"rules": [
