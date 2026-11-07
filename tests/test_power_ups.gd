@@ -115,6 +115,8 @@ func _test_frost(room: Node, player: Node, data: Dictionary) -> void:
 	grunt.position = Vector2(360, 200)
 	room.add_child(grunt)
 	await _frames(2)
+	# Enough health that two arrows (one may roll a crit) never kill it.
+	grunt.health.set_max_health(99)
 	_check(not grunt.is_slowed(), "a fresh enemy is not slowed")
 	await _shoot(player, Vector2(300, 200))
 	_check(not grunt.is_slowed(), "without frost an arrow does not slow")
