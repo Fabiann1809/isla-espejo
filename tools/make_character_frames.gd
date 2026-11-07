@@ -112,9 +112,6 @@ func _initialize() -> void:
 				_add(frames, sheet, spec.cell, anim, a[0], a[1], a[2])
 		ResourceSaver.save(frames, "res://data/enemies/%s_frames.tres" % id)
 	for id: String in NPCS:
-		if id == "merchant":
-			load("res://tools/make_merchant_frames.gd").build_frames()
-			continue
 		var frames := _new_frames()
 		var sheet: Texture2D = load("res://assets/sprites/npcs/%s/%s.png" % [id, id])
 		var cells: Array = []
