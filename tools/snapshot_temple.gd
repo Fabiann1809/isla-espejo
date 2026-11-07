@@ -19,6 +19,7 @@ var _seed := 7
 
 
 func _initialize() -> void:
+	await process_frame
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0:
 		_dir = args[0]

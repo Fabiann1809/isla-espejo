@@ -147,6 +147,7 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 **Hecho cuando:** el escenario 2 es completable de inicio a jefe con la IA funcionando.
 
 ## 11. Escenario 3: Templo del Eclipse — A+B  ← 10
+- [x] Integrar arte del templo v2: recortes limpios, 23 tiras a escala de juego, pisos por altura, acantilados y lava animada; adaptación reproducible con `python tools/adapt_temple_art_v2.py`.
 - [x] Tileset del templo y lava (caminos de piedra sobre lava; islas de piedra con tres niveles de altura, escaleras y puentes; nada flota en el aire sin roca debajo)
 - [x] Salas con trampas (13 salas: patio de pilares, islas, terrazas, pasarela de trampas, cascadas de lava, tres salas de marea de lava, santuario, evento, especial; `tools/make_temple_rooms.py` y `tools/make_temple_data.gd`)
 - [x] Enemigos del escenario colocados (los 25 enemigos del templo en `temple.tres`, elenco de 10 por partida y afinidades por sala)

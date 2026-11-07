@@ -5,6 +5,8 @@ Game design: `docs/JUEGO.md` and task list: `docs/TAREAS.md` (both written in Sp
 Visual references: `docs/referencias/` (concept images only; they are NOT game sprites).
 
 ## Core idea (do not lose sight of it)
+Temple art v2: `python tools/adapt_temple_art_v2.py` adapts the source sheets in `assets/art_temple_v2/` into the existing runtime terrain atlas and 23 anchored prop strips. Run it **after** either original temple art generator, which otherwise overwrites the adapted art. It keeps atlas coordinates, palette, footprints, animation frame counts and hazard phase ranges unchanged. Fire uses a fixed stone base; plants, vines and banners sway; effect phases share one scale. Validate with the existing temple tests and `tools/snapshot_temple.gd`.
+
 Nico is stuck on an island that mirrors and learns from him. He crosses 3 scenarios, defeats 3 bosses (each gives a compass fragment and a skill) and goes home. Three pillars:
 1. **Every run is different**: procedural maps built from hand-made rooms.
 2. **Fixed skills, one per boss** (no combos for now, but keep the system data-driven so combos can be added later).
