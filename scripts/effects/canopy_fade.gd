@@ -3,8 +3,9 @@ extends Node
 ## Trees turn see-through while Nico stands behind them, so he is never lost under a crown. Only
 ## the trees near him are checked; the value and the off switch live in Tuning. The Level adds one.
 
-## Trees farther than this from Nico (px) are not checked.
-const REACH := 72.0
+## Trees and structures farther than this from Nico (px) are not checked (the temple's pillars stand
+## about 100 px tall above their foot).
+const REACH := 128.0
 ## Nico's body center, above his feet (his origin).
 const BODY := Vector2(0, -10)
 
@@ -53,10 +54,19 @@ func rect_of(tree: Node2D) -> Rect2:
 		return _rects[tree]
 	var rect := Rect2(tree.global_position, Vector2.ZERO)
 	for child in tree.get_children():
-		var sprite := child as Sprite2D
-		if sprite == null or sprite.texture == null:
+		var local := Rect2()
+		var sprite := child as Node2D
+		if child is Sprite2D and child.texture != null:
+			local = child.get_rect()
+		elif child is AnimatedSprite2D and child.sprite_frames != null:
+			# An animated prop (the temple's): the size of its current frame, placed as the node draws it.
+			var frame: Texture2D = child.sprite_frames.get_frame_texture(child.animation, child.frame)
+			if frame == null:
+				continue
+			var size := frame.get_size()
+			local = Rect2(child.offset - (size / 2.0 if child.centered else Vector2.ZERO), size)
+		else:
 			continue
-		var local := sprite.get_rect()
 		var top_left := sprite.global_transform * local.position
 		var bottom_right := sprite.global_transform * local.end
 		rect = rect.merge(Rect2(top_left, bottom_right - top_left).abs())

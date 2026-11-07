@@ -617,6 +617,9 @@ const TEMPLE_STAIR_BRAZIER_MAX_PAIRS := 2
 ## much bigger than the forest's it is (1 = the same) and how many px below the feet it sits (the
 ## forest's, centred on the last row of the feet, shows only a sliver); and how far a solid prop's
 ## shadow leans east, away from the light (px per px of the prop's height; 0 = right under its foot).
+## Tall temple structures (pillars, statues, the face gate, pedestal braziers, lava falls) turn
+## see-through while Nico walks behind them, with the trees' CANOPY_FADE_ALPHA and speed.
+const TEMPLE_SEE_THROUGH := true
 const TEMPLE_SHADOW_ALPHA := 0.42
 const TEMPLE_SHADOW_SCALE := 1.15
 ## Negative: the shadow's centre sits a little above the last row of the feet, so the feet stand on it

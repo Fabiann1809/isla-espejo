@@ -97,8 +97,15 @@ var _along := 0.0
 var _hit_clock := 0.0
 
 
+## Tall structures that turn see-through while Nico walks behind them (CanopyFade, as the trees do).
+const SEE_THROUGH_KINDS: Array[Kind] = [Kind.PILLAR_CARVED, Kind.PILLAR_BLOCK, Kind.COLUMN_LOW, Kind.COLUMN_BROKEN,
+		Kind.STATUE_GUARDIAN, Kind.FACE_GATE, Kind.BRAZIER_PEDESTAL, Kind.ALTAR_RUNE, Kind.LAVA_FALL]
+
+
 func _ready() -> void:
 	_build()
+	if kind in SEE_THROUGH_KINDS and Tuning.TEMPLE_SEE_THROUGH:
+		add_to_group(RoomProp.CANOPY_GROUP)
 
 
 func is_solid() -> bool:
