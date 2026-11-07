@@ -233,7 +233,11 @@ aliases = {
 &"death_vasija_poseida": &"death_bones",
 &"death_verdugo_piedra": &"death_bones",
 &"enemy_death": &"death_slime",
-&"pickup_arrows": &"pickup_heart"
+&"pickup_arrows": &"pickup_heart",
+&"pickup_pierce": &"pickup_heart",
+&"pickup_frost": &"pickup_heart",
+&"pickup_haste": &"pickup_heart",
+&"pickup_shield": &"pickup_heart"
 }
 music = {
 &"boss": ExtResource("87_sf6au"),

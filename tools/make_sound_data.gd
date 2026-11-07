@@ -79,6 +79,10 @@ const ALIASES := {
 	&"death_sombra_errante": &"skill_shadow",
 	&"death_bestia_de_la_niebla": &"death_wood",
 	&"pickup_arrows": &"pickup_heart",
+	&"pickup_pierce": &"pickup_heart",
+	&"pickup_frost": &"pickup_heart",
+	&"pickup_haste": &"pickup_heart",
+	&"pickup_shield": &"pickup_heart",
 	# Attack kinds without a cue of their own: a swing whooshes, a trap clinks, a charge thumps.
 	&"attack_melee": &"dash",
 	&"attack_trap": &"arrow_wall",

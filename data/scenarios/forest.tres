@@ -27,6 +27,10 @@
 [ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="30_rd"]
 [ext_resource type="Resource" path="res://data/resources/heart.tres" id="31_heart"]
 [ext_resource type="Resource" path="res://data/resources/arrows.tres" id="32_arrows"]
+[ext_resource type="Resource" path="res://data/resources/pierce.tres" id="34_pierce"]
+[ext_resource type="Resource" path="res://data/resources/frost.tres" id="35_frost"]
+[ext_resource type="Resource" path="res://data/resources/haste.tres" id="36_haste"]
+[ext_resource type="Resource" path="res://data/resources/shield.tres" id="37_shield"]
 [ext_resource type="Resource" path="res://data/resources/gold.tres" id="33_gold"]
 
 [resource]
@@ -61,4 +65,4 @@ npc_scene = ExtResource("9_q2d2u")
 start_npc_scene = ExtResource("23_merchant")
 special_npc_scene = ExtResource("23_merchant")
 chest_scenes = Array[PackedScene]([ExtResource("3_k7olh")])
-drops = Array[ExtResource("30_rd")]([ExtResource("31_heart"), ExtResource("32_arrows"), ExtResource("33_gold")])
+drops = Array[ExtResource("30_rd")]([ExtResource("31_heart"), ExtResource("32_arrows"), ExtResource("34_pierce"), ExtResource("35_frost"), ExtResource("36_haste"), ExtResource("37_shield"), ExtResource("33_gold")])

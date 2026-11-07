@@ -130,6 +130,8 @@ func _initialize() -> void:
 	scenario.start_npc_scene = load("res://scenes/npcs/merchant.tscn")
 	scenario.special_npc_scene = load("res://scenes/npcs/merchant.tscn")
 	var drops: Array[ResourceData] = [load("res://data/resources/heart.tres"), load("res://data/resources/arrows.tres"),
+			load("res://data/resources/pierce.tres"), load("res://data/resources/frost.tres"),
+			load("res://data/resources/haste.tres"), load("res://data/resources/shield.tres"),
 			load("res://data/resources/gold.tres")]
 	scenario.drops = drops
 	scenario.objective = "Encuentra al Guardián antiguo"

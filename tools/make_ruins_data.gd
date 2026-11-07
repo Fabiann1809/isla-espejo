@@ -73,6 +73,8 @@ func _initialize() -> void:
 	scenario.boss_scene = load("res://scenes/enemies/stone_serpent.tscn")
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
 	var drops: Array[ResourceData] = [load("res://data/resources/heart.tres"), load("res://data/resources/arrows.tres"),
+			load("res://data/resources/pierce.tres"), load("res://data/resources/frost.tres"),
+			load("res://data/resources/haste.tres"), load("res://data/resources/shield.tres"),
 			load("res://data/resources/gold.tres")]
 	scenario.drops = drops
 	scenario.objective = "Encuentra a la Serpiente de piedra"
