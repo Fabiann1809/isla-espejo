@@ -13,7 +13,10 @@ var alpha := Tuning.SHADOW_ALPHA
 
 ## Adds a shadow to `actor` if it has none yet (and shadows are on).
 ## `alpha` < 0 uses Tuning.SHADOW_ALPHA (a dark floor needs a stronger shadow to ground the actor).
-static func attach(actor: Node2D, alpha := -1.0) -> void:
+## `size_scale` grows the ellipse and `drop` moves it that many px below the feet: centred on the
+## last row of the feet, only its lower half shows, so a floor that needs the actor plainly grounded
+## (the temple's) asks for a bigger one a little lower.
+static func attach(actor: Node2D, alpha := -1.0, size_scale := 1.0, drop := 0.0) -> void:
 	if not Tuning.SHADOWS_ENABLED or actor.has_node(NODE_NAME):
 		return
 	var shadow := ActorShadow.new()
@@ -27,8 +30,8 @@ static func attach(actor: Node2D, alpha := -1.0) -> void:
 		var measure := _measure(sprite)
 		feet = sprite.position + (sprite.offset + Vector2(0, measure.bottom)) * sprite.scale
 		width = measure.width * absf(sprite.scale.x)
-	shadow.position = feet
-	shadow.size = Vector2(width * Tuning.SHADOW_WIDTH_FACTOR, width * Tuning.SHADOW_WIDTH_FACTOR * Tuning.SHADOW_HEIGHT_FACTOR)
+	shadow.position = feet + Vector2(0, drop)
+	shadow.size = Vector2(width * Tuning.SHADOW_WIDTH_FACTOR, width * Tuning.SHADOW_WIDTH_FACTOR * Tuning.SHADOW_HEIGHT_FACTOR) * size_scale
 	actor.add_child(shadow)
 	actor.move_child(shadow, 0)
 

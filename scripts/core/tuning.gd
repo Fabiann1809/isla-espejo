@@ -555,8 +555,14 @@ const TEMPLE_EAST_SHADOWS := true
 const TEMPLE_STAIR_WALLS := true
 const TEMPLE_STAIR_TOP_BRAZIERS := true
 const TEMPLE_STAIR_BRAZIER_SPACING := 6
-## How far a solid prop's shadow leans east, away from the light (px per px of the prop's height;
-## 0 = a shadow right under its foot).
+## The ground shadow of Nico, the enemies and the NPCs on the temple's floors: its alpha (the stone
+## needs more than the forest's SHADOW_ALPHA to keep them on the ground; < 0 = SHADOW_ALPHA), how
+## much bigger than the forest's it is (1 = the same) and how many px below the feet it sits (the
+## forest's, centred on the last row of the feet, shows only a sliver); and how far a solid prop's
+## shadow leans east, away from the light (px per px of the prop's height; 0 = right under its foot).
+const TEMPLE_SHADOW_ALPHA := 0.5
+const TEMPLE_SHADOW_SCALE := 1.6
+const TEMPLE_SHADOW_DROP := 2.0
 const TEMPLE_PROP_SHADOW_LEAN := 0.22
 ## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
 ## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava

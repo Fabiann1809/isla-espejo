@@ -60,6 +60,8 @@ func _shoot_room(data: RoomData, theme: RoomTheme) -> void:
 	player.position = room.player_spawn() if room.get_node_or_null("PlayerSpawn") != null else Vector2(ROOM_SIZE) / 2.0
 	room.add_child(player)
 	_disable_camera(player)
+	# The ground shadow Level gives him on a temple map, so the room shots show him standing.
+	ActorShadow.attach(player, Tuning.TEMPLE_SHADOW_ALPHA, Tuning.TEMPLE_SHADOW_SCALE, Tuning.TEMPLE_SHADOW_DROP)
 	Heights.set_level(player, room.height_at(player.position))
 	_center_camera(viewport, Vector2(viewport.size) / 2.0)
 	await _frames(WAIT_FRAMES)

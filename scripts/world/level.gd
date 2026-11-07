@@ -784,13 +784,20 @@ func _compute_bounds() -> void:
 
 func _add_shadows() -> void:
 	var alpha := -1.0
+	var size_scale := 1.0
+	var drop := 0.0
 	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		alpha = Tuning.RUIN_SHADOW_ALPHA
+	elif scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		# The temple's platforms need everyone plainly on the ground: a stronger, bigger shadow.
+		alpha = Tuning.TEMPLE_SHADOW_ALPHA
+		size_scale = Tuning.TEMPLE_SHADOW_SCALE
+		drop = Tuning.TEMPLE_SHADOW_DROP
 	for node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("npcs"):
 		if _map.is_ancestor_of(node):
-			ActorShadow.attach(node, alpha)
+			ActorShadow.attach(node, alpha, size_scale, drop)
 	if player != null:
-		ActorShadow.attach(player, alpha)
+		ActorShadow.attach(player, alpha, size_scale, drop)
 ## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void; for the
 ## temple, solid collision around the sea, so nothing ever leaves the map.
 func _build_boundary() -> void:
