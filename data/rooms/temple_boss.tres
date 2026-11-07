@@ -9,5 +9,6 @@ id = &"temple_boss"
 type = 5
 scene = ExtResource("1_c0rib")
 height = 1
+size_tiles = Vector2i(42, 28)
 min_enemies = 0
 max_enemies = 0

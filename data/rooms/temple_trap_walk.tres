@@ -9,6 +9,7 @@ id = &"temple_trap_walk"
 scene = ExtResource("1_v4eyk")
 weight = 0.8
 tags = Array[StringName]([&"traps"])
+size_tiles = Vector2i(34, 24)
 min_enemies = 4
 max_enemies = 6
 enemy_affinity = {

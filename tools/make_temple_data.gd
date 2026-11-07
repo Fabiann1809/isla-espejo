@@ -1,38 +1,46 @@
 extends SceneTree
 ## Generates the Templo del Eclipse scenario (data/scenarios/temple.tres) and its rooms
 ## (data/rooms/temple_*.tres), and points the ruins' exit at the temple (data/scenarios/ruins.tres,
-## which tools/make_ruins_data.gd also writes).
+## which tools/make_ruins_data.gd also writes). The temple's grid cell is 48x32 tiles and its rooms come
+## in three sizes (large 42x28, medium 34x24, small 26x20), each centred in its cell; every room's
+## `size_tiles` is checked against its plan here.
 ## Run from the repo root: godot --headless --path . --script res://tools/make_temple_data.gd
 ## Needs the room scenes (python tools/make_temple_rooms.py), the tileset profile, the theme and the
 ## props' art. Every room's plan is checked again here with the game's rules
 ## (tools/validate_temple_plans.gd: TemplePlan.validate with the room's surge stages and spawn_ok for
 ## its markers), and nothing is written when one fails. Balance lives in the generated .tres files.
 
+## The three room sizes of the temple (tiles) and the grid cell every room is centred in.
+const LARGE := Vector2i(42, 28)
+const MEDIUM := Vector2i(34, 24)
+const SMALL := Vector2i(26, 20)
+const CELL_TILES := Vector2i(48, 32)
+
 const ROOMS := [
 	# id, type, scene, weight, tags, min_enemies, max_enemies, height, enemy_affinity,
-	# [surge_stages, kills_stage_1, kills_to_recede, wave_size, max_alive] (empty = no surge)
-	[&"temple_start", RoomData.RoomType.START, "start", 1.0, [], 0, 0, 0, {}, []],
-	[&"temple_boss", RoomData.RoomType.BOSS, "boss", 1.0, [], 0, 0, 1, {}, []],
+	# [surge_stages, kills_stage_1, kills_to_recede, wave_size, max_alive] (empty = no surge), size_tiles
+	[&"temple_start", RoomData.RoomType.START, "start", 1.0, [], 0, 0, 0, {}, [], MEDIUM],
+	[&"temple_boss", RoomData.RoomType.BOSS, "boss", 1.0, [], 0, 0, 1, {}, [], LARGE],
 	[&"temple_pillar_court", RoomData.RoomType.COMBAT, "pillar_court", 1.0, [&"court"], 3, 5, 0,
-			{&"monje_sin_rostro": 2.0, &"centinela_obsidiana": 1.5, &"duelista_maldito": 1.5, &"verdugo_piedra": 1.5}, []],
+			{&"monje_sin_rostro": 2.0, &"centinela_obsidiana": 1.5, &"duelista_maldito": 1.5, &"verdugo_piedra": 1.5}, [], LARGE],
 	[&"temple_isles", RoomData.RoomType.COMBAT, "isles", 1.0, [&"bridges"], 3, 5, 0,
-			{&"gusano_puentes": 3.0, &"manta_hollin": 2.0, &"carnero_basalto": 0.5, &"rueda_devoradora": 0.5}, []],
+			{&"gusano_puentes": 3.0, &"manta_hollin": 2.0, &"carnero_basalto": 0.5, &"rueda_devoradora": 0.5}, [], MEDIUM],
 	[&"temple_terraces", RoomData.RoomType.COMBAT, "terraces", 1.0, [&"heights"], 3, 5, 0,
-			{&"ojo_sol": 2.0, &"oraculo_ceniza": 2.0, &"acolito_brasero": 1.5, &"carnero_basalto": 0.5, &"rueda_devoradora": 0.5}, []],
+			{&"ojo_sol": 2.0, &"oraculo_ceniza": 2.0, &"acolito_brasero": 1.5, &"carnero_basalto": 0.5, &"rueda_devoradora": 0.5}, [], MEDIUM],
 	[&"temple_trap_walk", RoomData.RoomType.COMBAT, "trap_walk", 0.8, [&"traps"], 4, 6, 0,
 			{&"relojero_trampas": 3.0, &"baldosa_hambrienta": 2.0, &"carcelero_cadenas": 2.0, &"manos_abismo": 1.5,
-			&"carnero_basalto": 0.5, &"rueda_devoradora": 0.5}, []],
+			&"carnero_basalto": 0.5, &"rueda_devoradora": 0.5}, [], MEDIUM],
 	[&"temple_lava_falls", RoomData.RoomType.COMBAT, "lava_falls", 0.8, [&"falls"], 3, 5, 1,
-			{&"manta_hollin": 3.0, &"salamandra_cristal": 2.0, &"ojo_sol": 1.5, &"gusano_puentes": 0.5}, []],
+			{&"manta_hollin": 3.0, &"salamandra_cristal": 2.0, &"ojo_sol": 1.5, &"gusano_puentes": 0.5}, [], MEDIUM],
 	[&"temple_surge_basin", RoomData.RoomType.COMBAT, "surge_basin", 2.0, [&"surge"], 2, 3, 0,
-			{&"manta_hollin": 1.5, &"nucleo_cria": 0.0, &"arana_talladora": 0.0}, [1, 4, 4, 2, 4]],
+			{&"manta_hollin": 1.5, &"nucleo_cria": 0.0, &"arana_talladora": 0.0}, [1, 4, 4, 2, 4], MEDIUM],
 	[&"temple_surge_tiers", RoomData.RoomType.COMBAT, "surge_tiers", 2.0, [&"surge"], 2, 3, 0,
-			{&"ojo_sol": 1.5, &"acolito_brasero": 1.5, &"nucleo_cria": 0.0, &"arana_talladora": 0.0}, [2, 4, 4, 2, 4]],
+			{&"ojo_sol": 1.5, &"acolito_brasero": 1.5, &"nucleo_cria": 0.0, &"arana_talladora": 0.0}, [2, 4, 4, 2, 4], LARGE],
 	[&"temple_surge_bridges", RoomData.RoomType.COMBAT, "surge_bridges", 2.0, [&"surge", &"bridges"], 2, 3, 0,
-			{&"gusano_puentes": 2.0, &"manta_hollin": 1.5, &"nucleo_cria": 0.0, &"arana_talladora": 0.0}, [2, 4, 4, 2, 4]],
-	[&"temple_sanctum", RoomData.RoomType.REWARD, "sanctum", 1.0, [&"bridges"], 0, 0, 0, {}, []],
-	[&"temple_event", RoomData.RoomType.EVENT, "event", 1.0, [], 0, 0, 0, {}, []],
-	[&"temple_special", RoomData.RoomType.SPECIAL, "special", 1.0, [], 0, 0, 0, {}, []],
+			{&"gusano_puentes": 2.0, &"manta_hollin": 1.5, &"nucleo_cria": 0.0, &"arana_talladora": 0.0}, [2, 4, 4, 2, 4], LARGE],
+	[&"temple_sanctum", RoomData.RoomType.REWARD, "sanctum", 1.0, [&"bridges"], 0, 0, 0, {}, [], SMALL],
+	[&"temple_event", RoomData.RoomType.EVENT, "event", 1.0, [], 0, 0, 0, {}, [], SMALL],
+	[&"temple_special", RoomData.RoomType.SPECIAL, "special", 1.0, [], 0, 0, 0, {}, [], SMALL],
 ]
 const ENEMIES := ["centinela_obsidiana", "carcelero_cadenas", "acolito_brasero", "verdugo_piedra", "duelista_maldito",
 		"salamandra_cristal", "gusano_puentes", "caracol_escoria", "carnero_basalto", "manta_hollin", "eco_espejo",
@@ -49,7 +57,7 @@ func _initialize() -> void:
 	for spec in ROOMS:
 		var scene: PackedScene = load("res://scenes/levels/rooms/temple/%s.tscn" % spec[2])
 		var surge: Array = spec[9]
-		for problem in _check_scene(validator, scene, surge[0] if not surge.is_empty() else 0, spec[7]):
+		for problem in _check_scene(validator, scene, surge[0] if not surge.is_empty() else 0, spec[7], spec[10]):
 			printerr("%s: %s" % [spec[0], problem])
 			problems += 1
 		rooms[spec[0]] = [spec, scene]
@@ -73,6 +81,7 @@ func _initialize() -> void:
 		room.min_enemies = spec[5]
 		room.max_enemies = spec[6]
 		room.height = spec[7]
+		room.size_tiles = spec[10]
 		room.enemy_affinity = spec[8]
 		var surge: Array = spec[9]
 		if not surge.is_empty():
@@ -90,9 +99,10 @@ func _initialize() -> void:
 	scenario.display_name = "Templo del Eclipse"
 	scenario.chapter_title = "El templo conoce tu destino."
 	scenario.theme = load("res://data/themes/temple.tres")
-	scenario.grid_size = Vector2i(5, 6)
-	scenario.min_main_path = 7
-	scenario.max_main_path = 12
+	scenario.grid_size = Vector2i(5, 5)
+	scenario.min_main_path = 6
+	scenario.max_main_path = 9
+	scenario.cell_tiles = CELL_TILES
 	scenario.side_rooms = 4
 	scenario.loop_chance = 0.1
 	scenario.event_rooms = 1
@@ -132,10 +142,10 @@ func _initialize() -> void:
 	quit()
 
 
-## The problems of a room scene: its Shape's plan judged by TemplePlan (with the room's surge stages
-## and base height) and every marker on a spawn_ok cell. Read from the packed scene's state, so no
+## The problems of a room scene: its Shape's plan judged by TemplePlan (with the room's surge stages,
+## base height and size) and every marker on a spawn_ok cell. Read from the packed scene's state, so no
 ## node is built.
-func _check_scene(validator: GDScript, scene: PackedScene, surge_stages: int, height: int) -> Array:
+func _check_scene(validator: GDScript, scene: PackedScene, surge_stages: int, height: int, size: Vector2i) -> Array:
 	var state := scene.get_state()
 	var rows := ""
 	var markers: Array[Vector2] = []
@@ -150,7 +160,7 @@ func _check_scene(validator: GDScript, scene: PackedScene, surge_stages: int, he
 				markers.append(state.get_node_property_value(i, j))
 	if rows == "":
 		return ["no Shape with a plan"]
-	var result: Dictionary = validator.check(rows, surge_stages, height)
+	var result: Dictionary = validator.check(rows, surge_stages, height, size)
 	var problems: Array = result["problems"].duplicate()
 	var ok := {}
 	for cell in result["spawn_ok"]:

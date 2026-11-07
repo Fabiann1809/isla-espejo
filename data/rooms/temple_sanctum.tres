@@ -9,5 +9,6 @@ id = &"temple_sanctum"
 type = 3
 scene = ExtResource("1_helpt")
 tags = Array[StringName]([&"bridges"])
+size_tiles = Vector2i(26, 20)
 min_enemies = 0
 max_enemies = 0

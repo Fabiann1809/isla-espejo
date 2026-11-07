@@ -8,6 +8,7 @@ script = ExtResource("2_mi6wl")
 id = &"temple_pillar_court"
 scene = ExtResource("1_h4jyd")
 tags = Array[StringName]([&"court"])
+size_tiles = Vector2i(42, 28)
 min_enemies = 3
 max_enemies = 5
 enemy_affinity = {

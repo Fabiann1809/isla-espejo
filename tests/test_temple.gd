@@ -1,6 +1,7 @@
 extends SceneTree
-## The Templo del Eclipse scenario: its data (25 enemies, a roster of 10, 13 room designs, surge
-## rooms), every room plan a valid design with its markers on spawn_ok cells, 30 seeds that build a
+## The Templo del Eclipse scenario: its data (25 enemies, a roster of 10, 13 room designs in three
+## sizes centred in a 48x32 grid cell, surge rooms), every room plan a valid design of its room's
+## size with its markers on spawn_ok cells, 30 seeds that build a
 ## map where every room is reached from the start (one staircase per level between neighbours), surge
 ## rooms in most maps, the full level built with every enemy on its island and on its platform's
 ## level, each of the 25 enemies alive for 3 s in a temple room without leaving it or stepping in lava,
@@ -9,7 +10,10 @@ extends SceneTree
 ## `Level`/`Room` must not be referenced as types here (autoload compile order).
 
 const TILE := 16
-const ROOM_SIZE := Vector2(480, 288)
+const LARGE := Vector2i(42, 28)
+const MEDIUM := Vector2i(34, 24)
+const SMALL := Vector2i(26, 20)
+const CELL_TILES := Vector2i(48, 32)
 const ALL_DOORS: Array[Vector2i] = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
 const MARKER_CONTAINERS := ["EnemySpawns", "NpcSpawn", "BossSpawn", "ChestSpawn", "SpecialSpawn", "ExitSpawn"]
 const ROOM_IDS := ["temple_start", "temple_boss", "temple_pillar_court", "temple_isles", "temple_terraces",
@@ -62,8 +66,10 @@ func _check_data(scenario: ScenarioData) -> void:
 	_check(ids == wanted, "its pool holds the 25 temple enemies (%d)" % ids.size())
 	_check(scenario.roster_size == 10, "a map fields a roster of 10 (%d)" % scenario.roster_size)
 	_check(scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA, "it has the temple theme (lava walls)")
-	_check(scenario.grid_size == Vector2i(5, 6) and scenario.min_main_path == 7 and scenario.max_main_path == 12
-			and scenario.side_rooms == 4 and scenario.reward_rooms == 2, "its grid and path limits are the brief's")
+	_check(scenario.grid_size == Vector2i(5, 5) and scenario.min_main_path == 6 and scenario.max_main_path == 9
+			and scenario.side_rooms == 4 and scenario.reward_rooms == 2, "its grid is 5x5 with a main path of 6 to 9 rooms")
+	_check(scenario.cell_tiles == CELL_TILES and scenario.corridor_tiles == 3,
+			"its grid cell is 48x32 tiles with corridors of at least 3 (%s, %d)" % [scenario.cell_tiles, scenario.corridor_tiles])
 	var rooms: Array[RoomData] = [scenario.start_room, scenario.boss_room]
 	rooms.append_array(scenario.rooms)
 	var found: Array = rooms.map(func(r: RoomData) -> String: return String(r.id))
@@ -72,21 +78,21 @@ func _check_data(scenario: ScenarioData) -> void:
 	expected.sort()
 	_check(found == expected, "it has the 13 room designs (%s)" % [found])
 	_check(scenario.boss_room.height == 1 and scenario.start_room.height == 0, "the boss arena is raised and the start is on the ground")
-	# The brief's table: every room's type, base height and exact tag set.
+	# The brief's table: every room's type, base height, exact tag set and size (the design annex's three sizes).
 	var table := {
-		&"temple_start": [RoomData.RoomType.START, 0, []],
-		&"temple_boss": [RoomData.RoomType.BOSS, 1, []],
-		&"temple_pillar_court": [RoomData.RoomType.COMBAT, 0, [&"court"]],
-		&"temple_isles": [RoomData.RoomType.COMBAT, 0, [&"bridges"]],
-		&"temple_terraces": [RoomData.RoomType.COMBAT, 0, [&"heights"]],
-		&"temple_trap_walk": [RoomData.RoomType.COMBAT, 0, [&"traps"]],
-		&"temple_lava_falls": [RoomData.RoomType.COMBAT, 1, [&"falls"]],
-		&"temple_surge_basin": [RoomData.RoomType.COMBAT, 0, [&"surge"]],
-		&"temple_surge_tiers": [RoomData.RoomType.COMBAT, 0, [&"surge"]],
-		&"temple_surge_bridges": [RoomData.RoomType.COMBAT, 0, [&"bridges", &"surge"]],
-		&"temple_sanctum": [RoomData.RoomType.REWARD, 0, [&"bridges"]],
-		&"temple_event": [RoomData.RoomType.EVENT, 0, []],
-		&"temple_special": [RoomData.RoomType.SPECIAL, 0, []],
+		&"temple_start": [RoomData.RoomType.START, 0, [], MEDIUM],
+		&"temple_boss": [RoomData.RoomType.BOSS, 1, [], LARGE],
+		&"temple_pillar_court": [RoomData.RoomType.COMBAT, 0, [&"court"], LARGE],
+		&"temple_isles": [RoomData.RoomType.COMBAT, 0, [&"bridges"], MEDIUM],
+		&"temple_terraces": [RoomData.RoomType.COMBAT, 0, [&"heights"], MEDIUM],
+		&"temple_trap_walk": [RoomData.RoomType.COMBAT, 0, [&"traps"], MEDIUM],
+		&"temple_lava_falls": [RoomData.RoomType.COMBAT, 1, [&"falls"], MEDIUM],
+		&"temple_surge_basin": [RoomData.RoomType.COMBAT, 0, [&"surge"], MEDIUM],
+		&"temple_surge_tiers": [RoomData.RoomType.COMBAT, 0, [&"surge"], LARGE],
+		&"temple_surge_bridges": [RoomData.RoomType.COMBAT, 0, [&"bridges", &"surge"], LARGE],
+		&"temple_sanctum": [RoomData.RoomType.REWARD, 0, [&"bridges"], SMALL],
+		&"temple_event": [RoomData.RoomType.EVENT, 0, [], SMALL],
+		&"temple_special": [RoomData.RoomType.SPECIAL, 0, [], SMALL],
 	}
 	for room in rooms:
 		var row: Array = table.get(room.id, [])
@@ -95,8 +101,10 @@ func _check_data(scenario: ScenarioData) -> void:
 		if same_tags:
 			for tag in row[2]:
 				same_tags = same_tags and room_tags.has(tag)
-		_check(not row.is_empty() and room.type == row[0] and room.height == row[1] and same_tags,
-				"%s is %s at height %s with tags %s (brief: %s)" % [room.id, room.type, room.height, room_tags, row])
+		_check(not row.is_empty() and room.type == row[0] and room.height == row[1] and same_tags and room.size_tiles == row[3],
+				"%s is %s at height %s with tags %s, %s tiles (brief: %s)" % [room.id, room.type, room.height, room_tags, room.size_tiles, row])
+		_check(room.size_tiles.x % 2 == 0 and room.size_tiles.y % 2 == 0 and room.size_tiles.x <= CELL_TILES.x and room.size_tiles.y <= CELL_TILES.y,
+				"%s fits the cell on whole tiles" % room.id)
 	var surge := {}
 	for room in scenario.rooms:
 		if room.surge_stages > 0:
@@ -149,6 +157,8 @@ func _check_plans(scenario: ScenarioData) -> void:
 			room.queue_free()
 			continue
 		var problems: Array = shape.plan.validate(data.surge_stages)
+		if shape.plan.size_cells() != data.size_tiles:
+			problems.append("the plan is %s cells, the room %s tiles" % [shape.plan.size_cells(), data.size_tiles])
 		if not problems.is_empty():
 			bad_plans += 1
 			printerr("%s: %s" % [data.id, problems])
@@ -172,7 +182,7 @@ func _check_plans(scenario: ScenarioData) -> void:
 		room.queue_free()
 	holder.queue_free()
 	await process_frame
-	_check(bad_plans == 0, "every temple room plan is a valid design of its room's base height")
+	_check(bad_plans == 0, "every temple room plan is a valid design of its room's base height and size")
 	_check(bad_markers == 0, "every marker is on a spawn_ok cell (%d markers)" % markers)
 	_check(few_spawns == 0, "every combat room has at least 6 enemy spawns")
 
@@ -225,7 +235,7 @@ func _check_props_reach(scenario: ScenarioData) -> void:
 	# The check itself works: a statue on the sanctum's bridge foot is caught.
 	var sanctum_plan: Object = load("res://scripts/world/temple_plan.gd").parse(
 			(load("res://scenes/levels/rooms/temple/sanctum.tscn") as PackedScene).instantiate().get_node("Shape").rows)
-	var foot: Array[Vector3i] = [Vector3i(23, 6, 0), Vector3i(24, 6, 0)]
+	var foot: Array[Vector3i] = [Vector3i(20, 6, 0), Vector3i(21, 6, 0)]
 	var none: Array[Vector2i] = []
 	_check(not validator.check_props(sanctum_plan, foot, none).is_empty(), "a solid prop at the foot of the sanctum's bridge is refused")
 
@@ -370,7 +380,7 @@ func _check_enemies(scenario: ScenarioData) -> void:
 	room.setup(data, ALL_DOORS.duplicate())
 	root.add_child(room)
 	var player: Node2D = load("res://scenes/player/player.tscn").instantiate()
-	player.position = room.player_spawn() if room.get_node_or_null("PlayerSpawn") != null else ROOM_SIZE / 2.0
+	player.position = room.player_spawn() if room.get_node_or_null("PlayerSpawn") != null else room.center()
 	room.add_child(player)
 	await physics_frame
 	var shape = room.get_node("Shape")
@@ -397,7 +407,7 @@ func _check_enemies(scenario: ScenarioData) -> void:
 			if not is_instance_valid(enemy):
 				continue
 			ran += 1
-			var inside := Rect2(Vector2.ZERO, ROOM_SIZE).grow(TILE).has_point(enemy.position)
+			var inside := Rect2(Vector2.ZERO, room.pixel_size()).grow(TILE).has_point(enemy.position)
 			if not inside:
 				left += 1
 				printerr("%s left the room (%s)" % [enemy.data.id, enemy.position])

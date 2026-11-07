@@ -5,202 +5,138 @@
 [ext_resource type="Script" path="res://scripts/world/temple_shape.gd" id="3"]
 
 [node name="TempleBoss" instance=ExtResource("1")]
+size_tiles = Vector2i(42, 28)
 
 [node name="Shape" type="Node2D" parent="."]
 script = ExtResource("3")
-rows = "#############1111#############
-#~~~~~~~~~~11111111~~~~~~~~~~#
-#~~~~~~~11111111111111~~~~~~~#
-#~~~~~111111111111111111~~~~~#
-#~~~11111111111111111111~~~~~#
-#~~1111111111111111111111~~~~#
-#~11111111111111111111111~~~~#
-1111111111111111111111111~1111
-111111111111111111111111111111
-111111111111111111111111111111
-111~11111111111111111111111111
-#~1111111111111111111111111~~#
-#~~111111111111111111111111~~#
-#~~~1111111111111111111111~~~#
-#~~~~11111111111111111111~~~~#
-#~~~~~~111111111111111~~~~~~~#
-#~~~~~~~~~1111111111~~~~~~~~~#
-#############1111#############"
+rows = "###################1111###################
+#~~~~~~~~~~~111111111111111111~~~~~~~~~~~#
+#~~~~~~~~~1112222222222222222111~~~~~~~~~#
+#~~~~~~~~111122222222222222221111~~~~~~~~#
+#~~~~~~~11111222222222222222211111~~~~~~~#
+#~~~~~~1111112222222222222222111111~~~~~~#
+#~~~~~1111111111111^^^^1111111111111~~~~~#
+#~~~~11111111111111111111111111111111~~~~#
+#~~~1111111111111111111111111111111111~~~#
+#~~11111111111111111111111111111111111~~~#
+#~11111111111111111111111111111111111111~#
+#~11111111111111111111111111111111111111~#
+111111111111111111111111111111111111111111
+111111111111111111111111111111111111111111
+111111111111111111111111111111111111111111
+111111111111111111111111111111111111111111
+#~1111111111111111111111111111111111111~~#
+#~11111111111111111111111111111111111111~#
+#~~111111111111111111111111111111111111~~#
+#~~~~111111111111111111111111111111111~~~#
+#~~~~11111111111111111111111111111111~~~~#
+#~~~~~~1111111111111111111111111111~~~~~~#
+#~~~~~~~~111111111111111111111111~~~~~~~~#
+#~~~~~~~~~~11111111111111111111~~~~~~~~~~#
+#~~~~~~~~~~~~1111111111111111~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~111111111111~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~11111111~~~~~~~~~~~~~~~~#
+###################1111###################"
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(248, 43)
+position = Vector2(328, 43)
 script = ExtResource("2")
 kind = 18
-level = 1
+level = 2
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(120, 76)
+position = Vector2(264, 76)
 script = ExtResource("2")
 kind = 6
-level = 1
+level = 2
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(360, 76)
+position = Vector2(408, 76)
 script = ExtResource("2")
 kind = 6
 flip = true
-level = 1
+level = 2
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(72, 188)
+position = Vector2(184, 75)
 script = ExtResource("2")
-kind = 6
+kind = 4
 level = 1
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(408, 188)
+position = Vector2(488, 75)
 script = ExtResource("2")
-kind = 6
+kind = 4
 flip = true
 level = 1
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(136, 252)
+position = Vector2(248, 156)
 script = ExtResource("2")
-kind = 6
 level = 1
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(344, 252)
+position = Vector2(424, 156)
 script = ExtResource("2")
-kind = 6
 flip = true
 level = 1
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(56, 108)
+position = Vector2(248, 332)
 script = ExtResource("2")
-kind = 6
 level = 1
 
 [node name="Prop9" type="Node2D" parent="."]
-position = Vector2(408, 220)
+position = Vector2(424, 332)
 script = ExtResource("2")
-kind = 6
 flip = true
 level = 1
 
 [node name="Prop10" type="Node2D" parent="."]
-position = Vector2(104, 108)
+position = Vector2(264, 108)
 script = ExtResource("2")
+kind = 15
 level = 1
 
 [node name="Prop11" type="Node2D" parent="."]
-position = Vector2(376, 108)
+position = Vector2(408, 108)
 script = ExtResource("2")
+kind = 15
 flip = true
 level = 1
 
 [node name="Prop12" type="Node2D" parent="."]
-position = Vector2(104, 220)
+position = Vector2(616, 320)
 script = ExtResource("2")
-level = 1
+kind = 14
 
 [node name="Prop13" type="Node2D" parent="."]
-position = Vector2(376, 220)
+position = Vector2(232, 416)
 script = ExtResource("2")
+kind = 14
 flip = true
-level = 1
 
 [node name="Prop14" type="Node2D" parent="."]
-position = Vector2(152, 59)
+position = Vector2(520, 384)
 script = ExtResource("2")
-kind = 4
-level = 1
+kind = 14
+flip = true
 
 [node name="Prop15" type="Node2D" parent="."]
-position = Vector2(328, 59)
-script = ExtResource("2")
-kind = 4
-flip = true
-level = 1
-
-[node name="Prop16" type="Node2D" parent="."]
-position = Vector2(184, 268)
-script = ExtResource("2")
-kind = 8
-level = 1
-
-[node name="Prop17" type="Node2D" parent="."]
-position = Vector2(296, 268)
-script = ExtResource("2")
-kind = 8
-flip = true
-level = 1
-
-[node name="Prop18" type="Node2D" parent="."]
-position = Vector2(376, 92)
-script = ExtResource("2")
-kind = 11
-level = 1
-
-[node name="Prop19" type="Node2D" parent="."]
-position = Vector2(88, 236)
-script = ExtResource("2")
-kind = 11
-level = 1
-
-[node name="Prop20" type="Node2D" parent="."]
-position = Vector2(344, 272)
-script = ExtResource("2")
-kind = 14
-
-[node name="Prop21" type="Node2D" parent="."]
-position = Vector2(360, 256)
+position = Vector2(584, 352)
 script = ExtResource("2")
 kind = 14
 flip = true
-
-[node name="Prop22" type="Node2D" parent="."]
-position = Vector2(456, 192)
-script = ExtResource("2")
-kind = 14
-flip = true
-
-[node name="Prop23" type="Node2D" parent="."]
-position = Vector2(408, 240)
-script = ExtResource("2")
-kind = 14
-
-[node name="Prop24" type="Node2D" parent="."]
-position = Vector2(136, 272)
-script = ExtResource("2")
-kind = 14
-flip = true
-
-[node name="Prop25" type="Node2D" parent="."]
-position = Vector2(72, 204)
-script = ExtResource("2")
-kind = 13
-level = 1
-
-[node name="Prop26" type="Node2D" parent="."]
-position = Vector2(328, 252)
-script = ExtResource("2")
-kind = 13
-level = 1
-
-[node name="Prop27" type="Node2D" parent="."]
-position = Vector2(360, 60)
-script = ExtResource("2")
-kind = 13
-flip = true
-level = 1
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
-position = Vector2(240, 232)
+position = Vector2(328, 392)
 
 [node name="BossSpawn" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="BossSpawn"]
-position = Vector2(248, 136)
+position = Vector2(328, 216)
 
 [node name="ExitSpawn" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="ExitSpawn"]
-position = Vector2(248, 72)
+position = Vector2(328, 72)

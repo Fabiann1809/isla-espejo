@@ -4,11 +4,10 @@ extends SceneTree
 ##   - with all four doors open, each door must reach the middle of the room and every other door
 ##     with a player-sized body (nothing solid may block the central lanes);
 ##   - spawn markers (player, enemies, NPC, chest, boss, special) must not be inside a solid prop;
-##   - rooms are the standard 30x18 tiles.
+##   - rooms are their RoomData's size (even tiles; 30x18 unless the data says otherwise).
 ## Run: godot --headless --path . --script res://tests/test_room_designs.gd
 ## `Room` must not be referenced as a type here (autoload compile order).
 
-const ROOM_SIZE := Vector2(480, 288)
 const DOOR_MARGIN := 14.0
 const MARKER_CONTAINERS := ["EnemySpawns", "NpcSpawn", "BossSpawn", "ChestSpawn", "SpecialSpawn"]
 const ALL_DOORS: Array[Vector2i] = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
@@ -58,16 +57,18 @@ func _initialize() -> void:
 	for i in designs.size():
 		var label: String = "%s/%s" % [designs[i][0], designs[i][1].id]
 		var room = instances[i]
-		if room.pixel_size() != ROOM_SIZE:
+		var size_tiles: Vector2i = designs[i][1].size_tiles
+		var room_size: Vector2 = room.pixel_size()
+		if room_size != Vector2(size_tiles * 16) or size_tiles.x % 2 != 0 or size_tiles.y % 2 != 0:
 			bad_size += 1
-			printerr("%s is %s px, expected %s" % [label, room.pixel_size(), ROOM_SIZE])
+			printerr("%s is %s px, expected %s tiles (even)" % [label, room_size, size_tiles])
 		var origin: Vector2 = room.position
-		var center := origin + ROOM_SIZE / 2.0
+		var center := origin + room_size / 2.0
 		var doors := {
-			Vector2i.UP: origin + Vector2(ROOM_SIZE.x / 2.0, DOOR_MARGIN),
-			Vector2i.DOWN: origin + Vector2(ROOM_SIZE.x / 2.0, ROOM_SIZE.y - DOOR_MARGIN),
-			Vector2i.LEFT: origin + Vector2(DOOR_MARGIN, ROOM_SIZE.y / 2.0),
-			Vector2i.RIGHT: origin + Vector2(ROOM_SIZE.x - DOOR_MARGIN, ROOM_SIZE.y / 2.0),
+			Vector2i.UP: origin + Vector2(room_size.x / 2.0, DOOR_MARGIN),
+			Vector2i.DOWN: origin + Vector2(room_size.x / 2.0, room_size.y - DOOR_MARGIN),
+			Vector2i.LEFT: origin + Vector2(DOOR_MARGIN, room_size.y / 2.0),
+			Vector2i.RIGHT: origin + Vector2(room_size.x - DOOR_MARGIN, room_size.y / 2.0),
 		}
 		# Door to centre, and door to the opposite door.
 		for dir_key in doors:
@@ -94,7 +95,7 @@ func _initialize() -> void:
 
 	print("Rooms checked: ", designs.size())
 	_check(designs.size() >= 10, "there are rooms to check (%d)" % designs.size())
-	_check(bad_size == 0, "every room is the standard 30x18 tiles")
+	_check(bad_size == 0, "every room is its data's size, in even tiles")
 	_check(bad_lanes == 0, "every door of every room reaches the middle and the opposite door (%d paths)" % checked_lanes)
 	_check(bad_markers == 0, "no spawn marker is inside a solid object (%d markers)" % checked_markers)
 

@@ -9,6 +9,7 @@ id = &"temple_surge_basin"
 scene = ExtResource("1_t0smv")
 weight = 2.0
 tags = Array[StringName]([&"surge"])
+size_tiles = Vector2i(34, 24)
 max_enemies = 3
 enemy_affinity = {
 &"arana_talladora": 0.0,

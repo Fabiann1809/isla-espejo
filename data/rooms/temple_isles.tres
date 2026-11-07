@@ -8,6 +8,7 @@ script = ExtResource("2_wmc43")
 id = &"temple_isles"
 scene = ExtResource("1_d4frt")
 tags = Array[StringName]([&"bridges"])
+size_tiles = Vector2i(34, 24)
 min_enemies = 3
 max_enemies = 5
 enemy_affinity = {

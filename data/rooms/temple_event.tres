@@ -8,5 +8,6 @@ script = ExtResource("2_ukltn")
 id = &"temple_event"
 type = 2
 scene = ExtResource("1_furtw")
+size_tiles = Vector2i(26, 20)
 min_enemies = 0
 max_enemies = 0

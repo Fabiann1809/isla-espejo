@@ -3,11 +3,11 @@ extends SceneTree
 ## one overview of a whole temple map, to compare them with docs/referencias/templo_mapa.jpg.
 ## Run: godot --path . --script res://tools/snapshot_temple.gd -- [folder] [seed]
 ## Default folder: user://snapshots/temple/ (printed at the end); default seed: 7.
-## Each room is built as in the game (room_base + its scene, the temple theme, every door open) on a
-## sea of lava two tiles wide around it, with Nico standing at its player spawn or its middle; the
-## overview is the real temple level (its HUD hidden) seen whole from above.
+## Each room is built as in the game (room_base + its scene, the temple theme, every door open) at
+## its own size (RoomData.size_tiles) on a sea of lava two tiles wide around it, with Nico standing at
+## its player spawn or its middle; the overview is the real temple level (its HUD hidden) seen whole
+## from above.
 
-const ROOM_SIZE := Vector2i(480, 288)
 const MARGIN := 32
 const WAIT_FRAMES := 12
 const ALL_DOORS: Array[Vector2i] = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
@@ -40,7 +40,8 @@ func _initialize() -> void:
 
 ## One room on a sea of lava, Nico on his spawn, shot after its animations have started.
 func _shoot_room(data: RoomData, theme: RoomTheme) -> void:
-	var viewport := _viewport(ROOM_SIZE + Vector2i.ONE * MARGIN * 2)
+	var room_size: Vector2i = data.size_tiles * TileArt.TILE
+	var viewport := _viewport(room_size + Vector2i.ONE * MARGIN * 2)
 	var world := Node2D.new()
 	world.y_sort_enabled = true
 	world.position = Vector2.ONE * MARGIN
@@ -48,9 +49,8 @@ func _shoot_room(data: RoomData, theme: RoomTheme) -> void:
 	var lava := LavaBackdrop.lava_layer("Sea")
 	lava.z_index = LavaBackdrop.SEA_Z
 	world.add_child(lava)
-	var tiles := Vector2i(ROOM_SIZE) / TileArt.TILE
 	var margin_tiles := MARGIN / TileArt.TILE
-	LavaBackdrop.paint_lava(lava, Rect2i(Vector2i.ONE * -margin_tiles, tiles + Vector2i.ONE * margin_tiles * 2))
+	LavaBackdrop.paint_lava(lava, Rect2i(Vector2i.ONE * -margin_tiles, data.size_tiles + Vector2i.ONE * margin_tiles * 2))
 	Ambience.apply(world, true, theme.world_tint)
 	var room: Node2D = data.scene.instantiate()
 	room.theme = theme
@@ -58,7 +58,7 @@ func _shoot_room(data: RoomData, theme: RoomTheme) -> void:
 	room.setup(data, ALL_DOORS.duplicate())
 	world.add_child(room)
 	var player: Node2D = load("res://scenes/player/player.tscn").instantiate()
-	player.position = room.player_spawn() if room.get_node_or_null("PlayerSpawn") != null else Vector2(ROOM_SIZE) / 2.0
+	player.position = room.player_spawn() if room.get_node_or_null("PlayerSpawn") != null else Vector2(room_size) / 2.0
 	room.add_child(player)
 	_disable_camera(player)
 	# The ground shadow Level gives him on a temple map, so the room shots show him standing.

@@ -9,6 +9,7 @@ id = &"temple_surge_tiers"
 scene = ExtResource("1_upn4n")
 weight = 2.0
 tags = Array[StringName]([&"surge"])
+size_tiles = Vector2i(42, 28)
 max_enemies = 3
 enemy_affinity = {
 &"acolito_brasero": 1.5,
