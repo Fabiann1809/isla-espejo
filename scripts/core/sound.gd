@@ -144,8 +144,15 @@ func _connect_events() -> void:
 	Events.level_started.connect(_on_level_started)
 	# Temple: the lava surge is heard in the whole room, so these play at full volume.
 	Events.lava_surge_warned.connect(func(_room: Node, _stage: int) -> void: play(&"lava_surge_warn"))
-	Events.lava_surge_started.connect(func(_room: Node, _stage: int) -> void: play(&"lava_surge_rise"))
-	Events.lava_surge_receded.connect(func(_room: Node) -> void: play(&"lava_surge_recede"))
+	Events.lava_surge_started.connect(func(_room: Node, _stage: int) -> void:
+		play(&"lava_surge_rise")
+		# While the lava is up the music turns urgent, if the bank has a surge track.
+		if bank != null and bank.music.has(&"temple_surge"):
+			play_music(&"temple_surge"))
+	Events.lava_surge_receded.connect(func(_room: Node) -> void:
+		play(&"lava_surge_recede")
+		if current_music == &"temple_surge":
+			play_music(_scenario_music))
 	_connect_optional_events()
 
 

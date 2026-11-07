@@ -1,11 +1,12 @@
 """Synthesizes the Templo del Eclipse audio with numpy only (fixed seeds, no samples, no downloads).
 
-Writes assets/audio/music/temple.wav (a seamless loop, 32 kHz stereo) and the cues
+Writes the cues
 assets/audio/sfx/<cue>_<n>.wav (44.1 kHz mono), plus the .import files (music loop = forward).
 Run: python tools/make_temple_audio.py   (then godot --headless --path . --import and
 godot --headless --path . --script res://tools/make_sound_data.gd)
 """
 import os
+import sys
 import wave
 import numpy as np
 
@@ -441,13 +442,15 @@ def seed_of(cue, v):
 def main():
     os.makedirs(MUSIC_DIR, exist_ok=True)
     os.makedirs(SFX_DIR, exist_ok=True)
-    music, n = make_music()
-    write_wav(os.path.join(MUSIC_DIR, "temple.wav"), music, MSR, 2)
-    peak, rms = stats(music)
-    print(f"music/temple.wav: {n} samples @ {MSR} Hz = {n / MSR:.2f} s, peak {peak:.1f} dBFS, "
-          f"rms {rms:.1f} dBFS, |last-first| {np.abs(music[0] - music[-1]).max():.5f}, "
-          f"max step {np.abs(np.diff(music, axis=0)).max():.5f}")
-    write_import(os.path.join(MUSIC_DIR, "temple.wav.import"), "res://assets/audio/music/temple.wav", 1, n)
+    # The temple plays "Ancient Temple" (Alexandr Zhelanov, CC-BY 4.0, see CREDITS.md) as temple.ogg; this
+    # synthesized loop is only written on request, as a stand-in, outside the game's music folder.
+    if "--music" in sys.argv:
+        music, n = make_music()
+        out = os.path.join(ROOT, "tmp_preview", "temple_synth.wav")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        write_wav(out, music, MSR, 2)
+        peak, rms = stats(music)
+        print(f"{out}: {n} samples @ {MSR} Hz = {n / MSR:.2f} s, peak {peak:.1f} dBFS, rms {rms:.1f} dBFS")
     for cue, (fn, variants, rms_target) in SFX.items():
         for v in range(variants):
             x = fade(fn(np.random.default_rng(seed_of(cue, v)), v), 0.002, 0.03)

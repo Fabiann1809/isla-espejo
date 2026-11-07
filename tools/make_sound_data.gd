@@ -111,7 +111,9 @@ const ALIASES := {
 const MUSIC_VOLUMES := {
 	&"menu": -8.0,
 	&"forest": -10.0,
-	&"temple": -10.0,
+	&"temple": -12.0,
+	# Played while a lava surge floods a temple room (Sound switches to it and back).
+	&"temple_surge": -12.0,
 	&"boss": -9.0,
 }
 

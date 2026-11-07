@@ -1,144 +1,145 @@
 [gd_resource type="Resource" script_class="SoundBank" format=3]
 
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alert_0.wav" id="1_f7dtj"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_hit_0.ogg" id="2_noq8n"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_hit_1.ogg" id="3_dm008"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_hit_2.ogg" id="4_t7n7a"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_wall_0.ogg" id="5_a7n6p"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_wall_1.ogg" id="6_cgjt3"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_defeated_0.wav" id="7_tbc5q"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_roots_0.ogg" id="8_clh4e"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_slam_0.ogg" id="9_0p03a"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_slam_1.ogg" id="10_wfg0u"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_warn_0.wav" id="11_yibqy"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/chest_0.ogg" id="12_gg6r1"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/crit_hit_0.wav" id="13_laah5"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/crit_hit_1.wav" id="14_uswd1"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/crit_hit_2.wav" id="15_vc2mb"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/dash_0.ogg" id="16_54ei2"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/dash_1.ogg" id="17_juvs4"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_bones_0.ogg" id="18_6yajw"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_bones_1.ogg" id="19_3nmgj"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_slime_0.ogg" id="20_tuvv0"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_slime_1.ogg" id="21_67y0a"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_wood_0.ogg" id="22_02jvl"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_wood_1.ogg" id="23_sebq0"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/dialogue_0.ogg" id="24_jprxn"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hurt_0.ogg" id="25_7canb"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hurt_1.ogg" id="26_4j0r5"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hurt_2.ogg" id="27_xt4hs"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/fragment_0.wav" id="28_bimpw"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/geyser_0.wav" id="29_hvig4"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/geyser_1.wav" id="30_xh8bl"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/geyser_2.wav" id="31_gfd4u"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_bubble_0.wav" id="32_sxm3a"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_bubble_1.wav" id="33_k1i54"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_bubble_2.wav" id="34_8yukw"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_recede_0.wav" id="35_udmus"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_recede_1.wav" id="36_hr20s"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_recede_2.wav" id="37_jn8l5"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_rise_0.wav" id="38_7wf12"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_rise_1.wav" id="39_7ndps"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_rise_2.wav" id="40_wxqb4"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_warn_0.wav" id="41_7sbgt"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_warn_1.wav" id="42_awyhr"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_warn_2.wav" id="43_j1jev"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/merchant_greet_0.wav" id="44_i63jo"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/merchant_greet_1.wav" id="45_o3vmw"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/pickup_gold_0.ogg" id="46_h2a2p"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/pickup_gold_1.ogg" id="47_du8uq"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/pickup_heart_0.ogg" id="48_m8280"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_death_0.wav" id="49_ifx71"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_hurt_0.ogg" id="50_tu1i8"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_hurt_1.ogg" id="51_onjlj"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/portal_0.wav" id="52_m5410"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/rolling_rock_0.wav" id="53_7q610"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/rolling_rock_1.wav" id="54_plil6"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/rolling_rock_2.wav" id="55_iu241"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/saw_0.wav" id="56_0qcmd"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/saw_1.wav" id="57_xdu2s"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/saw_2.wav" id="58_d7hn7"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_buy_0.wav" id="59_8id6t"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_buy_1.wav" id="60_plkap"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_buy_2.wav" id="61_mcr50"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_denied_0.wav" id="62_i34oy"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_denied_1.wav" id="63_ek3kg"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_denied_2.wav" id="64_psxyj"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shot_0.wav" id="65_pd3en"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shot_1.wav" id="66_efhtp"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shot_2.wav" id="67_yr4rx"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_current_0.ogg" id="68_l5502"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_current_1.ogg" id="69_3dbcd"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_roots_0.ogg" id="70_8r5x2"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_shadow_0.ogg" id="71_djdib"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/spikes_0.wav" id="72_3qn7s"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/spikes_1.wav" id="73_pv47a"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/spikes_2.wav" id="74_boor7"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/spit_0.wav" id="75_8q8hl"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_0.ogg" id="76_kukfx"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_1.ogg" id="77_vrepc"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_2.ogg" id="78_g3b2w"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_3.ogg" id="79_jgsiu"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_4.ogg" id="80_gtcer"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/summon_0.wav" id="81_3twrp"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/thunder_0.wav" id="82_ci55s"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_back_0.ogg" id="83_d1v6n"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_click_0.ogg" id="84_xljyp"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_confirm_0.ogg" id="85_xt2l4"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_hover_0.ogg" id="86_octte"]
-[ext_resource type="AudioStream" path="res://assets/audio/music/boss.ogg" id="87_hh7bo"]
-[ext_resource type="AudioStream" path="res://assets/audio/music/forest.ogg" id="88_sf6au"]
-[ext_resource type="AudioStream" path="res://assets/audio/music/menu.ogg" id="89_k5ofm"]
-[ext_resource type="AudioStream" path="res://assets/audio/music/temple.wav" id="90_xyxj0"]
-[ext_resource type="Script" path="res://scripts/core/sound_bank.gd" id="91_20iqx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alert_0.wav" id="1_noq8n"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_hit_0.ogg" id="2_dm008"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_hit_1.ogg" id="3_t7n7a"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_hit_2.ogg" id="4_a7n6p"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_wall_0.ogg" id="5_cgjt3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/arrow_wall_1.ogg" id="6_tbc5q"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_defeated_0.wav" id="7_clh4e"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_roots_0.ogg" id="8_0p03a"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_slam_0.ogg" id="9_wfg0u"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_slam_1.ogg" id="10_yibqy"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boss_warn_0.wav" id="11_gg6r1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/chest_0.ogg" id="12_laah5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crit_hit_0.wav" id="13_uswd1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crit_hit_1.wav" id="14_vc2mb"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crit_hit_2.wav" id="15_54ei2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/dash_0.ogg" id="16_juvs4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/dash_1.ogg" id="17_6yajw"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_bones_0.ogg" id="18_3nmgj"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_bones_1.ogg" id="19_tuvv0"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_slime_0.ogg" id="20_67y0a"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_slime_1.ogg" id="21_02jvl"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_wood_0.ogg" id="22_sebq0"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_wood_1.ogg" id="23_jprxn"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/dialogue_0.ogg" id="24_7canb"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hurt_0.ogg" id="25_4j0r5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hurt_1.ogg" id="26_xt4hs"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hurt_2.ogg" id="27_bimpw"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/fragment_0.wav" id="28_hvig4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/geyser_0.wav" id="29_xh8bl"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/geyser_1.wav" id="30_gfd4u"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/geyser_2.wav" id="31_sxm3a"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_bubble_0.wav" id="32_k1i54"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_bubble_1.wav" id="33_8yukw"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_bubble_2.wav" id="34_udmus"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_recede_0.wav" id="35_hr20s"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_recede_1.wav" id="36_jn8l5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_recede_2.wav" id="37_7wf12"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_rise_0.wav" id="38_7ndps"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_rise_1.wav" id="39_wxqb4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_rise_2.wav" id="40_7sbgt"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_warn_0.wav" id="41_awyhr"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_warn_1.wav" id="42_j1jev"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/lava_surge_warn_2.wav" id="43_i63jo"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/merchant_greet_0.wav" id="44_o3vmw"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/merchant_greet_1.wav" id="45_h2a2p"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/pickup_gold_0.ogg" id="46_du8uq"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/pickup_gold_1.ogg" id="47_m8280"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/pickup_heart_0.ogg" id="48_ifx71"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_death_0.wav" id="49_tu1i8"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_hurt_0.ogg" id="50_onjlj"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_hurt_1.ogg" id="51_m5410"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/portal_0.wav" id="52_7q610"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/rolling_rock_0.wav" id="53_plil6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/rolling_rock_1.wav" id="54_iu241"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/rolling_rock_2.wav" id="55_0qcmd"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/saw_0.wav" id="56_xdu2s"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/saw_1.wav" id="57_d7hn7"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/saw_2.wav" id="58_8id6t"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_buy_0.wav" id="59_plkap"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_buy_1.wav" id="60_mcr50"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_buy_2.wav" id="61_i34oy"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_denied_0.wav" id="62_ek3kg"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_denied_1.wav" id="63_psxyj"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shop_denied_2.wav" id="64_pd3en"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shot_0.wav" id="65_efhtp"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shot_1.wav" id="66_yr4rx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shot_2.wav" id="67_l5502"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_current_0.ogg" id="68_3dbcd"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_current_1.ogg" id="69_8r5x2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_roots_0.ogg" id="70_djdib"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/skill_shadow_0.ogg" id="71_3qn7s"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/spikes_0.wav" id="72_pv47a"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/spikes_1.wav" id="73_boor7"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/spikes_2.wav" id="74_8q8hl"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/spit_0.wav" id="75_kukfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_0.ogg" id="76_vrepc"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_1.ogg" id="77_g3b2w"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_2.ogg" id="78_jgsiu"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_3.ogg" id="79_gtcer"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/step_4.ogg" id="80_3twrp"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/summon_0.wav" id="81_ci55s"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/thunder_0.wav" id="82_d1v6n"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_back_0.ogg" id="83_xljyp"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_click_0.ogg" id="84_xt2l4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_confirm_0.ogg" id="85_octte"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_hover_0.ogg" id="86_hh7bo"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/boss.ogg" id="87_sf6au"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/forest.ogg" id="88_k5ofm"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/menu.ogg" id="89_xyxj0"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/temple.ogg" id="90_20iqx"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/temple_surge.ogg" id="91_p1hcf"]
+[ext_resource type="Script" path="res://scripts/core/sound_bank.gd" id="92_mg28i"]
 
 [resource]
-script = ExtResource("91_20iqx")
+script = ExtResource("92_mg28i")
 cues = {
-&"alert": [ExtResource("1_f7dtj")],
-&"arrow_hit": [ExtResource("2_noq8n"), ExtResource("3_dm008"), ExtResource("4_t7n7a")],
-&"arrow_wall": [ExtResource("5_a7n6p"), ExtResource("6_cgjt3")],
-&"boss_defeated": [ExtResource("7_tbc5q")],
-&"boss_roots": [ExtResource("8_clh4e")],
-&"boss_slam": [ExtResource("9_0p03a"), ExtResource("10_wfg0u")],
-&"boss_warn": [ExtResource("11_yibqy")],
-&"chest": [ExtResource("12_gg6r1")],
-&"crit_hit": [ExtResource("13_laah5"), ExtResource("14_uswd1"), ExtResource("15_vc2mb")],
-&"dash": [ExtResource("16_54ei2"), ExtResource("17_juvs4")],
-&"death_bones": [ExtResource("18_6yajw"), ExtResource("19_3nmgj")],
-&"death_slime": [ExtResource("20_tuvv0"), ExtResource("21_67y0a")],
-&"death_wood": [ExtResource("22_02jvl"), ExtResource("23_sebq0")],
-&"dialogue": [ExtResource("24_jprxn")],
-&"enemy_hurt": [ExtResource("25_7canb"), ExtResource("26_4j0r5"), ExtResource("27_xt4hs")],
-&"fragment": [ExtResource("28_bimpw")],
-&"geyser": [ExtResource("29_hvig4"), ExtResource("30_xh8bl"), ExtResource("31_gfd4u")],
-&"lava_bubble": [ExtResource("32_sxm3a"), ExtResource("33_k1i54"), ExtResource("34_8yukw")],
-&"lava_surge_recede": [ExtResource("35_udmus"), ExtResource("36_hr20s"), ExtResource("37_jn8l5")],
-&"lava_surge_rise": [ExtResource("38_7wf12"), ExtResource("39_7ndps"), ExtResource("40_wxqb4")],
-&"lava_surge_warn": [ExtResource("41_7sbgt"), ExtResource("42_awyhr"), ExtResource("43_j1jev")],
-&"merchant_greet": [ExtResource("44_i63jo"), ExtResource("45_o3vmw")],
-&"pickup_gold": [ExtResource("46_h2a2p"), ExtResource("47_du8uq")],
-&"pickup_heart": [ExtResource("48_m8280")],
-&"player_death": [ExtResource("49_ifx71")],
-&"player_hurt": [ExtResource("50_tu1i8"), ExtResource("51_onjlj")],
-&"portal": [ExtResource("52_m5410")],
-&"rolling_rock": [ExtResource("53_7q610"), ExtResource("54_plil6"), ExtResource("55_iu241")],
-&"saw": [ExtResource("56_0qcmd"), ExtResource("57_xdu2s"), ExtResource("58_d7hn7")],
-&"shop_buy": [ExtResource("59_8id6t"), ExtResource("60_plkap"), ExtResource("61_mcr50")],
-&"shop_denied": [ExtResource("62_i34oy"), ExtResource("63_ek3kg"), ExtResource("64_psxyj")],
-&"shot": [ExtResource("65_pd3en"), ExtResource("66_efhtp"), ExtResource("67_yr4rx")],
-&"skill_current": [ExtResource("68_l5502"), ExtResource("69_3dbcd")],
-&"skill_roots": [ExtResource("70_8r5x2")],
-&"skill_shadow": [ExtResource("71_djdib")],
-&"spikes": [ExtResource("72_3qn7s"), ExtResource("73_pv47a"), ExtResource("74_boor7")],
-&"spit": [ExtResource("75_8q8hl")],
-&"step": [ExtResource("76_kukfx"), ExtResource("77_vrepc"), ExtResource("78_g3b2w"), ExtResource("79_jgsiu"), ExtResource("80_gtcer")],
-&"summon": [ExtResource("81_3twrp")],
-&"thunder": [ExtResource("82_ci55s")],
-&"ui_back": [ExtResource("83_d1v6n")],
-&"ui_click": [ExtResource("84_xljyp")],
-&"ui_confirm": [ExtResource("85_xt2l4")],
-&"ui_hover": [ExtResource("86_octte")]
+&"alert": [ExtResource("1_noq8n")],
+&"arrow_hit": [ExtResource("2_dm008"), ExtResource("3_t7n7a"), ExtResource("4_a7n6p")],
+&"arrow_wall": [ExtResource("5_cgjt3"), ExtResource("6_tbc5q")],
+&"boss_defeated": [ExtResource("7_clh4e")],
+&"boss_roots": [ExtResource("8_0p03a")],
+&"boss_slam": [ExtResource("9_wfg0u"), ExtResource("10_yibqy")],
+&"boss_warn": [ExtResource("11_gg6r1")],
+&"chest": [ExtResource("12_laah5")],
+&"crit_hit": [ExtResource("13_uswd1"), ExtResource("14_vc2mb"), ExtResource("15_54ei2")],
+&"dash": [ExtResource("16_juvs4"), ExtResource("17_6yajw")],
+&"death_bones": [ExtResource("18_3nmgj"), ExtResource("19_tuvv0")],
+&"death_slime": [ExtResource("20_67y0a"), ExtResource("21_02jvl")],
+&"death_wood": [ExtResource("22_sebq0"), ExtResource("23_jprxn")],
+&"dialogue": [ExtResource("24_7canb")],
+&"enemy_hurt": [ExtResource("25_4j0r5"), ExtResource("26_xt4hs"), ExtResource("27_bimpw")],
+&"fragment": [ExtResource("28_hvig4")],
+&"geyser": [ExtResource("29_xh8bl"), ExtResource("30_gfd4u"), ExtResource("31_sxm3a")],
+&"lava_bubble": [ExtResource("32_k1i54"), ExtResource("33_8yukw"), ExtResource("34_udmus")],
+&"lava_surge_recede": [ExtResource("35_hr20s"), ExtResource("36_jn8l5"), ExtResource("37_7wf12")],
+&"lava_surge_rise": [ExtResource("38_7ndps"), ExtResource("39_wxqb4"), ExtResource("40_7sbgt")],
+&"lava_surge_warn": [ExtResource("41_awyhr"), ExtResource("42_j1jev"), ExtResource("43_i63jo")],
+&"merchant_greet": [ExtResource("44_o3vmw"), ExtResource("45_h2a2p")],
+&"pickup_gold": [ExtResource("46_du8uq"), ExtResource("47_m8280")],
+&"pickup_heart": [ExtResource("48_ifx71")],
+&"player_death": [ExtResource("49_tu1i8")],
+&"player_hurt": [ExtResource("50_onjlj"), ExtResource("51_m5410")],
+&"portal": [ExtResource("52_7q610")],
+&"rolling_rock": [ExtResource("53_plil6"), ExtResource("54_iu241"), ExtResource("55_0qcmd")],
+&"saw": [ExtResource("56_xdu2s"), ExtResource("57_d7hn7"), ExtResource("58_8id6t")],
+&"shop_buy": [ExtResource("59_plkap"), ExtResource("60_mcr50"), ExtResource("61_i34oy")],
+&"shop_denied": [ExtResource("62_ek3kg"), ExtResource("63_psxyj"), ExtResource("64_pd3en")],
+&"shot": [ExtResource("65_efhtp"), ExtResource("66_yr4rx"), ExtResource("67_l5502")],
+&"skill_current": [ExtResource("68_3dbcd"), ExtResource("69_8r5x2")],
+&"skill_roots": [ExtResource("70_djdib")],
+&"skill_shadow": [ExtResource("71_3qn7s")],
+&"spikes": [ExtResource("72_pv47a"), ExtResource("73_boor7"), ExtResource("74_8q8hl")],
+&"spit": [ExtResource("75_kukfx")],
+&"step": [ExtResource("76_vrepc"), ExtResource("77_g3b2w"), ExtResource("78_jgsiu"), ExtResource("79_gtcer"), ExtResource("80_3twrp")],
+&"summon": [ExtResource("81_ci55s")],
+&"thunder": [ExtResource("82_d1v6n")],
+&"ui_back": [ExtResource("83_xljyp")],
+&"ui_click": [ExtResource("84_xt2l4")],
+&"ui_confirm": [ExtResource("85_octte")],
+&"ui_hover": [ExtResource("86_hh7bo")]
 }
 volumes_db = {
 &"alert": -12.0,
@@ -235,14 +236,16 @@ aliases = {
 &"pickup_arrows": &"pickup_heart"
 }
 music = {
-&"boss": ExtResource("87_hh7bo"),
-&"forest": ExtResource("88_sf6au"),
-&"menu": ExtResource("89_k5ofm"),
-&"temple": ExtResource("90_xyxj0")
+&"boss": ExtResource("87_sf6au"),
+&"forest": ExtResource("88_k5ofm"),
+&"menu": ExtResource("89_xyxj0"),
+&"temple": ExtResource("90_20iqx"),
+&"temple_surge": ExtResource("91_p1hcf")
 }
 music_volumes_db = {
 &"boss": -9.0,
 &"forest": -10.0,
 &"menu": -8.0,
-&"temple": -10.0
+&"temple": -12.0,
+&"temple_surge": -12.0
 }
