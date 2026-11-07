@@ -5,7 +5,7 @@ extends SceneTree
 
 const SEEDS := 400
 ## room_data.id per cell ("x,y:id" sorted by coord) of the forest and the ruins for seeds 1..20,
-## recorded after the special room (the Mercader's shop) took the first free dead end, so a change to the generator that moves one room of
+## recorded after the special room (the Mercader's shop) took a far free spot (3+ steps from the start), so a change to the generator that moves one room of
 ## the first two chapters fails here (regenerate the table only on purpose, with the old code).
 const REFERENCE := {
 	"forest": {

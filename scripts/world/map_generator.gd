@@ -10,6 +10,8 @@ extends RefCounted
 const MAX_PATH_ATTEMPTS := 300
 ## Picking a room again is less likely each time it was already used, for variety.
 const REPEAT_PENALTY := 0.4
+## The special room (the Mercader's shop) lies at least this many steps from the start.
+const SPECIAL_MIN_DISTANCE := 3
 
 
 ## `weight_modifiers` maps a room tag to a multiplier (e.g. {&"ambush": 2.0}); this is how the
@@ -175,14 +177,36 @@ static func _assign_types(layout: MapLayout, scenario: ScenarioData, rng: Random
 	dead_ends.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return keys[a] > keys[b])
 	_shuffle(others, rng)
 	var spots: Array[Vector2i] = dead_ends + others
-	var wanted: Array[RoomData.RoomType] = []
-	# The special room (the Mercader's shop) goes first: when spots run short a reward room is the one dropped.
-	for i in scenario.special_rooms:
-		wanted.append(RoomData.RoomType.SPECIAL)
-	for i in scenario.reward_rooms:
-		wanted.append(RoomData.RoomType.REWARD)
-	for i in mini(wanted.size(), spots.size()):
-		layout.get_cell(spots[i]).type = wanted[i]
+	# The special room (the Mercader's shop) is picked first and far from the start: at least
+	# SPECIAL_MIN_DISTANCE steps away and, when the map allows, in the second half of the run; never next
+	# to the boss. The first spot of `spots` that fits wins (far dead ends come first); with none, the
+	# farthest spot. Reward rooms then take the next spots.
+	var half := (layout.main_path.size() - 1) >> 1
+	var special := -1
+	for need in [maxi(SPECIAL_MIN_DISTANCE, half), SPECIAL_MIN_DISTANCE]:
+		for i in spots.size():
+			var coord := spots[i]
+			if dist[coord] >= need and not layout.are_connected(coord, layout.boss_cell):
+				special = i
+				break
+		if special >= 0:
+			break
+	if special < 0:
+		# Nothing far enough: the farthest spot, off the boss's side if any spot is.
+		for avoid_boss in [true, false]:
+			for i in spots.size():
+				var coord := spots[i]
+				if avoid_boss and layout.are_connected(coord, layout.boss_cell):
+					continue
+				if special < 0 or dist[coord] > dist[spots[special]]:
+					special = i
+			if special >= 0:
+				break
+	if scenario.special_rooms > 0 and special >= 0:
+		layout.get_cell(spots[special]).type = RoomData.RoomType.SPECIAL
+		spots.remove_at(special)
+	for i in mini(scenario.reward_rooms, spots.size()):
+		layout.get_cell(spots[i]).type = RoomData.RoomType.REWARD
 	# No combat cell was left: turn the farthest cell that is not start, boss or event into the special room.
 	if scenario.special_rooms > 0 and layout.count_of_type(RoomData.RoomType.SPECIAL) == 0:
 		var far := Vector2i(-1, -1)
