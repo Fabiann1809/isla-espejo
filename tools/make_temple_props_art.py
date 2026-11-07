@@ -192,17 +192,10 @@ def glyph(c, x, y, index, color):
 def pillar_carved(frame, n):
     """A tall carved pillar: capital, shaft with bands of glyphs, a stepped plinth; the glyphs glint in turn."""
     c = Canvas(20, 60)
-    stone_block(c, 1, 2, 18, 3, top=STONE_HI)  # capital, two steps
-    stone_block(c, 2, 5, 16, 3, top=STONE_4)
-    for y in range(8, 50):  # fluted shaft
-        for x in range(3, 17):
-            col = shade_x(x, 3, 16, (STONE_4, STONE_3, STONE_3, STONE_2, STONE_1))
-            if x in (6, 10, 14):
-                col = STONE_1 if x > 8 else STONE_2
-            elif x in (7, 11, 15):
-                col = STONE_4 if x < 8 else STONE_3
-            c.put(x, y, col)
-    c.vline(3, 8, 49, STONE_HI)
+    capital(c, 1, 1, 18, pale_rows=1)  # capital: the abacus with its top face, then a step
+    c.hline(1, 18, 4, STONE_2)
+    stone_block(c, 2, 5, 16, 3, top=STONE_4, ramp=(STONE_4, STONE_3, STONE_2, STONE_1))
+    shaft(c, 3, 17, 8, 50, flutes=(6, 10, 14))
     # Two carved panels, recessed, each with a glyph; a bronze ring between them.
     for i, y in enumerate((12, 31)):
         c.rect(4, y, 12, 10, STONE_2)
@@ -219,8 +212,12 @@ def pillar_carved(frame, n):
     c.hline(4, 15, 25, BRONZE_2)
     c.hline(4, 15, 26, BRONZE_D)
     c.put(5, 25, GOLD_HI)
-    stone_block(c, 2, 50, 16, 3, top=STONE_4)  # plinth, two steps
-    stone_block(c, 1, 53, 18, 5, top=STONE_4)
+    stone_block(c, 2, 50, 16, 3, top=STONE_4, ramp=(STONE_4, STONE_3, STONE_2, STONE_1))  # plinth, two steps
+    capital(c, 1, 53, 18, pale_rows=0)
+    c.rect(1, 55, 18, 3, STONE_2)
+    c.vline(1, 55, 57, STONE_3)
+    c.vline(18, 55, 57, STONE_D)
+    c.hline(1, 18, 57, JOINT)
     # A crack and a bit of moss at the foot.
     c.vline(13, 44, 48, JOINT)
     c.put(14, 47, JOINT)
@@ -237,38 +234,90 @@ def pillar_block(frame, n):
     y = 2
     for i, (x, w) in enumerate(offsets):
         h = 11 if i < 3 else 12
-        stone_block(c, x, y, w, h)
+        # Each block lit on the left and dark on the right, its top face pale where it sticks out.
+        stone_block(c, x, y, w, h, ramp=(STONE_HI, STONE_4, STONE_3, STONE_3, STONE_2, STONE_1, STONE_D),
+                    top=STONE_PALE if i == 0 or offsets[i - 1][1] < w else STONE_4)
         # A few chips and a joint across the face.
         c.put(x + w - 3, y + 3, STONE_1)
         c.put(x + 2, y + h - 3, STONE_2)
         if i == 1:
             c.vline(x + 7, y + 1, y + h - 2, JOINT)
         y += h
-    stone_block(c, 1, 46, 18, 4, top=STONE_4)
+    capital(c, 1, 46, 18, pale_rows=0)
+    c.rect(1, 48, 18, 2, STONE_2)
+    c.vline(18, 48, 49, STONE_D)
+    c.hline(1, 18, 49, JOINT)
     c.outline()
     moss(c, ((4, 14), (14, 29), (3, 43)), frame, n)
     embers(c, ((16, 44, 0),), frame, n, rise=3)
     return c
 
 
+SHAFT = (STONE_HI, STONE_4, STONE_4, STONE_3, STONE_3, STONE_2, STONE_1, STONE_D)
+
+
+def shaft(c, x0, x1, y0, y1, flutes=()):
+    """A round shaft lit from the upper left: pale on its left edge, dark on its right, with a flute
+    (a dark groove and its lit edge) at each x of `flutes`."""
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            col = shade_x(x, x0, x1 - 1, SHAFT)
+            if x in flutes:
+                col = STONE_D if x > (x0 + x1) // 2 else STONE_1
+            elif x - 1 in flutes:
+                col = STONE_HI if x < (x0 + x1) // 2 else STONE_3
+            c.put(x, y, col)
+
+
+def capital(c, x, y, w, pale_rows=1):
+    """The flat top of a capital or a plinth seen from above: a pale top face, a lit front edge and a
+    dark underside, so the block reads as standing proud of the shaft."""
+    c.rect(x, y, w, 1, STONE_PALE)
+    c.rect(x, y + pale_rows, w, 1, STONE_HI)
+    for yy in range(y + 1, y + pale_rows):
+        c.rect(x, yy, w, 1, STONE_PALE)
+    c.rect(x, y + pale_rows + 1, w, 1, STONE_4)
+    c.vline(x + w - 1, y + 1, y + pale_rows + 1, STONE_2)
+
+
 def column_low(frame, n):
-    """A squat column with a wide capital, the kind that lines a bridge; a glint runs along its band."""
+    """A squat column of the kind that lines a bridge, standing up: a wide capital with its top face
+    seen from above, a fluted round shaft pale on the left and dark on the right, a bronze band whose
+    glint travels round it, and a stepped plinth; its shadow is the prop's, leaning east."""
     c = Canvas(20, 32)
-    stone_block(c, 1, 2, 18, 4, top=STONE_HI)
-    for y in range(6, 26):
-        for x in range(4, 16):
-            c.put(x, y, shade_x(x, 4, 15, (STONE_4, STONE_3, STONE_3, STONE_2, STONE_1)))
-    c.vline(4, 6, 25, STONE_HI)
-    c.hline(5, 14, 12, JOINT)
-    c.hline(5, 14, 20, JOINT)
-    for x in (6, 9, 12):
-        c.put(x, 15, BRONZE_1)
-        c.put(x + 1, 16, BRONZE_D)
-    stone_block(c, 2, 26, 16, 4, top=STONE_4)
+    # Capital: the abacus (18 wide, its top face visible), then the echinus narrowing to the shaft.
+    capital(c, 1, 0, 18, pale_rows=1)
+    c.hline(1, 18, 3, STONE_2)
+    c.hline(2, 17, 4, STONE_3)
+    c.hline(3, 16, 5, STONE_1)
+    c.put(2, 4, STONE_4)
+    c.put(17, 4, STONE_D)
+    # Shaft with three flutes.
+    shaft(c, 4, 16, 6, 25, flutes=(7, 11))
+    # Bronze band with a glint that runs round it.
+    c.hline(4, 15, 14, BRONZE_2)
+    c.hline(4, 15, 15, BRONZE_1)
+    c.hline(4, 15, 16, BRONZE_D)
+    c.put(15, 14, BRONZE_D)
+    c.put(15, 15, BRONZE_D)
+    # Base: a torus, then the plinth with its top face; the foot (10, 28) stands in the plinth.
+    c.hline(3, 16, 25, STONE_4)
+    c.hline(3, 16, 26, STONE_2)
+    c.put(16, 25, STONE_1)
+    capital(c, 1, 27, 18, pale_rows=0)
+    c.rect(1, 29, 18, 3, STONE_2)
+    c.vline(1, 29, 31, STONE_3)
+    c.vline(18, 29, 31, STONE_D)
+    c.hline(1, 18, 31, JOINT)
+    c.hline(2, 17, 30, STONE_1)
+    # A chip and a crack.
+    c.put(6, 20, JOINT)
+    c.put(7, 21, JOINT)
     c.outline()
-    glint = (5 + frame * 3) % 10 + 5
-    c.put(glint, 15, GOLD_HI)
-    moss(c, ((15, 25),), frame, n)
+    glint = (4 + frame * 3) % 12 + 4
+    c.put(glint, 14, GOLD_HI)
+    c.put(min(15, glint + 1), 15, GOLD_HI)
+    moss(c, ((15, 24),), frame, n)
     return c
 
 
@@ -278,13 +327,17 @@ def column_broken(frame, n):
     tops = (9, 7, 6, 8, 10, 12, 11, 9, 8, 10, 12, 13)
     for i, x in enumerate(range(4, 16)):
         for y in range(tops[i], 22):
-            c.put(x, y, shade_x(x, 4, 15, (STONE_4, STONE_3, STONE_3, STONE_2, STONE_1)))
-        c.put(x, tops[i], STONE_HI if i < 6 else STONE_4)
-    c.vline(4, 9, 21, STONE_HI)
+            c.put(x, y, shade_x(x, 4, 15, SHAFT))
+        c.put(x, tops[i], STONE_PALE if i < 6 else STONE_4)
+    c.vline(8, 9, 21, STONE_1)
+    c.vline(12, 12, 21, STONE_D)
     c.hline(5, 14, 16, JOINT)
     c.put(8, 12, JOINT)
     c.put(9, 13, JOINT)
-    stone_block(c, 2, 22, 16, 4, top=STONE_4)
+    capital(c, 2, 22, 16, pale_rows=0)
+    c.rect(2, 24, 16, 2, STONE_2)
+    c.vline(17, 24, 25, STONE_D)
+    c.hline(2, 17, 25, JOINT)
     # Fallen chips.
     for x, y, col in ((1, 24, STONE_3), (2, 25, STONE_2), (17, 23, STONE_3), (18, 24, STONE_2), (16, 25, STONE_1)):
         c.put(x, y, col)
@@ -399,12 +452,12 @@ def brazier(frame, n):
 def brazier_pedestal(frame, n):
     """A stone pedestal 16x32 with a bronze bowl on top, its flame lighting the way."""
     c = Canvas(20, 44)
-    for y in range(14, 38):
-        for x in range(4, 16):
-            c.put(x, y, shade_x(x, 4, 15, (STONE_4, STONE_3, STONE_3, STONE_2, STONE_1)))
-    c.vline(4, 14, 37, STONE_HI)
-    stone_block(c, 3, 12, 14, 3, top=STONE_HI)
-    stone_block(c, 2, 38, 16, 4, top=STONE_4)
+    shaft(c, 4, 16, 14, 38)
+    stone_block(c, 3, 12, 14, 3, top=STONE_PALE, ramp=(STONE_4, STONE_3, STONE_2, STONE_1))
+    capital(c, 2, 38, 16, pale_rows=0)
+    c.rect(2, 40, 16, 2, STONE_2)
+    c.vline(17, 40, 41, STONE_D)
+    c.hline(2, 17, 41, JOINT)
     c.hline(5, 14, 20, JOINT)
     c.hline(5, 14, 30, JOINT)
     glyph(c, 8, 23, 1, (JOINT, BRONZE_D, GOLD_HI, BRONZE_D, JOINT, JOINT, BRONZE_D, JOINT)[frame % 8])

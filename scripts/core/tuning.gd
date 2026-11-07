@@ -555,6 +555,9 @@ const TEMPLE_EAST_SHADOWS := true
 const TEMPLE_STAIR_WALLS := true
 const TEMPLE_STAIR_TOP_BRAZIERS := true
 const TEMPLE_STAIR_BRAZIER_SPACING := 6
+## How far a solid prop's shadow leans east, away from the light (px per px of the prop's height;
+## 0 = a shadow right under its foot).
+const TEMPLE_PROP_SHADOW_LEAN := 0.22
 ## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
 ## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava
 ## cells (0 = none) with this many embers rising from it (0 = none), their life (s), their climb

@@ -297,13 +297,18 @@ func _collide(size: Vector2, layer_bits: int) -> void:
 
 
 ## A soft shadow on the floor under a solid prop, drawn with the floor so it never darkens an actor.
+## It leans east, away from the light, the taller the prop (`Tuning.TEMPLE_PROP_SHADOW_LEAN`), so a
+## column reads as standing up.
 func _foot_shadow() -> void:
 	if not Tuning.RUIN_PROP_SHADOWS or not is_solid():
 		return
 	var size := footprint()
 	var shadow := ActorShadow.new()
 	shadow.name = ActorShadow.NODE_NAME
-	shadow.size = Vector2(size.x + 4.0, maxf(4.0, size.y * 0.75))
+	var foot: Array = spec().get("foot", [0, 0])
+	var lean := maxf(0.0, Tuning.TEMPLE_PROP_SHADOW_LEAN) * float(foot[1])
+	shadow.size = Vector2(size.x + 4.0 + lean, maxf(4.0, size.y * 0.75))
+	shadow.position = Vector2(lean / 2.0, 0.0).round()
 	shadow.alpha = Tuning.RUIN_PROP_SHADOW_ALPHA
 	shadow.z_as_relative = false
 	shadow.z_index = RoomTheme.FLOOR_Z
