@@ -53,7 +53,8 @@ func _start_room_center(level: Level) -> Vector2:
 	var room: Room = level.room_at(level.layout.start_cell) if level.layout != null else null
 	if room == null:
 		return level.bounds.get_center()
-	return room.global_position + Level.CELL_SIZE / 2.0
+	# Rooms have their own size now (RoomData.size_tiles): its centre, not a fixed cell's.
+	return room.global_position + room.center()
 
 
 func _run() -> void:

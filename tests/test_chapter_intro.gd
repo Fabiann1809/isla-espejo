@@ -41,8 +41,8 @@ func _initialize() -> void:
 	_check(camera.zoom.x < 1.0, "the camera starts zoomed out")
 	var start_room = level.room_at(level.layout.start_cell)
 	var view_center: Vector2 = level.player.global_position + camera.position
-	_check(view_center.distance_to(start_room.global_position + level.CELL_SIZE / 2.0) < 1.0, "centered on the room where Nico appears, not on the whole map")
-	_check(camera.position.length() < level.CELL_SIZE.length(), "so the glide is short (less than a room)")
+	_check(view_center.distance_to(start_room.global_position + start_room.center()) < 1.0, "centered on the room where Nico appears, not on the whole map")
+	_check(camera.position.length() < start_room.pixel_size().length(), "so the glide is short (less than a room)")
 	_check(level.player._locked, "the controls are held during the intro")
 	_check(not level.get_node("Hud").visible, "the HUD waits for the end")
 
