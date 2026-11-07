@@ -124,7 +124,7 @@ func _check_data(scenario: ScenarioData) -> void:
 			and scenario.objective_flag == &"temple_boss_defeated", "the Guardián antiguo is its boss")
 	_check(scenario.objective != "" and scenario.objective_done != "" and scenario.completion_text != "",
 			"its objective and completion texts are set")
-	_check(scenario.drops.size() == 3 and not scenario.chest_scenes.is_empty() and scenario.exit_scene != null,
+	_check(scenario.drops.size() == 7 and not scenario.chest_scenes.is_empty() and scenario.exit_scene != null,
 			"it has drops, chests and an exit")
 	var affinities := 0
 	for room in scenario.rooms:

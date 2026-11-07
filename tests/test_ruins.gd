@@ -35,7 +35,7 @@ func _initialize() -> void:
 	var ids: Array = scenario.enemy_pool.map(func(scene: PackedScene) -> String: return scene.resource_path.get_file().get_basename())
 	ids.sort()
 	_check(ids == ["bestia_de_la_niebla", "murcielago", "sombra_errante"], "its pool has the three enemies of the second map (%s)" % [ids])
-	_check(scenario.drops.size() == 3 and not scenario.chest_scenes.is_empty() and scenario.exit_scene != null, "it has drops, chests and an exit")
+	_check(scenario.drops.size() == 7 and not scenario.chest_scenes.is_empty() and scenario.exit_scene != null, "it has drops, chests and an exit")
 
 	var invalid := 0
 	var bad_counts := 0
