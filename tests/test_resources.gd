@@ -18,7 +18,7 @@ func _initialize() -> void:
 	_check(heart.display_name != "" and arrows.display_name != "" and gold.display_name != "" and arrows.message != "",
 			"the resources have their Spanish texts in data")
 	var scenario: Resource = load("res://data/scenarios/forest.tres")
-	_check(scenario.drops.size() == 3, "the forest leaves hearts, arrow orbs and gold")
+	_check(scenario.drops.size() == 7, "the forest leaves hearts, the five buffs and gold")
 	_check(load("res://data/enemies/brote.tres").drop_multiplier == 0.0 and load("res://data/enemies/ente.tres").drop_multiplier > 1.0,
 			"minions drop nothing and the mini boss drops more")
 
@@ -93,15 +93,15 @@ func _initialize() -> void:
 			fan += 1
 	_check(fan == 3, "with the orb a shot sends 3 arrows (%d)" % fan)
 	# The effect ends by itself.
-	player._buff_left = 0.01
+	player._buffs[&"arrows"]["left"] = 0.01
 	await _frames(3)
-	_check(not buffs.is_empty() and buffs[-1][1] == 0.0 and player._extra_arrows == 0, "the orb wears off and says so")
+	_check(not buffs.is_empty() and buffs[-1][1] == 0.0 and not player.has_buff(&"arrows"), "the orb wears off and says so")
 
 	# Everything of the run is lost together.
 	player.add_gold(10)
 	arrows.apply(player)
 	player.clear_run_resources()
-	_check(player.gold == 0 and player._extra_arrows == 0 and player._buff_left == 0.0, "ending the run drops gold and the orb")
+	_check(player.gold == 0 and player.buff_ids().is_empty(), "ending the run drops gold and the orb")
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
