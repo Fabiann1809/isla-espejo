@@ -73,11 +73,11 @@ var _side_flip := false
 var _move_hold_left := 0.0
 ## Gold carried in this run (lost when the run ends, see clear_run_resources()).
 var gold := 0
-## Arrows added to every shot while the arrow orb lasts, and the angle between them.
-var _extra_arrows := 0
-var _arrow_spread := 0.0
-var _buff_left := 0.0
-var _buff_id := StringName()
+## Running temporary buffs (see ResourceData.is_buff): id -> {"data": ResourceData, "left": seconds,
+## "charges": int}. Taking the same buff again only restarts its time.
+var _buffs := {}
+## The bubble drawn around Nico while a shield lasts.
+var _shield_bubble: ShieldBubble
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
 ## Pulled by an enemy (a chain): dragged toward `_pull_to` at `_pull_speed` for a while. A dodge
@@ -151,10 +151,7 @@ func _physics_process(delta: float) -> void:
 		if _stealth_left <= 0.0:
 			end_stealth()
 
-	if _buff_left > 0.0:
-		_buff_left -= delta
-		if _buff_left <= 0.0:
-			_end_arrow_buff()
+	_tick_buffs(delta)
 
 	_interact_block_left = maxf(_interact_block_left - delta, 0.0)
 	_flash_left = maxf(_flash_left - delta, 0.0)
@@ -308,36 +305,122 @@ func add_gold(amount: int) -> void:
 	Events.player_gold_changed.emit(gold)
 
 
-## The arrow orb: every shot sends extra arrows in a fan for `data.duration` seconds (taking
-## another orb restarts the time).
-func start_arrow_buff(data: ResourceData) -> void:
-	_extra_arrows = data.extra_arrows
-	_arrow_spread = deg_to_rad(data.spread_degrees)
-	_buff_left = data.duration
-	_buff_id = data.id
+## Starts a temporary buff for `data.duration` seconds; taking the same one again restarts its time
+## (and refills a shield). Several different buffs run at once.
+func start_buff(data: ResourceData) -> void:
+	_buffs[data.id] = {"data": data, "left": data.duration, "charges": data.shield_charges}
 	Events.player_buff_changed.emit(data.id, data.duration, data.color)
+	if _is_shield(data):
+		_show_shield_bubble(data.color)
+		Events.player_buff_charges_changed.emit(data.id, data.shield_charges)
 
 
-func _end_arrow_buff() -> void:
-	_extra_arrows = 0
-	_buff_left = 0.0
-	Events.player_buff_changed.emit(_buff_id, 0.0, Color.WHITE)
-	_buff_id = StringName()
+## The arrow orb's old name.
+func start_arrow_buff(data: ResourceData) -> void:
+	start_buff(data)
+
+
+func has_buff(id: StringName) -> bool:
+	return _buffs.has(id)
+
+
+## Seconds left of the buff `id` (0 = not running).
+func buff_left(id: StringName) -> float:
+	return _buffs[id]["left"] if _buffs.has(id) else 0.0
+
+
+func buff_ids() -> Array:
+	return _buffs.keys()
+
+
+## Hits the shield can still absorb (0 without one).
+func shield_charges() -> int:
+	var data := buff_data(ResourceData.Effect.SHIELD)
+	return _buffs[data.id]["charges"] if data != null else 0
+
+
+## The data of the running BUFF with this effect, or null.
+func buff_data(effect: ResourceData.Effect) -> ResourceData:
+	for entry in _buffs.values():
+		var data: ResourceData = entry["data"]
+		if data.kind == ResourceData.Kind.BUFF and data.effect == effect:
+			return data
+	return null
+
+
+func _is_shield(data: ResourceData) -> bool:
+	return data.kind == ResourceData.Kind.BUFF and data.effect == ResourceData.Effect.SHIELD
+
+
+## The data of the running arrow fan, or null.
+func _fan_data() -> ResourceData:
+	for entry in _buffs.values():
+		if entry["data"].kind == ResourceData.Kind.ARROWS:
+			return entry["data"]
+	return null
+
+
+func _tick_buffs(delta: float) -> void:
+	for id in _buffs.keys():
+		_buffs[id]["left"] -= delta
+		if _buffs[id]["left"] <= 0.0:
+			_end_buff(id)
+
+
+func _end_buff(id: StringName) -> void:
+	if not _buffs.has(id):
+		return
+	var data: ResourceData = _buffs[id]["data"]
+	_buffs.erase(id)
+	if _is_shield(data):
+		_hide_shield_bubble()
+	Events.player_buff_changed.emit(id, 0.0, Color.WHITE)
+
+
+func end_all_buffs() -> void:
+	for id in _buffs.keys():
+		_end_buff(id)
+
+
+func _show_shield_bubble(color: Color) -> void:
+	if _shield_bubble == null:
+		_shield_bubble = ShieldBubble.new()
+		add_child(_shield_bubble)
+	_shield_bubble.color = color
+
+
+func _hide_shield_bubble() -> void:
+	if _shield_bubble != null:
+		_shield_bubble.queue_free()
+		_shield_bubble = null
+
+
+## Walking speed with the haste buff (slows are applied by the callers).
+func move_speed() -> float:
+	var haste := buff_data(ResourceData.Effect.HASTE)
+	return speed * (1.0 + haste.speed_bonus) if haste != null else speed
+
+
+## The weapon's time between shots, shorter while haste lasts.
+func shot_cooldown() -> float:
+	var haste := buff_data(ResourceData.Effect.HASTE)
+	return attack_cooldown * (1.0 - haste.cooldown_cut) if haste != null else attack_cooldown
 
 
 ## Drops everything earned during the run (gold and timed effects); skills and story stay in GameState.
 func clear_run_resources() -> void:
-	if _buff_left > 0.0:
-		_end_arrow_buff()
+	end_all_buffs()
 	add_gold(-gold)
 
 
 ## Forgets what only mattered on the map just left: a chain's pull, a slow, the stealth, the
-## invulnerability, buffered presses and the skills' cooldowns. Health, gold and the buff stay: they
-## are the run's. The Level calls it when it puts Nico on a new map.
+## invulnerability, buffered presses, the skills' cooldowns and every temporary buff (they are for
+## the map they were taken on). Health and gold stay: they are the run's. The Level calls it when it
+## puts Nico on a new map.
 func reset_for_new_map() -> void:
 	if state == State.DEAD:
 		return
+	end_all_buffs()
 	break_pull()
 	_pull_speed = 0.0
 	_slow_left = 0.0
@@ -450,12 +533,39 @@ func _on_dialogue_finished(_dialogue_id: StringName, _state: StringName) -> void
 
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
+	if _absorb_with_shield():
+		return
 	# Published before the health drops: the profile closes the run on `player_died`, so a damage
 	# event after it would be lost and the killing blow would never count.
 	Events.player_damaged.emit(damage, from_position)
 	health.take_damage(damage, from_position)
 	if not health.is_dead():
 		hurt(from_position)
+
+
+## The shield takes the hit instead of Nico: no damage and no knockback, only the i-frames of a hit.
+func _absorb_with_shield() -> bool:
+	var data := buff_data(ResourceData.Effect.SHIELD)
+	if data == null or _buffs[data.id]["charges"] <= 0:
+		return false
+	_buffs[data.id]["charges"] -= 1
+	_invulnerable_left = data.shield_invulnerability
+	flash(data.color, Tuning.SHIELD_FLASH_SECONDS, Tuning.SHIELD_FLASH_STRENGTH)
+	if _shield_bubble != null:
+		_shield_bubble.pulse()
+	var left: int = _buffs[data.id]["charges"]
+	Events.player_buff_charges_changed.emit(data.id, left)
+	if left <= 0:
+		_end_buff(data.id)
+	return true
+
+
+## Every arrow of a frost shot slows what it hits.
+func _on_frost_hit(hurtbox: Hurtbox) -> void:
+	var data := buff_data(ResourceData.Effect.FROST)
+	var target: Node = hurtbox.owner
+	if data != null and target != null and target.has_method("apply_slow"):
+		target.apply_slow(data.slow_factor, data.slow_seconds)
 
 
 func _on_arrow_hit(hurtbox: Hurtbox, damage: int) -> void:
@@ -469,7 +579,7 @@ func _on_crit_landed(hurtbox: Hurtbox, damage: int) -> void:
 
 
 func _process_free(_delta: float) -> void:
-	velocity = _move_dir * speed * (_slow_factor if _slow_left > 0.0 else 1.0)
+	velocity = _move_dir * move_speed() * (_slow_factor if _slow_left > 0.0 else 1.0)
 	state = State.MOVE if _move_dir != Vector2.ZERO else State.IDLE
 
 	if _locked:
@@ -517,7 +627,7 @@ func _process_dash(delta: float) -> void:
 func _start_attack() -> void:
 	end_stealth()
 	_action_dir = facing
-	_attack_cooldown_left = attack_cooldown
+	_attack_cooldown_left = shot_cooldown()
 	_set_attack_active(true)
 	_enter_state(State.ATTACK, attack_time)
 	attacked.emit(_action_dir)
@@ -525,7 +635,7 @@ func _start_attack() -> void:
 
 
 func _process_attack(delta: float) -> void:
-	velocity = _move_dir * speed * attack_move_factor
+	velocity = _move_dir * move_speed() * attack_move_factor
 	# The last tick of the attack always releases a pending shot (a release_at of 1.0 included).
 	if _shot_pending and (_state_time_left - delta <= 0.0 or 1.0 - _state_time_left / attack_time >= weapon.release_at):
 		_fire()
@@ -558,10 +668,14 @@ func _fire() -> void:
 	var pose := FacingView.attack_animation(_action_dir, _body.sprite_frames)
 	var muzzle := global_position + FacingView.attack_muzzle(pose, FacingView.attack_flips(_action_dir))
 	# The middle arrow is the real shot (the AI counts its hit); the others of the fan are extra.
-	var count := 1 + _extra_arrows
+	var fan := _fan_data()
+	var count := 1 + (fan.extra_arrows if fan != null else 0)
+	var spread := deg_to_rad(fan.spread_degrees) if fan != null else 0.0
+	var pierce := buff_data(ResourceData.Effect.PIERCE)
+	var frost := buff_data(ResourceData.Effect.FROST)
 	for i in count:
 		var arrow: Arrow = weapon.projectile_scene.instantiate()
-		var angle := _arrow_spread * (i - (count - 1) / 2.0)
+		var angle := spread * (i - (count - 1) / 2.0)
 		# Every arrow rolls its own crit; a crit is the same Hitbox hit with multiplied damage.
 		var crit := _crit_rng.randf() < total_crit_chance()
 		var damage := arrow_damage()
@@ -569,6 +683,12 @@ func _fire() -> void:
 			damage = maxi(roundi(damage * crit_multiplier), damage)
 		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, damage)
 		arrow.crit = crit
+		if pierce != null:
+			arrow.max_hits = pierce.pierce_count
+			arrow.tint = pierce.color
+		if frost != null:
+			arrow.tint = frost.color
+			arrow.hit_landed.connect(_on_frost_hit)
 		arrow.height_level = Heights.level_of(self)
 		if i == (count - 1) / 2:
 			arrow.hit_landed.connect(_on_arrow_hit.bind(damage))

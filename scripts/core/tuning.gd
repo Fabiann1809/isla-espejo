@@ -408,6 +408,30 @@ const DAMAGE_NUMBER_CRIT_SIZE := 24
 const CRIT_HIT_STOP := 0.04
 const CRIT_SHAKE := Vector2(1.5, 0.1)
 
+# --- Temporary power-ups (the numbers of each live in its ResourceData in data/resources) ------------
+## Wash over Nico (strength 0..1, seconds) when the shield absorbs a hit.
+const SHIELD_FLASH_SECONDS := 0.25
+const SHIELD_FLASH_STRENGTH := 0.5
+## The shield bubble around Nico: art strip (square 32 px frames, played at this fps; code-drawn when the
+## file is missing), centre height above his origin, radius and ring width (px) of the code-drawn one,
+## its alpha, the pulse speed and the extra alpha / scale of the pulse when it absorbs a hit.
+const SHIELD_BUBBLE_ART := "res://assets/sprites/effects/shield_bubble.png"
+const SHIELD_BUBBLE_FPS := 8.0
+const SHIELD_BUBBLE_LIFT := 10.0
+const SHIELD_BUBBLE_RADIUS := 15.0
+const SHIELD_BUBBLE_ALPHA := 0.55
+const SHIELD_BUBBLE_PULSE_SPEED := 3.0
+const SHIELD_BUBBLE_HIT_SECONDS := 0.3
+const SHIELD_BUBBLE_HIT_SCALE := 0.25
+## Radius (px) of the orb that marks a buff on the ground when it has no art.
+const BUFF_ORB_RADIUS := 5.5
+## Art of a buff: the HUD icon (12x12) and the world pickup strip (square 16 px frames, at this fps), named by id.
+const BUFF_ICON_PATH := "res://assets/ui/hud/buff_%s.png"
+const BUFF_PICKUP_PATH := "res://assets/sprites/pickups/buff_%s.png"
+## HUD buff rows: height of each row (px).
+const BUFF_ROW_HEIGHT := 12
+const BUFF_PICKUP_FPS := 8.0
+
 # --- Shop upgrades (bought from the Mercader, kept in GameState for the journey) ----------------------
 ## `SHOP_ENABLED` false: the Mercader only talks. Per level: extra arrow damage, extra crit chance and
 ## extra hearts; 0 turns that upgrade's effect off.

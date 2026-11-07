@@ -27,6 +27,13 @@ var _angle := 0.0
 var height_level := Heights.LOW
 ## A critical arrow (the player rolled it): drawn warm gold so the player sees which one it is.
 var crit := false
+## How many enemies the arrow can hit before it stops (1 = it ends on the first; more = it pierces,
+## the Hitbox still hits each enemy only once).
+var max_hits := 1
+## Colour of the picture (a pierce or frost buff); white = as drawn. A crit's gold wins.
+var tint := Color.WHITE
+
+var _hits := 0
 
 @onready var _art: Sprite2D = $Art
 @onready var _hitbox: Hitbox = $Hitbox
@@ -44,6 +51,7 @@ func setup(direction: Vector2, speed: float, max_range: float, damage: int) -> v
 func _ready() -> void:
 	_art.rotation = _angle
 	_art.position = ART_HEIGHT
+	_art.modulate = tint
 	if crit:
 		_art.modulate = Color(1.0, 0.85, 0.35)
 	var tip := Vector2.from_angle(_angle) * SENSOR_DISTANCE
@@ -67,8 +75,10 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_hit_landed(hurtbox: Hurtbox) -> void:
+	_hits += 1
 	hit_landed.emit(hurtbox)
-	_end_with_impact()
+	if _hits >= max_hits:
+		_end_with_impact()
 
 
 func _end_with_impact() -> void:

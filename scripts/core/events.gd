@@ -54,6 +54,9 @@ signal player_stealth_changed(active: bool)
 # Run resources (hearts, arrow orb, gold); lost when the run ends
 signal resource_collected(resource_id: StringName)
 signal player_gold_changed(total: int)
+## A temporary buff started or was refreshed (`duration` seconds) or ended (`duration` 0); several run at once.
+## A shield also reports how many hits it can still absorb.
+signal player_buff_charges_changed(buff_id: StringName, charges: int)
 ## A timed effect started (`duration` > 0, with the color of its icon) or ended (`duration` = 0).
 signal player_buff_changed(buff_id: StringName, duration: float, color: Color)
 
