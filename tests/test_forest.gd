@@ -125,11 +125,13 @@ func _test_built_level() -> void:
 	var chests := level.get_tree().get_nodes_in_group("chests")
 	var elders := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"elder")
 	var merchants := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"merchant")
-	_check(npcs.size() == 2 and elders.size() == 1 and elders[0].get_parent().data.type == RoomData.RoomType.EVENT,
+	_check(npcs.size() == 3 and elders.size() == 1 and elders[0].get_parent().data.type == RoomData.RoomType.EVENT,
 			"the Anciano waits in the event room")
-	_check(merchants.size() == 1 and merchants[0].get_parent().data.type == RoomData.RoomType.SPECIAL,
-			"the Mercader waits in the special room")
-	if merchants.size() == 1:
+	var merchant_rooms: Array = merchants.map(func(n: Node) -> int: return n.get_parent().data.type)
+	merchant_rooms.sort()
+	_check(merchants.size() == 2 and merchant_rooms == [RoomData.RoomType.START, RoomData.RoomType.SPECIAL],
+			"the Mercader waits in the start room and in the special room")
+	if merchants.size() == 2:
 		var dialogue: Node = root.get_node("Dialogue")
 		var talked := []
 		var listener := func(id: StringName) -> void: talked.append(id)

@@ -132,7 +132,7 @@ build("start", "ForestStart",
              (PINE, 3, 3), (PINE, 5, 2), (PINE, 25, 3), (PINE, 26, 5), (PINE, 3, 14), (PINE, 2, 12),
              (PINE, 25, 14), (PINE, 27, 12), (BUSH, 7, 4), (BUSH, 22, 4), (BUSH, 8, 13), (BUSH, 21, 13),
              (TALL_ROUND_TREE, 4, 5), (TALL_ROUND_TREE, 24, 12)],
-      player_spawn=(240, 144), scatter=[(PINE, 8), (TALL_PINE, 3), (BUSH, 4)])
+      spawns={"NpcSpawn": [(304, 104)]}, player_spawn=(240, 144), scatter=[(PINE, 8), (TALL_PINE, 3), (BUSH, 4)])
 
 # --- Boss: a wide circle of bare earth ringed by trees ------------------------------------------------
 build("boss", "ForestBoss",

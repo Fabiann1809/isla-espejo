@@ -339,12 +339,14 @@ class Room:
                     self.reserved.add((tx, ty))
         self.props.append((kind, x, y, size))
 
-    def marker_near(self, wanted, radius=6):
+    def marker_near(self, wanted, radius=6, off_lanes=False):
         """The pixel position of the free floor cell closest to the tile `wanted`."""
         taken = self.occupied()
         best = None
         for x, y in self.cells():
             if (x, y) in taken or self.near(x, y, "#~wr=", 1):
+                continue
+            if off_lanes and (x in LANE_COLUMNS or y in LANE_ROWS):
                 continue
             d = math.hypot(x - wanted[0], y - wanted[1])
             if d <= radius and (best is None or d < best[0]):
@@ -543,6 +545,8 @@ r.connect()
 r.player_spawn = (240, 144)
 lit(r, crystals=2, torches=2, lanterns=1)
 little(r, boulders=1, stalagmites=1)
+# The Mercader waits a few tiles from Nico's spawn, off the door lanes.
+r.spawns = {"NpcSpawn": [r.marker_near((19, 5), off_lanes=True)]}
 story(r, statues=1, vases=1, armor=1, banners=1)
 r.finish()
 

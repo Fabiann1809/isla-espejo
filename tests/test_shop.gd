@@ -30,6 +30,7 @@ func _initialize() -> void:
 	var player = room.get_node("Player")
 	_test_buying(catalog, player)
 	_test_refusals(catalog, player)
+	await _test_start_rooms()
 	await _test_new_map_and_death(catalog, player, room)
 	_test_saves(catalog, player)
 	await _test_menu_and_merchant(catalog, player)
@@ -74,13 +75,38 @@ func _test_placement() -> void:
 	var forest: Resource = load("res://data/scenarios/forest.tres")
 	_check(temple.start_npc_scene == merchant and temple.special_npc_scene == merchant and temple.npc_scene == null,
 			"the temple's start and special rooms use merchant.tscn; its event room stays empty")
-	_check(forest.special_npc_scene == merchant, "the forest's special room uses the same merchant.tscn")
+	var ruins: Resource = load("res://data/scenarios/ruins.tres")
+	_check(forest.start_npc_scene == merchant and forest.special_npc_scene == merchant,
+			"the forest's start and special rooms use the same merchant.tscn")
+	_check(ruins.start_npc_scene == merchant and ruins.special_npc_scene == merchant and ruins.npc_scene != merchant,
+			"the Ruinas' start and special rooms use it too; the Viajera keeps the event room")
 	var start: Resource = load("res://scenes/levels/rooms/temple/start.tscn")
 	var names: Array = []
 	var state: SceneState = start.get_state()
 	for i in state.get_node_count():
 		names.append(state.get_node_name(i))
 	_check(names.has(&"NpcSpawn"), "the temple's start room has its NpcSpawn marker")
+
+
+## Each chapter's built map puts a Mercader in its start room, a few tiles from where Nico appears.
+func _test_start_rooms() -> void:
+	for chapter in ["forest", "ruins", "temple"]:
+		var level: Node2D = load("res://scenes/levels/%s_level.tscn" % chapter).instantiate()
+		level.seed_value = 4242
+		level.use_director = false
+		root.add_child(level)
+		await _frames(3)
+		var found := false
+		var distance := 0.0
+		for npc in get_nodes_in_group("npcs"):
+			var room: Node = npc.get_parent()
+			if npc.dialogue_id == &"merchant" and room.data != null and room.data.type == 0:
+				found = true
+				distance = npc.global_position.distance_to(level.player.global_position)
+		_check(found, "the %s's start room has a Mercader" % chapter)
+		_check(found and distance >= 32.0 and distance <= 140.0, "he stands a few tiles from Nico's spawn, in view (%d px)" % distance)
+		level.queue_free()
+		await _frames(3)
 
 
 func _test_buying(catalog: Resource, player: Node) -> void:

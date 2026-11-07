@@ -61,6 +61,8 @@ func _initialize() -> void:
 	var pool: Array[PackedScene] = [load("res://scenes/enemies/slime.tscn"), load("res://scenes/enemies/planta_tiradora.tscn"), load("res://scenes/enemies/esqueleto.tscn"), load("res://scenes/enemies/ente.tscn")]
 	scenario.enemy_pool = pool
 	scenario.npc_scene = load("res://scenes/npcs/elder.tscn")
+	scenario.start_npc_scene = load("res://scenes/npcs/merchant.tscn")
+	scenario.special_npc_scene = load("res://scenes/npcs/merchant.tscn")
 	var chests: Array[PackedScene] = [load("res://scenes/world/chest.tscn")]
 	scenario.chest_scenes = chests
 	scenario.boss_scene = load("res://scenes/enemies/forest_guardian.tscn")
