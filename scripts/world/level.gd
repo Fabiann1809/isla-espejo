@@ -113,6 +113,7 @@ func generate(new_seed := 0) -> void:
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = current_seed + 1
+	_use_shadow_style()
 	_build_rooms(rng)
 	_build_corridors()
 	_compute_bounds()
@@ -806,21 +807,32 @@ func _compute_bounds() -> void:
 
 
 func _add_shadows() -> void:
+	for node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("npcs"):
+		if _map.is_ancestor_of(node):
+			ActorShadow.attach_styled(node)
+	if player != null:
+		ActorShadow.attach_styled(player)
+
+
+## The map's shadow style, set before the rooms are built so every actor (also those that appear
+## later, see Room.register_enemy) gets the same shadow.
+func _use_shadow_style() -> void:
 	var alpha := -1.0
 	var size_scale := 1.0
 	var drop := 0.0
+	var bottom := -1.0
 	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		alpha = Tuning.RUIN_SHADOW_ALPHA
 	elif scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
-		# The temple's platforms need everyone plainly on the ground: a stronger, bigger shadow.
+		# The temple's platforms need everyone plainly on the ground: a stronger shadow, anchored under
+		# the feet so it never sticks out below them.
 		alpha = Tuning.TEMPLE_SHADOW_ALPHA
 		size_scale = Tuning.TEMPLE_SHADOW_SCALE
 		drop = Tuning.TEMPLE_SHADOW_DROP
-	for node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("npcs"):
-		if _map.is_ancestor_of(node):
-			ActorShadow.attach(node, alpha, size_scale, drop)
-	if player != null:
-		ActorShadow.attach(player, alpha, size_scale, drop)
+		bottom = Tuning.TEMPLE_SHADOW_BOTTOM
+	ActorShadow.use_style(alpha, size_scale, drop, bottom)
+
+
 ## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void; for the
 ## temple, solid collision around the sea, so nothing ever leaves the map.
 func _build_boundary() -> void:

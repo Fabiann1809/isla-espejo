@@ -185,6 +185,9 @@ func height_at(local: Vector2) -> int:
 
 
 func register_enemy(enemy: Node) -> void:
+	# An enemy that appears after the map was built (a wave, a brood, a summon) gets its shadow here.
+	if enemy is Node2D and enemy.is_inside_tree():
+		ActorShadow.attach_styled(enemy)
 	enemies_alive += 1
 	_had_enemies = true
 	enemy.connect("died", _on_enemy_died)

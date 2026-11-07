@@ -605,6 +605,9 @@ const TEMPLE_SHADOW_SCALE := 1.15
 ## Negative: the shadow's centre sits a little above the last row of the feet, so the feet stand on it
 ## (a big shadow below the feet made Nico look like he floated over the floor).
 const TEMPLE_SHADOW_DROP := -1.5
+## How far the temple shadow's lower edge reaches below the feet (px), for every actor whatever its width
+## (-1 = centre it on the feet with TEMPLE_SHADOW_DROP instead).
+const TEMPLE_SHADOW_BOTTOM := 1.5
 const TEMPLE_PROP_SHADOW_LEAN := 0.22
 ## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
 ## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava
