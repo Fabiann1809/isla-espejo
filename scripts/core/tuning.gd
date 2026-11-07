@@ -118,6 +118,28 @@ const CAMP_LANTERN_LIGHT := Color(1.0, 0.72, 0.36, 0.3)
 const CAMP_LANTERN_LIGHT_RADIUS := 26.0
 const CAMP_RUNE_LIGHT := Color(0.45, 0.9, 1.0, 0.2)
 const CAMP_RUNE_LIGHT_RADIUS := 18.0
+## The Mercader's shop (RoomDressing; art in assets/sprites/shop/, each file used only if it exists, else
+## simple shapes): in the room where a merchant NPC stands, a stall behind him, a rug under him, two
+## lanterns and crates. Offsets are the piece's foot from the Mercader's origin (px); the stall is the
+## only piece with a solid base (SHOP_STALL_BASE_HEIGHT px tall at its foot). A piece whose base would
+## land on a door lane, a prop, a marker, a wall or (temple) anything but floor at the room's level is
+## left out.
+const SHOP_ROOM_ENABLED := true
+const SHOP_ART_DIR := "res://assets/sprites/shop/"
+const SHOP_STALL_OFFSET := Vector2(-16, -16)
+const SHOP_STALL_SIZE := Vector2(64, 48)
+const SHOP_STALL_BASE_HEIGHT := 6.0
+const SHOP_RUG_OFFSET := Vector2(0, 2)
+const SHOP_RUG_SIZE := Vector2(48, 32)
+## Lanterns flank the stall; the strip's frames are 16 px wide.
+const SHOP_LANTERN_OFFSETS := [Vector2(-52, -16), Vector2(20, -16)]
+const SHOP_LANTERN_FRAME_WIDTH := 16
+const SHOP_LANTERN_FPS := 6.0
+const SHOP_LANTERN_LIGHT := Color(1.0, 0.72, 0.36, 0.3)
+const SHOP_LANTERN_LIGHT_RADIUS := 30.0
+const SHOP_CRATES_OFFSETS := [Vector2(36, -24), Vector2(-44, -24)]
+const SHOP_CRATES_SIZE := Vector2(32, 24)
+const SHOP_CRATES_BASE_HEIGHT := 6.0
 ## How far above a tile's bottom the floor details of the forest art stand (px).
 const DETAIL_FOOT_LIFT := 3.0
 ## Trees on the walls of the rooms and corridors: distance between them, how far each one wanders

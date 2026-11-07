@@ -3,7 +3,8 @@ extends RefCounted
 ## Decoration that tells the special rooms apart at a glance, added by Level after it fills a room:
 ## - boss arena: darker ground, roots on the floor, a ring of standing stones, torches at its doors;
 ## - reward glade: a pool of warm light around the chest and a few flowers;
-## - event camp: the campfire's flickering light and a signpost by the way in.
+## - event camp: the campfire's flickering light and a signpost by the way in;
+## - the Mercader's shop (any room where a merchant NPC stands): a stall, a rug, lanterns and crates.
 ## Purely visual: no collision, no gameplay. Every element can be switched off in Tuning.
 
 const TORCH_FRAMES := [TileArt.TORCH_A, TileArt.TORCH_B]
@@ -19,6 +20,8 @@ static var _pixel: Texture2D
 static func dress(room: Room) -> void:
 	if not Tuning.ROOM_DRESSING_ENABLED or room.theme == null or room.data == null:
 		return
+	if Tuning.SHOP_ROOM_ENABLED:
+		_dress_shop(room)
 	# The Ruinas dress their special rooms with their own props (see RuinProp), not with the forest's.
 	if room.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		return
@@ -319,6 +322,183 @@ static func _camp_light(room: Room, spot: Vector2, color: Color, radius: float, 
 	light.position = spot
 	light.z_index = RoomTheme.GROUND_FX_Z
 	room.add_child(light)
+
+
+# --- Mercader's shop --------------------------------------------------------------------------
+
+## A market stall behind the Mercader, a rug under him, two lanterns and crates (Tuning.SHOP_*). Art
+## from assets/sprites/shop/ when the file exists, else plain shapes. Upright pieces stand with the
+## actors (y-sorted by their foot); the rug lies on the ground; only the stall has a (low) solid base.
+static func _dress_shop(room: Room) -> void:
+	var merchant := _merchant_of(room)
+	if merchant == null:
+		return
+	var spot: Vector2 = merchant.position
+	var taken: Array[Rect2] = _blocked_rects(room)
+	var rug_size := Tuning.SHOP_RUG_SIZE
+	var rug_center := (spot + Tuning.SHOP_RUG_OFFSET).round()
+	if _shop_floor_ok(room, Rect2(rug_center - rug_size / 2.0, rug_size)):
+		var rug := _shop_rug(rug_size)
+		rug.name = "ShopRug"
+		rug.position = rug_center
+		rug.z_index = RoomTheme.GROUND_FX_Z
+		room.add_child(rug)
+	var stall_foot := (spot + Tuning.SHOP_STALL_OFFSET).round()
+	var stall := _shop_stall()
+	var stall_base := _shop_base(stall_foot, stall.get_meta(&"width"), Tuning.SHOP_STALL_BASE_HEIGHT)
+	if _camp_spot_free(room, stall_base, taken) and _shop_floor_ok(room, stall_base):
+		taken.append(stall_base)
+		stall.name = "ShopStall"
+		stall.position = stall_foot
+		stall.add_child(_base_body(Rect2(stall_base.position - stall_foot, stall_base.size)))
+		room.add_child(stall)
+	else:
+		stall.free()
+	var lantern_count := 0
+	for offset: Vector2 in Tuning.SHOP_LANTERN_OFFSETS:
+		var foot := (spot + offset).round()
+		var base := Rect2(foot - Vector2(4, 4), Vector2(8, 4))
+		if not (_camp_spot_free(room, base, taken) and _shop_floor_ok(room, base)):
+			continue
+		taken.append(base)
+		lantern_count += 1
+		var lantern := _shop_lantern()
+		lantern.name = "ShopLantern%d" % lantern_count
+		lantern.position = foot
+		room.add_child(lantern)
+		var light_name := "ShopLanternLight%d" % lantern_count
+		_camp_light(room, foot + Vector2(0, -12), Tuning.SHOP_LANTERN_LIGHT, Tuning.SHOP_LANTERN_LIGHT_RADIUS, light_name)
+		var light := room.get_node_or_null(light_name)
+		if light != null:
+			var flicker := light.create_tween().set_loops()
+			flicker.tween_property(light, "modulate:a", Tuning.SHOP_LANTERN_LIGHT.a * 0.7, 0.35 + 0.1 * lantern_count).set_trans(Tween.TRANS_SINE)
+			flicker.tween_property(light, "modulate:a", Tuning.SHOP_LANTERN_LIGHT.a, 0.5).set_trans(Tween.TRANS_SINE)
+	var crate_count := 0
+	for offset: Vector2 in Tuning.SHOP_CRATES_OFFSETS:
+		var foot := (spot + offset).round()
+		var base := _shop_base(foot, Tuning.SHOP_CRATES_SIZE.x, Tuning.SHOP_CRATES_BASE_HEIGHT)
+		if not (_camp_spot_free(room, base, taken) and _shop_floor_ok(room, base)):
+			continue
+		taken.append(base)
+		crate_count += 1
+		var crates := _shop_crates()
+		crates.name = "ShopCrates%d" % crate_count
+		crates.position = foot
+		room.add_child(crates)
+
+
+## The merchant NPC standing in the room (the one that opens the shop), if any.
+static func _merchant_of(room: Room) -> Node2D:
+	for child in room.get_children():
+		if child is Node2D and "opens_shop" in child and child.opens_shop:
+			return child
+	return null
+
+
+## The strip of ground a piece occupies: `width` wide (minus the picture's margins), `height` tall, ending at `foot`.
+static func _shop_base(foot: Vector2, width: float, height: float) -> Rect2:
+	var inner := width - 2.0 * (1.0 + Tuning.PROP_FOOT_INSET)
+	return Rect2(foot.x - inner / 2.0, foot.y - height, inner, height)
+
+
+## Whether `rect` (room px) lies on floor of the room's own level. Only the temple has anything else
+## (lava, other heights, stairs): there the corners and the middle of the rect must be flat floor.
+static func _shop_floor_ok(room: Room, rect: Rect2) -> bool:
+	var shape := room.get_node_or_null("Shape")
+	if shape == null or not "plan" in shape or not shape.plan is TemplePlan:
+		return true
+	var plan: TemplePlan = shape.plan
+	var level := room.height_at(rect.get_center())
+	var inset := Vector2(0.01, 0.01)
+	for point in [rect.position, rect.end - inset, Vector2(rect.position.x, rect.end.y - 0.01), Vector2(rect.end.x - 0.01, rect.position.y), rect.get_center()]:
+		var cell := Vector2i((point / TileArt.TILE).floor())
+		if plan.is_lava(cell) or plan.is_stair(cell) or plan.height_at(cell) != level or not plan.is_walkable(cell, level):
+			return false
+	return true
+
+
+## A node holding one picture (or a placeholder) with its foot at the node's origin.
+static func _shop_picture(file: String, size: Vector2, placeholder: Callable) -> Node2D:
+	var holder := Node2D.new()
+	var tex := ForestArt.texture(Tuning.SHOP_ART_DIR + file)
+	if tex != null:
+		var sprite := Sprite2D.new()
+		sprite.texture = tex
+		sprite.centered = false
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.position = -Vector2(floorf(tex.get_width() / 2.0), tex.get_height())
+		holder.add_child(sprite)
+		holder.set_meta(&"width", float(tex.get_width()))
+	else:
+		placeholder.call(holder)
+		holder.set_meta(&"width", size.x)
+	return holder
+
+
+static func _shape_rect(parent: Node2D, rect: Rect2, color: Color) -> void:
+	var box := ColorRect.new()
+	box.position = rect.position
+	box.size = rect.size
+	box.color = color
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(box)
+
+
+static func _shop_stall() -> Node2D:
+	return _shop_picture("stall.png", Tuning.SHOP_STALL_SIZE, func(holder: Node2D) -> void:
+		var size := Tuning.SHOP_STALL_SIZE
+		_shape_rect(holder, Rect2(-size.x / 2.0 + 4, -size.y + 8, 4, size.y - 8), Color(0.35, 0.22, 0.12))
+		_shape_rect(holder, Rect2(size.x / 2.0 - 8, -size.y + 8, 4, size.y - 8), Color(0.35, 0.22, 0.12))
+		_shape_rect(holder, Rect2(-size.x / 2.0, -size.y, size.x, 12), Color(0.75, 0.3, 0.22))
+		_shape_rect(holder, Rect2(-size.x / 2.0 + 2, -14, size.x - 4, 14), Color(0.5, 0.33, 0.18)))
+
+
+static func _shop_crates() -> Node2D:
+	return _shop_picture("crates.png", Tuning.SHOP_CRATES_SIZE, func(holder: Node2D) -> void:
+		_shape_rect(holder, Rect2(-14, -14, 14, 14), Color(0.55, 0.38, 0.2))
+		_shape_rect(holder, Rect2(0, -10, 12, 10), Color(0.48, 0.33, 0.17))
+		_shape_rect(holder, Rect2(-8, -22, 12, 9), Color(0.6, 0.42, 0.22)))
+
+
+## The rug lying flat, centered on the node's origin.
+static func _shop_rug(size: Vector2) -> Node2D:
+	var holder := Node2D.new()
+	var tex := ForestArt.texture(Tuning.SHOP_ART_DIR + "rug.png")
+	if tex != null:
+		var sprite := Sprite2D.new()
+		sprite.texture = tex
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		holder.add_child(sprite)
+	else:
+		_shape_rect(holder, Rect2(-size / 2.0, size), Color(0.45, 0.14, 0.14))
+		_shape_rect(holder, Rect2(-size / 2.0 + Vector2(3, 3), size - Vector2(6, 6)), Color(0.68, 0.45, 0.2))
+	return holder
+
+
+## A lantern on a post: an animated strip of 16 px wide frames, or a plain post with a lit box.
+static func _shop_lantern() -> Node2D:
+	var holder := Node2D.new()
+	var tex := ForestArt.texture(Tuning.SHOP_ART_DIR + "lantern.png")
+	if tex != null:
+		var width := Tuning.SHOP_LANTERN_FRAME_WIDTH
+		var frames := SpriteFrames.new()
+		frames.set_animation_speed(&"default", Tuning.SHOP_LANTERN_FPS)
+		for i in maxi(tex.get_width() / width, 1):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = tex
+			atlas.region = Rect2(i * width, 0, width, tex.get_height())
+			frames.add_frame(&"default", atlas)
+		var flame := AnimatedSprite2D.new()
+		flame.sprite_frames = frames
+		flame.centered = false
+		flame.position = Vector2(-width / 2.0, -tex.get_height())
+		flame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		holder.add_child(flame)
+		flame.play()
+	else:
+		_shape_rect(holder, Rect2(-1, -16, 2, 16), Color(0.3, 0.2, 0.12))
+		_shape_rect(holder, Rect2(-4, -24, 8, 9), Color(1.0, 0.82, 0.4))
+	return holder
 
 
 # --- Helpers ----------------------------------------------------------------------------------
