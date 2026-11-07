@@ -164,7 +164,15 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_njpas")
 }],
-"loop": 1,
-"name": &"idle",
+"loop": false,
+"name": &"gesture",
 "speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8gcp7")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 1.0
 }]

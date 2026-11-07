@@ -280,6 +280,13 @@ const RUIN_FLOOR_ZONES_MAX := 3
 const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
 const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 
+# --- NPC gestures ---
+## An NPC whose frames have a "gesture" animation (the Mercader showing his emerald) stands still
+## on "idle" and plays it once every NPC_GESTURE_MIN..MAX seconds and when spoken to. False = never.
+const NPC_GESTURES_ENABLED := true
+const NPC_GESTURE_MIN := 6.0
+const NPC_GESTURE_MAX := 11.0
+
 # --- Idle breathing (IdleBreath) ---
 ## Nico and the NPCs breathe while they stand still: the body rises up to BREATH_PIXELS whole pixels while the legs
 ## (the lowest BREATH_LEG_SHARE of the figure) stretch to keep the feet fixed, one breath every BREATH_SECONDS. False = off.
