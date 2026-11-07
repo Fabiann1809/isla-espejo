@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="1_0ew3p"]
+
+[resource]
+script = ExtResource("1_0ew3p")
+id = &"shield"
+display_name = "Escudo de eco"
+message = "¡Un escudo de eco absorbe los próximos 2 golpes!"
+kind = 3
+effect = 3
+color = Color(0.95, 0.85, 0.4, 1)
+duration = 20.0
+drop_chance = 0.025
+max_on_floor = 1
+lifetime = 10.0

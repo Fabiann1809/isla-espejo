@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="1_6p58t"]
+
+[resource]
+script = ExtResource("1_6p58t")
+id = &"frost"
+display_name = "Flechas de escarcha"
+message = "¡Tus flechas congelan a quien tocan!"
+kind = 3
+effect = 1
+color = Color(0.55, 0.9, 1, 1)
+drop_chance = 0.025
+max_on_floor = 1
+lifetime = 10.0
