@@ -39,6 +39,12 @@ var _zone := Vector2.ZERO
 var _zone_left := 0.0
 var _needs_zone := true
 var _roar_left := 0.0
+## Charge motion (Tuning.SERPENT_*): length of the current warning, time since the dash began,
+## time to the next afterimage and what is left of the recoil.
+var _windup_total := 0.0
+var _dash_time := 0.0
+var _ghost_left := 0.0
+var _recoil_left := 0.0
 
 
 func _ready() -> void:
@@ -51,6 +57,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_roar_left = maxf(_roar_left - delta, 0.0)
+	_recoil_left = maxf(_recoil_left - delta, 0.0)
 	super(delta)
 	if state != State.ATTACK:
 		_dashing = false
@@ -174,6 +181,8 @@ func _strike() -> void:
 	if attack == Attack.CHARGE:
 		_dashing = true
 		_charge_hit = false
+		_dash_time = 0.0
+		_ghost_left = 0.0
 		# Time limit of the dash: something the ray did not see (a body) can never hold it forever.
 		_step_left = _lane_length / maxf(_serpent.charge_speed * _speed_scale(), 1.0) + DASH_GRACE
 		if _lane != null:
@@ -193,6 +202,7 @@ func _recover() -> void:
 func _warn_charge(windup: float) -> void:
 	step = Step.WINDUP
 	_step_left = windup
+	_windup_total = windup
 	if _target_is_valid():
 		var to_target := target.global_position - global_position
 		if to_target.length() > 1.0:
@@ -217,6 +227,11 @@ func _process_dash(delta: float) -> void:
 		_end_dash()
 		return
 	_hurt_in_lane(travelled)
+	_dash_time += delta
+	_ghost_left -= delta
+	if _ghost_left <= 0.0:
+		_spawn_ghost()
+		_ghost_left = Tuning.SERPENT_GHOST_INTERVAL
 	var speed := _serpent.charge_speed * _speed_scale()
 	velocity = _lane_dir * minf(speed, remaining / maxf(delta, 0.001))
 
@@ -238,6 +253,7 @@ func _hurt_in_lane(travelled: float) -> void:
 
 func _end_dash() -> void:
 	_dashing = false
+	_recoil_left = Tuning.SERPENT_RECOIL_SECONDS
 	_charges_done += 1
 	# In phase two it charges again at once, unless it is cornered (no room left for a real dash).
 	if phase == 2 and _charges_done < _serpent.phase_two_charges and _target_is_valid():
@@ -353,7 +369,10 @@ func _clear_lane() -> void:
 ## Each step of an attack holds its own pose: charge = reared up, then the lunge while dashing;
 ## spit = venom in the mouth, then spitting; recovery = idle. Entering phase two it opens its hood.
 func _update_animation() -> void:
-	if _sprite == null or state == State.DEAD:
+	if _sprite == null:
+		return
+	_apply_charge_motion()
+	if state == State.DEAD:
 		return
 	if state != State.ATTACK:
 		if _roar_left > 0.0:
@@ -368,7 +387,66 @@ func _update_animation() -> void:
 		Step.WINDUP:
 			_hold_pose(&"charge_windup" if attack == Attack.CHARGE else &"spit_windup", 0)
 		Step.STRIKE:
-			_hold_pose(&"charge" if attack == Attack.CHARGE else &"spit", 0)
+			if attack == Attack.CHARGE and _slithering():
+				_sprite.speed_scale = Tuning.SERPENT_DASH_ANIM_SPEED
+				if _sprite.animation != &"run" or not _sprite.is_playing():
+					_sprite.play(&"run")
+			else:
+				_hold_pose(&"charge" if attack == Attack.CHARGE else &"spit", 0)
 		Step.RECOVER:
 			if _sprite.animation != &"idle" or not _sprite.is_playing():
 				_sprite.play(&"idle")
+
+
+## After the lunge pose the dash is the crawl cycle, played fast.
+func _slithering() -> bool:
+	return Tuning.SERPENT_CHARGE_MOTION and _dash_time >= Tuning.SERPENT_LUNGE_SECONDS 			and _sprite.sprite_frames.has_animation(&"run")
+
+
+## Moves and stretches the sprite only (never the body): pull back and tremble while warning a
+## charge, snap forward and stretch while dashing, squash when it stops. Whole pixels, so the art
+## stays crisp.
+func _apply_charge_motion() -> void:
+	var offset := Vector2.ZERO
+	var stretch := Vector2.ONE
+	if Tuning.SERPENT_CHARGE_MOTION and state == State.ATTACK and attack == Attack.CHARGE:
+		if step == Step.WINDUP and _windup_total > 0.0:
+			var progress := clampf(1.0 - _step_left / _windup_total, 0.0, 1.0)
+			var eased := ease(progress, 0.4)
+			offset = -_lane_dir * Tuning.SERPENT_PULLBACK * eased
+			offset += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * Tuning.SERPENT_TREMBLE * progress * progress
+			stretch = Vector2.ONE.lerp(Tuning.SERPENT_WINDUP_SQUASH, eased)
+		elif step == Step.STRIKE and _dashing:
+			var snap := clampf(_dash_time / maxf(Tuning.SERPENT_LUNGE_SECONDS, 0.001), 0.0, 1.0)
+			offset = _lane_dir * Tuning.SERPENT_LUNGE_PUSH * (1.0 - snap)
+			stretch = Tuning.SERPENT_DASH_STRETCH
+	if Tuning.SERPENT_CHARGE_MOTION and _recoil_left > 0.0 and state != State.DEAD:
+		var left := _recoil_left / maxf(Tuning.SERPENT_RECOIL_SECONDS, 0.001)
+		stretch = Vector2.ONE.lerp(Tuning.SERPENT_RECOIL_SQUASH, left)
+	_sprite.position = data.sprite_offset + offset.round()
+	_sprite.scale = Vector2.ONE * data.sprite_scale * stretch
+
+
+## A fading copy of the current frame left behind by the dash (drawn on the ground layer, under
+## every actor, so it never covers Nico).
+func _spawn_ghost() -> void:
+	if not Tuning.SERPENT_CHARGE_MOTION or _sprite == null or get_parent() == null:
+		return
+	var texture := _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+	if texture == null:
+		return
+	var ghost := Node2D.new()
+	ghost.z_index = RoomTheme.GROUND_FX_Z
+	ghost.modulate = Tuning.SERPENT_GHOST_COLOR
+	var picture := Sprite2D.new()
+	picture.texture = texture
+	picture.flip_h = _sprite.flip_h
+	picture.position = _sprite.position
+	picture.scale = _sprite.scale
+	picture.offset = _sprite.offset
+	ghost.add_child(picture)
+	get_parent().add_child(ghost)
+	ghost.global_position = global_position
+	var fade := ghost.create_tween()
+	fade.tween_property(ghost, "modulate:a", 0.0, Tuning.SERPENT_GHOST_LIFE)
+	fade.tween_callback(ghost.queue_free)

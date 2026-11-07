@@ -183,19 +183,36 @@ func _test_charge() -> void:
 	await _frames(30)
 	_check(boss.step == boss.Step.WINDUP and boss.global_position.distance_to(ARENA) < 1.0 and _player.health.current == before,
 			"no move and no damage during the warning")
+	var base_offset: Vector2 = boss.data.sprite_offset
+	var base_scale: Vector2 = Vector2.ONE * boss.data.sprite_scale
+	_check(boss._sprite.position.x < base_offset.x and boss._sprite.scale.x > base_scale.x,
+			"while it warns it pulls back and squashes, only its picture (%s)" % boss._sprite.position)
 	var furthest := 0.0
 	var off_lane := 0.0
+	var saw_slither := false
+	var ghosts := 0
+	var stretched := false
 	for i in 90:
 		furthest = maxf(furthest, boss.global_position.x - ARENA.x)
 		off_lane = maxf(off_lane, absf(boss.global_position.y - ARENA.y))
+		if boss.step == boss.Step.STRIKE:
+			saw_slither = saw_slither or (boss._sprite.animation == &"run" and boss._sprite.is_playing())
+			stretched = stretched or boss._sprite.scale.x > base_scale.x * 1.05
+		ghosts = maxi(ghosts, _room.get_children().filter(func(n: Node) -> bool:
+				return n.get_child_count() == 1 and n.get_child(0) is Sprite2D and n.z_index == RoomTheme.GROUND_FX_Z).size())
 		if boss.step == boss.Step.RECOVER:
 			break
 		await physics_frame
+	_check(saw_slither and stretched, "the dash slithers fast and stretched, not one still frame")
+	_check(ghosts > 0, "the dash leaves fading afterimages (%d at once)" % ghosts)
 	_check(_struck.size() == 1 and _struck[0] == [&"stone_serpent", &"charge"], "the dash is published")
 	_check(furthest > 150.0 and off_lane < 2.0, "it dashes along the lane (%.0f px)" % furthest)
 	_check(furthest <= boss._lane_length + 1.0, "and stops at the lane's end")
 	_check(_player.health.current == before - boss.data.charge_damage,
 			"standing in the lane costs %d health (%d -> %d)" % [boss.data.charge_damage, before, _player.health.current])
+	await _frames(30)
+	_check(boss._sprite.position == base_offset and boss._sprite.scale.is_equal_approx(base_scale),
+			"after the recoil its picture is back in place")
 	boss.free()
 	await _frames(90)
 

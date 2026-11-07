@@ -280,6 +280,26 @@ const RUIN_FLOOR_ZONES_MAX := 3
 const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
 const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 
+# --- Serpiente de piedra: charge motion ---
+## The art has one lunge pose, so the charge is animated by moving the sprite (never the body or
+## its collision): during the warning it pulls back up to SERPENT_PULLBACK px, squashes and trembles
+## more and more; it snaps forward on the lunge pose for SERPENT_LUNGE_SECONDS, then slithers fast
+## (the crawl cycle at SERPENT_DASH_ANIM_SPEED) stretched by SERPENT_DASH_STRETCH, leaving fading
+## afterimages; when it stops it recoils (squash) for SERPENT_RECOIL_SECONDS. False = the old still poses.
+const SERPENT_CHARGE_MOTION := true
+const SERPENT_PULLBACK := 4.0
+const SERPENT_WINDUP_SQUASH := Vector2(1.08, 0.92)
+const SERPENT_TREMBLE := 1.0
+const SERPENT_LUNGE_SECONDS := 0.12
+const SERPENT_LUNGE_PUSH := 3.0
+const SERPENT_DASH_ANIM_SPEED := 2.2
+const SERPENT_DASH_STRETCH := Vector2(1.14, 0.9)
+const SERPENT_GHOST_INTERVAL := 0.045
+const SERPENT_GHOST_LIFE := 0.22
+const SERPENT_GHOST_COLOR := Color(0.55, 0.95, 0.6, 0.45)
+const SERPENT_RECOIL_SECONDS := 0.22
+const SERPENT_RECOIL_SQUASH := Vector2(0.88, 1.1)
+
 # --- NPC gestures ---
 ## An NPC whose frames have a "gesture" animation (the Mercader showing his emerald) stands still
 ## on "idle" and plays it once every NPC_GESTURE_MIN..MAX seconds and when spoken to. False = never.
