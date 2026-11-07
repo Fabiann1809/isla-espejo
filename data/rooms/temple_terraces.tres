@@ -9,8 +9,6 @@ id = &"temple_terraces"
 scene = ExtResource("1_kaiiv")
 tags = Array[StringName]([&"heights"])
 size_tiles = Vector2i(34, 24)
-min_enemies = 3
-max_enemies = 5
 enemy_affinity = {
 &"acolito_brasero": 1.5,
 &"carnero_basalto": 0.5,
