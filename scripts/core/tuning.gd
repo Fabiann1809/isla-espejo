@@ -600,9 +600,11 @@ const TEMPLE_STAIR_BRAZIER_MAX_PAIRS := 2
 ## much bigger than the forest's it is (1 = the same) and how many px below the feet it sits (the
 ## forest's, centred on the last row of the feet, shows only a sliver); and how far a solid prop's
 ## shadow leans east, away from the light (px per px of the prop's height; 0 = right under its foot).
-const TEMPLE_SHADOW_ALPHA := 0.5
-const TEMPLE_SHADOW_SCALE := 1.6
-const TEMPLE_SHADOW_DROP := 2.0
+const TEMPLE_SHADOW_ALPHA := 0.42
+const TEMPLE_SHADOW_SCALE := 1.15
+## Negative: the shadow's centre sits a little above the last row of the feet, so the feet stand on it
+## (a big shadow below the feet made Nico look like he floated over the floor).
+const TEMPLE_SHADOW_DROP := -1.5
 const TEMPLE_PROP_SHADOW_LEAN := 0.22
 ## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
 ## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava
