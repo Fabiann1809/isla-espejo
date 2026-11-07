@@ -59,7 +59,6 @@ enemy_weights = {
 boss_scene = ExtResource("2_nskt5")
 exit_scene = ExtResource("15_ihfyc")
 npc_scene = ExtResource("16_0w6gt")
-start_npc_scene = ExtResource("27_yqxvw")
 special_npc_scene = ExtResource("27_yqxvw")
 chest_scenes = Array[PackedScene]([ExtResource("3_17cr1")])
 drops = Array[ExtResource("4_vbwlf")]([ExtResource("5_tt8rx"), ExtResource("6_i5typ"), ExtResource("7_wmivt"), ExtResource("8_xjon4"), ExtResource("9_l3tv5"), ExtResource("10_vlh0q"), ExtResource("11_ul8xy")])

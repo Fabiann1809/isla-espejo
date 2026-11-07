@@ -121,6 +121,8 @@ func validate() -> Array[String]:
 		problems.append("boss cell has the wrong type")
 	if count_of_type(RoomData.RoomType.START) != 1 or count_of_type(RoomData.RoomType.BOSS) != 1:
 		problems.append("there must be exactly one start and one boss room")
+	if scenario != null and scenario.special_rooms > 0 and count_of_type(RoomData.RoomType.SPECIAL) == 0:
+		problems.append("the scenario asks for a special room and the map has none")
 	return problems
 
 

@@ -126,8 +126,7 @@ func _initialize() -> void:
 	var chests: Array[PackedScene] = [load("res://scenes/world/chest.tscn")]
 	scenario.chest_scenes = chests
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
-	# The Mercader waits near the landing and again in the special room; the event room stays empty.
-	scenario.start_npc_scene = load("res://scenes/npcs/merchant.tscn")
+	# The Mercader waits only in the special room (his shop); the start and event rooms stay empty.
 	scenario.special_npc_scene = load("res://scenes/npcs/merchant.tscn")
 	var drops: Array[ResourceData] = [load("res://data/resources/heart.tres"), load("res://data/resources/arrows.tres"),
 			load("res://data/resources/pierce.tres"), load("res://data/resources/frost.tres"),

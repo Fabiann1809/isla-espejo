@@ -74,7 +74,6 @@ enemy_pool = Array[PackedScene]([ExtResource("12_iyweh"), ExtResource("13_ngq0o"
 roster_size = 10
 boss_scene = ExtResource("2_a55qm")
 exit_scene = ExtResource("36_u4jgo")
-start_npc_scene = ExtResource("50_h4ryt")
 special_npc_scene = ExtResource("50_h4ryt")
 chest_scenes = Array[PackedScene]([ExtResource("3_28wuw")])
 drops = Array[ExtResource("4_36bw2")]([ExtResource("5_p8jhx"), ExtResource("6_t54a4"), ExtResource("7_5lnbb"), ExtResource("8_iksst"), ExtResource("9_y4hgs"), ExtResource("10_ow6r7"), ExtResource("11_yfpg5")])

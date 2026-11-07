@@ -176,12 +176,24 @@ static func _assign_types(layout: MapLayout, scenario: ScenarioData, rng: Random
 	_shuffle(others, rng)
 	var spots: Array[Vector2i] = dead_ends + others
 	var wanted: Array[RoomData.RoomType] = []
-	for i in scenario.reward_rooms:
-		wanted.append(RoomData.RoomType.REWARD)
+	# The special room (the Mercader's shop) goes first: when spots run short a reward room is the one dropped.
 	for i in scenario.special_rooms:
 		wanted.append(RoomData.RoomType.SPECIAL)
+	for i in scenario.reward_rooms:
+		wanted.append(RoomData.RoomType.REWARD)
 	for i in mini(wanted.size(), spots.size()):
 		layout.get_cell(spots[i]).type = wanted[i]
+	# No combat cell was left: turn the farthest cell that is not start, boss or event into the special room.
+	if scenario.special_rooms > 0 and layout.count_of_type(RoomData.RoomType.SPECIAL) == 0:
+		var far := Vector2i(-1, -1)
+		for coord: Vector2i in layout.cells:
+			var type := layout.get_cell(coord).type
+			if type == RoomData.RoomType.START or type == RoomData.RoomType.BOSS or type == RoomData.RoomType.EVENT:
+				continue
+			if far.x < 0 or dist[coord] > dist[far] or (dist[coord] == dist[far] and (coord.x < far.x or (coord.x == far.x and coord.y < far.y))):
+				far = coord
+		if far.x >= 0:
+			layout.get_cell(far).type = RoomData.RoomType.SPECIAL
 
 
 static func _first_combat(layout: MapLayout, coords: Array[Vector2i]) -> Vector2i:

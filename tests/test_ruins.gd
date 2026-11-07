@@ -121,11 +121,11 @@ func _initialize() -> void:
 	var npcs: Array = level.get_tree().get_nodes_in_group("npcs")
 	var travelers: Array = npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"traveler")
 	var merchants: Array = npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"merchant")
-	_check(npcs.size() == 3 and travelers.size() == 1 and travelers[0].get_parent().data.type == RoomData.RoomType.EVENT,
+	_check(npcs.size() == 2 and travelers.size() == 1 and travelers[0].get_parent().data.type == RoomData.RoomType.EVENT,
 			"the Viajera waits in the event room (%d NPCs)" % npcs.size())
 	var merchant_rooms: Array = merchants.map(func(n: Node) -> int: return n.get_parent().data.type)
 	merchant_rooms.sort()
-	_check(merchant_rooms == [RoomData.RoomType.START, RoomData.RoomType.SPECIAL], "the Mercader waits in the start room and in the special room")
+	_check(merchant_rooms == [RoomData.RoomType.SPECIAL], "the Mercader waits only in the special room")
 	var dialogue: Node = root.get_node("Dialogue")
 	var state: Node = root.get_node("GameState")
 	state.reset()

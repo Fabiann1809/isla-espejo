@@ -73,13 +73,13 @@ func _test_placement() -> void:
 	var merchant: PackedScene = load("res://scenes/npcs/merchant.tscn")
 	var temple: Resource = load("res://data/scenarios/temple.tres")
 	var forest: Resource = load("res://data/scenarios/forest.tres")
-	_check(temple.start_npc_scene == merchant and temple.special_npc_scene == merchant and temple.npc_scene == null,
-			"the temple's start and special rooms use merchant.tscn; its event room stays empty")
+	_check(temple.start_npc_scene == null and temple.special_npc_scene == merchant and temple.npc_scene == null,
+			"the temple's special room uses merchant.tscn; its start and event rooms stay empty")
 	var ruins: Resource = load("res://data/scenarios/ruins.tres")
-	_check(forest.start_npc_scene == merchant and forest.special_npc_scene == merchant,
-			"the forest's start and special rooms use the same merchant.tscn")
-	_check(ruins.start_npc_scene == merchant and ruins.special_npc_scene == merchant and ruins.npc_scene != merchant,
-			"the Ruinas' start and special rooms use it too; the Viajera keeps the event room")
+	_check(forest.start_npc_scene == null and forest.special_npc_scene == merchant,
+			"the forest's special room uses merchant.tscn; its start room stays empty")
+	_check(ruins.start_npc_scene == null and ruins.special_npc_scene == merchant and ruins.npc_scene != merchant,
+			"the Ruinas' special room uses it too; the Viajera keeps the event room")
 	var start: Resource = load("res://scenes/levels/rooms/temple/start.tscn")
 	var names: Array = []
 	var state: SceneState = start.get_state()
@@ -88,7 +88,7 @@ func _test_placement() -> void:
 	_check(names.has(&"NpcSpawn"), "the temple's start room has its NpcSpawn marker")
 
 
-## Each chapter's built map puts a Mercader in its start room, a few tiles from where Nico appears.
+## Each chapter's built map puts exactly one Mercader, in its special room (his shop), none at the start.
 func _test_start_rooms() -> void:
 	for chapter in ["forest", "ruins", "temple"]:
 		var level: Node2D = load("res://scenes/levels/%s_level.tscn" % chapter).instantiate()
@@ -96,15 +96,18 @@ func _test_start_rooms() -> void:
 		level.use_director = false
 		root.add_child(level)
 		await _frames(3)
-		var found := false
-		var distance := 0.0
+		var in_shop := 0
+		var in_start := 0
 		for npc in get_nodes_in_group("npcs"):
 			var room: Node = npc.get_parent()
-			if npc.dialogue_id == &"merchant" and room.data != null and room.data.type == 0:
-				found = true
-				distance = npc.global_position.distance_to(level.player.global_position)
-		_check(found, "the %s's start room has a Mercader" % chapter)
-		_check(found and distance >= 32.0 and distance <= 140.0, "he stands a few tiles from Nico's spawn, in view (%d px)" % distance)
+			if npc.dialogue_id != &"merchant" or room.data == null:
+				continue
+			if room.data.type == RoomData.RoomType.SPECIAL:
+				in_shop += 1
+			elif room.data.type == RoomData.RoomType.START:
+				in_start += 1
+		_check(in_shop == 1, "the %s's special room has its Mercader" % chapter)
+		_check(in_start == 0, "the %s's start room has none" % chapter)
 		level.queue_free()
 		await _frames(3)
 
