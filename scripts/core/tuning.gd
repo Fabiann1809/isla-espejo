@@ -412,9 +412,9 @@ const TEMPLE_GEYSER_SETTLE := 0.6
 const TEMPLE_GEYSER_DAMAGE := 1
 ## Additive glows of the temple's fires and lava (alpha 0 = off) and their radii (px): fire for torches
 ## and braziers, lava for the falls, the geyser while it erupts and the gate's mouth.
-const TEMPLE_FIRE_LIGHT := Color(1.0, 0.62, 0.2, 0.42)
-const TEMPLE_FIRE_LIGHT_RADIUS := 48.0
-const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.4)
+const TEMPLE_FIRE_LIGHT := Color(1.0, 0.62, 0.2, 0.28)
+const TEMPLE_FIRE_LIGHT_RADIUS := 38.0
+const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.28)
 const TEMPLE_LAVA_LIGHT_RADIUS := 56.0
 const TEMPLE_GATE_LIGHT_RADIUS := 80.0
 ## Bounds of a temple light's flicker, as a factor of RUIN_LIGHT_FLICKER_SECONDS (picked per position).
@@ -551,6 +551,8 @@ const TEMPLE_PILLAR_BLOCK_CHANCE := 0.35
 ## stone post when another brazier burns closer than this many cells (0 = always a brazier).
 const TEMPLE_MASONRY_ART := true
 const TEMPLE_DROP_SHADOWS := true
+## Extra rock rows may occupy empty lava only, never floor, stairs or bridge decks.
+const TEMPLE_LAVA_CLIFF_EXTRA_ROWS := 2
 const TEMPLE_EAST_SHADOWS := true
 const TEMPLE_STAIR_WALLS := true
 const TEMPLE_STAIR_TOP_BRAZIERS := true

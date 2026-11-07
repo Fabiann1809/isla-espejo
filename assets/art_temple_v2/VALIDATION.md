@@ -1,12 +1,13 @@
-# Verification — temple art v2
+# Verification — complete temple scenery and depth
 
-- Godot 4.7.2 .NET, Windows; branch auto/mejoras-noche.
-- Imported the adapted assets and rendered all 13 temple room designs plus the complete seed-7 map using tools/snapshot_temple.gd. Visually reviewed pillar court, boss, terraces, islands and trap walk at game scale.
-- Validated all 25 runtime prop strips: dimensions match cell size times frame count, alpha is binary, every frame is nonempty. Confirmed distinct frames for fire, lava fall, geyser, spikes, saw, rolling rock, vines, banner and plant.
-- Existing smoke check and all 99 test scripts have successful runs. Ran the initial portion sequentially, the temple checks separately and the remaining tests in three groups.
-- Temple checks: tileset 17, props 41, shape 35, temple 63, lava surge 59, heights 27, draw order, corridors, room design and level construction all passed.
-- One general test was intermittent during the grouped run: test_forjador_condenado observed 4 blocks instead of 5. Repeating it with the other test groups finished passed all 25 checks. No enemy or test code was changed.
-- Snapshot generation still prints Godot's Camera2D physics interpolation warning. It completes and saves the captures; the initial camera-outside-tree error was fixed by waiting for the SceneTree's first frame.
-- git diff --check and Python compilation passed.
+- Godot 4.7.2 .NET, Windows, branch auto/mejoras-noche.
+- Smoke check: 620 files checked, zero failures.
+- All 99 existing test scripts passed in this execution, including the Forjador test. The temple checks ran sequentially; remaining checks ran in three independent groups. No failed tests or script errors were recorded.
+- Temple shape checks increased from 35 to 38: added verification that extra lava cliffs have depth and an animated illuminated foot, stop before walkable islands, and cast shadows between sea and rock without covering a walkable floor or bridge.
+- All 25 prop strips match their integral cell dimensions/frame counts, have binary alpha and contain no empty frames.
+- The complete rebuild is byte-identical when run again: all 25 prop strips and the terrain atlas have the same SHA-256 hashes.
+- Rendered all 13 temple rooms and a complete seed-7 map. Reviewed the overview, terraces, islands and structural tile contact sheet. Final comparison uses the preceding integrated art on the left and this revision on the right.
+- Snapshot generation completes with the existing Camera2D physics interpolation warning; no script errors. This is render/automated verification, not a manual end-to-end playthrough.
+- Logs: sibling revision_arte/temple_complete_*.log. Captures: revision_arte/temple_depth/. Comparison: revision_arte/temple_depth_comparison.png.
 
-Logs and before/after captures are outside the repository in ../revision_arte/temple_v2_*.log and ../revision_arte/temple_after/. This verification renders the actual game resources and exercises automated gameplay checks; it does not claim a manual end-to-end playthrough.
+The additional foundation is visual and occupies lava only, using existing walkability checks. No collision rectangle, actor height, stair zone, trap phase or procedural room plan was changed. Fire glare and floor tones were adjusted for readability.

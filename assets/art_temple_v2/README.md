@@ -1,26 +1,27 @@
-# Temple art v2
+# Temple scenery — complete adaptation and depth
 
-## Integrated runtime art
-Run `python tools/adapt_temple_art_v2.py` from the repository. Pillow is required. Run this adaptation AFTER the original temple art generators if rebuilding everything.
+Rebuild with `python tools/finish_temple_art.py` (Pillow required). This calls the base adapter and then finishes all structural and incidental tile roles. Run it after the older temple art generators. Running only `adapt_temple_art_v2.py` rebuilds the partial first pass.
 
-The adapter writes the existing resources consumed by Godot:
-- `assets/tilesets/temple/temple_sheet.png`: 16 px tiles, three 64 px floor macros, painted cliff/masonry faces and three animated 128 px lava macros.
-- `assets/sprites/temple_props/*.png`: 23 adapted strips, using the original integral cell dimensions, feet and frame counts from `props.json`.
+## Runtime assets
+- `assets/tilesets/temple/temple_sheet.png`: all 1989 named roles adapted, including stairs, decks, rails, posts, ledges, cap corners, mossy faces, illuminated cliff feet, shore, bubbles, floors, incidental props and animations.
+- `assets/sprites/temple_props/*.png`: all 25 strips, including smoke/embers, saw groove and rolling rock break/spawn phases.
+- `coverage.json`: complete list of tile roles handled by the rebuild.
 
-No runtime script, scene, resource path, collision footprint, elevation rule, hazard timer or phase span needs to change. Alpha is cleaned to 0/255, detached speckles are discarded, and colours use `tools/temple_palette.py`. Texture filtering stays nearest with no mipmaps. Lava periods share boundaries; floor height tones remain distinct.
+Atlas coordinates and topology masks stay compatible with the existing profiles. The source template supplies cutouts, neighbour masks and step joints; painted source materials replace the old material pixels. This retains the game's modular silhouettes rather than introducing a different collision grid. Colours use `tools/temple_palette.py`; sprite alpha is binary and runtime dimensions remain integral.
 
-Fire frames keep the stone base fixed. Plant roots and hanging attachments stay anchored while leaves, vines and banners sway. The geyser, spikes and rolling rock retain the existing phase ranges; the rock keeps its authored break/spawn frames. `ember_vent` and `saw_track` retain their existing art. Structural ledge masks, stairs, bridge rails and corner topology also remain authored in the original atlas.
+## Depth
+The visual foundation extends up to two extra rock rows into lava (`Tuning.TEMPLE_LAVA_CLIFF_EXTRA_ROWS`). Existing plan checks stop it before walkable islands, stairs and decks. This changes no collision rectangle or actor height. `LavaShadows` casts a shadow below the foundation, above the sea and below every floor. Darker cliff faces, stronger south/east shadows, distinct floor tones and softer fire glare reveal the three heights.
 
-## Source sheets
-The PNGs in this folder are sources, not runtime atlases. They measure 1254 × 1254; the adapter rounds source cell boundaries once and outputs integral runtime cells. Do not import these directly as a 16 px TileSet.
+## Sources
+The four painted source sheets measure 1254 × 1254. They are not runtime TileSets; the adapter rounds source regions once and exports the original game-sized cells.
+- props.png: pillars, guardian, fire bases, portal, pottery, rubble, vegetation.
+- architecture.png: structural pieces, vines, banner and chest.
+- terrain.png: stone, cliff, masonry, lava, stair treads and bridge planks.
+- effects.png: fire, falls, geyser, spikes, saw, rock and smoke.
+- atlas_template.png: compatible topology and silhouette template from the preceding revision.
+- props_original.png: earlier reference, not consumed by the rebuild.
 
-- `props.png`: 4 × 4 pillars, columns, guardian, braziers, torch, gate, altar, pottery, barrel, rubble, volcanic rock and plant.
-- `architecture.png`: 4 × 4 architecture pieces; the adapter uses the vines and banner.
-- `terrain.png`: 8 × 8 terrain regions, including stone, cliffs, walls and lava.
-- `effects.png`: eight rows of eight frames: brazier, torch, lava fall, geyser, spikes, saw, rock and smoke. The smoke row is reference only.
-- `props_original.png`: previous source version retained for comparison; do not use it directly.
+## Review
+Render all 13 room designs and a complete map with `tools/snapshot_temple.gd`. Current captures are in the sibling `revision_arte/temple_depth/`; `temple_depth_comparison.png` compares the terraces with the previous integration. The source folder is excluded from Godot import/export through .gdignore; final textures are in the runtime asset folders above.
 
-Direction: top-down temple, dusty rose stone, olive moss, geometric carvings, purple shadows and amber lava. The reference map guides style; actual room layouts remain procedural.
-
-## Verification
-Use `tools/run_tests.sh` for gameplay checks. `tools/snapshot_temple.gd` renders all 13 room designs and a complete seeded map. Review at native game scale, including raised terraces, bridges and trap lanes. Final screen captures and a comparison are in the sibling `revision_arte/temple_after` and `revision_arte/temple_v2_comparison.png` outside this repository.
+The player, enemies and gameplay UI retain their established art; this adaptation concerns scenery. Gameplay footprints, trap timing, phase spans and procedural room plans remain unchanged.

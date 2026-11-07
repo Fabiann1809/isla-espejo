@@ -203,7 +203,7 @@ def terrain():
         if name in tiles:
             x, y = tiles[name]
             sheet.paste(tile, (x*16, y*16))
-    for level, brightness in ((0, .84), (1, 1.0), (2, 1.12)):
+    for level, brightness in ((0, .72), (1, 1.0), (2, 1.22)):
         # A 64px macro crosses cell boundaries, instead of framing every 16px tile.
         patch = source.crop((8, 8, 155, 155)).filter(ImageFilter.MinFilter(3)).resize((64, 64), NEAREST)
         field = palette(ImageEnhance.Brightness(periodic(patch)).enhance(brightness))

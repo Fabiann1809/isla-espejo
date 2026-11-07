@@ -33,7 +33,7 @@ const COLUMNS := TemplePlan.COLUMNS
 const ROWS := TemplePlan.ROWS
 const TILE := TemplePlan.TILE
 const MACRO := 4
-const LAYER_NAMES := ["Lava", "Bubbles", "Faces", "Floor0", "Floor1", "Floor2", "FloorDetail", "Rims", "RimGlow",
+const LAYER_NAMES := ["Lava", "Bubbles", "LavaShadows", "Faces", "Floor0", "Floor1", "Floor2", "FloorDetail", "Rims", "RimGlow",
 		"Ledges", "Shadows", "ShadowsEast", "Stairs", "Bridges"]
 const COLLISION_LAYERS: Array[int] = [TemplePlan.WORLD_LAYER, TemplePlan.LAVA_LAYER, TemplePlan.BLOCK_LEVEL_0_LAYER,
 		TemplePlan.BLOCK_LEVEL_1_LAYER, TemplePlan.BLOCK_LEVEL_2_LAYER, TemplePlan.HEIGHT_2_LAYER]
@@ -69,6 +69,7 @@ func _ready() -> void:
 	_rng.seed = hash(Vector2i(global_position))
 	for layer_name in LAYER_NAMES:
 		_layers[layer_name] = _new_layer(layer_name, LavaBackdrop.SEA_Z if layer_name == "Lava" else RoomTheme.FLOOR_Z)
+	_layers["LavaShadows"].z_index = LavaBackdrop.SEA_Z + 1
 	_find_faces()
 	_build_lava()
 	_build_faces()
@@ -234,6 +235,8 @@ func _find_faces() -> void:
 			if below >= h:
 				continue
 			var drop := h - below
+			if below < 0:
+				drop += Tuning.TEMPLE_LAVA_CLIFF_EXTRA_ROWS
 			var same := func(nx: int) -> bool:
 				return _art_height(Vector2i(nx, y)) == h and _art_height(Vector2i(nx, y + 1)) == below
 			var side := "m"
@@ -392,6 +395,11 @@ func _build_ledges() -> void:
 func _build_shadows() -> void:
 	if Tuning.TEMPLE_DROP_SHADOWS:
 		for cell in _faces:
+			if _faces[cell]["kind"] == "foot":
+				for distance in [1, 2]:
+					var receiver: Vector2i = cell + Vector2i(0, distance)
+					if _is_open_lava(receiver) and not _faces.has(receiver) and not _is_deck(receiver):
+						_paint("LavaShadows", receiver, &"shadow_s_1" if distance == 1 else &"shadow_s_2")
 			if not _faces[cell]["on_floor"]:
 				continue
 			for i in [1, 2]:

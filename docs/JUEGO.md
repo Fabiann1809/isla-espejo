@@ -70,7 +70,7 @@ Nico entra en un bosque antiguo siguiendo una señal de la brújula. Conoce al *
 El segundo fragmento (azul) está en unas ruinas antiguas. Nico encuentra a la **Viajera**, que no recuerda cómo llegó. Descubren que otros viajeros estuvieron allí antes. Las ruinas sugieren que la isla tiene voluntad propia. Lo protege la **Serpiente de piedra**.
 
 ### Capítulo 3 — Templo del Eclipse
-El escenario utiliza el arte adaptado de `assets/art_temple_v2/`: piedra rosácea, relieves tallados, musgo y lava animada. Los recursos finales conservan la cuadrícula de 16 px, las bases de los objetos y las tres alturas del mapa procedural; `tools/adapt_temple_art_v2.py` prepara las tiras y el atlas que consume Godot.
+El escenario utiliza el arte adaptado de `assets/art_temple_v2/`: piedra rosácea, relieves tallados, musgo y lava animada. Los recursos finales conservan la cuadrícula de 16 px, las bases de los objetos y las tres alturas del mapa procedural; `tools/finish_temple_art.py` prepara todas las tiras y los materiales del atlas. Las islas muestran un cimiento rocoso más grueso sobre la lava, sombras hacia el sur y tonos distintos por altura. Esa profundidad adicional es visual: se detiene antes de los caminos, las escaleras y los puentes, sin modificar sus colisiones.
 
 El último fragmento (violeta) está en un templo. El **Mercader** ofrece ayuda a cambio de "precios". Nico descubre que los fragmentos funcionan como **llaves que mantienen el vínculo entre la isla y quienes quedan atrapados**. Lo protege el **Guardián antiguo**.
 

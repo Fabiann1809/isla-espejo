@@ -135,6 +135,17 @@ func _initialize() -> void:
 			"ledges lip the high side of every change (%d cells)" % ledges.get_used_cells().size())
 	_check(shadows.get_used_cells().has(Vector2i(4, 10)) and not shadows.get_used_cells().has(Vector2i(4, 9)),
 			"shadows fall on the lower floor south of a face (%d cells)" % shadows.get_used_cells().size())
+	# The island's extra rock occupies empty lava only; a nearby walkable island cuts it short.
+	_check(faces.get_used_cells().has(Vector2i(28, 17)) and _frames_of(faces, Vector2i(28, 17)) == 4,
+			"a lava cliff has extra rock thickness and an animated illuminated foot")
+	_check(not faces.get_used_cells().has(Vector2i(4, 12)),
+			"the extra cliff stops before a walkable island")
+	var lava_shadows := shape.get_node("LavaShadows") as TileMapLayer
+	var shadows_safe := lava_shadows.z_index > lava.z_index and lava_shadows.z_index < faces.z_index
+	for receiver in lava_shadows.get_used_cells():
+		shadows_safe = shadows_safe and shape._is_open_lava(receiver) and not shape._is_deck(receiver)
+	_check(shadows_safe and not lava_shadows.get_used_cells().is_empty(),
+			"island shadows lie above the sea, below rock, and never cover a bridge or walkable floor")
 	_check(shape.get_node("Stairs").get_used_cells().size() == 8 and shape.get_node("Bridges").get_used_cells().size() == 6,
 			"stairs and bridges are deck tiles")
 	var rails := shape.get_node("Rails")
