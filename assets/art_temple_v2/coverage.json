@@ -2,7 +2,7 @@
   "tile_roles": 1989,
   "adapted_roles": 1989,
   "prop_strips": 25,
-  "topology": "Original alpha silhouettes, neighbour masks and step joints retained; all materials adapted.",
+  "topology": "Atlas coordinates and neighbour masks retained; solid bevelled treads and sculpted basalt faces.",
   "roles": [
     "ash_a",
     "ash_patch_0",

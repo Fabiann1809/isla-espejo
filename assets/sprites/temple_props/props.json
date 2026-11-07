@@ -1,14 +1,14 @@
 {
   "pillar_carved": {
     "cell": [
-      20,
-      60
+      40,
+      104
     ],
     "frames": 4,
     "fps": 3.0,
     "foot": [
-      10,
-      56
+      20,
+      100
     ],
     "footprint": [
       14,
@@ -17,14 +17,14 @@
   },
   "pillar_block": {
     "cell": [
-      20,
-      52
+      40,
+      104
     ],
     "frames": 4,
     "fps": 4.0,
     "foot": [
-      10,
-      48
+      20,
+      100
     ],
     "footprint": [
       14,
@@ -65,14 +65,14 @@
   },
   "statue_guardian": {
     "cell": [
-      36,
-      52
+      64,
+      88
     ],
     "frames": 4,
     "fps": 2.5,
     "foot": [
-      18,
-      47
+      32,
+      83
     ],
     "footprint": [
       28,
@@ -97,14 +97,14 @@
   },
   "brazier_pedestal": {
     "cell": [
-      20,
-      44
+      32,
+      64
     ],
     "frames": 8,
     "fps": 8.0,
     "foot": [
-      10,
-      40
+      16,
+      60
     ],
     "footprint": [
       14,
@@ -311,14 +311,14 @@
   },
   "face_gate": {
     "cell": [
-      80,
-      64
+      112,
+      112
     ],
     "frames": 8,
     "fps": 6.0,
     "foot": [
-      40,
-      61
+      56,
+      105
     ],
     "footprint": [
       76,

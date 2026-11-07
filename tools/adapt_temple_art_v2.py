@@ -1,7 +1,8 @@
 """Adapt the painted temple sources to the existing runtime atlas and anchored strips.
 
 Run from any directory: python tools/adapt_temple_art_v2.py
-No runtime metadata, collision footprints or animation phase ranges are changed.
+Atlas coordinates, collision footprints and animation phase ranges are retained.
+Tall scenery gets larger sprite cells and feet without changing its physics base.
 """
 from pathlib import Path
 import json
@@ -9,6 +10,7 @@ import math
 import re
 
 from PIL import Image, ImageChops, ImageEnhance, ImageFilter
+from temple_volume_art import architecture_meta, pillar
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'assets/art_temple_v2'
@@ -98,11 +100,13 @@ def write_strip(name, frames, info):
     for i, frame in enumerate(frames):
         assert frame.size == (width, height)
         strip.paste(frame, (i * width, 0))
-    strip.save(PROPS / (name + '.png'))
+    palette(strip).save(PROPS / (name + '.png'))
 
 
 def props():
     meta = json.loads((PROPS / 'props.json').read_text())
+    architecture_meta(meta)
+    (PROPS / 'props.json').write_text(json.dumps(meta, indent=2) + '\n')
     art = Image.open(SOURCE / 'props.png').convert('RGBA')
     architecture = Image.open(SOURCE / 'architecture.png').convert('RGBA')
     effects = Image.open(SOURCE / 'effects.png').convert('RGBA')
@@ -151,6 +155,8 @@ def props():
                         frame.alpha_composite(fire, (left, top + (1 if i % 4 == 1 else 0)))
                     frames.append(frame)
         write_strip(name, frames, info)
+        if name in ('pillar_carved', 'pillar_block'):
+            write_strip(name, [pillar(name, i) for i in range(info['frames'])], info)
     # Keep hazard silhouettes in the same cells/phase spans as their hitboxes.
     sequences = {'lava_fall': (2, list(range(8))),
                  'geyser': (3, [0]*4 + [1]*4 + [2,3,4,4,5,5,6,6] + [7,7,0,0]),

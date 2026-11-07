@@ -1,7 +1,7 @@
 """Rebuild the complete temple scenery, retaining topology masks and gameplay anchors.
 
 Usage: python tools/finish_temple_art.py
-The template supplies silhouettes/step joints, never the final material colours.
+The template supplies neighbour silhouettes; masonry and bevelled treads are finished at pixel size.
 """
 import json
 import math
@@ -10,6 +10,7 @@ import sys
 from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 sys.dont_write_bytecode = True
 import adapt_temple_art_v2 as art
+from temple_volume_art import finish_tiles
 
 
 def texture(region, size=(16, 16), brightness=1.0):
@@ -142,11 +143,12 @@ def finish():
                 put(name,material(mask,wood,.65))
             else:
                 put(name,material(mask,stone,.5))
+    finish_tiles(sheet, tiles, template)
     sheet.save(path)
     finish_props(lava)
     assert set(tiles) - covered == set(), sorted(set(tiles)-covered)
     report={'tile_roles':len(tiles),'adapted_roles':len(covered), 'prop_strips':25,
-            'topology':'Original alpha silhouettes, neighbour masks and step joints retained; all materials adapted.',
+            'topology':'Atlas coordinates and neighbour masks retained; solid bevelled treads and sculpted basalt faces.',
             'roles':sorted(covered)}
     (art.SOURCE/'coverage.json').write_text(json.dumps(report,indent=2)+'\n')
     print(f'Finished {len(covered)} tile roles and all 25 prop strips')
@@ -161,7 +163,7 @@ def finish_props(lava):
         original=Image.open(art.PROPS/(name+'.png')).convert('RGBA')
         base=original.crop((0,0,w,h)) if name=='rock_smoking' else Image.new('RGBA',(w,h))
         if name=='ember_vent':
-            base.alpha_composite(lava.resize((12,4)),(2,info['foot'][1]-3))
+            base.alpha_composite(lava.resize((12,4), art.NEAREST),(2,info['foot'][1]-3))
         frames=[]
         for i in range(info['frames']):
             out=base.copy()
