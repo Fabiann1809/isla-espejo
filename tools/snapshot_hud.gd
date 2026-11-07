@@ -9,6 +9,12 @@ func _initialize() -> void:
 	root.add_child(level)
 	for i in 30:
 		await process_frame
+	# The island's camera intro hides the HUD while it plays: wait for it to end.
+	var intro := level.find_child("ChapterIntro", true, false)
+	if intro != null and intro.has_signal("finished"):
+		await intro.finished
+		for i in 10:
+			await process_frame
 	var state = root.get_node("GameState")
 	state.collect_fragment(&"green")
 	root.get_node("Events").fragment_collected.emit(&"green")
