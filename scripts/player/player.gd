@@ -42,6 +42,15 @@ var attack_cooldown := 0.35
 var attack_move_factor := 0.3
 ## How visible the player is to enemies (1 = normal). The Sombra skill lowers it for a while.
 var visibility := 1.0
+## Chance (0..1) that an arrow crits and the damage multiplier of a crit (see Tuning).
+var crit_chance := Tuning.PLAYER_CRIT_CHANCE
+var crit_multiplier := Tuning.PLAYER_CRIT_MULTIPLIER
+## Shop upgrades of the journey (GameState.apply_upgrades sets them on every map): extra arrow damage,
+## extra crit chance and the extra hearts already added to the maximum health.
+var bonus_damage := 0
+var crit_bonus := 0.0
+var _health_bonus := 0
+var _crit_rng := RandomNumberGenerator.new()
 
 var _state_time_left := 0.0
 var _dash_cooldown_left := 0.0
@@ -187,6 +196,28 @@ func equip(new_weapon: WeaponData) -> void:
 	attack_time = weapon.attack_time
 	attack_cooldown = weapon.attack_cooldown
 	attack_move_factor = weapon.move_factor
+
+
+## Damage of one arrow before a crit: the weapon's plus the shop's upgrade.
+func arrow_damage() -> int:
+	return attack_damage + bonus_damage
+
+
+## Chance that an arrow crits (0 with `Tuning.CRITS_ENABLED` off), shop upgrades included.
+func total_crit_chance() -> float:
+	if not Tuning.CRITS_ENABLED:
+		return 0.0
+	return clampf(crit_chance + crit_bonus, 0.0, 1.0)
+
+
+## Sets what the shop sold (`damage` extra arrow damage, `crit` extra crit chance, `hearts` extra
+## maximum health). Idempotent: the hearts already added are remembered, so a new map adds none twice.
+func set_upgrades(damage: int, crit: float, hearts: int) -> void:
+	bonus_damage = damage
+	crit_bonus = crit
+	if hearts != _health_bonus:
+		health.increase_max(hearts - _health_bonus)
+		_health_bonus = hearts
 
 
 ## True while the player cannot be damaged (dash i-frames, after a hit, or dead).
@@ -427,10 +458,14 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 		hurt(from_position)
 
 
-func _on_arrow_hit(hurtbox: Hurtbox) -> void:
+func _on_arrow_hit(hurtbox: Hurtbox, damage: int) -> void:
 	var target: Node = hurtbox.owner
 	attack_hit.emit(target)
-	Events.player_hit_enemy.emit(target, attack_damage)
+	Events.player_hit_enemy.emit(target, damage)
+
+
+func _on_crit_landed(hurtbox: Hurtbox, damage: int) -> void:
+	Events.player_crit.emit(hurtbox.owner, damage)
 
 
 func _process_free(_delta: float) -> void:
@@ -527,10 +562,18 @@ func _fire() -> void:
 	for i in count:
 		var arrow: Arrow = weapon.projectile_scene.instantiate()
 		var angle := _arrow_spread * (i - (count - 1) / 2.0)
-		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, attack_damage)
+		# Every arrow rolls its own crit; a crit is the same Hitbox hit with multiplied damage.
+		var crit := _crit_rng.randf() < total_crit_chance()
+		var damage := arrow_damage()
+		if crit:
+			damage = maxi(roundi(damage * crit_multiplier), damage)
+		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, damage)
+		arrow.crit = crit
 		arrow.height_level = Heights.level_of(self)
 		if i == (count - 1) / 2:
-			arrow.hit_landed.connect(_on_arrow_hit)
+			arrow.hit_landed.connect(_on_arrow_hit.bind(damage))
+		if crit:
+			arrow.hit_landed.connect(_on_crit_landed.bind(damage))
 		arrow.blocked.connect(func(at: Vector2) -> void: Events.arrow_blocked.emit(at))
 		effects_parent().add_child(arrow)
 		arrow.global_position = muzzle

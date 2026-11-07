@@ -6,6 +6,8 @@ extends Node
 
 signal fragment_collected(fragment_id: StringName)
 signal skill_learned(skill_id: StringName)
+## A shop upgrade went up a level (the save listens).
+signal upgrade_changed(upgrade_id: StringName, level: int)
 
 const VERSION := 1
 const SKILL_PATH := "res://data/skills/%s.tres"
@@ -16,6 +18,9 @@ var fragments: Array[StringName] = []
 var skills: Array[StringName] = []
 ## Story flags (dialogue state, defeated bosses...). Name -> true.
 var flags := {}
+## Shop upgrades of this journey: upgrade id -> level (see ShopItem; ids "bow_damage", "crit_chance",
+## "max_health"). Wiped on death like everything else here.
+var upgrades := {}
 
 
 func set_flag(flag: StringName) -> void:
@@ -46,20 +51,43 @@ func learn_skill(skill_id: StringName) -> void:
 	skill_learned.emit(skill_id)
 
 
-## Unlocks every learned skill on `player` (call when a player is created).
+func upgrade_level(upgrade_id: StringName) -> int:
+	return int(upgrades.get(upgrade_id, 0))
+
+
+## Raises an upgrade by one level (the shop checks gold and the maximum before).
+func add_upgrade(upgrade_id: StringName) -> int:
+	var level := upgrade_level(upgrade_id) + 1
+	upgrades[upgrade_id] = level
+	upgrade_changed.emit(upgrade_id, level)
+	return level
+
+
+## Unlocks every learned skill and every bought upgrade on `player` (call when a player is created
+## or put on a new map: it is idempotent).
 func apply_to_player(player: Node) -> void:
 	for skill_id in skills:
 		player.skills.unlock(load(SKILL_PATH % skill_id))
+	apply_upgrades(player)
+
+
+## Puts the shop's upgrades on `player`: arrow damage, crit chance and maximum health.
+func apply_upgrades(player: Node) -> void:
+	player.set_upgrades(upgrade_level(&"bow_damage") * Tuning.UPGRADE_BOW_DAMAGE_PER_LEVEL,
+			upgrade_level(&"crit_chance") * Tuning.UPGRADE_CRIT_PER_LEVEL,
+			upgrade_level(&"max_health") * Tuning.UPGRADE_HEALTH_PER_LEVEL)
 
 
 func reset() -> void:
 	fragments.clear()
 	skills.clear()
 	flags.clear()
+	upgrades.clear()
 
 
 func to_dict() -> Dictionary:
-	return {"version": VERSION, "fragments": fragments, "skills": skills, "flags": flags.keys()}
+	return {"version": VERSION, "fragments": fragments, "skills": skills, "flags": flags.keys(),
+			"upgrades": upgrades}
 
 
 func from_dict(data: Dictionary) -> bool:
@@ -72,4 +100,9 @@ func from_dict(data: Dictionary) -> bool:
 		skills.append(StringName(id))
 	for flag in data.get("flags", []):
 		flags[StringName(flag)] = true
+	# Saves from before the shop have no "upgrades": they load with none.
+	var saved_upgrades: Variant = data.get("upgrades", {})
+	if saved_upgrades is Dictionary:
+		for id in saved_upgrades:
+			upgrades[StringName(id)] = maxi(int(saved_upgrades[id]), 0)
 	return true

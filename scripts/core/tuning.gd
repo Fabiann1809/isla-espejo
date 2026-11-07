@@ -369,6 +369,26 @@ const DAMAGE_NUMBER_COLOR := Color(1.0, 0.95, 0.75)
 ## Font size of the numbers (the pixel font is drawn crisp at multiples of 16).
 const DAMAGE_NUMBER_SIZE := 16
 const DAMAGE_NUMBER_BOSS_COLOR := Color(1.0, 0.75, 0.4)
+## Critical hits of Nico's arrows: base chance (0 = never) and damage multiplier. `CRITS_ENABLED` is the
+## off switch for the whole feature (shop upgrades included); the shop's crit upgrade adds to the chance.
+const CRITS_ENABLED := true
+const PLAYER_CRIT_CHANCE := 0.05
+const PLAYER_CRIT_MULTIPLIER := 2.0
+## A crit's damage number: gold and bigger than the normal one (the pixel font is crisp at multiples
+## of 8 as well), plus a little extra hit stop (s) and camera shake (px, s); 0 = off.
+const DAMAGE_NUMBER_CRIT_COLOR := Color(1.0, 0.82, 0.15)
+const DAMAGE_NUMBER_CRIT_SIZE := 24
+const CRIT_HIT_STOP := 0.04
+const CRIT_SHAKE := Vector2(1.5, 0.1)
+
+# --- Shop upgrades (bought from the Mercader, kept in GameState for the journey) ----------------------
+## `SHOP_ENABLED` false: the Mercader only talks. Per level: extra arrow damage, extra crit chance and
+## extra hearts; 0 turns that upgrade's effect off.
+const SHOP_ENABLED := true
+const UPGRADE_BOW_DAMAGE_PER_LEVEL := 1
+const UPGRADE_CRIT_PER_LEVEL := 0.05
+const UPGRADE_HEALTH_PER_LEVEL := 1
+
 ## Red flash over the screen when Nico is hurt (alpha 0 = off) and how long it fades (s).
 const HURT_FLASH := Color(0.85, 0.05, 0.05, 0.28)
 const HURT_FLASH_TIME := 0.3

@@ -25,6 +25,8 @@ var _range_left := 200.0
 var _angle := 0.0
 ## Height level of the shooter: the arrow only stops at what blocks that level (see Heights).
 var height_level := Heights.LOW
+## A critical arrow (the player rolled it): drawn warm gold so the player sees which one it is.
+var crit := false
 
 @onready var _art: Sprite2D = $Art
 @onready var _hitbox: Hitbox = $Hitbox
@@ -42,6 +44,8 @@ func setup(direction: Vector2, speed: float, max_range: float, damage: int) -> v
 func _ready() -> void:
 	_art.rotation = _angle
 	_art.position = ART_HEIGHT
+	if crit:
+		_art.modulate = Color(1.0, 0.85, 0.35)
 	var tip := Vector2.from_angle(_angle) * SENSOR_DISTANCE
 	_hitbox.position = tip
 	_wall_sensor.position = tip + Vector2.from_angle(_angle)

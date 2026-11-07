@@ -40,6 +40,9 @@ var _pulse_time := 0.0
 var _ghost_material: ShaderMaterial
 var _step_left := 0.0
 var _burst_frames: SpriteFrames
+## The damage number each enemy got last (instance id -> Label): a crit is announced right after the
+## damage, so it restyles that number instead of drawing a second one.
+var _last_numbers := {}
 
 
 func _ready() -> void:
@@ -50,6 +53,7 @@ func _ready() -> void:
 	if not Tuning.GAME_FEEL_ENABLED:
 		return
 	Events.enemy_damaged.connect(_on_enemy_damaged)
+	Events.player_crit.connect(_on_player_crit)
 	Events.enemy_killed.connect(_on_enemy_killed)
 	Events.player_damaged.connect(_on_player_damaged)
 	Events.player_health_changed.connect(_on_player_health_changed)
@@ -139,7 +143,36 @@ func _on_enemy_damaged(enemy: Node, amount: int) -> void:
 	if body == null or not is_instance_valid(body):
 		return
 	burst(body.global_position + Vector2(0, -8), _color_of(enemy), Tuning.HIT_PARTICLES, Tuning.HIT_PARTICLE_SPEED)
-	damage_number(body.global_position + Vector2(0, -20), amount, enemy is Boss)
+	if _last_numbers.size() > 64:
+		for id in _last_numbers.keys():
+			if not is_instance_valid(_last_numbers[id]):
+				_last_numbers.erase(id)
+	_last_numbers[enemy.get_instance_id()] = damage_number(body.global_position + Vector2(0, -20), amount, enemy is Boss)
+
+
+## A crit: the number of that hit turns gold and bigger (or is drawn so if the enemy showed none), with
+## a touch more hit stop and shake.
+func _on_player_crit(enemy: Node, damage: int) -> void:
+	var body := enemy as Node2D
+	if body == null or not is_instance_valid(body):
+		return
+	var label: Label = _last_numbers.get(enemy.get_instance_id())
+	if label == null or not is_instance_valid(label):
+		label = damage_number(body.global_position + Vector2(0, -20), damage, enemy is Boss)
+	if label != null:
+		_style_crit(label)
+	hit_stop(Tuning.CRIT_HIT_STOP)
+	shake(Tuning.CRIT_SHAKE)
+
+
+func _style_crit(label: Label) -> void:
+	label.add_theme_font_size_override("font_size", Tuning.DAMAGE_NUMBER_CRIT_SIZE)
+	label.add_theme_color_override("font_color", Tuning.DAMAGE_NUMBER_CRIT_COLOR)
+	label.set_meta("crit", true)
+	# Wider box, same centre, so the bigger digits stay centred over the enemy.
+	var old := label.size
+	label.size = Vector2(48, 24)
+	label.position -= (label.size - old) / 2.0
 
 
 func _on_enemy_killed(enemy: Node) -> void:
@@ -357,10 +390,10 @@ func puff(at: Vector2, away: Vector2, color: Color, count: int, speed: float) ->
 	get_tree().create_timer(dust.lifetime + 0.1, false).timeout.connect(dust.queue_free)
 
 
-## A number that rises and fades over `at` (world position).
-func damage_number(at: Vector2, amount: int, boss := false) -> void:
+## A number that rises and fades over `at` (world position); returns it (null when numbers are off).
+func damage_number(at: Vector2, amount: int, boss := false) -> Label:
 	if Tuning.DAMAGE_NUMBER_TIME <= 0.0 or amount <= 0:
-		return
+		return null
 	var label := Label.new()
 	label.text = str(amount)
 	label.add_theme_font_size_override("font_size", Tuning.DAMAGE_NUMBER_SIZE)
@@ -382,6 +415,7 @@ func damage_number(at: Vector2, amount: int, boss := false) -> void:
 	tween.parallel().tween_property(label, "modulate:a", 0.0, Tuning.DAMAGE_NUMBER_TIME * 0.5) \
 			.set_delay(Tuning.DAMAGE_NUMBER_TIME * 0.5)
 	tween.tween_callback(label.queue_free)
+	return label
 
 
 func _color_of(enemy: Node) -> Color:

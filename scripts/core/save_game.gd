@@ -22,6 +22,7 @@ func _ready() -> void:
 	Events.fragment_collected.connect(func(_id: StringName) -> void: save())
 	Events.boss_defeated.connect(func(_id: StringName) -> void: save())
 	GameState.skill_learned.connect(func(_id: StringName) -> void: save())
+	GameState.upgrade_changed.connect(func(_id: StringName, _level: int) -> void: save())
 
 
 func has_save() -> bool:
