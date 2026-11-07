@@ -257,6 +257,12 @@ func _node_tests() -> void:
 	Heights.set_level(player, 2)
 	var alive_before: int = room.enemies_alive
 	await _frames(int((Tuning.TEMPLE_SURGE_WAVE_INTERVAL + Tuning.TEMPLE_SURGE_SPAWN_WARN + 1.0) * 60))
+	# The wave's timer runs on game time and the wait above on physics frames; under load they drift,
+	# so wait a little longer (at most as long again) for the wave to land before judging it.
+	var extra := int((Tuning.TEMPLE_SURGE_WAVE_INTERVAL + Tuning.TEMPLE_SURGE_SPAWN_WARN + 1.0) * 60)
+	while extra > 0 and room.enemies_alive <= alive_before:
+		await physics_frame
+		extra -= 1
 	_check(spawned.size() >= 1, "a wave appeared (%d)" % spawned.size())
 	var good := not spawned.is_empty()
 	for entry in spawned:
