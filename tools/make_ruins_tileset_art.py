@@ -128,27 +128,29 @@ def value_noise(rng, w, h, cell):
 # --- floors -------------------------------------------------------------------------------------------
 def floor_tile(seed, tones=(FLOOR_1, FLOOR_2, FLOOR_3), joint=JOINT, wear=0.0, moss=0.0, crack=False,
                rune=False, dark=False):
-    """Four slabs of 8x8 in two offset rows (tileable), a dark joint on the right and bottom of each."""
+    """Two rows of slabs of 16x8, the second shifted by half a slab (tileable): twice the old 8x8 slabs, calmer.
+    Lit on the top and left edge, one dark joint on the bottom and right, almost no speckle, the tones pulled
+    toward their mean so a floor reads as structure and not as noise."""
     rng = random.Random(seed)
     img = blank()
-    noise = value_noise(rng, T, T, 4)
-    slabs = [(0, 0), (8, 0), (-4, 8), (4, 8), (12, 8)]
-    for sx, sy in slabs:
-        base = rng.choice(tones)
-        if dark:
-            base = shade(base, 0.55)
-        for yy in range(8):
-            for xx in range(8):
-                x, y = sx + xx, sy + yy
-                if not (0 <= x < T and 0 <= y < T):
-                    continue
-                n = noise[y][x] - 0.5
-                c = shade(base, 1.0 + n * 0.22 + rng.uniform(-0.04, 0.04))
-                if xx == 7 or yy == 7:
-                    c = joint if not dark else shade(joint, 0.6)
-                elif yy == 0 or xx == 0:
-                    c = shade(c, 1.12)
-                img.putpixel((x, y), c)
+    mean = tuple(sum(t[i] for t in tones) // len(tones) for i in range(3)) + (255,)
+    slab_tones = [mix(rng.choice(tones), mean, 0.55) for _ in range(2)]
+    for row in range(2):
+        off = 8 * row
+        base = shade(slab_tones[row], 0.55) if dark else slab_tones[row]
+        edge = shade(joint, 0.6) if dark else joint
+        for y in range(8):
+            for x in range(16):
+                py = row * 8 + y
+                sx = (x - off) % 16                 # where this pixel is inside its slab
+                c = base
+                if y == 7 or sx == 15:
+                    c = edge
+                elif y == 0 or sx == 0:
+                    c = shade(base, 1.14) if dark else mix(base, FLOOR_HI, 0.35)
+                elif (x * 7 + py * 13 + seed) % 29 == 0:
+                    c = shade(base, 0.95)
+                img.putpixel((x, py), c)
     if wear:
         for _ in range(int(wear * 40)):
             put(img, rng.randrange(T), rng.randrange(T), shade(tones[0], 0.8))
