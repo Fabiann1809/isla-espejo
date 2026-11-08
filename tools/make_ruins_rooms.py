@@ -725,6 +725,9 @@ pair(r, BANNER, (12, 2), radius=1, margin=0)
 # What is left of the old ring: two small broken columns at the upper sides, nothing below.
 r.put_near(PILLAR, (4, 6), radius=1, style=BROKEN_S)
 r.put_near(PILLAR, (25, 6), radius=1, style=BROKEN_S, flip=True)
+# Two large braziers burn at the south side, on each side of the way in, to light the fight.
+r.put_near(BRAZIER, (8, 14), radius=2, margin=0, style="large")
+r.put_near(BRAZIER, (21, 14), radius=2, margin=0, style="large", flip=True)
 story(r, armor=1, symbol=(14, 8))
 r.finish()
 

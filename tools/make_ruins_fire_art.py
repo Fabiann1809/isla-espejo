@@ -64,9 +64,9 @@ class Cv:
 def flame(cv, cx, base_y, h, w, frame, seed=1):
     """A flame standing on (cx, base_y): four nested layers, the tip and the width swaying a little per frame."""
     rng = random.Random(seed * 7 + frame)
-    sway = (0.0, 1.1, -0.9)[frame % 3]
+    sway = (0.0, 1.1, -0.9, 0.5)[frame % 4]
     for layer, (shrink, top, color) in enumerate(((1.0, 1.0, FIRE[1]), (0.78, 0.86, FIRE[2]), (0.5, 0.66, FIRE[3]), (0.28, 0.42, FIRE[4]))):
-        height = h * top * (1.0 + 0.06 * (frame - 1))
+        height = h * top * (1.0 + (-0.06, 0.0, 0.06, 0.03)[frame % 4])
         for i in range(int(height) + 1):
             t = i / max(1.0, height)
             half = w / 2.0 * shrink * (1.0 - t) ** 0.62 * (0.88 + 0.12 * math.cos(frame * 2.2 + t * 4.0))
@@ -122,6 +122,58 @@ def brazier(frame):
     for x in range(5, 19):
         cv.put(x, 13, EMBER[(x + frame) % 3])
     flame(cv, 12, 13, 15, 11, frame, 3)
+    return cv.outline().img
+
+
+def brazier_large(frame):
+    """The big brazier of the boss's arena: a wide carved plinth, a shaft with a glowing rune, a deep bowl heaped with coals, a
+    tall flame with two lesser tongues at its sides and sparks that rise frame by frame. 40x58, four frames."""
+    cv = Cv(40, 58)
+    cv.rect(4, 51, 35, 56, M)                     # plinth
+    cv.rect(4, 51, 35, 51, L)
+    cv.rect(4, 56, 35, 56, S1)
+    cv.rect(32, 52, 35, 55, M0)
+    cv.rect(8, 47, 31, 50, M2)
+    cv.rect(8, 47, 31, 47, L)
+    cv.rect(11, 33, 28, 46, M)                    # shaft
+    cv.rect(11, 33, 13, 46, L)
+    cv.rect(26, 33, 28, 46, M0)
+    for y in range(36, 44):                       # a carved diamond with a blue spark
+        half = 4 - abs(y - 39.5) // 1
+        for x in range(int(19.5 - half), int(20 + half)):
+            cv.put(x, y, S2)
+    cv.put(19, 39, C("#5cc8ff"))
+    cv.put(20, 40, C("#5cc8ff"))
+    cv.put(19, 40, C("#d8f6ff"))
+    cv.rect(9, 44, 30, 46, M2)
+    cv.rect(9, 44, 30, 44, L)
+    for y in range(22, 33):                       # the bowl
+        t = (y - 22) / 10.0
+        half = int(round(15 - 5 * t))
+        for x in range(20 - half, 20 + half):
+            c = M if x > 12 else L
+            if x >= 20 + half - 4:
+                c = M0
+            if y == 22:
+                c = HI if x < 24 else L
+            if y == 32:
+                c = S1
+            cv.put(x, y, c)
+    cv.rect(2, 20, 37, 22, L)
+    cv.rect(2, 20, 37, 20, HI)
+    cv.rect(3, 23, 36, 23, M2)
+    for x in range(5, 35):                        # a heap of coals
+        cv.put(x, 19, EMBER[(x + frame) % 3])
+        if (x + frame) % 4:
+            cv.put(x, 18, EMBER[(x + 2 * frame) % 3])
+    flame(cv, 20, 18, 26, 18, frame, 4)
+    flame(cv, 13, 18, 14, 8, frame + 1, 6)
+    flame(cv, 27, 18, 14, 8, frame + 2, 7)
+    rng = random.Random(21)
+    for i in range(6):                            # sparks drifting up, one step per frame
+        x0 = rng.randrange(10, 31)
+        y = 12 - ((frame * 4 + i * 5) % 22)
+        cv.put(x0 + (i % 3) - 1, max(0, y + 12), FIRE[3] if i % 2 else FIRE[2])
     return cv.outline().img
 
 
@@ -201,19 +253,20 @@ def campfire(frame):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    makers = {"brazier": brazier, "torch": torch, "lantern": lantern, "campfire": campfire}
-    sheet = Image.new("RGBA", (4 * 3 * 40 + 20, 60), (22, 26, 46, 255))
+    makers = {"brazier": (brazier, 3), "torch": (torch, 3), "lantern": (lantern, 3), "campfire": (campfire, 3),
+              "brazier_large": (brazier_large, 4)}
+    sheet = Image.new("RGBA", (5 * 4 * 50 + 20, 70), (22, 26, 46, 255))
     x = 8
-    for name, make in makers.items():
-        for f in range(FRAMES):
+    for name, (make, count) in makers.items():
+        for f in range(count):
             img = make(f)
             img.save(os.path.join(OUT, f"{name}_{f}.png"))
-            sheet.alpha_composite(img, (x, 56 - img.height))
+            sheet.alpha_composite(img, (x, 66 - img.height))
             x += img.width + 6
         x += 8
     preview = sys.argv[1] if len(sys.argv) > 1 else None
     if preview:
-        sheet.crop((0, 0, x, 60)).resize((x * 6, 360), Image.NEAREST).save(preview)
+        sheet.crop((0, 0, x, 70)).resize((x * 5, 350), Image.NEAREST).save(preview)
     print("ok")
 
 

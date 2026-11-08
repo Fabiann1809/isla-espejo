@@ -117,7 +117,9 @@ func _build() -> void:
 		Kind.STELE:
 			_tall(&"stele")
 		Kind.BRAZIER:
-			if not _fire_art("brazier", FIRE_FPS):
+			if style == &"large" and _fire_art("brazier_large", FIRE_FPS):
+				pass
+			elif not _fire_art("brazier", FIRE_FPS):
 				add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.TORCH:
 			if not _fire_art("torch", FIRE_FPS):
@@ -167,7 +169,10 @@ func _build() -> void:
 		Kind.TORCH:
 			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6) if not _has_fire_art("torch") else Vector2(8, -12))
 		Kind.BRAZIER:
-			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5) if not _has_fire_art("brazier") else Vector2(8, -8))
+			if style == &"large" and _has_fire_art("brazier_large"):
+				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.7, Vector2(8, -14))
+			else:
+				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5) if not _has_fire_art("brazier") else Vector2(8, -8))
 		Kind.CAMPFIRE:
 			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.15, Vector2(8, 2))
 		Kind.CRYSTAL:
@@ -260,17 +265,21 @@ func _fire_art(art_name: String, fps: float) -> bool:
 	frames.set_animation_speed(&"burn", fps)
 	frames.set_animation_loop(&"burn", true)
 	var first: Texture2D = null
-	for i in 3:
-		var texture := _prop_texture("%s_%d" % [art_name, i])
+	var count := 0
+	while count < 8:
+		var texture := _prop_texture("%s_%d" % [art_name, count])
+		if texture == null:
+			break
 		first = first if first != null else texture
 		frames.add_frame(&"burn", texture)
+		count += 1
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = frames
 	sprite.centered = false
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.position = Vector2(TileArt.TILE / 2.0 - first.get_width() / 2.0, TileArt.TILE - first.get_height())
 	add_child(sprite)
-	sprite.frame = randi() % 3
+	sprite.frame = randi() % count
 	sprite.play(&"burn")
 	return true
 
