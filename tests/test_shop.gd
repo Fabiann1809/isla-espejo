@@ -246,6 +246,7 @@ func _test_menu_and_merchant(catalog: Resource, player: Node) -> void:
 	key.action = &"pause"
 	key.pressed = true
 	Input.parse_input_event(key)
+	Input.flush_buffered_events()
 	await _frames(3)
 	_check(not menu.is_open() and not paused, "Esc (pause) closes the shop and the game goes on")
 	menu.open(player)

@@ -79,6 +79,7 @@ func _initialize() -> void:
 	press.action = "interact"
 	press.pressed = true
 	Input.parse_input_event(press)
+	Input.flush_buffered_events()
 	await process_frame
 	await process_frame
 	_check(skip_end[0], "a key press skips the intro")
@@ -87,6 +88,7 @@ func _initialize() -> void:
 	release.action = "interact"
 	release.pressed = false
 	Input.parse_input_event(release)
+	Input.flush_buffered_events()
 	skipped.queue_free()
 	await process_frame
 	quit(0 if _ok else 1)

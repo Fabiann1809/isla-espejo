@@ -216,6 +216,7 @@ func _press(action: String) -> void:
 	event.action = action
 	event.pressed = true
 	Input.parse_input_event(event)
+	Input.flush_buffered_events()
 	await physics_frame
 
 
@@ -224,6 +225,7 @@ func _release(action: String) -> void:
 	event.action = action
 	event.pressed = false
 	Input.parse_input_event(event)
+	Input.flush_buffered_events()
 	await physics_frame
 
 
@@ -232,8 +234,11 @@ func _tap(action: String) -> void:
 	press.action = action
 	press.pressed = true
 	Input.parse_input_event(press)
+	# Applied now: on a busy machine a press and its release must never land in one flush.
+	Input.flush_buffered_events()
 	await _frames(5)
 	var release := InputEventAction.new()
 	release.action = action
 	release.pressed = false
 	Input.parse_input_event(release)
+	Input.flush_buffered_events()

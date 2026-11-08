@@ -103,11 +103,13 @@ func _tap(action: String) -> void:
 	press.action = action
 	press.pressed = true
 	Input.parse_input_event(press)
+	Input.flush_buffered_events()
 	await process_frame
 	var release := InputEventAction.new()
 	release.action = action
 	release.pressed = false
 	Input.parse_input_event(release)
+	Input.flush_buffered_events()
 	await process_frame
 
 
