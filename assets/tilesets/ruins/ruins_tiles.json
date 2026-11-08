@@ -1313,6 +1313,114 @@
   "floor_slab_c_br": [
    7,
    20
+  ],
+  "abyss_a_0": [
+   8,
+   20
+  ],
+  "abyss_a_1": [
+   9,
+   20
+  ],
+  "abyss_a_2": [
+   10,
+   20
+  ],
+  "abyss_b_0": [
+   11,
+   20
+  ],
+  "abyss_b_1": [
+   12,
+   20
+  ],
+  "abyss_b_2": [
+   13,
+   20
+  ],
+  "abyss_c_0": [
+   14,
+   20
+  ],
+  "abyss_c_1": [
+   15,
+   20
+  ],
+  "abyss_c_2": [
+   0,
+   21
+  ],
+  "abyss_d_0": [
+   1,
+   21
+  ],
+  "abyss_d_1": [
+   2,
+   21
+  ],
+  "abyss_d_2": [
+   3,
+   21
+  ],
+  "abyss_shade_a": [
+   4,
+   21
+  ],
+  "abyss_foam_a": [
+   5,
+   21
+  ],
+  "abyss_shade_b": [
+   6,
+   21
+  ],
+  "abyss_foam_b": [
+   7,
+   21
+  ],
+  "cliff_top_a": [
+   8,
+   21
+  ],
+  "cliff_foot_a": [
+   9,
+   21
+  ],
+  "cliff_top_b": [
+   10,
+   21
+  ],
+  "cliff_foot_b": [
+   11,
+   21
+  ],
+  "cliff_top_c": [
+   12,
+   21
+  ],
+  "cliff_foot_c": [
+   13,
+   21
+  ],
+  "cliff_top_d": [
+   14,
+   21
+  ],
+  "cliff_foot_d": [
+   15,
+   21
+  ],
+  "rim_n": [
+   0,
+   22
+  ],
+  "rim_w": [
+   1,
+   22
+  ],
+  "rim_e": [
+   2,
+   22
   ]
  },
  "patterns": {

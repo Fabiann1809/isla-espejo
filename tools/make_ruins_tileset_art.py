@@ -1512,42 +1512,64 @@ def crag(seed, cols, rows, moss=0.0, crystal=False):
 
 # --- stairs and bridges -------------------------------------------------------------------------------------
 def bridge_planks(horizontal=True, seed=2):
+    """Boards of a wooden deck: four to a tile, each its own tone with a dark gap, a light top edge, grain, nail heads at
+    both ends and a little shade where the parapets fall on it. `horizontal`: the boards lie side by side along x."""
     rng = random.Random(seed)
     img = blank()
+    tones = [shade(WOOD_2, 1.0), shade(WOOD_1, 1.12), shade(WOOD_2, 0.92), shade(WOOD_1, 1.04)]
+    grain = [[rng.random() for _ in range(T)] for _ in range(4)]
     for y in range(T):
         for x in range(T):
-            k = x if horizontal else y
-            base = (WOOD_2, WOOD_1, WOOD_2, WOOD_1)[(k // 4) % 4]
-            if k % 4 == 3:
+            k, along = (x, y) if horizontal else (y, x)
+            board = (k // 4) % 4
+            edge = k % 4
+            c = tones[board]
+            if edge == 3:
                 c = WOOD_D
-            elif k % 4 == 0:
-                c = shade(base, 1.18)
-            else:
-                c = shade(base, 1.0 + rng.uniform(-0.07, 0.07))
+            elif edge == 0:
+                c = shade(c, 1.2)
+            elif grain[board][along] < 0.16:
+                c = shade(c, 0.86)                     # a grain streak along the board
+            if edge in (1, 2) and along in (2, T - 3) and edge == 1 + board % 2:
+                c = shade(WOOD_D, 1.15)                # a nail head near each end
+            if along < 2:
+                c = shade(c, 0.82)                     # the shade under the parapet at one side
+            elif along > T - 3:
+                c = shade(c, 0.9)
             img.putpixel((x, y), c)
     return img
 
 
 def bridge_rail(horizontal=True):
-    """Stone parapet along a bridge (the low wall at its sides); horizontal = runs along x."""
+    """A low stone parapet along a causeway or a bridge: a lit cap, a face of cut blocks with their joints and a squat post
+    at the end of every tile, a dark foot over the water. `horizontal`: it runs along x (the cap on top)."""
     img = blank()
     for y in range(T):
         for x in range(T):
-            k = y if horizontal else x
-            if k < 2:
-                c = OUTLINE
+            k, along = (y, x) if horizontal else (x, y)
+            if k < 1 or k > 14:
+                c = OUTLINE                               # the outline
+            elif k == 1:
+                c = ROCK_HI                               # the cap's lit edge
             elif k < 5:
-                c = ROCK_HI if k == 2 else ROCK_4
-            elif k < 9:
-                c = ROCK_3
-            elif k < 12:
-                c = ROCK_2
+                c = ROCK_4 if k < 4 else ROCK_3           # the cap
+            elif k == 5:
+                c = shade(ROCK_3, 0.6)                    # the shade under the cap
+            elif k < 13:
+                row = (k - 6) // 3                        # two courses of blocks, the second shifted
+                joint = (along + (4 if row else 0)) % 8 == 7
+                c = shade(ROCK_3, 0.55) if joint else (ROCK_3 if row == 0 else ROCK_2)
+                if k == 6 or k == 9:
+                    c = shade(c, 1.12)                    # the lit top of a block
             else:
-                c = ROCK_D
-            along = x if horizontal else y
-            if along % 8 == 7 and k >= 2:
-                c = shade(c, 0.6)
-            img.putpixel((x, y), c)
+                c = ROCK_D                                # the dark foot
+            if along < 3 and 1 < k < 14:                  # a post at the tile's start, a little proud of the face
+                c = ROCK_HI if k == 2 else (ROCK_4 if along < 2 else ROCK_3)
+                if k >= 12:
+                    c = ROCK_2
+            if along == 3 and 1 < k < 14:
+                c = shade(ROCK_D, 1.2)
+            img.putpixel((x, y) if horizontal else (y, x) if False else (x, y), c) if horizontal else img.putpixel((k, along), c)
     return img
 
 
@@ -2170,7 +2192,7 @@ def build_tiles():
     add("floor_dim_a", floor_tile(51, tones=(FLOOR_D, FLOOR_1, FLOOR_1)))
     add("floor_dim_b", floor_tile(52, tones=(FLOOR_D, FLOOR_1, FLOOR_2), wear=0.3))
     add("floor_pale_a", floor_tile(53, tones=(FLOOR_2, FLOOR_3, FLOOR_HI)))
-    add("floor_pale_b", floor_tile(54, tones=(FLOOR_2, FLOOR_3, FLOOR_3), moss=0.2))
+    add("floor_pale_b", floor_tile(54, tones=(FLOOR_2, FLOOR_3, FLOOR_3)))
     add("floor_cracked_a", floor_cracked(55))
     add("floor_cracked_b", floor_cracked(56))
     add("floor_cracked_c", floor_cracked(57))
@@ -2187,6 +2209,10 @@ def build_tiles():
         slab = floor_slab_big(seed)
         for name, box in (("tl", (0, 0)), ("tr", (16, 0)), ("bl", (0, 16)), ("br", (16, 16))):
             add("floor_slab_%s_%s" % ("abc"[k], name), slab.crop((box[0], box[1], box[0] + T, box[1] + T)))
+    # deep water, cliffs and the lips of a floor over water (tools/ruins_abyss_art.py)
+    import ruins_abyss_art
+    for name, img in ruins_abyss_art.tiles():
+        add(name, img)
     return tiles, patterns
 
 
