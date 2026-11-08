@@ -33,6 +33,8 @@ const WATER_FRAME_SECONDS := 0.45
 var _cells: Array[String] = []
 var _water_layers: Array[TileMapLayer] = []
 var _water_time := 0.0
+## The three frames of the deep water, taking turns like the river's (see _process).
+var _abyss_layers: Array[TileMapLayer] = []
 
 
 const RUINS_PROFILE := "res://data/tilesets/ruins.tres"
@@ -51,22 +53,28 @@ func _ready() -> void:
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(global_position))
-	_build_rock_mass()
+	if Tuning.RUIN_ABYSS:
+		_build_abyss(rng)
+	else:
+		_build_rock_mass()
 	_build_floor_detail(rng)
 	_build_water()
 	_build_deck()
 	_build_waterfalls()
 	_build_collision()
-	_build_rock_edge(rng)
+	if Tuning.RUIN_ABYSS:
+		_build_rims()
+	else:
+		_build_rock_edge(rng)
 
 
 func _process(delta: float) -> void:
-	if _water_layers.size() < 3:
-		return
 	_water_time += delta
 	var frame := int(_water_time / WATER_FRAME_SECONDS) % 3
-	_water_layers[1].visible = frame == 1
-	_water_layers[2].visible = frame == 2
+	for layers in [_water_layers, _abyss_layers]:
+		if layers.size() >= 3:
+			layers[1].visible = frame == 1
+			layers[2].visible = frame == 2
 
 
 ## The character of a cell; outside the plan counts as rock.
@@ -134,7 +142,8 @@ func _build_floor_detail(rng: RandomNumberGenerator) -> void:
 			elif n < -Tuning.RUIN_FLOOR_DIM_THRESHOLD:
 				layer.set_cell(cell, 0, TileArt.coords([&"floor_pale_a", &"floor_pale_b"][rng.randi() % 2]))
 	_place_slabs(layer, rng, used)
-	var kinds := [&"broken", &"worn", &"mossy"]
+	# Nothing green on the floor: the slabs, their wear and their breaks are all there is.
+	var kinds := [&"broken", &"worn"]
 	var zones := rng.randi_range(Tuning.RUIN_FLOOR_ZONES_MIN, Tuning.RUIN_FLOOR_ZONES_MAX)
 	for i in zones:
 		_place_zone(layer, rng, used, kinds[i % kinds.size()])
@@ -274,6 +283,88 @@ func _build_waterfalls() -> void:
 				holder.add_child(RuinAnim.sprite([&"waterfall_mid_a", &"waterfall_mid_b", &"waterfall_mid_c"], 6.0, at))
 			else:
 				holder.add_child(RuinAnim.sprite([&"waterfall_base_a", &"waterfall_base_b", &"waterfall_base_c"], 6.0, at))
+
+
+# --- deep water and cliffs (Tuning.RUIN_ABYSS) -------------------------------------------------------------------
+## True where the picture is deep water: the rock of the plan, the room's walls (not the gap of an open door) and
+## everything outside the plan.
+func is_abyss(cell: Vector2i) -> bool:
+	if cell.x < 0 or cell.y < 0 or cell.x >= COLUMNS or cell.y >= ROWS:
+		return true
+	if _cells[cell.y][cell.x] != ROCK:
+		return false
+	var on_border := cell.x == 0 or cell.y == 0 or cell.x == COLUMNS - 1 or cell.y == ROWS - 1
+	if on_border:
+		var room := get_parent()
+		if room != null and room.has_method("is_wall_cell"):
+			return room.is_wall_cell(cell)
+	return true
+
+
+## True for a cell Nico can stand on and that a cliff hangs from: floor, planks, the gap of an open door.
+func _is_ground(cell: Vector2i) -> bool:
+	if is_abyss(cell):
+		return false
+	var c := cell_at(cell)
+	return c == FLOOR or c == PLANKS or c == ROCK
+
+
+## The deep water of every abyss cell. Under a floor's south edge hangs a cliff of two rows, then a row of foam and
+## a row of shade; the rest is open water in three frames that take turns. The cliff's feet may fall outside
+## the plan (below the room), so the cells are painted a few rows past it.
+func _build_abyss(rng: RandomNumberGenerator) -> void:
+	var base := _new_layer("Abyss")
+	var shimmer_b := _new_layer("AbyssB")
+	var shimmer_c := _new_layer("AbyssC")
+	var cliffs := _new_layer("Cliffs")
+	_abyss_layers = [base, shimmer_b, shimmer_c]
+	var variants := ["a", "b", "c", "d"]
+	for y in range(0, ROWS + 4):
+		for x in COLUMNS:
+			var cell := Vector2i(x, y)
+			if not is_abyss(cell):
+				continue
+			var depth := -1
+			for d in range(1, 5):
+				if _is_ground(cell + Vector2i.UP * d):
+					depth = d - 1
+					break
+				if not is_abyss(cell + Vector2i.UP * d):
+					break
+			var v: String = variants[rng.randi_range(0, variants.size() - 1)]
+			match depth:
+				0:
+					cliffs.set_cell(cell, 0, TileArt.coords(StringName("cliff_top_" + v)))
+				1:
+					cliffs.set_cell(cell, 0, TileArt.coords(StringName("cliff_foot_" + v)))
+				2:
+					base.set_cell(cell, 0, TileArt.coords(StringName("abyss_foam_" + ["a", "b"][rng.randi() % 2])))
+				3:
+					base.set_cell(cell, 0, TileArt.coords(StringName("abyss_shade_" + ["a", "b"][rng.randi() % 2])))
+				_:
+					base.set_cell(cell, 0, TileArt.coords(StringName("abyss_%s_0" % v)))
+					shimmer_b.set_cell(cell, 0, TileArt.coords(StringName("abyss_%s_1" % v)))
+					shimmer_c.set_cell(cell, 0, TileArt.coords(StringName("abyss_%s_2" % v)))
+	shimmer_b.visible = false
+	shimmer_c.visible = false
+
+
+## The lip of every floor cell that has deep water at its north, west or east: a thin edge over the floor's tile.
+func _build_rims() -> void:
+	var north := _new_layer("RimNorth")
+	var west := _new_layer("RimWest")
+	var east := _new_layer("RimEast")
+	for y in range(1, ROWS - 1):
+		for x in range(1, COLUMNS - 1):
+			var cell := Vector2i(x, y)
+			if cell_at(cell) != FLOOR:
+				continue
+			if is_abyss(cell + Vector2i.UP):
+				north.set_cell(cell, 0, TileArt.coords(&"rim_n"))
+			if is_abyss(cell + Vector2i.LEFT):
+				west.set_cell(cell, 0, TileArt.coords(&"rim_w"))
+			if is_abyss(cell + Vector2i.RIGHT):
+				east.set_cell(cell, 0, TileArt.coords(&"rim_e"))
 
 
 # --- collision ---------------------------------------------------------------------------------------------------------

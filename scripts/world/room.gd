@@ -252,6 +252,9 @@ func _build_themed_floor() -> void:
 	patches.frequency = Tuning.GRASS_PATCH_FREQUENCY
 	var origin := Vector2i(position) / TILE
 	var in_patch := func(cell: Vector2i) -> bool:
+		# The Ruinas have no second ground: their "grass patches" would be moss, and the floor is slabs only.
+		if theme.wall_style == RoomTheme.WallStyle.ROCKS:
+			return false
 		return patches.get_noise_2d(origin.x + cell.x, origin.y + cell.y) > Tuning.GRASS_PATCH_THRESHOLD
 	for y in size_tiles.y:
 		for x in size_tiles.x:
@@ -296,6 +299,8 @@ func _add_detail_groups(decor: TileMapLayer, rng: RandomNumberGenerator) -> void
 		[TileArt.FLOWER_PURPLE, TileArt.FLOWER_YELLOW],
 		[TileArt.STUMP],
 	]
+	if theme != null and theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		families = [[TileArt.PEBBLES, TileArt.ROCK_SMALL]]       # stones only: no mushrooms, flowers or stumps in a ruin
 	for group in Tuning.DETAIL_GROUPS_PER_ROOM:
 		var family: Array = families[rng.randi_range(0, families.size() - 1)]
 		var center := Vector2i(rng.randi_range(2, size_tiles.x - 3), rng.randi_range(2, size_tiles.y - 3))
@@ -372,6 +377,8 @@ func _plant_tree_wall(rng: RandomNumberGenerator) -> void:
 ## collision): two staggered rows on top (painted into one picture, nobody walks behind them) and
 ## single columns, y-sorted with the actors, on the sides and at the bottom.
 func _plant_rock_wall(rng: RandomNumberGenerator) -> void:
+	if Tuning.RUIN_ABYSS:
+		return          # the walls are deep water and cliffs, drawn by the room's Shape
 	var rocks := Node2D.new()
 	rocks.name = "WallRocks"
 	rocks.y_sort_enabled = true

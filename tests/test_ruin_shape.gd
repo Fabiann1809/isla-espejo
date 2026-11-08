@@ -27,8 +27,15 @@ func _initialize() -> void:
 
 	_check(shape.is_rock(Vector2i(5, 4)) and shape.is_water(Vector2i(9, 5)) and shape.cell_at(Vector2i(9, 8)) == "=" and shape.is_walkable(Vector2i(9, 8)),
 			"the plan reads as rock, water and planks")
-	_check(shape.get_node("RockMass") != null and shape.get_node("Water") != null and shape.get_node("Rocks") != null
-			and shape.get_node("Waterfalls").get_child_count() == 4, "it draws rock, water, columns and a waterfall (2x2 cells)")
+	# The rock is deep water with cliffs (Tuning.RUIN_ABYSS) or a mass of rock with columns on its edge.
+	var rock_picture: bool = (shape.get_node_or_null("Abyss") != null and shape.get_node_or_null("Cliffs") != null
+			and shape.get_node_or_null("RimNorth") != null) if Tuning.RUIN_ABYSS 			else (shape.get_node_or_null("RockMass") != null and shape.get_node_or_null("Rocks") != null)
+	_check(rock_picture and shape.get_node("Water") != null and shape.get_node("Waterfalls").get_child_count() == 4,
+			"it draws the rock (as %s), the river and a waterfall (2x2 cells)" % ("deep water and cliffs" if Tuning.RUIN_ABYSS else "rock and columns"))
+	if Tuning.RUIN_ABYSS:
+		# Cell (5,4) is rock inside the plan, (0,8) a border cell in front of floor, (9,5) the river.
+		_check(shape.is_abyss(Vector2i(5, 4)) and shape.is_abyss(Vector2i(-1, 3)) and not shape.is_abyss(Vector2i(9, 8))
+				and not shape.is_abyss(Vector2i(9, 5)), "deep water is the plan's rock and what lies outside it, never the floor or the river")
 	var detail: TileMapLayer = shape.get_node("FloorDetail")
 	var plain := TileArt.coords(&"floor_a")
 	var lane_hole := false
