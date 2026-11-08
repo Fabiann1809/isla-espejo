@@ -11,6 +11,7 @@ id = &"caracol_escoria"
 display_name = "Caracol de escoria"
 placeholder_color = Color(0.45, 0.3, 0.25, 1)
 sprite_frames = ExtResource("2_1xj5o")
+sprite_scale = 0.7
 sprite_offset = Vector2(0, -15)
 max_health = 14
 move_speed = 12.0

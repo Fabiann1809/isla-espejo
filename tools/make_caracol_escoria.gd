@@ -14,6 +14,8 @@ func _initialize() -> void:
 	# 64x64 cells, its art drawn by tools/make_caracol_escoria_art.py with the feet (the last row
 	# of the lava pool it sits in) on row 53: they sit a few pixels below the body's center.
 	data.sprite_offset = Vector2(0, -15)
+	# Drawn smaller than its art: the snail read as too big next to the other enemies.
+	data.sprite_scale = 0.7
 	# Very sturdy: lots of health, barely pushed, and a hit never cuts its bite short.
 	data.max_health = 14
 	data.knockback_resistance = 0.85
