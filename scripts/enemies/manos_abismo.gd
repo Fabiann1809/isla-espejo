@@ -330,8 +330,18 @@ func _update_arm() -> void:
 		shadow.visible = phase != Phase.UNDER
 
 
-## Burrowed there is nothing to show. It rises with `special`, reaches and holds with `attack`, waits
-## with `idle` and sinks with `special` played backwards; the base picks `hurt`.
+## Plays `anim` (or backwards) so it lasts `seconds`.
+func _play_timed(anim: StringName, seconds: float, backwards: bool) -> void:
+	if backwards:
+		_sprite.play_backwards(anim)
+	else:
+		_sprite.play(anim)
+	_sprite.speed_scale = _animation_length(anim) / maxf(seconds, 0.05)
+
+
+## Burrowed there is nothing to show. It rises with `special`, reaches with `attack` timed to the
+## reach, holds on its grip, pulls back with `attack` backwards, waits with `idle` and sinks with
+## `special` played backwards; the base picks `hurt`.
 func _update_animation() -> void:
 	if _sprite == null or state == State.DEAD:
 		return
@@ -353,9 +363,15 @@ func _update_animation() -> void:
 		Phase.RISING:
 			_sprite.play(&"special")
 			_sprite.speed_scale = _animation_length(&"special") / maxf(data.attack_windup, 0.05)
-		Phase.REACHING, Phase.HOLDING:
+		Phase.REACHING:
+			# the hand coils, opens and lunges over the whole reach, ending on its grip
+			_play_timed(&"attack", _hands.reach_length / maxf(_hands.reach_speed * _speed_scale(), 1.0), false)
+		Phase.HOLDING:
 			if _sprite.animation != &"attack":
 				_sprite.play(&"attack")
+		Phase.RETRACTING:
+			# it pulls back through the same frames in reverse
+			_play_timed(&"attack", _hands.reach_length / maxf(_hands.retract_speed * _speed_scale(), 1.0), true)
 		Phase.SINKING:
 			_sprite.play_backwards(&"special")
 			_sprite.speed_scale = _animation_length(&"special") / maxf(_hands.sink_time, 0.05)
