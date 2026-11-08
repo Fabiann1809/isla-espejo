@@ -136,6 +136,8 @@ func _connect_events() -> void:
 		play(StringName("boss_" + pattern)))
 	Events.boss_health_changed.connect(_on_boss_health_changed)
 	Events.boss_defeated.connect(_on_boss_defeated)
+	Events.boss_awakened.connect(func(_id: StringName, at: Vector2) -> void: play(&"boss_slam", at))
+	Events.portal_opened.connect(func(at: Vector2) -> void: play(&"portal", at, -4.0))
 	Events.level_started.connect(_on_level_started)
 
 

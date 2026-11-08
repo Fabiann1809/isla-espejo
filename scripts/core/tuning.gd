@@ -196,6 +196,23 @@ const MAP_VEIL_FADE_OUT := 0.3
 const MAP_VEIL_FADE_IN := 0.45
 const MAP_VEIL_HOLD_FRAMES := 3
 
+# --- Characters -------------------------------------------------------------------------------------
+## A greeting character starts talking when the player is this close (px), so both are on screen.
+const NPC_GREET_DISTANCE := 96.0
+## Seconds between the player getting that close and the conversation starting.
+const NPC_GREET_DELAY := 0.5
+## The boss that talks first waits, asleep, until Nico is this close (px), then wakes up and they talk.
+const BOSS_TALK_DISTANCE := 130.0
+
+# --- Entering a room ---------------------------------------------------------------------------------
+## The first time Nico steps into the boss's arena: a dip of the screen and a breath of the camera (ordinary
+## rooms have none, and no room shows a name: the island has one name, shown by the chapter intro).
+const ROOM_TRANSITIONS_ENABLED := true
+const ROOM_DIP_ALPHA := 0.5
+const ROOM_DIP_SECONDS := 0.5
+const ROOM_PUNCH_ZOOM := 1.05
+const ROOM_PUNCH_SECONDS := 0.55
+
 # --- Chapter intro ----------------------------------------------------------------------------------
 ## When an island's chapter starts, the camera shows the room where Nico appears from farther away (a bit of
 ## its neighbours too) and glides in to Nico while the island's name appears (off = the game starts on Nico
@@ -297,6 +314,9 @@ const BOSS_ARENA_SHADE := Color(0.06, 0.04, 0.03, 0.4)
 const BOSS_ARENA_ROOTS := 6
 const BOSS_ROOT_COLOR := Color(0.26, 0.17, 0.09, 0.5)
 const BOSS_STONES := 14
+## The ring of runes under the boss (see ArenaRunes).
+const BOSS_RUNE_COLOR := Color(0.45, 0.95, 0.5)
+const BOSS_RUNE_RADIUS := 46.0
 const DOOR_TORCHES := true
 const TORCH_FLICKER_FPS := 4.0
 ## Warm light on the ground around each torch (alpha 0 = off), radius in px.
@@ -314,6 +334,8 @@ const CAMP_SIGN := true
 ## open, light on the ground and rising sparks (0 = off).
 const PORTAL_BASE := true
 const PORTAL_LIGHT := Color(0.7, 0.45, 1.0, 0.35)
+## Seconds the doorway takes to unfold and shine when the boss falls.
+const PORTAL_OPEN_SECONDS := 1.4
 const PORTAL_LIGHT_RADIUS := 40.0
 const PORTAL_SPARKS := 10
 ## The portal's own art (assets/art_forest/portal/, drawn in Aseprite): a round stone dais lying with
@@ -340,6 +362,11 @@ const SHAKE_BOSS_SLAM := Vector2(5.0, 0.35)
 const SHAKE_BOSS_ROOTS := Vector2(2.5, 0.25)
 const SHAKE_BOSS_PHASE := Vector2(4.0, 0.4)
 const SHAKE_BOSS_DEFEATED := Vector2(7.0, 0.7)
+## A boss that talks first sleeps tinted grey until it notices Nico, then wakes up over this many seconds.
+const BOSS_DORMANT_TINT := Color(0.5, 0.58, 0.52)
+const BOSS_AWAKEN_SECONDS := 1.1
+const SHAKE_BOSS_AWAKEN := Vector2(4.0, 0.9)
+const SHAKE_PORTAL_OPEN := Vector2(2.5, 0.8)
 ## Particles thrown when an enemy is hit and when it dies (count 0 = off), in the enemy's color.
 const HIT_PARTICLES := 5
 const DEATH_PARTICLES := 18

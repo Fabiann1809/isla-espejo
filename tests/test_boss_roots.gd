@@ -166,6 +166,7 @@ func _test_in_generated_level() -> void:
 	player.global_position = boss.global_position + Vector2(100, 40)
 	await physics_frame
 	boss._last_pattern = boss.Pattern.SLAM
+	boss.play_intro_dialogue = false
 	boss._acquire_target(player)
 	for i in 400:
 		if boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS:
@@ -218,6 +219,7 @@ func _roots_attack(scene: String, phase := 1) -> Node2D:
 			child.free()
 	var boss: Node2D = load("res://scenes/enemies/%s.tscn" % scene).instantiate()
 	boss.position = ARENA
+	boss.play_intro_dialogue = false
 	_room.add_child(boss)
 	if phase == 2:
 		boss._enter_phase_two()
@@ -227,6 +229,7 @@ func _roots_attack(scene: String, phase := 1) -> Node2D:
 	# set it before engaging so the very first attack is not left to chance. Engage it right away:
 	# waiting for it to notice the player depends on timing (slow on CI).
 	boss._last_pattern = boss.Pattern.SLAM
+	boss.play_intro_dialogue = false
 	boss._acquire_target(_player)
 	for i in 400:
 		if boss.state == boss.State.ATTACK and boss.pattern == boss.Pattern.ROOTS:

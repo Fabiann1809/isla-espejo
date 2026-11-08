@@ -34,6 +34,7 @@ func _initialize() -> void:
 	_test_data()
 	await _make_room()
 	await _test_engagement()
+	await _test_intro_dialogue()
 	await _test_slam()
 	await _test_roots()
 	await _test_super_armor()
@@ -53,7 +54,8 @@ func _test_data() -> void:
 	_check(boss != null and boss.id == &"forest_guardian" and boss.display_name == "Guardián del bosque", "the Guardián del bosque has its data")
 	_check(boss.max_health >= 20 and boss.slam_damage >= 1 and boss.slam_windup >= 0.5 and boss.roots_windup >= 0.5,
 			"it has real health and warning times long enough to react to")
-	_check(boss.intro_lines.size() == 2 and "Nadie abandona la isla" in boss.intro_lines[1], "it has its two intro lines")
+	_check(boss.intro_dialogue == &"forest_guardian" and not root.get_node("Dialogue").load_dialogue(&"forest_guardian").is_empty(),
+			"it talks with Nico before the fight (its intro dialogue exists)")
 	_check(boss.pickup_scene != null and boss.defeated_flag == &"forest_boss_defeated", "it drops the fragment and sets the story flag")
 	_check(boss.knockback_resistance == 1.0, "it cannot be knocked back")
 	var scenario: ScenarioData = load("res://data/scenarios/forest.tres")
@@ -81,6 +83,7 @@ func _spawn_boss() -> Node2D:
 			child.free()
 	var boss: Node2D = load("res://scenes/enemies/forest_guardian.tscn").instantiate()
 	boss.position = ARENA
+	boss.play_intro_dialogue = false      # the fight tests skip the conversation (it has its own test below)
 	_room.add_child(boss)
 	return boss
 
@@ -107,9 +110,35 @@ func _test_engagement() -> void:
 	_player.global_position = ARENA + Vector2(150, 0)
 	await _frames(25)
 	_check(boss.target == _player, "when the player comes close the boss notices them")
-	_check(_messages.size() == 2 and _messages[0].begins_with("Nico:") and _messages[1].begins_with("Guardián:"),
-			"the fight opens with the two intro lines (%s)" % [_messages])
 	_check(_boss_bars.size() > 0 and _boss_bars[-1] == [&"forest_guardian", max_health, max_health, "Guardián del bosque"], "the boss health bar is announced")
+	_player.global_position = ARENA + Vector2(0, 400)
+	await _frames(5)
+	boss.free()
+
+
+# --- The talk before the fight --------------------------------------------------------------------
+
+func _test_intro_dialogue() -> void:
+	var dialogue: Node = root.get_node("Dialogue")
+	root.get_node("GameState").reset()
+	var boss := _spawn_boss()
+	boss.play_intro_dialogue = true
+	_boss_bars.clear()
+	_player.global_position = ARENA + Vector2(150, 0)
+	await _frames(25)
+	_check(boss.target == _player and boss._holding and not dialogue.active, "far away it only notices Nico: it sleeps on and says nothing")
+	await _frames(60)
+	_check(not dialogue.active and boss._waiting_to_talk, "and it does not talk while Nico is far (both must be seen)")
+	_player.global_position = ARENA + Vector2(100, 0)
+	var spot: Vector2 = boss.global_position
+	await _frames(90)
+	_check(dialogue.active, "then they talk before the fight")
+	_check(boss.global_position.is_equal_approx(spot) and boss.state != boss.State.ATTACK, "the boss waits while they talk (%s %s)" % [boss.state, boss.global_position.distance_to(spot)])
+	_check(_boss_bars.is_empty(), "the fight has not begun: no health bar yet")
+	dialogue._finish()
+	await _frames(3)
+	_check(not dialogue.active and _boss_bars.size() > 0, "when the talk ends the fight begins and the health bar shows")
+	_check(root.get_node("GameState").has_flag(&"met_forest_guardian"), "and the island remembers they have talked")
 	_player.global_position = ARENA + Vector2(0, 400)
 	await _frames(5)
 	boss.free()
@@ -340,6 +369,9 @@ func _test_forest_level() -> void:
 	# ending after the last chapter is covered by test_ending)
 	level.end_after_last_chapter = false
 	_messages.clear()
+	for enemy in get_nodes_in_group("enemies"):
+		if "play_intro_dialogue" in enemy:
+			enemy.play_intro_dialogue = false      # this part is about the exit, not the talk before the fight
 	var portal = get_nodes_in_group("exit_portals")[0]
 	level.player.global_position = portal.global_position + Vector2(0, 20)
 	await _frames(4)

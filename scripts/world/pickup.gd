@@ -1,11 +1,14 @@
 class_name Pickup
 extends Area2D
 ## A resource lying on the ground. The player takes it by touching it; some fly to him when close.
-## Drawn with simple shapes until there is art.
+## The heart and the arrow orb are pixel art (assets/sprites/pickups/, tools/make_pickup_art.py); the
+## gold coin is drawn with shapes (the HUD's coin copies that design).
 
 const BLINK_SECONDS := 3.0
 const MAGNET_SPEED := 150.0
 const BOB_HEIGHT := 1.5
+const HEART_ART := preload("res://assets/sprites/pickups/heart.png")
+const ORB_ART := preload("res://assets/sprites/pickups/arrow_orb.png")
 
 var data: ResourceData
 
@@ -63,14 +66,9 @@ func _draw() -> void:
 	draw_circle(Vector2(0, 2), 3.0, Color(0, 0, 0, 0.3))
 	match data.kind:
 		ResourceData.Kind.HEAL:
-			draw_circle(lift + Vector2(-2.5, -1), 2.8, data.color)
-			draw_circle(lift + Vector2(2.5, -1), 2.8, data.color)
-			draw_colored_polygon(PackedVector2Array([lift + Vector2(-5, 0), lift + Vector2(5, 0), lift + Vector2(0, 6)]), data.color)
+			draw_texture(HEART_ART, (lift - HEART_ART.get_size() / 2.0).round())
 		ResourceData.Kind.ARROWS:
-			draw_circle(lift, 5.5, data.color.darkened(0.4))
-			draw_circle(lift, 4.0, data.color)
-			for dir in [-0.6, 0.0, 0.6]:
-				draw_line(lift + Vector2(-2, 2).rotated(dir), lift + Vector2(3, -2).rotated(dir), Color.WHITE, 1.0)
+			draw_texture(ORB_ART, (lift - ORB_ART.get_size() / 2.0).round())
 		ResourceData.Kind.GOLD:
 			draw_circle(lift, 3.8, data.color.darkened(0.35))
 			draw_circle(lift, 2.8, data.color)

@@ -28,6 +28,8 @@ var scenario_id: StringName = &""
 ## The prompt of the open portal (from the scene); a sealed one shows the sealed prompt instead.
 var _open_prompt := ""
 var _time := 0.0
+## 0 while the portal is waking up, 1 when it shines fully (an already open portal starts at 1).
+var _open_amount := 1.0
 var _light: Sprite2D
 var _sparks: CPUParticles2D
 
@@ -40,16 +42,20 @@ func _ready() -> void:
 	_build_base()
 	_open_prompt = _use.prompt
 	_use.interacted.connect(_on_used)
-	Events.boss_defeated.connect(func(_id: StringName) -> void: _refresh())
+	Events.boss_defeated.connect(func(_id: StringName) -> void:
+		var was_open := _glow.visible
+		_refresh()
+		if not was_open and is_open():
+			_play_opening())
 	_refresh()
 
 
 func _process(delta: float) -> void:
 	if _glow.visible:
 		_time += delta
-		_glow.modulate.a = 0.6 + 0.3 * sin(_time * 4.0)
+		_glow.modulate.a = (0.6 + 0.3 * sin(_time * 4.0)) * _open_amount
 		if _light != null:
-			_light.modulate.a = Tuning.PORTAL_LIGHT.a * (0.8 + 0.2 * sin(_time * 4.0))
+			_light.modulate.a = Tuning.PORTAL_LIGHT.a * (0.8 + 0.2 * sin(_time * 4.0)) * _open_amount
 
 
 func is_open() -> bool:
@@ -65,6 +71,35 @@ func _refresh() -> void:
 		_light.visible = open
 	if _sparks != null:
 		_sparks.emitting = open
+
+
+## The boss has just fallen: the doorway unfolds upward, the light and the sparks swell, a ring of
+## sparks bursts from the dais and the screen trembles a little (the sealed stone was waiting for this).
+func _play_opening() -> void:
+	_open_amount = 0.0
+	_glow.scale = Vector2(1.0, 0.04)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(self, "_open_amount", 1.0, Tuning.PORTAL_OPEN_SECONDS)
+	tween.tween_property(_glow, "scale", Vector2.ONE, Tuning.PORTAL_OPEN_SECONDS) 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var burst := CPUParticles2D.new()
+	burst.texture = RoomDressing.pixel()
+	burst.one_shot = true
+	burst.amount = 32
+	burst.lifetime = 1.0
+	burst.explosiveness = 1.0
+	burst.position = Vector2(0, 6)
+	burst.direction = Vector2.UP
+	burst.spread = 180.0
+	burst.gravity = Vector2.ZERO
+	burst.initial_velocity_min = 35.0
+	burst.initial_velocity_max = 70.0
+	burst.scale_amount_min = 1.0
+	burst.scale_amount_max = 2.0
+	burst.color = Color(0.88, 0.74, 1.0, 0.95)
+	burst.emitting = true
+	add_child(burst)
+	get_tree().create_timer(2.0).timeout.connect(burst.queue_free)
+	Events.portal_opened.emit(global_position)
 
 
 func _on_used(_player: Node) -> void:

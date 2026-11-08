@@ -24,8 +24,10 @@ const BOSS_CARD_BARS := 22.0
 
 ## Compass fragment ids in story order, with the color each one has in the world.
 const FRAGMENT_COLORS := {&"green": Color(0.35, 0.85, 0.4), &"blue": Color(0.35, 0.6, 0.95), &"violet": Color(0.7, 0.45, 0.95)}
-const FRAGMENT_SIZE := Vector2(8, 8)
+const FRAGMENT_SIZE := Vector2(12, 12)
+## The icon of a fragment that is not collected yet: the same piece, dark.
 const FRAGMENT_MISSING := Color(0.2, 0.2, 0.26)
+const FRAGMENT_ICON := "res://assets/sprites/fragments/fragment_%s_icon.png"
 
 const TOAST_SECONDS := 3.2
 const TOAST_FADE := 0.8
@@ -46,6 +48,7 @@ const BUFF_BAR_SIZE := Vector2(40, 3)
 
 var _fragment_icons := {}
 var _gold_label: Label
+var _coin: CoinIcon
 var _buff_row: Control
 var _buff_icon: ColorRect
 var _buff_fill: ColorRect
@@ -82,7 +85,9 @@ func _ready() -> void:
 	_build_saved_note()
 	_build_fragments_and_objective()
 	_build_resources()
-	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
+	Events.player_gold_changed.connect(func(total: int) -> void:
+		_gold_label.text = str(total)
+		_coin.pop())
 	Events.player_buff_changed.connect(_on_buff_changed)
 	Events.objective_changed.connect(func(text: String) -> void: _objective.text = text)
 	Events.fragment_collected.connect(func(_id: StringName) -> void: _refresh_fragments())
@@ -99,12 +104,16 @@ func _build_fragments_and_objective() -> void:
 	row.add_theme_constant_override("separation", 4)
 	add_child(row)
 	for id: StringName in FRAGMENT_COLORS:
-		var icon := ColorRect.new()
+		var icon := TextureRect.new()
+		icon.texture = load(FRAGMENT_ICON % id)
 		icon.custom_minimum_size = FRAGMENT_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		icon.pivot_offset = FRAGMENT_SIZE / 2.0
+		icon.modulate = FRAGMENT_MISSING
 		row.add_child(icon)
 		_fragment_icons[id] = icon
 	_objective = Label.new()
-	_objective.position = Vector2(8, 38)
+	_objective.position = Vector2(8, 40)
 	_objective.add_theme_font_size_override("font_size", 10)
 	_objective.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
 	add_child(_objective)
@@ -126,10 +135,9 @@ func _build_resources() -> void:
 	_gold_label.add_theme_font_size_override("font_size", 10)
 	_gold_label.add_theme_color_override("font_color", GOLD_COLOR)
 	gold_row.add_child(_gold_label)
-	var coin := ColorRect.new()
-	coin.custom_minimum_size = Vector2(8, 8)
-	coin.color = GOLD_COLOR
-	gold_row.add_child(coin)
+	_coin = CoinIcon.new()
+	_coin.color = GOLD_COLOR
+	gold_row.add_child(_coin)
 
 	_buff_row = Control.new()
 	_buff_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
@@ -166,7 +174,14 @@ func _process(delta: float) -> void:
 
 func _refresh_fragments() -> void:
 	for id: StringName in _fragment_icons:
-		_fragment_icons[id].color = FRAGMENT_COLORS[id] if GameState.has_fragment(id) else FRAGMENT_MISSING
+		var icon: TextureRect = _fragment_icons[id]
+		var has := GameState.has_fragment(id)
+		var tint := Color.WHITE if has else FRAGMENT_MISSING
+		if has and icon.modulate == FRAGMENT_MISSING:
+			# A fragment just collected lights up with a little pop.
+			icon.scale = Vector2.ONE * 1.6
+			create_tween().tween_property(icon, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		icon.modulate = tint
 
 
 func show_message(text: String) -> void:
