@@ -42,6 +42,9 @@ func _check_attack(scene: String, pattern_name: String, offset: Vector2, strike_
 			child.free()
 	var boss: Node2D = load("res://scenes/enemies/%s.tscn" % scene).instantiate()
 	boss.position = ARENA
+	# Only the fight is under test: the Guardian would sleep until Nico is close and talk first.
+	if "play_intro_dialogue" in boss:
+		boss.play_intro_dialogue = false
 	_room.add_child(boss)
 	_player.global_position = ARENA + offset
 	var wanted: int = boss.Pattern[pattern_name]

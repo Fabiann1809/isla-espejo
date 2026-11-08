@@ -111,9 +111,9 @@ func _initialize() -> void:
 	root.add_child(elder)
 	await process_frame
 	_check(elder.get_node("Sprite").visible and not elder.get_node("Body").visible, "the elder shows its sprite instead of the colored figure")
-	_check(elder.sprite_scale == 0.5, "the elder is drawn at half size")
+	_check(elder.sprite_scale == 0.6, "the elder is drawn a little larger than half size, so he stands as tall as Nico")
 	var height := _visible_height(elder.get_node("Sprite"))
-	_check(height >= 24.0 and height <= 34.0, "the elder is about as tall as Nico (%.1f px)" % height)
+	_check(height >= 24.0 and height <= 36.0, "the elder is about as tall as Nico (%.1f px)" % height)
 	# A new NPC with 64x64 art gets the same size without setting anything.
 	for id: String in ["traveler", "merchant"]:
 		var npc = load("res://scenes/npcs/npc.tscn").instantiate()
