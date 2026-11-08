@@ -139,7 +139,7 @@ func _test_main_menu() -> void:
 	await process_frame
 	_check(not menu.continue_button.disabled, "continue is enabled with a save")
 	menu.start_button.pressed.emit()
-	_check(menu.start_button.text == "¿Borrar el progreso? Pulsa de nuevo" and _save.has_save() and _state.has_fragment(&"green"),
+	_check(menu.start_button.text == UiText.t("menu_start_confirm") and _save.has_save() and _state.has_fragment(&"green"),
 			"starting over asks first and erases nothing yet")
 	menu.options_button.pressed.emit()
 	_check(menu.options.visible and not menu.continue_button.is_visible_in_tree(), "options open over the menu")
@@ -179,13 +179,21 @@ func _test_hud_and_objective() -> void:
 	await process_frame
 	_check(objectives.size() > 0 and objectives[0] == "Encuentra al Guardián del bosque", "the HUD is told the objective")
 	var hud: CanvasLayer = level.get_node("Hud")
-	_check(hud._fragment_icons[&"green"].modulate == hud.FRAGMENT_MISSING, "fragment icons start dim")
+	_check(not _fragment_lit(hud, &"green"), "fragment icons start dim")
 
 	_state.set_flag(&"forest_boss_defeated")
 	_events.boss_defeated.emit(&"forest_guardian")
 	_state.collect_fragment(&"green")
 	_check(objectives.back() == "Cruza el portal", "the objective changes when the boss falls")
-	_check(hud._fragment_icons[&"green"].modulate == Color.WHITE, "a collected fragment lights its icon")
+	_check(_fragment_lit(hud, &"green"), "a collected fragment lights its icon")
 	_check(level.get_node("PauseMenu") != null, "the level has a pause menu")
 	level.queue_free()
 	await process_frame
+
+
+## A fragment icon is the team's art (lit = full modulate) or the old colored square.
+func _fragment_lit(hud: Node, id: StringName) -> bool:
+	var icon: Control = hud._fragment_icons[id]
+	if icon is TextureRect:
+		return icon.modulate == Color.WHITE
+	return (icon as ColorRect).color == hud.FRAGMENT_COLORS[id]

@@ -39,6 +39,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 theme_override_colors/font_color = Color(0.8, 0.7, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
 
 [node name="Prompt" type="Label" parent="."]
 visible = false
@@ -55,6 +57,8 @@ grow_horizontal = 2
 grow_vertical = 0
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(1, 0.95, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
 
 [node name="BossBar" type="Control" parent="."]
 visible = false

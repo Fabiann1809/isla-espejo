@@ -10,8 +10,8 @@ extends SkillEffect
 
 
 func activate(caster: Node2D, skill: SkillData, direction: Vector2) -> int:
-	caster.get_parent().add_child(
-			SkillZone.wave(caster.global_position, direction, skill.range, arc_degrees, skill.color))
+	effects_parent(caster).add_child(SkillZone.wave(
+			caster.global_position, direction, skill.range, arc_degrees, skill.color, 0.35, skill.zone_frames))
 	var affected := 0
 	for enemy in enemies_near(caster.get_tree(), caster.global_position, skill.range):
 		var offset := enemy.global_position - caster.global_position

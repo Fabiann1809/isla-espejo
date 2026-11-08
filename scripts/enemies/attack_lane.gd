@@ -11,6 +11,9 @@ var lifetime := 1.0
 ## The lane, relative to the node's position.
 var _span := Vector2.RIGHT
 var _age := 0.0
+## Seconds left of a fade-out started by `fade()` (-1 = not fading).
+var _fade_left := -1.0
+var _fade_time := 0.3
 
 
 ## A lane from `from` to `to` (world positions) under `parent`, lasting `seconds`.
@@ -33,12 +36,24 @@ func aim(from: Vector2, to: Vector2) -> void:
 	queue_redraw()
 
 
+## The lane fades out over `seconds` and frees itself (a boss's dash lets its warning go as it starts).
+func fade(seconds := 0.3) -> void:
+	_fade_time = maxf(seconds, 0.01)
+	_fade_left = _fade_time
+
+
 func _ready() -> void:
+	add_to_group("attack_lanes")
 	z_index = RoomTheme.GROUND_FX_Z
 
 
 func _physics_process(delta: float) -> void:
 	_age += delta
+	if _fade_left >= 0.0:
+		_fade_left -= delta
+		if _fade_left <= 0.0:
+			queue_free()
+			return
 	queue_redraw()
 	if _age >= lifetime:
 		queue_free()
@@ -46,17 +61,18 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	var progress := clampf(_age / maxf(lifetime, 0.001), 0.0, 1.0)
+	var fading := 1.0 if _fade_left < 0.0 else clampf(_fade_left / _fade_time, 0.0, 1.0)
 	var along := _span.normalized()
 	var side := Vector2(-along.y, along.x)
 	# A dark edge under the colored stripe so it reads on any floor.
 	if Tuning.ZONE_OUTLINE_ALPHA > 0.0:
-		draw_line(Vector2.ZERO, _span, Color(0, 0, 0, Tuning.ZONE_OUTLINE_ALPHA * 0.6), width + 2.0)
+		draw_line(Vector2.ZERO, _span, Color(0, 0, 0, Tuning.ZONE_OUTLINE_ALPHA * 0.6 * fading), width + 2.0)
 	var fill := color
-	fill.a = 0.18 + 0.32 * progress
+	fill.a = (0.18 + 0.32 * progress) * fading
 	draw_line(Vector2.ZERO, _span, fill, width)
 	# The arrow head at the far end says which way it goes.
 	var edge := color
-	edge.a = 0.55 + 0.4 * progress
+	edge.a = (0.55 + 0.4 * progress) * fading
 	var head := width * 0.9
 	draw_colored_polygon(PackedVector2Array([
 		_span + along * head * 0.6, _span - along * head * 0.6 + side * head,

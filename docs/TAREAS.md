@@ -55,9 +55,9 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 ## 4. Enemigos base — B  ← 3
 - [x] Clase base de enemigo con vida, daño, estados (idle, patrulla, persecución, ataque, muerte) y datos en `data/enemies/` (`scripts/enemies/enemy.gd`, plantilla `scenes/enemies/grunt.tscn`)
 - [x] Detección del jugador (rango de visión, cono, línea de visión y señal `player_detected`)
-- [ ] **Bestia de la niebla** (embiste). Va en el mapa 2, no en el bosque
-- [ ] **Sombra errante** (teletransporte): ya tiene arte animado y aparece en el bosque con el comportamiento base; falta el teletransporte (`scenes/enemies/sombra_errante.tscn`). Va en el mapa 2, no en el bosque
-- [ ] **Murciélago** (picado rápido): ya tiene arte animado y estadísticas rápidas y frágiles (`scenes/enemies/murcielago.tscn`); falta el picado y el ataque en grupo. Va en el mapa 2, no en el bosque
+- [x] **Bestia de la niebla** (embiste en línea recta con aviso y acosa en manada: `scripts/enemies/charger.gd`, `tests/test_fog_beast.gd`). Va en el mapa 2
+- [x] **Sombra errante** (se desvanece, avisa dónde va a aparecer detrás de Nico y golpea: `scripts/enemies/teleporter.gd`, `tests/test_sombra_errante.gd`). Va en el mapa 2
+- [x] **Murciélago** (vuela sobre el agua, ronda y se lanza en picado con aviso, en grupo: `scripts/enemies/diver.gd`, `tests/test_murcielago.gd`). Va en el mapa 2
 - [x] **Slime verde** (siempre se mueve a saltos y ataca de cerca con un golpe corto): arte propio dibujado con `tools/make_slime_art.py`, datos en `data/enemies/slime.tres` y escena `scenes/enemies/slime.tscn`; ya aparece en el bosque
 - [x] **Planta tiradora** (se mueve a saltitos entre disparos y escupe bolas hacia el jugador; sin línea de visión no dispara): arte propio con `tools/make_planta_art.py`, datos en `data/enemies/planta_tiradora.tres` y escena `scenes/enemies/planta_tiradora.tscn`; ya aparece en el bosque
 - [x] **Esqueleto** (camina hacia el jugador y lo golpea con un hueso; comportamiento cuerpo a cuerpo genérico): arte propio con `tools/make_esqueleto_art.py`, datos en `data/enemies/esqueleto.tres` y escena `scenes/enemies/esqueleto.tscn`; ya aparece en el bosque
@@ -76,7 +76,8 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] **Raíces**: traba enemigos en una zona
 - [x] **Corriente**: empuja y ralentiza
 - [x] **Sombra**: teletransporte corto y menor detección
-- [x] HUD de habilidades con indicador de recarga
+- [x] HUD de habilidades con indicador de recarga (con iconos propios de cada habilidad)
+- [x] Arte y animación de las habilidades: raíces que brotan y se hunden, ola de agua que avanza, humo de Sombra, destello en Nico al lanzar (`tools/make_skill_art.py`, `assets/sprites/skills/`)
 - [x] Cada habilidad emite eventos al bus (la IA los usa)
 - [x] Diseñar el sistema para que añadir una habilidad nueva sea solo agregar datos y un efecto
 
@@ -138,27 +139,29 @@ Leyenda de dependencias: `←` indica qué tarea debe estar lista antes.
 - [x] Oscuridad por sala (capa de sombra con luces de cristales y antorchas) y animación sencilla (cascadas, llamas, cristales, destellos del agua), con sus valores e interruptores en `Tuning`
 - [x] Enemigos del escenario colocados (Bestia de la niebla, Sombra errante y Murciélago, con sus pesos en `ruins.tres`)
 - [x] Trampa de pinchos en 2 salas de combate (3 en la sala estrecha y 3 en la de cascadas, con arte de ruinas)
-- [ ] **Jefe: Serpiente de piedra** (embestida, veneno / proyectiles)
-- [ ] Al derrotarlo: fragmento azul y habilidad **Corriente**
-- [ ] NPC **Viajera** con 3 estados de diálogo
-- [ ] Transición desde el escenario 1 y hacia el 3
+- [x] **Jefe: Serpiente de piedra** (embestida con carril avisado, escupe veneno en abanico y se desliza entre zonas; `scenes/enemies/stone_serpent.tscn`, `tests/test_serpent.gd`, en `ruins.tres` como `boss_scene`)
+- [x] Al derrotarlo: fragmento azul y habilidad **Corriente** (deja el fragmento, activa `ruins_boss_defeated` y abre el portal)
+- [x] NPC **Viajera** con 3 estados de diálogo (`scenes/npcs/traveler.tscn`, `data/dialogues/traveler.json`; espera en la sala de evento de las ruinas y después de la Serpiente dice sus últimas líneas)
+- [x] Transición desde el escenario 1 y hacia el 3 (el portal de las ruinas sigue sellado hasta vencer a la serpiente y lleva al templo, `tests/test_chapters.gd`)
 
 **Hecho cuando:** el escenario 2 es completable de inicio a jefe con la IA funcionando.
 
 ## 11. Escenario 3: Templo del Eclipse — A+B  ← 10
-- [ ] Tileset del templo y lava (caminos de piedra sobre lava, sin plataformas flotantes)
-- [ ] Salas con trampas
-- [ ] Enemigos del escenario colocados
+- [x] Completar materiales del escenario (1989 roles y 25 tiras, incluidas escaleras, puentes, bordes y variantes) y dar profundidad a las islas con roca adicional sobre lava, sombras y separación de tonos por altura; `python tools/finish_temple_art.py`.
+- [x] Integrar arte del templo v2: recortes limpios, 23 tiras a escala de juego, pisos por altura, acantilados y lava animada; adaptación reproducible con `python tools/adapt_temple_art_v2.py`.
+- [x] Tileset del templo y lava (caminos de piedra sobre lava; islas de piedra con tres niveles de altura, escaleras y puentes; nada flota en el aire sin roca debajo)
+- [x] Salas con trampas (13 salas: patio de pilares, islas, terrazas, pasarela de trampas, cascadas de lava, tres salas de marea de lava, santuario, evento, especial; `tools/make_temple_rooms.py` y `tools/make_temple_data.gd`)
+- [x] Enemigos del escenario colocados (los 25 enemigos del templo en `temple.tres`, elenco de 10 por partida y afinidades por sala)
 - [ ] **Jefe: Guardián antiguo** (proyectiles, golpes, escudo / invocación): ya existe con su arte (golem de piedra) y los ataques del jefe base (`scenes/enemies/ancient_guardian.tscn`); faltan sus ataques propios y el escenario 3
 - [ ] Al derrotarlo: fragmento violeta y habilidad **Sombra**
-- [ ] NPC **Mercader** con 3 estados de diálogo (solo diálogo, sin tienda)
+- [x] NPC **Mercader** con 3 estados de diálogo y **tienda** (decidido por el usuario, sustituye el "solo diálogo"): ya estaba en la sala especial del bosque; ahora también espera cerca de la entrada del templo y en su sala especial; tras hablar se abre `ShopMenu` y el oro compra pociones y mejoras del arco, el crítico y los corazones
 - [ ] Cierre de la historia
 
 **Hecho cuando:** el escenario 3 es completable y se obtiene el último fragmento.
 
 ## 12. Diálogos, historia y final — B  ← 7
 - [x] Sistema de diálogo (caja de texto, avance, retratos opcionales) leyendo de `data/dialogues/` (hecho por A; faltan los retratos, que son opcionales)
-- [ ] Redactar los 3 estados de diálogo de Anciano (hecho), Viajera y Mercader (pendientes: copiar `elder.json`)
+- [x] Redactar los 3 estados de diálogo de Anciano (`elder.json`), Viajera (`traveler.json`) y Mercader (`merchant.json`)
 - [x] Prólogo y textos de inicio de capítulo (prólogo de la tormenta en `scenes/ui/prologue.tscn` con textos en `data/story/prologue.json`; el título de capítulo del bosque ya existía; los de los capítulos 2 y 3 van con sus escenarios)
 - [ ] Diálogos de jefes (antes y después): el Guardián del bosque ya tiene los dos (`intro_lines` y `defeat_lines` en su `BossData`); faltan los jefes 2 y 3
 - [x] Textos de muerte y reinicio ("La isla vuelve a empezar…", en `data/ai/profile_config.tres`)
@@ -225,7 +228,7 @@ Cambio de diseño acordado (ver `docs/JUEGO.md`, decisiones de diseño). Sustitu
 - [ ] Cuarto escenario
 - [ ] Guardián de la isla como jefe final separado
 - [ ] Mini-jefe adicional
-- [ ] Tienda del Mercader
+- [x] Tienda del Mercader (ahora dentro del alcance, ver el NPC Mercader del escenario 3)
 
 ## Punto de control
 Cuando las tareas 1 a 7 estén listas, **el escenario 1 debe poder jugarse completo**. Si no es así, se recorta contenido del escenario 3, **no** la IA.

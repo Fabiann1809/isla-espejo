@@ -29,7 +29,7 @@ texts = {
 "title": "La isla te recuerda",
 "death_line": "Nico: No… todavía no. Tengo que volver.",
 "restart": "La isla vuelve a empezar. Pero Nico recuerda.",
-"ending_line": "Nico: La brújula vuelve a brillar en verde.",
-"ending": "Fin de la primera isla. El viaje de Nico continuará.",
+"ending_line": "Nico: Dos fragmentos… la brújula casi señala el camino.",
+"ending": "Fin de la segunda isla. El viaje de Nico continuará.",
 "ending_continue": "Pulsa E para volver al menú"
 }

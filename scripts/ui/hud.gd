@@ -24,10 +24,20 @@ const BOSS_CARD_BARS := 22.0
 
 ## Compass fragment ids in story order, with the color each one has in the world.
 const FRAGMENT_COLORS := {&"green": Color(0.35, 0.85, 0.4), &"blue": Color(0.35, 0.6, 0.95), &"violet": Color(0.7, 0.45, 0.95)}
-const FRAGMENT_SIZE := Vector2(12, 12)
-## The icon of a fragment that is not collected yet: the same piece, dark.
+const FRAGMENT_SIZE := Vector2(8, 8)
 const FRAGMENT_MISSING := Color(0.2, 0.2, 0.26)
-const FRAGMENT_ICON := "res://assets/sprites/fragments/fragment_%s_icon.png"
+## The team's 16x16 icon of a fragment; without the file the colored square above is used.
+const FRAGMENT_ART := "res://assets/sprites/fragments/fragment_%s.png"
+const FRAGMENT_ART_SIZE := Vector2(16, 16)
+## A fragment not collected yet shows its icon dark and faded.
+const FRAGMENT_ART_MISSING := Color(0.12, 0.12, 0.16, 0.7)
+const FRAGMENT_ROW_Y := 24.0
+## Gold coin, upgrade icons and their sizes in the top right corner.
+const GOLD_ART := "res://assets/sprites/shop/gold_coin.png"
+const COIN_SIZE := Vector2(12, 12)
+const UPGRADE_ICON_SIZE := Vector2(12, 12)
+const UPGRADE_ROW_Y := 24.0
+const BUFF_ROW_Y := 40.0
 
 const TOAST_SECONDS := 3.2
 const TOAST_FADE := 0.8
@@ -45,15 +55,20 @@ const SAVED_FADE := 0.6
 
 const GOLD_COLOR := Color(1.0, 0.8, 0.25)
 const BUFF_BAR_SIZE := Vector2(40, 3)
+const BUFF_ICON_SIZE := Vector2(12, 12)
+const BUFF_BAR_X := 16.0
+## Wide enough for the icon, the bar and the shield's "x2".
+const BUFF_ROW_WIDTH := 76.0
 
 var _fragment_icons := {}
+var _fragment_has_art := false
+var _fragment_row: HBoxContainer
 var _gold_label: Label
-var _coin: CoinIcon
-var _buff_row: Control
-var _buff_icon: ColorRect
-var _buff_fill: ColorRect
-var _buff_left := 0.0
-var _buff_total := 1.0
+var _upgrade_row: HBoxContainer
+var _shop_catalog: ShopCatalog
+## Holds one row per running buff; `_buff_rows` maps the buff id to its row's nodes and time.
+var _buff_box: Control
+var _buff_rows := {}
 var _objective: Label
 var _toast_queue: Array[String] = []
 var _toast_busy := false
@@ -85,12 +100,17 @@ func _ready() -> void:
 	_build_saved_note()
 	_build_fragments_and_objective()
 	_build_resources()
-	Events.player_gold_changed.connect(func(total: int) -> void:
-		_gold_label.text = str(total)
-		_coin.pop())
+	Events.player_gold_changed.connect(func(total: int) -> void: _gold_label.text = str(total))
 	Events.player_buff_changed.connect(_on_buff_changed)
+	Events.player_buff_charges_changed.connect(_on_buff_charges_changed)
 	Events.objective_changed.connect(func(text: String) -> void: _objective.text = text)
 	Events.fragment_collected.connect(func(_id: StringName) -> void: _refresh_fragments())
+	_build_upgrades()
+	GameState.upgrade_changed.connect(func(_id: StringName, _level: int) -> void: _refresh_upgrades())
+	Events.shop_bought.connect(func(_id: StringName) -> void: _refresh_upgrades())
+	Events.level_started.connect(func(_id: StringName, _seed: int) -> void:
+		_refresh_upgrades()
+		_refresh_fragments())
 	_boss_bar.hide()
 	_message.hide()
 	_toast.hide()
@@ -99,23 +119,35 @@ func _ready() -> void:
 
 ## Three compass fragment icons (dim until collected) and the objective line under the hearts.
 func _build_fragments_and_objective() -> void:
-	var row := HBoxContainer.new()
-	row.position = Vector2(8, 24)
-	row.add_theme_constant_override("separation", 4)
-	add_child(row)
+	_fragment_row = HBoxContainer.new()
+	_fragment_row.position = Vector2(8, FRAGMENT_ROW_Y)
+	_fragment_row.add_theme_constant_override("separation", 4)
+	add_child(_fragment_row)
 	for id: StringName in FRAGMENT_COLORS:
-		var icon := TextureRect.new()
-		icon.texture = load(FRAGMENT_ICON % id)
-		icon.custom_minimum_size = FRAGMENT_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-		icon.pivot_offset = FRAGMENT_SIZE / 2.0
-		icon.modulate = FRAGMENT_MISSING
-		row.add_child(icon)
+		var path := FRAGMENT_ART % id
+		var icon: Control
+		if ResourceLoader.exists(path):
+			var picture := TextureRect.new()
+			picture.texture = load(path) as Texture2D
+			picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			picture.custom_minimum_size = FRAGMENT_ART_SIZE
+			icon = picture
+			_fragment_has_art = true
+		else:
+			var square := ColorRect.new()
+			square.custom_minimum_size = FRAGMENT_SIZE
+			icon = square
+		icon.name = "Fragment_%s" % id
+		_fragment_row.add_child(icon)
 		_fragment_icons[id] = icon
 	_objective = Label.new()
-	_objective.position = Vector2(8, 40)
+	# Under the icons, whatever their size.
+	_objective.position = Vector2(8, FRAGMENT_ROW_Y + (FRAGMENT_ART_SIZE.y if _fragment_has_art else FRAGMENT_SIZE.y) + 6.0)
 	_objective.add_theme_font_size_override("font_size", 10)
 	_objective.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
+	_outline(_objective)
 	add_child(_objective)
 	_refresh_fragments()
 
@@ -134,54 +166,168 @@ func _build_resources() -> void:
 	_gold_label.text = "0"
 	_gold_label.add_theme_font_size_override("font_size", 10)
 	_gold_label.add_theme_color_override("font_color", GOLD_COLOR)
+	_outline(_gold_label)
 	gold_row.add_child(_gold_label)
-	_coin = CoinIcon.new()
-	_coin.color = GOLD_COLOR
-	gold_row.add_child(_coin)
+	var coin_icon: Control
+	if ResourceLoader.exists(GOLD_ART):
+		var picture := TextureRect.new()
+		picture.texture = load(GOLD_ART) as Texture2D
+		picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		picture.custom_minimum_size = COIN_SIZE
+		coin_icon = picture
+	else:
+		var square := ColorRect.new()
+		square.custom_minimum_size = Vector2(8, 8)
+		square.color = GOLD_COLOR
+		coin_icon = square
+	coin_icon.name = "Coin"
+	gold_row.add_child(coin_icon)
+	gold_row.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_gold_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	coin_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-	_buff_row = Control.new()
-	_buff_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	_buff_row.position = Vector2(-8 - 58, 24)
-	_buff_icon = ColorRect.new()
-	_buff_icon.size = Vector2(8, 8)
-	_buff_row.add_child(_buff_icon)
+	_buff_box = Control.new()
+	_buff_box.name = "Buffs"
+	_buff_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_buff_box.position = Vector2(-8 - BUFF_ROW_WIDTH, BUFF_ROW_Y)
+	add_child(_buff_box)
+
+
+## One row per running buff, stacked top to bottom in the order they started: its icon (the art when it
+## exists, else a square in the buff's colour), a bar that shrinks with the time left and, for a shield,
+## the hits it can still absorb. Taking the same buff again only refills its bar.
+func _on_buff_changed(buff_id: StringName, duration: float, color: Color) -> void:
+	if duration <= 0.0:
+		if _buff_rows.has(buff_id):
+			_buff_rows[buff_id]["row"].queue_free()
+			_buff_rows.erase(buff_id)
+			_layout_buff_rows()
+		return
+	if not _buff_rows.has(buff_id):
+		_buff_rows[buff_id] = _build_buff_row(buff_id, color)
+		_layout_buff_rows()
+	var entry: Dictionary = _buff_rows[buff_id]
+	entry["left"] = duration
+	entry["total"] = maxf(duration, 0.01)
+	entry["fill"].size.x = BUFF_BAR_SIZE.x
+
+
+func _on_buff_charges_changed(buff_id: StringName, charges: int) -> void:
+	if _buff_rows.has(buff_id):
+		_buff_rows[buff_id]["charges"].text = "x%d" % charges
+
+
+func _build_buff_row(buff_id: StringName, color: Color) -> Dictionary:
+	var row := Control.new()
+	row.name = "Buff_%s" % buff_id
+	var path: String = Tuning.BUFF_ICON_PATH % buff_id
+	var icon: Control
+	if ResourceLoader.exists(path):
+		var picture := TextureRect.new()
+		picture.texture = load(path) as Texture2D
+		picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon = picture
+	else:
+		var square := ColorRect.new()
+		square.color = color
+		icon = square
+	icon.size = BUFF_ICON_SIZE
+	row.add_child(icon)
 	var track := ColorRect.new()
 	track.color = Color(0, 0, 0, 0.5)
 	track.size = BUFF_BAR_SIZE
-	track.position = Vector2(12, 3)
-	_buff_row.add_child(track)
-	_buff_fill = ColorRect.new()
-	_buff_fill.size = BUFF_BAR_SIZE
-	_buff_fill.position = Vector2(12, 3)
-	_buff_row.add_child(_buff_fill)
-	add_child(_buff_row)
-	_buff_row.hide()
+	track.position = Vector2(BUFF_BAR_X, 4)
+	row.add_child(track)
+	var fill := ColorRect.new()
+	fill.color = color
+	fill.size = BUFF_BAR_SIZE
+	fill.position = track.position
+	row.add_child(fill)
+	var charges := Label.new()
+	charges.position = Vector2(BUFF_BAR_X + BUFF_BAR_SIZE.x + 3, -2)
+	charges.add_theme_font_size_override("font_size", 10)
+	charges.add_theme_color_override("font_color", color.lightened(0.4))
+	row.add_child(charges)
+	_buff_box.add_child(row)
+	return {"row": row, "fill": fill, "charges": charges, "left": 0.0, "total": 1.0}
 
 
-func _on_buff_changed(_buff_id: StringName, duration: float, color: Color) -> void:
-	_buff_left = duration
-	_buff_total = maxf(duration, 0.01)
-	_buff_row.visible = duration > 0.0
-	_buff_icon.color = color
-	_buff_fill.color = color
+func _layout_buff_rows() -> void:
+	var index := 0
+	for id in _buff_rows:
+		_buff_rows[id]["row"].position = Vector2(0, index * Tuning.BUFF_ROW_HEIGHT)
+		index += 1
 
 
 func _process(delta: float) -> void:
-	if _buff_left > 0.0:
-		_buff_left = maxf(_buff_left - delta, 0.0)
-		_buff_fill.size.x = BUFF_BAR_SIZE.x * _buff_left / _buff_total
+	for id in _buff_rows:
+		var entry: Dictionary = _buff_rows[id]
+		entry["left"] = maxf(entry["left"] - delta, 0.0)
+		entry["fill"].size.x = BUFF_BAR_SIZE.x * entry["left"] / entry["total"]
 
 
 func _refresh_fragments() -> void:
 	for id: StringName in _fragment_icons:
-		var icon: TextureRect = _fragment_icons[id]
-		var has := GameState.has_fragment(id)
-		var tint := Color.WHITE if has else FRAGMENT_MISSING
-		if has and icon.modulate == FRAGMENT_MISSING:
-			# A fragment just collected lights up with a little pop.
-			icon.scale = Vector2.ONE * 1.6
-			create_tween().tween_property(icon, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		icon.modulate = tint
+		var have := GameState.has_fragment(id)
+		var icon: Control = _fragment_icons[id]
+		if icon is TextureRect:
+			icon.modulate = Color.WHITE if have else FRAGMENT_ART_MISSING
+		else:
+			(icon as ColorRect).color = FRAGMENT_COLORS[id] if have else FRAGMENT_MISSING
+
+
+## Row of the shop's upgrades the player owns (small icon and level), under the gold. Rebuilt
+## from GameState whenever something is bought; hidden while there are none.
+func _build_upgrades() -> void:
+	_shop_catalog = ShopCatalog.load_default()
+	_upgrade_row = HBoxContainer.new()
+	_upgrade_row.name = "Upgrades"
+	_upgrade_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_upgrade_row.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_upgrade_row.position = Vector2(-8, UPGRADE_ROW_Y)
+	_upgrade_row.add_theme_constant_override("separation", 6)
+	_upgrade_row.alignment = BoxContainer.ALIGNMENT_END
+	add_child(_upgrade_row)
+	_refresh_upgrades()
+
+
+func _refresh_upgrades() -> void:
+	for child in _upgrade_row.get_children():
+		_upgrade_row.remove_child(child)
+		child.queue_free()
+	for item: ShopItem in _shop_catalog.items:
+		var level := GameState.upgrade_level(item.upgrade_id) if item.is_upgrade() else 0
+		if level <= 0:
+			continue
+		var entry := HBoxContainer.new()
+		entry.name = "Upgrade_%s" % item.id
+		entry.add_theme_constant_override("separation", 2)
+		var texture := item.icon()
+		if texture != null:
+			var picture := TextureRect.new()
+			picture.texture = texture
+			picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			picture.custom_minimum_size = UPGRADE_ICON_SIZE
+			entry.add_child(picture)
+		else:
+			var swatch := ColorRect.new()
+			swatch.color = item.color
+			swatch.custom_minimum_size = UPGRADE_ICON_SIZE - Vector2(4, 4)
+			entry.add_child(swatch)
+		var text := Label.new()
+		text.text = UiText.t("hud_upgrade_level") % level
+		text.add_theme_font_size_override("font_size", 9)
+		text.add_theme_color_override("font_color", Color(0.85, 0.8, 1.0))
+		_outline(text)
+		entry.add_child(text)
+		_upgrade_row.add_child(entry)
+	_upgrade_row.visible = _upgrade_row.get_child_count() > 0
 
 
 func show_message(text: String) -> void:
@@ -280,8 +426,14 @@ func _show_boss_card(boss_name: String) -> void:
 	tween.tween_callback(card.queue_free)
 
 
+## A dark edge around a text drawn over the world, so it reads on bright grass and glowing crystals.
+func _outline(label: Label) -> void:
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	label.add_theme_constant_override("outline_size", 3)
+
+
 func _on_prompt_changed(prompt: String) -> void:
-	_prompt.text = "[E] " + prompt
+	_prompt.text = UiText.t("prompt_prefix") + prompt
 	_prompt.visible = prompt != ""
 
 

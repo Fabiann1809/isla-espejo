@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/skills/roots_effect.gd" id="1_74jov"]
 [ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="2_nbvvt"]
+[ext_resource type="SpriteFrames" path="res://data/skills/roots_frames.tres" id="3_frames"]
+[ext_resource type="Texture2D" path="res://assets/sprites/skills/icon_roots.png" id="4_icon"]
 
 [sub_resource type="Resource" id="Resource_ki708"]
 script = ExtResource("1_74jov")
@@ -15,3 +17,5 @@ cooldown = 6.0
 range = 56.0
 color = Color(0.3, 0.75, 0.3, 1)
 effect = SubResource("Resource_ki708")
+zone_frames = ExtResource("3_frames")
+icon = ExtResource("4_icon")

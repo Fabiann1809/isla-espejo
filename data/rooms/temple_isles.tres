@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/isles.tscn" id="1_d4frt"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_wmc43"]
+
+[resource]
+script = ExtResource("2_wmc43")
+id = &"temple_isles"
+scene = ExtResource("1_d4frt")
+tags = Array[StringName]([&"bridges"])
+size_tiles = Vector2i(34, 24)
+enemy_affinity = {
+&"carnero_basalto": 0.5,
+&"manta_hollin": 3.0,
+&"rueda_devoradora": 0.5
+}

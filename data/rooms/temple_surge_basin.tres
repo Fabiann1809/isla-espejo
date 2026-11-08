@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/surge_basin.tscn" id="1_t0smv"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_mi3no"]
+
+[resource]
+script = ExtResource("2_mi3no")
+id = &"temple_surge_basin"
+scene = ExtResource("1_t0smv")
+weight = 2.0
+tags = Array[StringName]([&"surge"])
+size_tiles = Vector2i(34, 24)
+max_enemies = 3
+enemy_affinity = {
+&"arana_talladora": 0.0,
+&"manta_hollin": 1.5,
+&"nucleo_cria": 0.0
+}
+surge_stages = 1
+kills_stage_1 = 4
+kills_to_recede = 4
+max_alive = 4

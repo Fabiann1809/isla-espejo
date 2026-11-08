@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/skills/shadow_effect.gd" id="1_ev487"]
 [ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="2_kw5og"]
+[ext_resource type="SpriteFrames" path="res://data/skills/shadow_frames.tres" id="3_frames"]
+[ext_resource type="Texture2D" path="res://assets/sprites/skills/icon_shadow.png" id="4_icon"]
 
 [sub_resource type="Resource" id="Resource_vi1p0"]
 script = ExtResource("1_ev487")
@@ -16,3 +18,5 @@ cooldown = 7.0
 range = 110.0
 color = Color(0.65, 0.4, 0.9, 1)
 effect = SubResource("Resource_vi1p0")
+zone_frames = ExtResource("3_frames")
+icon = ExtResource("4_icon")

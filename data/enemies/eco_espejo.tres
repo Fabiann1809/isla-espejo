@@ -8,7 +8,7 @@
 script = ExtResource("2_6k2ka")
 projectile_scene = ExtResource("1_txbke")
 id = &"eco_espejo"
-display_name = "Eco del Espejo"
+display_name = "Eco del espejo"
 placeholder_color = Color(0.72, 0.85, 1, 1)
 sprite_frames = ExtResource("3_8vijk")
 sprite_offset = Vector2(0, -11)

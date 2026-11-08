@@ -72,6 +72,7 @@ func _fire() -> void:
 		var along := 0.5 if count == 1 else float(i) / float(count - 1)
 		var direction := facing.rotated(lerpf(-spread / 2.0, spread / 2.0, along))
 		var flame: EnemyOrb = _shooter.projectile_scene.instantiate()
+		flame.height_level = Heights.level_of(self)
 		flame.setup(direction, _shooter.projectile_speed, _shooter.projectile_range,
 				ceili(data.attack_damage * damage_multiplier))
 		flame.position = position + direction * _shooter.muzzle_distance

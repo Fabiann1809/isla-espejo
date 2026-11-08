@@ -22,6 +22,8 @@ const FLOOR_COLORS := {
 	RoomData.RoomType.BOSS: Color(0.35, 0.18, 0.42),
 }
 
+## The room's size in tiles, walls included. `setup` takes it from the RoomData (even numbers: the doors
+## are the 4 middle cells of each edge).
 @export var size_tiles := Vector2i(30, 18)
 ## Shows the room type over the floor (debugging aid).
 @export var debug_label := true
@@ -37,12 +39,19 @@ var enemies_alive := 0
 ## Height level of the room (see Heights): its enemies are born on it.
 var height := Heights.LOW
 
+## While true the room does not report itself cleared (see release_clear).
+var clear_held := false
+## True once the room has reported itself cleared.
+var cleared_once := false
+
 var _had_enemies := false
 
 
 ## Call before adding the room to the tree.
 func setup(room_data: RoomData, doors: Array[Vector2i]) -> void:
 	data = room_data
+	if room_data != null:
+		size_tiles = room_data.size_tiles
 	open_doors = doors
 	height = room_data.height if room_data != null else Heights.LOW
 
@@ -87,12 +96,16 @@ func spawn_points(container: String) -> Array[Vector2]:
 	return points
 
 
-## Fills the room with `count` enemies from `pool`, on the EnemySpawns markers. With a director
-## `plan`, enemies are picked by the plan's weights and tuned by its multipliers.
+## Fills the room with `count` enemies from `pool`, on the EnemySpawns markers (or on `points`, local
+## positions, when given: a surge room's safe cells). With a director `plan`, enemies are picked by
+## the plan's weights and tuned by its multipliers.
 ## An enemy's id is the file name of its scene (grunt.tscn -> "grunt").
 func spawn_enemies(pool: Array[PackedScene], count: int, rng: RandomNumberGenerator,
-		plan: DirectorPlan = null, base_weights: Dictionary = {}) -> void:
-	var points := spawn_points("EnemySpawns")
+		plan: DirectorPlan = null, base_weights: Dictionary = {}, points: Array[Vector2] = []) -> void:
+	if points.is_empty():
+		points = spawn_points("EnemySpawns")
+	else:
+		points = points.duplicate()
 	if pool.is_empty() or points.is_empty():
 		return
 	for i in range(points.size() - 1, 0, -1):
@@ -158,7 +171,23 @@ func home_rect() -> Rect2:
 	return Rect2(global_position, pixel_size())
 
 
+## The height level of the floor at `local` (room pixels): the Shape's plan where the room has one
+## with heights (a temple island), never below 0 (lava counts as the ground); otherwise the room's
+## own height. An enemy born here takes it (Enemy._ready).
+func height_at(local: Vector2) -> int:
+	var shape := get_node_or_null("Shape")
+	if shape != null and "plan" in shape and shape.plan != null:
+		var cell := Vector2i((local / TILE).floor())
+		var level: int = shape.plan.height_at(cell)
+		if level != TemplePlan.MASONRY_HEIGHT:
+			return clampi(level, Heights.LOW, Heights.TOP)
+	return height
+
+
 func register_enemy(enemy: Node) -> void:
+	# An enemy that appears after the map was built (a wave, a brood, a summon) gets its shadow here.
+	if enemy is Node2D and enemy.is_inside_tree():
+		ActorShadow.attach_styled(enemy)
 	enemies_alive += 1
 	_had_enemies = true
 	enemy.connect("died", _on_enemy_died)
@@ -166,7 +195,18 @@ func register_enemy(enemy: Node) -> void:
 
 func _on_enemy_died() -> void:
 	enemies_alive -= 1
-	if enemies_alive == 0 and _had_enemies:
+	_check_cleared()
+
+
+## Lets a room whose fight is not over yet (a lava surge sends waves) hold its `cleared` back.
+func release_clear() -> void:
+	clear_held = false
+	_check_cleared()
+
+
+func _check_cleared() -> void:
+	if enemies_alive == 0 and _had_enemies and not clear_held:
+		cleared_once = true
 		cleared.emit()
 		Events.room_cleared.emit(self)
 
@@ -203,6 +243,10 @@ func _build_themed_floor() -> void:
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(position))
+	# A lava-walled room is painted whole by its Shape (lava under the floors, at the sea's z):
+	# a ground of stone here would cover that lava, so its layers stay empty.
+	if theme.wall_style == RoomTheme.WallStyle.LAVA:
+		return
 	# Irregular patches of a second grass, continuous across rooms (sampled in world tiles).
 	var patches := FastNoiseLite.new()
 	patches.frequency = Tuning.GRASS_PATCH_FREQUENCY
@@ -231,7 +275,9 @@ func _build_themed_floor() -> void:
 				ground.set_cell(cell, 0, TileArt.coords(theme.path_tile))
 				patch_layer.erase_cell(cell)
 				decor.erase_cell(cell)
-			elif not theme.forest_art_details and theme.wall_style != RoomTheme.WallStyle.ROCKS:
+			elif not theme.forest_art_details and theme.wall_style == RoomTheme.WallStyle.TREES:
+				# Rock walls are planted below; a lava-walled room has no wall art at all: its
+				# island's edge, drawn by the Shape, drops into the lava on the border.
 				border.set_cell(cell, 0, TileArt.coords(theme.border_tile))
 	_add_detail_groups(decor, rng)
 	_paint_door_paths(ground, decor, patch_layer)
@@ -348,10 +394,11 @@ func _plant_rock_wall(rng: RandomNumberGenerator) -> void:
 		rocks.add_child(RockWall.column(foot, rng))
 
 
-## Drops the feet of wall columns where the room's plan lets the rock lean on the wall (RuinShape).
+## Drops the feet of wall columns where the room's plan hides the wall: the rock leans on it
+## (RuinShape) or the island's edge drops into lava there (TempleShape). Duck-typed on `hides_wall_at`.
 func _without_hidden(feet: Array[Vector2]) -> Array[Vector2]:
-	var shape := get_node_or_null("Shape") as RuinShape
-	if shape == null:
+	var shape := get_node_or_null("Shape")
+	if shape == null or not shape.has_method("hides_wall_at"):
 		return feet
 	return feet.filter(func(foot: Vector2) -> bool:
 		return not shape.hides_wall_at(Vector2i(foot / TILE).clamp(Vector2i.ZERO, size_tiles - Vector2i.ONE)))
@@ -444,7 +491,9 @@ func _build_trigger() -> void:
 	area.collision_mask = 2
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = pixel_size() - Vector2(WALL, WALL) * 2.0
+	# The whole room, walls included: a Nico standing in a doorway is still inside, so the room's
+	# events (and a dark room's shade) do not flap while he lingers at the door.
+	rectangle.size = pixel_size()
 	shape.shape = rectangle
 	shape.position = center()
 	area.add_child(shape)

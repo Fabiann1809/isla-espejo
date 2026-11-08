@@ -1,0 +1,477 @@
+{
+  "pillar_carved": {
+    "cell": [
+      40,
+      104
+    ],
+    "frames": 4,
+    "fps": 3.0,
+    "foot": [
+      20,
+      100
+    ],
+    "footprint": [
+      14,
+      8
+    ]
+  },
+  "pillar_block": {
+    "cell": [
+      40,
+      104
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      20,
+      100
+    ],
+    "footprint": [
+      14,
+      8
+    ]
+  },
+  "column_low": {
+    "cell": [
+      20,
+      32
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      10,
+      28
+    ],
+    "footprint": [
+      14,
+      8
+    ]
+  },
+  "column_broken": {
+    "cell": [
+      20,
+      28
+    ],
+    "frames": 4,
+    "fps": 3.0,
+    "foot": [
+      10,
+      24
+    ],
+    "footprint": [
+      14,
+      8
+    ]
+  },
+  "statue_guardian": {
+    "cell": [
+      64,
+      88
+    ],
+    "frames": 4,
+    "fps": 2.5,
+    "foot": [
+      32,
+      83
+    ],
+    "footprint": [
+      28,
+      10
+    ]
+  },
+  "brazier": {
+    "cell": [
+      20,
+      28
+    ],
+    "frames": 8,
+    "fps": 8.0,
+    "foot": [
+      10,
+      24
+    ],
+    "footprint": [
+      12,
+      6
+    ]
+  },
+  "brazier_pedestal": {
+    "cell": [
+      32,
+      64
+    ],
+    "frames": 8,
+    "fps": 8.0,
+    "foot": [
+      16,
+      60
+    ],
+    "footprint": [
+      14,
+      8
+    ]
+  },
+  "torch_wall": {
+    "cell": [
+      14,
+      28
+    ],
+    "frames": 6,
+    "fps": 8.0,
+    "foot": [
+      7,
+      24
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "urn": {
+    "cell": [
+      18,
+      22
+    ],
+    "frames": 4,
+    "fps": 3.0,
+    "foot": [
+      9,
+      18
+    ],
+    "footprint": [
+      12,
+      6
+    ]
+  },
+  "vase": {
+    "cell": [
+      14,
+      18
+    ],
+    "frames": 4,
+    "fps": 3.0,
+    "foot": [
+      7,
+      15
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "barrel": {
+    "cell": [
+      18,
+      22
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      9,
+      18
+    ],
+    "footprint": [
+      12,
+      6
+    ]
+  },
+  "rubble": {
+    "cell": [
+      28,
+      14
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      14,
+      11
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "rock_smoking": {
+    "cell": [
+      28,
+      32
+    ],
+    "frames": 6,
+    "fps": 5.0,
+    "foot": [
+      14,
+      25
+    ],
+    "footprint": [
+      20,
+      8
+    ]
+  },
+  "plant": {
+    "cell": [
+      18,
+      18
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      9,
+      15
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "vines": {
+    "cell": [
+      18,
+      30
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      8,
+      27
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "banner": {
+    "cell": [
+      20,
+      44
+    ],
+    "frames": 6,
+    "fps": 5.0,
+    "foot": [
+      10,
+      41
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "lava_fall": {
+    "cell": [
+      16,
+      48
+    ],
+    "frames": 8,
+    "fps": 8.0,
+    "foot": [
+      8,
+      45
+    ],
+    "footprint": [
+      0,
+      0
+    ],
+    "loop_rows": [
+      8,
+      32
+    ]
+  },
+  "geyser": {
+    "cell": [
+      32,
+      48
+    ],
+    "frames": 20,
+    "fps": 8.0,
+    "foot": [
+      16,
+      42
+    ],
+    "footprint": [
+      20,
+      10
+    ],
+    "phases": {
+      "idle": [
+        0,
+        4
+      ],
+      "rumble": [
+        4,
+        8
+      ],
+      "erupt": [
+        8,
+        16
+      ],
+      "settle": [
+        16,
+        20
+      ]
+    }
+  },
+  "face_gate": {
+    "cell": [
+      112,
+      112
+    ],
+    "frames": 8,
+    "fps": 6.0,
+    "foot": [
+      56,
+      105
+    ],
+    "footprint": [
+      76,
+      10
+    ]
+  },
+  "altar_rune": {
+    "cell": [
+      36,
+      28
+    ],
+    "frames": 6,
+    "fps": 4.0,
+    "foot": [
+      18,
+      24
+    ],
+    "footprint": [
+      30,
+      8
+    ]
+  },
+  "ember_vent": {
+    "cell": [
+      16,
+      16
+    ],
+    "frames": 6,
+    "fps": 6.0,
+    "foot": [
+      8,
+      11
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "spikes": {
+    "cell": [
+      16,
+      16
+    ],
+    "frames": 16,
+    "fps": 8.0,
+    "foot": [
+      8,
+      12
+    ],
+    "footprint": [
+      14,
+      8
+    ],
+    "phases": {
+      "down": [
+        0,
+        4
+      ],
+      "warn": [
+        4,
+        8
+      ],
+      "up": [
+        8,
+        12
+      ],
+      "retract": [
+        12,
+        16
+      ]
+    },
+    "hitbox": [
+      12,
+      12,
+      0,
+      -4
+    ]
+  },
+  "saw": {
+    "cell": [
+      18,
+      18
+    ],
+    "frames": 4,
+    "fps": 12.0,
+    "foot": [
+      9,
+      14
+    ],
+    "footprint": [
+      14,
+      8
+    ],
+    "hitbox": [
+      12,
+      12,
+      0,
+      -5
+    ],
+    "track": "saw_track",
+    "track_cells": 4
+  },
+  "saw_track": {
+    "cell": [
+      16,
+      16
+    ],
+    "frames": 4,
+    "fps": 4.0,
+    "foot": [
+      8,
+      8
+    ],
+    "footprint": [
+      0,
+      0
+    ]
+  },
+  "rolling_rock": {
+    "cell": [
+      20,
+      20
+    ],
+    "frames": 12,
+    "fps": 10.0,
+    "foot": [
+      10,
+      17
+    ],
+    "footprint": [
+      14,
+      8
+    ],
+    "phases": {
+      "roll": [
+        0,
+        4
+      ],
+      "break": [
+        4,
+        8
+      ],
+      "spawn": [
+        8,
+        12
+      ]
+    },
+    "hitbox": [
+      12,
+      12,
+      0,
+      -8
+    ],
+    "track_cells": 8
+  }
+}

@@ -9,8 +9,8 @@ extends Enemy
 
 enum Blink { NONE, FADE, HIDDEN, APPEAR }
 
-## What blocks an arrival spot: the world and the ponds.
-const BLOCKING_MASK := 1 << (WORLD_LAYER - 1) | 1 << (WATER_LAYER - 1)
+## What blocks an arrival spot: whatever blocks its body (the world, the ponds and the ledges of
+## its height level), so it never lands inside a terrace or a bridge.
 ## Angles tried around the spot behind the player (radians): behind first, then the sides.
 const ARRIVAL_ANGLES := [0.0, PI / 2.0, PI / 4.0, 3.0 * PI / 4.0, PI]
 
@@ -93,6 +93,7 @@ func _process_attack(delta: float) -> void:
 		Blink.HIDDEN:
 			if _blink_left <= 0.0:
 				Placement.teleport(self, _arrival)
+				_collision.set_deferred("disabled", false)
 				_face_target()
 				blink = Blink.APPEAR
 				_blink_left = _tele.appear_time
@@ -115,6 +116,8 @@ func _vanish() -> void:
 	modulate.a = 0.0
 	blink = Blink.HIDDEN
 	_blink_left = _tele.hidden_time
+	# Gone from the floor too: Nico walking through the spot bumps into nothing.
+	_collision.set_deferred("disabled", true)
 	var parent := get_parent() as Node2D
 	if parent != null:
 		_warning = SkillZone.circle(parent.to_local(_arrival), _tele.warn_radius, _tele.warn_color,
@@ -154,7 +157,7 @@ func _spot_free(spot: Vector2) -> bool:
 	var params := PhysicsShapeQueryParameters2D.new()
 	params.shape = _collision.shape
 	params.transform = Transform2D(0.0, spot)
-	params.collision_mask = BLOCKING_MASK
+	params.collision_mask = collision_mask
 	params.exclude = [get_rid()]
 	return get_world_2d().direct_space_state.intersect_shape(params, 1).is_empty()
 

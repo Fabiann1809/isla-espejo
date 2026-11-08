@@ -92,6 +92,10 @@ func play_music(id: StringName) -> void:
 	if incoming.playing:
 		incoming.stop()
 	_music_active = incoming
+	if not outgoing.playing and current_music == StringName():
+		# Nothing to fade and nothing to bring in: a tween with no tweeners would only log an error.
+		_music_tween = null
+		return
 	_music_tween = create_tween().set_parallel(true)
 	if outgoing.playing:
 		_music_tween.tween_property(outgoing, "volume_db", -60.0, MUSIC_FADE)
@@ -128,6 +132,7 @@ func _connect_events() -> void:
 	Events.chest_opened.connect(func(_chest: Node) -> void: play(&"chest"))
 	Events.skill_used.connect(func(id: StringName, _d: Vector2, _n: int) -> void:
 		play(StringName("skill_" + id)))
+	Events.skill_blocked.connect(func(_slot: int) -> void: play(&"ui_back", Vector2.INF, -6.0))
 	Events.dialogue_started.connect(func(_id: StringName) -> void: play(&"dialogue"))
 	Events.fragment_collected.connect(func(_id: StringName) -> void: play(&"fragment"))
 	Events.scenario_completed.connect(func(_id: StringName) -> void: play(&"portal"))
@@ -139,6 +144,29 @@ func _connect_events() -> void:
 	Events.boss_awakened.connect(func(_id: StringName, at: Vector2) -> void: play(&"boss_slam", at))
 	Events.portal_opened.connect(func(at: Vector2) -> void: play(&"portal", at, -4.0))
 	Events.level_started.connect(_on_level_started)
+	# Temple: the lava surge is heard in the whole room, so these play at full volume.
+	Events.lava_surge_warned.connect(func(_room: Node, _stage: int) -> void: play(&"lava_surge_warn"))
+	Events.lava_surge_started.connect(func(_room: Node, _stage: int) -> void:
+		play(&"lava_surge_rise")
+		# While the lava is up the music turns urgent, if the bank has a surge track.
+		if bank != null and bank.music.has(&"temple_surge"):
+			play_music(&"temple_surge"))
+	Events.lava_surge_receded.connect(func(_room: Node) -> void:
+		play(&"lava_surge_recede")
+		if current_music == &"temple_surge":
+			play_music(_scenario_music))
+	_connect_optional_events()
+
+
+## Signals another branch adds to Events (shop and crits): connected only when they exist, so this
+## script works before and after they land.
+func _connect_optional_events() -> void:
+	if Events.has_signal(&"shop_bought"):
+		Events.connect(&"shop_bought", func(_item_id) -> void: play(&"shop_buy"))
+	if Events.has_signal(&"shop_denied"):
+		Events.connect(&"shop_denied", func(_reason) -> void: play(&"shop_denied"))
+	if Events.has_signal(&"player_crit"):
+		Events.connect(&"player_crit", func(enemy, _damage) -> void: play(&"crit_hit", _where(enemy)))
 
 
 func _on_enemy_damaged(enemy: Node, _amount: int) -> void:

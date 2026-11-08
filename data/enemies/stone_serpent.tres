@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SerpentData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/fragment_blue.tscn" id="1_do0lu"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/poison_orb.tscn" id="2_1w4vk"]
+[ext_resource type="Script" path="res://scripts/enemies/serpent_data.gd" id="3_hr3j3"]
+[ext_resource type="SpriteFrames" path="res://data/enemies/stone_serpent_frames.tres" id="4_pew7f"]
+
+[resource]
+script = ExtResource("3_hr3j3")
+projectile_scene = ExtResource("2_1w4vk")
+strike_time = 0.3
+recover_time = 0.65
+arena_radius = 190.0
+phase_two_speed = 1.25
+defeated_flag = &"ruins_boss_defeated"
+pickup_scene = ExtResource("1_do0lu")
+intro_lines = Array[String](["Nico: Otra criatura guardando un fragmento…", "Serpiente: Las piedras recuerdan a todos los que cayeron aquí."])
+defeat_lines = Array[String](["Nico: Dos fragmentos. La brújula ya casi señala a casa."])
+id = &"stone_serpent"
+display_name = "Serpiente de piedra"
+placeholder_color = Color(0.45, 0.52, 0.42, 1)
+sprite_frames = ExtResource("4_pew7f")
+sprite_offset = Vector2(0, -22)
+max_health = 110
+move_speed = 30.0
+chase_speed = 78.0
+detection_range = 230.0
+lose_range = 420.0
+attack_range = 40.0
+attack_cooldown = 0.5
+hurt_time = 0.0
+knockback_speed = 0.0
+knockback_resistance = 1.0
+patrol_radius = 0.0

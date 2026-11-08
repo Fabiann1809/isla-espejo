@@ -118,6 +118,28 @@ const CAMP_LANTERN_LIGHT := Color(1.0, 0.72, 0.36, 0.3)
 const CAMP_LANTERN_LIGHT_RADIUS := 26.0
 const CAMP_RUNE_LIGHT := Color(0.45, 0.9, 1.0, 0.2)
 const CAMP_RUNE_LIGHT_RADIUS := 18.0
+## The Mercader's shop (RoomDressing; art in assets/sprites/shop/, each file used only if it exists, else
+## simple shapes): in the room where a merchant NPC stands, a stall behind him, a rug under him, two
+## lanterns and crates. Offsets are the piece's foot from the Mercader's origin (px); the stall is the
+## only piece with a solid base (SHOP_STALL_BASE_HEIGHT px tall at its foot). A piece whose base would
+## land on a door lane, a prop, a marker, a wall or (temple) anything but floor at the room's level is
+## left out.
+const SHOP_ROOM_ENABLED := true
+const SHOP_ART_DIR := "res://assets/sprites/shop/"
+const SHOP_STALL_OFFSET := Vector2(-16, -16)
+const SHOP_STALL_SIZE := Vector2(64, 48)
+const SHOP_STALL_BASE_HEIGHT := 6.0
+const SHOP_RUG_OFFSET := Vector2(0, 2)
+const SHOP_RUG_SIZE := Vector2(48, 32)
+## Lanterns flank the stall; the strip's frames are 16 px wide.
+const SHOP_LANTERN_OFFSETS := [Vector2(-52, -16), Vector2(20, -16)]
+const SHOP_LANTERN_FRAME_WIDTH := 16
+const SHOP_LANTERN_FPS := 6.0
+const SHOP_LANTERN_LIGHT := Color(1.0, 0.72, 0.36, 0.3)
+const SHOP_LANTERN_LIGHT_RADIUS := 30.0
+const SHOP_CRATES_OFFSETS := [Vector2(36, -24), Vector2(-44, -24)]
+const SHOP_CRATES_SIZE := Vector2(32, 24)
+const SHOP_CRATES_BASE_HEIGHT := 6.0
 ## How far above a tile's bottom the floor details of the forest art stand (px).
 const DETAIL_FOOT_LIFT := 3.0
 ## Trees on the walls of the rooms and corridors: distance between them, how far each one wanders
@@ -297,6 +319,33 @@ const RUIN_FLOOR_ZONES_MAX := 3
 const RUIN_FLOOR_ZONE_RADIUS_MIN := 2.2
 const RUIN_FLOOR_ZONE_RADIUS_MAX := 3.8
 
+# --- Serpiente de piedra: charge motion ---
+## The art has one lunge pose, so the charge is animated by moving the sprite (never the body or
+## its collision): during the warning it pulls back up to SERPENT_PULLBACK px, squashes and trembles
+## more and more; it snaps forward on the lunge pose for SERPENT_LUNGE_SECONDS, then slithers fast
+## (the crawl cycle at SERPENT_DASH_ANIM_SPEED) stretched by SERPENT_DASH_STRETCH, leaving fading
+## afterimages; when it stops it recoils (squash) for SERPENT_RECOIL_SECONDS. False = the old still poses.
+const SERPENT_CHARGE_MOTION := true
+const SERPENT_PULLBACK := 4.0
+const SERPENT_WINDUP_SQUASH := Vector2(1.08, 0.92)
+const SERPENT_TREMBLE := 1.0
+const SERPENT_LUNGE_SECONDS := 0.12
+const SERPENT_LUNGE_PUSH := 3.0
+const SERPENT_DASH_ANIM_SPEED := 2.2
+const SERPENT_DASH_STRETCH := Vector2(1.14, 0.9)
+const SERPENT_GHOST_INTERVAL := 0.045
+const SERPENT_GHOST_LIFE := 0.22
+const SERPENT_GHOST_COLOR := Color(0.55, 0.95, 0.6, 0.45)
+const SERPENT_RECOIL_SECONDS := 0.22
+const SERPENT_RECOIL_SQUASH := Vector2(0.88, 1.1)
+
+# --- NPC gestures ---
+## An NPC whose frames have a "gesture" animation (the Mercader showing his emerald) stands still
+## on "idle" and plays it once every NPC_GESTURE_MIN..MAX seconds and when spoken to. False = never.
+const NPC_GESTURES_ENABLED := true
+const NPC_GESTURE_MIN := 6.0
+const NPC_GESTURE_MAX := 11.0
+
 # --- Idle breathing (IdleBreath) ---
 ## Nico and the NPCs breathe while they stand still: the body rises up to BREATH_PIXELS whole pixels while the legs
 ## (the lowest BREATH_LEG_SHARE of the figure) stretch to keep the feet fixed, one breath every BREATH_SECONDS. False = off.
@@ -396,6 +445,50 @@ const DAMAGE_NUMBER_COLOR := Color(1.0, 0.95, 0.75)
 ## Font size of the numbers (the pixel font is drawn crisp at multiples of 16).
 const DAMAGE_NUMBER_SIZE := 16
 const DAMAGE_NUMBER_BOSS_COLOR := Color(1.0, 0.75, 0.4)
+## Critical hits of Nico's arrows: base chance (0 = never) and damage multiplier. `CRITS_ENABLED` is the
+## off switch for the whole feature (shop upgrades included); the shop's crit upgrade adds to the chance.
+const CRITS_ENABLED := true
+const PLAYER_CRIT_CHANCE := 0.05
+const PLAYER_CRIT_MULTIPLIER := 2.0
+## A crit's damage number: gold and bigger than the normal one (the pixel font is crisp at multiples
+## of 8 as well), plus a little extra hit stop (s) and camera shake (px, s); 0 = off.
+const DAMAGE_NUMBER_CRIT_COLOR := Color(1.0, 0.82, 0.15)
+const DAMAGE_NUMBER_CRIT_SIZE := 24
+const CRIT_HIT_STOP := 0.04
+const CRIT_SHAKE := Vector2(1.5, 0.1)
+
+# --- Temporary power-ups (the numbers of each live in its ResourceData in data/resources) ------------
+## Wash over Nico (strength 0..1, seconds) when the shield absorbs a hit.
+const SHIELD_FLASH_SECONDS := 0.25
+const SHIELD_FLASH_STRENGTH := 0.5
+## The shield bubble around Nico: art strip (square 32 px frames, played at this fps; code-drawn when the
+## file is missing), centre height above his origin, radius and ring width (px) of the code-drawn one,
+## its alpha, the pulse speed and the extra alpha / scale of the pulse when it absorbs a hit.
+const SHIELD_BUBBLE_ART := "res://assets/sprites/effects/shield_bubble.png"
+const SHIELD_BUBBLE_FPS := 8.0
+const SHIELD_BUBBLE_LIFT := 10.0
+const SHIELD_BUBBLE_RADIUS := 15.0
+const SHIELD_BUBBLE_ALPHA := 0.55
+const SHIELD_BUBBLE_PULSE_SPEED := 3.0
+const SHIELD_BUBBLE_HIT_SECONDS := 0.3
+const SHIELD_BUBBLE_HIT_SCALE := 0.25
+## Radius (px) of the orb that marks a buff on the ground when it has no art.
+const BUFF_ORB_RADIUS := 5.5
+## Art of a buff: the HUD icon (12x12) and the world pickup strip (square 16 px frames, at this fps), named by id.
+const BUFF_ICON_PATH := "res://assets/ui/hud/buff_%s.png"
+const BUFF_PICKUP_PATH := "res://assets/sprites/pickups/buff_%s.png"
+## HUD buff rows: height of each row (px).
+const BUFF_ROW_HEIGHT := 12
+const BUFF_PICKUP_FPS := 8.0
+
+# --- Shop upgrades (bought from the Mercader, kept in GameState for the journey) ----------------------
+## `SHOP_ENABLED` false: the Mercader only talks. Per level: extra arrow damage, extra crit chance and
+## extra hearts; 0 turns that upgrade's effect off.
+const SHOP_ENABLED := true
+const UPGRADE_BOW_DAMAGE_PER_LEVEL := 1
+const UPGRADE_CRIT_PER_LEVEL := 0.05
+const UPGRADE_HEALTH_PER_LEVEL := 1
+
 ## Red flash over the screen when Nico is hurt (alpha 0 = off) and how long it fades (s).
 const HURT_FLASH := Color(0.85, 0.05, 0.05, 0.28)
 const HURT_FLASH_TIME := 0.3
@@ -403,7 +496,333 @@ const HURT_FLASH_TIME := 0.3
 const LOW_HEALTH := 1
 const LOW_HEALTH_PULSE := Color(0.6, 0.0, 0.0, 0.22)
 
+# --- Nico's movement feel ---------------------------------------------------------------------------
+## Turning between the walking views (side, front, back) keeps the step of the cycle instead of
+## starting it over. False = every turn restarts the walk.
+const WALK_KEEP_STEP := true
+## Dust under Nico's feet while he walks: particles per step (0 = off), seconds between steps (the
+## footstep sound's pace), how fast the dust drifts (px/s) and its color.
+const WALK_DUST := 2
+const WALK_DUST_EVERY := 0.32
+const WALK_DUST_SPEED := 10.0
+const WALK_DUST_COLOR := Color(0.85, 0.8, 0.65, 0.55)
+## The dodge squashes Nico's picture (x, y scale) as it starts, stretches it as it ends and settles
+## back in these seconds. Vector2.ONE for both = no squash.
+const DASH_SQUASH := Vector2(1.25, 0.8)
+const DASH_STRETCH_END := Vector2(0.9, 1.12)
+const DASH_STRETCH_SETTLE := 0.1
+## The camera leads Nico this many px where he walks or dodges (0 = off), catching up at this
+## speed (per second).
+## Off (0) in every map: the lead made the picture tremble. Kept as a switch.
+const CAMERA_LOOK_AHEAD := 0.0
+const CAMERA_LOOK_AHEAD_SPEED := 3.0
+
+# --- Casting a skill ---------------------------------------------------------------------------------
+## A ring of sparks in the skill's color at Nico's feet (false = off) and the flash of that color over
+## him, fading in these seconds (0 = off).
+const CAST_BURST := true
+const CAST_FLASH_SECONDS := 0.3
+const CAST_FLASH_STRENGTH := 0.8
+
 # --- Trees in front of Nico (CanopyFade) -----------------------------------------------------------
 ## A tree whose crown covers Nico turns see-through to this alpha (1 = off), at this speed (per s).
 const CANOPY_FADE_ALPHA := 0.45
 const CANOPY_FADE_SPEED := 8.0
+
+# --- Temple: plan ---
+## In a surge room every walkable level-0 cell must have a stair up within this many steps (cells),
+## so nobody is caught by the lava with no way up (TemplePlan.validate).
+const TEMPLE_SURGE_MAX_STAIR_DISTANCE := 9
+
+# --- Temple: tileset ---------------------------------------------------------------------------------
+## Tint over the whole Templo del Eclipse. Neutral (white): the warm tint stacked with the additive
+## glows and burnt the high floors to pale pink. Set a colour here and regenerate
+## data/themes/temple.tres (tools/make_temple_theme.gd) to bring it back.
+const TEMPLE_WORLD_TINT := Color.WHITE
+## Multipliers over the temple's lava layers (the sea, the rooms' lava and bubbles, the bridges'
+## lava) and its floor layers (floors, decks, stairs): darker and a little greyer, so the stone
+## reads mid-grey and the lava bright but flat. Color.WHITE = off.
+const TEMPLE_LAVA_MODULATE := Color(1.0, 0.94, 0.90)
+const TEMPLE_FLOOR_MODULATE := Color(0.90, 0.90, 0.94)
+## Cap on stacking additive lights: a temple light (prop, rim or stair brazier) is not created when
+## another temple light already burns closer than this many px (0 = no cap).
+const TEMPLE_LIGHT_MIN_SPACING := 28.0
+
+# --- Temple: props ---
+## A lava geyser (TempleProp.GEYSER) cycles idle, rumble, erupt and settle, in seconds; a hazard geyser
+## hurts only while it erupts. An ambient geyser starts its idle at a seeded point of it, so neighbours
+## never erupt together.
+const TEMPLE_GEYSER_IDLE := 3.0
+const TEMPLE_GEYSER_RUMBLE := 1.0
+const TEMPLE_GEYSER_ERUPT := 1.2
+const TEMPLE_GEYSER_SETTLE := 0.6
+const TEMPLE_GEYSER_DAMAGE := 1
+## Additive glows of the temple's fires and lava (alpha 0 = off) and their radii (px): fire for torches
+## and braziers, lava for the falls, the geyser while it erupts and the gate's mouth.
+const TEMPLE_FIRE_LIGHT := Color(1.0, 0.62, 0.2, 0.16)
+const TEMPLE_FIRE_LIGHT_RADIUS := 38.0
+const TEMPLE_LAVA_LIGHT := Color(1.0, 0.42, 0.1, 0.14)
+const TEMPLE_LAVA_LIGHT_RADIUS := 56.0
+const TEMPLE_GATE_LIGHT_RADIUS := 80.0
+## Bounds of a temple light's flicker, as a factor of RUIN_LIGHT_FLICKER_SECONDS (picked per position).
+const TEMPLE_PROP_LIGHT_FLICKER_MIN := 0.8
+const TEMPLE_PROP_LIGHT_FLICKER_MAX := 1.4
+## The trap walk's traps (TempleProp.SPIKES, SAW and ROLLING_ROCK; they hurt only through a Hitbox).
+## Off: they stand still on their first frame and never hurt. The damage of every trap; the spikes'
+## cycle in seconds (down, the warning with the tips out and the slots glowing, up, sinking back);
+## the saw's speed along its track (px/s) and how often it hurts whoever stays on it (s); the rock's
+## rumble before it rises (s), its speed (px/s), how long its shards lie (s) and how long the lane
+## stays empty before the next one (s).
+const TEMPLE_TRAPS_ENABLED := true
+const TEMPLE_TRAP_DAMAGE := 1
+const TEMPLE_SPIKES_DOWN := 2.4
+const TEMPLE_SPIKES_WARN := 0.7
+const TEMPLE_SPIKES_UP := 1.0
+const TEMPLE_SPIKES_RETRACT := 0.4
+const TEMPLE_SAW_SPEED := 40.0
+const TEMPLE_SAW_HIT_EVERY := 0.6
+const TEMPLE_ROCK_SPAWN := 0.8
+const TEMPLE_ROCK_SPEED := 56.0
+const TEMPLE_ROCK_BREAK := 0.5
+const TEMPLE_ROCK_RESPAWN := 1.4
+
+# --- Temple: level ---
+## The lava sea around a temple map (LavaBackdrop) reaches this far past the rooms (tiles): wider
+## than the forest's margin, so the sea, its shelves and its islets show around the edge rooms.
+const TEMPLE_BACKDROP_MARGIN_TILES := 6
+## Frames per second of the lava's flow (every cell in step, so the sea reads as one current), of its
+## bursting bubbles, of the crust's pulsing glow and of the lava-lit feet of the cliffs (these three
+## start at random times, so neighbours never pulse together).
+const TEMPLE_LAVA_FPS := 5.0
+const TEMPLE_LAVA_BUBBLE_FPS := 6.0
+const TEMPLE_LAVA_GLOW_FPS := 3.0
+const TEMPLE_LAVA_FOOT_FPS := 4.0
+## Share of the open lava cells (away from any shore or bridge) that carry a bursting bubble.
+const TEMPLE_BACKDROP_BUBBLE_CHANCE := 0.035
+## The sea's lava is painted from three edge-matched macro variants of the sheet (8x8 tiles each):
+## every 8x8 block of the world picks one by a world-space noise of this frequency (per block), so the
+## pattern never repeats on a grid. 0 = always the first variant.
+const TEMPLE_LAVA_VARIANT_FREQUENCY := 0.4
+## Big plates of cooler crust drifting slowly over every lava of the map (the sea, the rooms' lava
+## and the bridges' alike; under every floor): a tiling noise picture of TEMPLE_BACKDROP_PLATE_SIZE
+## texels, one texel per TEMPLE_BACKDROP_PLATE_TEXEL px. Their colour and alpha (0 = off), the share
+## of the sea they cover, how soft their edge is (in noise units), the noise frequency (per texel)
+## and their drift (px/s, x and y).
+const TEMPLE_BACKDROP_PLATE_COLOR := Color(0.14, 0.03, 0.02)
+const TEMPLE_BACKDROP_PLATE_ALPHA := 0.06
+const TEMPLE_BACKDROP_PLATE_SIZE := 256
+const TEMPLE_BACKDROP_PLATE_TEXEL := 4
+const TEMPLE_BACKDROP_PLATE_COVER := 0.42
+const TEMPLE_BACKDROP_PLATE_EDGE := 0.1
+const TEMPLE_BACKDROP_PLATE_FREQUENCY := 0.028
+const TEMPLE_BACKDROP_PLATE_DRIFT := Vector2(2.5, 1.0)
+## Islets of rock in the sea: on or off, one islet tried per this many tiles of the sea (fewer with a
+## bigger number; the spots are random, never a grid), their size in cells (min, max: the blob is cut
+## from a box of that size, so it is irregular and smaller), the chance that a tried islet is a big
+## one (the upper half of the sizes), tiles of open lava kept between an islet and anything else,
+## rows of cliff face under their top (min, max; an islet that pours a lava fall always has the
+## most) and the chance that an islet carries a ruin (a broken column or a brazier) on its top.
+const TEMPLE_BACKDROP_ISLETS := true
+const TEMPLE_BACKDROP_ISLET_PER_TILES := 230
+const TEMPLE_BACKDROP_ISLET_MIN := Vector2i(5, 4)
+const TEMPLE_BACKDROP_ISLET_MAX := Vector2i(10, 6)
+const TEMPLE_BACKDROP_ISLET_BIG_CHANCE := 0.65
+const TEMPLE_BACKDROP_ISLET_CLEAR_TILES := 2
+const TEMPLE_BACKDROP_ISLET_FACE_ROWS := Vector2i(1, 3)
+const TEMPLE_BACKDROP_RUIN_CHANCE := 0.65
+## Rock shelves along the north edge of the map (the lava falls pour over them into the sea): chance
+## per spot, their width in cells (min, max), how many rows of top reach into the view (min, max;
+## the first row always lies above it, so no shelf has a top edge) and the gap left between them.
+const TEMPLE_BACKDROP_SHELF_CHANCE := 0.75
+const TEMPLE_BACKDROP_SHELF_WIDTH := Vector2i(3, 6)
+const TEMPLE_BACKDROP_SHELF_ROWS := Vector2i(0, 2)
+const TEMPLE_BACKDROP_SHELF_GAP := Vector2i(1, 4)
+## Chance that an islet or a shelf pours a lava fall, px below the cliff's foot where the fall's splash
+## sits, chance of a smoking rock on an islet, of an ember vent on an inner cell of an islet, of a lone
+## smoking rock out in the lava (per islet spot), of a mossy cliff face and of a detail (moss, cracks,
+## pebbles, embers) on an inner cell.
+const TEMPLE_BACKDROP_FALL_CHANCE := 0.4
+const TEMPLE_BACKDROP_SHELF_FALL_CHANCE := 0.7
+const TEMPLE_BACKDROP_FALL_FOOT := 4.0
+const TEMPLE_BACKDROP_ROCK_CHANCE := 0.45
+const TEMPLE_BACKDROP_VENT_CHANCE := 0.12
+const TEMPLE_BACKDROP_LONE_ROCK_CHANCE := 0.08
+const TEMPLE_BACKDROP_MOSS_CHANCE := 0.3
+const TEMPLE_BACKDROP_DETAIL_CHANCE := 0.65
+## The crust (LavaBackdrop's shade over the sea): the lava darkens with distance from the islands'
+## stone (the rooms' floors, not their rectangles) and the bridges, so the way reads bright and the
+## far sea reads as cooled rock with glowing channels. Its colour, how dark far out, tiles from the
+## stone where it starts and where it is darkest, how much that edge wobbles (tiles), the wobble's
+## frequency, how much a second, slower noise mottles the far crust (0..1: cooled regions darker,
+## channels lighter), the share of it that falls on the islets' rock (they stand out of the sea) and
+## how far the search for the stone goes (tiles).
+const TEMPLE_BACKDROP_CRUST_COLOR := Color(0.1, 0.02, 0.02)
+const TEMPLE_BACKDROP_CRUST_ALPHA := 0.18
+const TEMPLE_BACKDROP_CRUST_NEAR_TILES := 2.0
+const TEMPLE_BACKDROP_CRUST_FAR_TILES := 9.0
+const TEMPLE_BACKDROP_CRUST_WOBBLE := 3.5
+const TEMPLE_BACKDROP_CRUST_FREQUENCY := 0.09
+const TEMPLE_BACKDROP_CRUST_MOTTLE := 0.45
+const TEMPLE_BACKDROP_CRUST_ON_ROCK := 0.4
+const TEMPLE_BACKDROP_DEPTH := 16
+## The islets and shelves are darker, warmer rock than the rooms' stone: a tint over their tiles
+## (their lava-lit feet stay bright).
+const TEMPLE_BACKDROP_ISLET_TINT := Color(0.82, 0.7, 0.66)
+## Bridges and stairs between temple rooms: px from the top of a wall tile where the near (south)
+## rail's parapet stands (its y-sort point), and px past the top end of a staircase where each
+## brazier's foot stands (on the high room's wall, flanking the door: half a wall tile).
+const TEMPLE_BRIDGE_RAIL_BASE := 10.0
+const TEMPLE_STAIR_BRAZIER_LANDING := 8.0
+
+# --- Temple: bridges ---
+## A temple corridor is a stone causeway over the lava (TempleBridge): a deck along the door lane and a
+## low parapet on each side, no posts but one at each end where the parapet meets a room (off: the
+## parapets end flush). A corridor longer than TEMPLE_LANDING_MIN_TILES gets a landing at mid-span (off
+## with TEMPLE_LANDINGS): a stone island TEMPLE_LANDING_TILES long along the corridor and as wide as
+## the lane plus the two parapet rows, with this many rows of cliff dropping into the lava on its
+## south side (0 = none, its ledge alone marks the edge) and a brazier on a pedestal on each side of
+## the way (off: bare).
+const TEMPLE_BRIDGE_END_POSTS := false
+## Decorative soffits and piers below causeways; no collision. False restores tile-only decks.
+const TEMPLE_BRIDGE_VOLUME := true
+const TEMPLE_BRIDGE_SOFFIT_PX := 10
+const TEMPLE_BRIDGE_PIER_EVERY := 6
+const TEMPLE_LANDINGS := true
+const TEMPLE_LANDING_MIN_TILES := 10
+const TEMPLE_LANDING_TILES := 6
+const TEMPLE_LANDING_FACE_ROWS := 2
+const TEMPLE_LANDING_BRAZIERS := true
+## A corridor between rooms one level apart climbs on one stretch of steps and is a bridge at each
+## end's height on the rest (off: the whole corridor is steps, as the Ruinas' are): across the landing
+## when it has one (TEMPLE_LANDING_STAIR_TILES long), else at the high room's door (up to
+## TEMPLE_BRIDGE_STAIR_TILES long).
+const TEMPLE_BRIDGE_STAIR_STRETCH := true
+const TEMPLE_BRIDGE_STAIR_TILES := 4
+const TEMPLE_LANDING_STAIR_TILES := 2
+
+# --- Temple: shape ---
+## A temple room (TempleShape) is a stone island over a sea of lava. Frames per second of the lava's
+## flow (the 4x4 macro sea, all in step), its bubbles, the pulsing cracks of the crust along the rims,
+## the lava's light on the foot of a cliff, the glowing runes and the sheet's fires (brazier, torch).
+## On: the temple's lava, glows and fires play their frames. Off: everything is painted still (first frame).
+const TEMPLE_SHAPE_ANIMATE := true
+const TEMPLE_RUNE_GLOW_FPS := 2.0
+const TEMPLE_FIRE_FPS := 7.0
+## Share of the open lava cells that bubble, of the cliff faces that hang moss, and of the floor cells
+## (off the door lanes) that carry moss, cracks and glowing runes (runes on levels 1 and 2 only).
+const TEMPLE_BUBBLE_SHARE := 0.04
+const TEMPLE_FACE_MOSS_SHARE := 0.25
+const TEMPLE_FLOOR_MOSS_SHARE := 0.05
+const TEMPLE_FLOOR_CRACK_SHARE := 0.03
+const TEMPLE_FLOOR_RUNE_SHARE := 0.015
+## Chance that a `p` cell holds a pillar of blocks instead of a carved one.
+const TEMPLE_PILLAR_BLOCK_CHANCE := 0.35
+## Reading the heights (each off = the plain look): a `#` masonry cell drawn as a built wall (capped
+## top, carved front) instead of a slab with a cliff; the shadow a platform casts south onto the
+## lower floor and the one it casts east; a balustrade on the open sides of every flight of stairs;
+## a mark (never blocking) on each top corner of every flight inside a room: a small brazier, or a
+## stone post when another brazier burns closer than this many cells (0 = always a brazier).
+const TEMPLE_MASONRY_ART := true
+const TEMPLE_DROP_SHADOWS := true
+## Extra rock rows may occupy empty lava only, never floor, stairs or bridge decks.
+const TEMPLE_LAVA_CLIFF_EXTRA_ROWS := 3
+const TEMPLE_EAST_SHADOWS := true
+const TEMPLE_STAIR_WALLS := true
+const TEMPLE_STAIR_TOP_BRAZIERS := true
+const TEMPLE_STAIR_BRAZIER_SPACING := 10
+## At most this many flights of a room get a pair of braziers at their top (the rest stay bare).
+const TEMPLE_STAIR_BRAZIER_MAX_PAIRS := 2
+## The ground shadow of Nico, the enemies and the NPCs on the temple's floors: its alpha (the stone
+## needs more than the forest's SHADOW_ALPHA to keep them on the ground; < 0 = SHADOW_ALPHA), how
+## much bigger than the forest's it is (1 = the same) and how many px below the feet it sits (the
+## forest's, centred on the last row of the feet, shows only a sliver); and how far a solid prop's
+## shadow leans east, away from the light (px per px of the prop's height; 0 = right under its foot).
+## Tall temple structures (pillars, statues, the face gate, pedestal braziers, lava falls) turn
+## see-through while Nico walks behind them, with the trees' CANOPY_FADE_ALPHA and speed.
+const TEMPLE_SEE_THROUGH := true
+const TEMPLE_SHADOW_ALPHA := 0.42
+const TEMPLE_SHADOW_SCALE := 1.15
+## Negative: the shadow's centre sits a little above the last row of the feet, so the feet stand on it
+## (a big shadow below the feet made Nico look like he floated over the floor).
+const TEMPLE_SHADOW_DROP := -1.5
+## How far the temple shadow's lower edge reaches below the feet (px), for every actor whatever its width
+## (-1 = centre it on the feet with TEMPLE_SHADOW_DROP instead).
+const TEMPLE_SHADOW_BOTTOM := 1.5
+const TEMPLE_PROP_SHADOW_LEAN := 0.22
+## One flickering lava light every this many rim cells (0 = none), its colour (alpha 0 = off; softer
+## than a fire's, the lava is already bright) and its radius (px); one ember vent every this many lava
+## cells (0 = none) with this many embers rising from it (0 = none), their life (s), their climb
+## (px/s, min and max), the upward pull (px/s²) and their colour.
+const TEMPLE_RIM_LIGHT_EVERY := 12
+const TEMPLE_RIM_LIGHT := Color(1.0, 0.45, 0.12, 0.08)
+const TEMPLE_RIM_LIGHT_RADIUS := 32.0
+const TEMPLE_EMBER_VENT_EVERY := 40
+const TEMPLE_EMBERS := 3
+const TEMPLE_EMBER_LIFETIME := 1.8
+const TEMPLE_EMBER_SPEED := Vector2(8.0, 18.0)
+const TEMPLE_EMBER_RISE := 14.0
+const TEMPLE_EMBER_COLOR := Color(1.0, 0.6, 0.2, 0.55)
+
+# --- Temple: surge ---------------------------------------------------------------------------------
+## Lava surge (LavaSurge, LavaSurgeLogic): the lava rises level by level in a `surge` room. Seconds of
+## warning before each rise, of the rise itself (the lava creeps in from the edges) and per level
+## when it recedes; the damage the lava deals every interval to whoever walks on a flooded level;
+## seconds between waves of enemies, of ring warning before each one appears, and of steam over the
+## floor the lava leaves. Nico must be farther than the trigger depth (px) from every door.
+const TEMPLE_SURGE_ENABLED := true
+const TEMPLE_SURGE_WARN_SECONDS := 2.5
+const TEMPLE_SURGE_RISE_SECONDS := 3.0
+const TEMPLE_SURGE_RECEDE_SECONDS := 2.5
+const TEMPLE_SURGE_DAMAGE_INTERVAL := 0.8
+const TEMPLE_SURGE_DAMAGE := 1
+const TEMPLE_SURGE_WAVE_INTERVAL := 6.0
+const TEMPLE_SURGE_SPAWN_WARN := 0.8
+const TEMPLE_SURGE_TRIGGER_DEPTH := 64.0
+const TEMPLE_SURGE_STEAM_SECONDS := 2.0
+## A wave never appears closer than this many cells to Nico.
+const TEMPLE_SURGE_SPAWN_MIN_DISTANCE := 4
+## Physics frames the lava's hitbox stays on a target (it retries while Nico is still blinking).
+const TEMPLE_SURGE_HIT_FRAMES := 6
+## Warning: camera shake (px, seconds), how often a bubble bursts on the edge (s), the glow of the
+## cells that flood first (alpha at its brightest).
+const TEMPLE_SURGE_WARN_SHAKE := Vector2(1.5, 2.0)
+const TEMPLE_SURGE_BUBBLE_EVERY := 0.12
+const TEMPLE_SURGE_WARN_GLOW := 0.32
+## Colours of the sealing fire, the warning ring of a wave and the bubbles.
+const TEMPLE_SURGE_SEAL_COLOR := Color(1.0, 0.42, 0.1, 0.55)
+const TEMPLE_SURGE_RING_COLOR := Color(1.0, 0.5, 0.12, 0.9)
+const TEMPLE_SURGE_BUBBLE_COLOR := Color(1.0, 0.72, 0.25, 0.85)
+## A fight that cannot send a wave (no enemy to pick, no free cell) ends after this many wave intervals
+## once nothing is alive, so the doors never stay sealed for good.
+const TEMPLE_SURGE_STALL_INTERVALS := 3
+## Look of the surge: the ring warning a wave (radius px, how it closes in: start and end scale), the
+## puff when it appears (radius px, seconds), the bubbles on the edge (radius range px, seconds), the
+## glow on the cells that flood first (colour; its alpha is TEMPLE_SURGE_WARN_GLOW).
+const TEMPLE_SURGE_RING_RADIUS := 11.0
+const TEMPLE_SURGE_RING_SPAN := Vector2(1.5, 0.9)
+const TEMPLE_SURGE_PUFF_RADIUS := 14.0
+const TEMPLE_SURGE_PUFF_LIFE := 0.35
+const TEMPLE_SURGE_BUBBLE_RADIUS := Vector2(3.0, 6.0)
+const TEMPLE_SURGE_BUBBLE_LIFE := 0.5
+const TEMPLE_SURGE_WARN_GLOW_COLOR := Color(1.0, 0.5, 0.15)
+## The sealing fire: its alpha pulses between these values every this many seconds, fades in and out.
+const TEMPLE_SURGE_SEAL_PULSE_ALPHAS := Vector2(0.55, 1.0)
+const TEMPLE_SURGE_SEAL_PULSE_SECONDS := 0.35
+const TEMPLE_SURGE_SEAL_FADE_IN := 0.4
+const TEMPLE_SURGE_SEAL_FADE_OUT := 0.5
+## Steam over the floor the lava leaves: particles, life (s), speed (px/s), size (px), pull up (px/s2),
+## colour at the start and at the end.
+const TEMPLE_SURGE_STEAM_AMOUNT := 3
+const TEMPLE_SURGE_STEAM_LIFETIME := 1.0
+const TEMPLE_SURGE_STEAM_SPEED := Vector2(4.0, 10.0)
+const TEMPLE_SURGE_STEAM_SCALE := Vector2(2.0, 4.0)
+const TEMPLE_SURGE_STEAM_RISE := 6.0
+const TEMPLE_SURGE_STEAM_COLOR := Color(1.0, 0.85, 0.75, 0.5)
+const TEMPLE_SURGE_STEAM_FADE := Color(0.8, 0.8, 0.85, 0.0)
+
+## Pixel bands at every lava contact; zero width disables the effect.
+const TEMPLE_SHORE_WIDTH := 6
+const TEMPLE_BASALT_VARIANTS := true
+const TEMPLE_BACKDROP_OUTCROPS := true
+const TEMPLE_SHORE_CRUST_ALPHA := 0.25
+const TEMPLE_SHORE_CRACK_ALPHA := 0.2

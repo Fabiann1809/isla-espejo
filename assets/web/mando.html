@@ -34,6 +34,8 @@
   #state.ok #dot { background: var(--ok); }
   #state.bad #dot { background: var(--bad); }
   #state.tap { text-decoration: underline; cursor: pointer; }
+  #b-pause { width: auto; min-width: 88px; height: 44px; border-radius: 22px; background: var(--panel); border: 2px solid var(--muted); color: var(--fg); font-size: 14px; padding: 0 16px; }
+  #b-pause.on { background: var(--muted); color: #0d1710; }
   #rtt { font-variant-numeric: tabular-nums; }
   #rtt.good { color: var(--ok); }
   #rtt.mid { color: var(--warn); }
@@ -77,6 +79,7 @@
 <div id="app">
   <div id="bar">
     <div id="state" role="status" aria-live="polite"><span id="dot"></span><span id="stateText">Esperando...</span></div>
+    <button class="btn" id="b-pause" data-action="pause" aria-label="Pausa">Pausa</button>
     <div id="rtt"></div>
   </div>
   <div id="pad">

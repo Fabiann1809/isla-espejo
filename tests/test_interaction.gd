@@ -45,7 +45,10 @@ func _initialize() -> void:
 
 func _test_chests() -> void:
 	var hud: Node = _room.get_node("Hud")
-	var heart := _place("res://scenes/world/chest_heart.tscn", ARENA)
+	var chest := _place("res://scenes/world/chest.tscn", ARENA)
+	chest.weight_heal = 1.0
+	chest.weight_gold = 0.0
+	chest.weight_upgrade = 0.0
 	_player.global_position = ARENA + Vector2(0, 24)
 	_player.health.take_damage(2)
 	_prompts.clear()
@@ -54,35 +57,28 @@ func _test_chests() -> void:
 	_check(hud.get_node("Prompt").visible and hud.get_node("Prompt").text == "[E] Abrir", "the HUD shows '[E] Abrir'")
 
 	var before: int = _player.health.current
+	var max_before: int = _player.health.max_health
 	_messages.clear()
 	await _tap("interact")
-	_check(heart.opened and _opened == 1, "pressing E opens the chest (Events.chest_opened)")
-	_check(_player.health.max_health == 6 and _player.health.current == before + 1, "a heart chest adds a heart (%d/%d)" % [_player.health.current, _player.health.max_health])
-	_check(_messages == [heart.message], "the chest tells the player what they found")
+	_check(chest.opened and _opened == 1, "pressing E opens the chest (Events.chest_opened)")
+	_check(_player.health.current == mini(before + chest.heal_amount, max_before) and _player.health.max_health == max_before,
+			"a health prize heals and never changes the maximum (%d/%d)" % [_player.health.current, _player.health.max_health])
+	_check(_messages.size() == 1 and _messages[0] != "", "the chest tells the player what they found")
 	await process_frame
-	_check(hud.get_node("Toast").visible and hud.get_node("Toast").text == heart.message, "the HUD shows the message")
+	_check(hud.get_node("Toast").visible and hud.get_node("Toast").text == _messages[0], "the HUD shows the message")
 	_check(_prompts[-1] == "" and not hud.get_node("Prompt").visible, "an opened chest no longer shows a prompt")
 
 	var health_after: int = _player.health.current
 	await _tap("interact")
-	_check(_opened == 1 and _player.health.current == health_after and _player.health.max_health == 6, "an opened chest gives nothing more")
-
-	var heal := _place("res://scenes/world/chest_heal.tscn", ARENA + Vector2(80, 0))
-	_player.global_position = ARENA + Vector2(80, 24)
-	_player.health.take_damage(_player.health.current - 2)
-	await _frames(3)
-	await _tap("interact")
-	_check(heal.opened and _player.health.current == 5, "a healing chest restores health (2 -> %d)" % _player.health.current)
-	_check(_player.health.max_health == 6, "a healing chest does not change the maximum")
-	heart.free()
-	heal.free()
+	_check(_opened == 1 and _player.health.current == health_after and _player.health.max_health == max_before, "an opened chest gives nothing more")
+	chest.free()
 	_player.health.heal(10)
 
 
 # --- Which object is chosen ------------------------------------------------------------------------
 
 func _test_nearest() -> void:
-	var chest := _place("res://scenes/world/chest_heal.tscn", ARENA)
+	var chest := _place("res://scenes/world/chest.tscn", ARENA)
 	var elder := _place("res://scenes/npcs/elder.tscn", ARENA + Vector2(28, 0))
 	_player.global_position = ARENA + Vector2(2, 24)
 	_prompts.clear()

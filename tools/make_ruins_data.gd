@@ -65,16 +65,24 @@ func _initialize() -> void:
 			load("res://scenes/enemies/sombra_errante.tscn"), load("res://scenes/enemies/murcielago.tscn")]
 	scenario.enemy_pool = pool
 	scenario.enemy_weights = {&"bestia_de_la_niebla": 3.0, &"sombra_errante": 3.0, &"murcielago": 4.0}
-	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
+	var chests: Array[PackedScene] = [load("res://scenes/world/chest.tscn")]
+	scenario.npc_scene = load("res://scenes/npcs/traveler.tscn")
+	scenario.special_npc_scene = load("res://scenes/npcs/merchant.tscn")
 	scenario.chest_scenes = chests
+	scenario.boss_scene = load("res://scenes/enemies/stone_serpent.tscn")
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
 	var drops: Array[ResourceData] = [load("res://data/resources/heart.tres"), load("res://data/resources/arrows.tres"),
+			load("res://data/resources/pierce.tres"), load("res://data/resources/frost.tres"),
+			load("res://data/resources/haste.tres"), load("res://data/resources/shield.tres"),
 			load("res://data/resources/gold.tres")]
 	scenario.drops = drops
 	scenario.objective = "Encuentra a la Serpiente de piedra"
 	scenario.objective_done = "Cruza el portal"
 	scenario.objective_flag = &"ruins_boss_defeated"
-	scenario.completion_text = "Capítulo 2 completado. El templo del eclipse te espera."
+	scenario.completion_text = "Capítulo 2 completado. El viaje de Nico continuará."
+	# The ruins lead to the temple (tools/make_temple_data.gd writes the temple and sets this too).
+	if ResourceLoader.exists("res://data/scenarios/temple.tres"):
+		scenario.next_scenario = load("res://data/scenarios/temple.tres")
 	ResourceSaver.save(scenario, "res://data/scenarios/ruins.tres")
 	print("ruins data written")
 	quit()

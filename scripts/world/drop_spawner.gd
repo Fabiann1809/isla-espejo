@@ -2,6 +2,8 @@ class_name DropSpawner
 extends Node
 ## Leaves basic resources where enemies die. The list comes from the scenario's `drops`; every
 ## resource rolls its own chance, with a "pity" kill count so a long dry streak never happens.
+## A kill leaves at most ONE temporary buff (the arrow fan and the other power-ups); hearts and gold are
+## not limited that way.
 
 const SCATTER := 10.0
 const PICKUP_SCENE := preload("res://scenes/world/pickup.tscn")
@@ -26,15 +28,22 @@ func _on_enemy_killed(enemy: Node) -> void:
 		return
 	var player := get_tree().get_first_node_in_group("player")
 	var hurt: bool = player != null and player.health.current * 2 <= player.health.max_health
+	var winners: Array[ResourceData] = []
 	for resource in drops:
 		var chance := resource.drop_chance * luck * (resource.hurt_chance_multiplier if hurt else 1.0)
 		var dry: int = _dry_kills.get(resource.id, 0) + 1
 		var guaranteed := resource.pity_kills > 0 and dry >= resource.pity_kills
 		if (guaranteed or rng.randf() < chance) and _room_on_floor(resource):
 			_dry_kills[resource.id] = 0
-			_spawn(resource, node)
+			winners.append(resource)
 		else:
 			_dry_kills[resource.id] = dry
+	# Several buffs may win the same kill: one of them, picked at random, is left.
+	var buffs := winners.filter(func(resource: ResourceData) -> bool: return resource.is_buff())
+	var chosen: ResourceData = buffs[rng.randi() % buffs.size()] if not buffs.is_empty() else null
+	for resource in winners:
+		if not resource.is_buff() or resource == chosen:
+			_spawn(resource, node)
 
 
 func _room_on_floor(resource: ResourceData) -> bool:

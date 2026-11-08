@@ -61,14 +61,15 @@ func _initialize() -> void:
 	var pool: Array[PackedScene] = [load("res://scenes/enemies/slime.tscn"), load("res://scenes/enemies/planta_tiradora.tscn"), load("res://scenes/enemies/esqueleto.tscn"), load("res://scenes/enemies/ente.tscn")]
 	scenario.enemy_pool = pool
 	scenario.npc_scene = load("res://scenes/npcs/elder.tscn")
-	var chests: Array[PackedScene] = [load("res://scenes/world/chest_heart.tscn"), load("res://scenes/world/chest_heal.tscn")]
+	scenario.special_npc_scene = load("res://scenes/npcs/merchant.tscn")
+	var chests: Array[PackedScene] = [load("res://scenes/world/chest.tscn")]
 	scenario.chest_scenes = chests
 	scenario.boss_scene = load("res://scenes/enemies/forest_guardian.tscn")
 	scenario.exit_scene = load("res://scenes/world/exit_portal.tscn")
 	scenario.objective = "Encuentra al Guardián del bosque"
 	scenario.objective_done = "Cruza el portal"
 	scenario.objective_flag = &"forest_boss_defeated"
-	scenario.completion_text = "Capítulo 1 completado. Las ruinas de la montaña te esperan."
+	scenario.completion_text = "Capítulo 1 completado. Las Ruinas de la Montaña te esperan."
 	ResourceSaver.save(scenario, "res://data/scenarios/forest.tres")
 	print("forest data written")
 	quit()

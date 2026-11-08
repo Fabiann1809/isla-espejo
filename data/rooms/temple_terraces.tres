@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/terraces.tscn" id="1_kaiiv"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_21cio"]
+
+[resource]
+script = ExtResource("2_21cio")
+id = &"temple_terraces"
+scene = ExtResource("1_kaiiv")
+tags = Array[StringName]([&"heights"])
+size_tiles = Vector2i(34, 24)
+enemy_affinity = {
+&"acolito_brasero": 1.5,
+&"carnero_basalto": 0.5,
+&"ojo_sol": 2.0,
+&"oraculo_ceniza": 2.0,
+&"rueda_devoradora": 0.5
+}

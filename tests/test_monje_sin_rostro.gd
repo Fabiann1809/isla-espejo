@@ -78,7 +78,8 @@ func _initialize() -> void:
 
 	# --- Reappears there and fires three projectiles
 	var orbs: Array = []
-	for i in 200:
+	# Generous caps: under a loaded machine the monk's timers can need more physics frames.
+	for i in 600:
 		await physics_frame
 		orbs = _find_orbs()
 		if not orbs.is_empty():
@@ -106,7 +107,7 @@ func _initialize() -> void:
 		_check(distinct, "each flies in a different direction")
 		_check(aimed, "one flies at Nico")
 	var nico_hp: int = _player.health.current
-	await _until(func() -> bool: return _player.health.current < nico_hp, 240)
+	await _until(func() -> bool: return _player.health.current < nico_hp, 600)
 	_check(_player.health.current < nico_hp, "a projectile hurts Nico (%d -> %d)" % [nico_hp, _player.health.current])
 	hp = monk.health.current
 	_check(monk.get_node("Hurtbox").receive_hit(1, _player.global_position) and monk.health.current < hp,

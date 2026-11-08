@@ -193,6 +193,7 @@ func _fire() -> void:
 	for i in count:
 		var direction := facing.rotated(deg_to_rad(_monk.shot_spread) * (i - (count - 1) / 2.0))
 		var orb: EnemyOrb = _monk.projectile_scene.instantiate()
+		orb.height_level = Heights.level_of(self)
 		orb.setup(direction, _monk.projectile_speed, _monk.projectile_range,
 				ceili(data.attack_damage * damage_multiplier))
 		orb.position = position + direction * _monk.muzzle_distance

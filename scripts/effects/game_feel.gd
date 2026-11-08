@@ -23,6 +23,7 @@ void fragment() {
 """
 ## Above the actors and the props: these effects last an instant and must never hide behind a tree.
 const EFFECT_Z := 10
+const CAST_BURST_FRAMES := "res://data/skills/cast_burst_frames.tres"
 
 ## Off in headless runs, so tests that count frames or seconds are not slowed down by the freezes
 ## (tests switch it on to check it).
@@ -37,6 +38,11 @@ var _low_health: ColorRect
 var _low_health_on := false
 var _pulse_time := 0.0
 var _ghost_material: ShaderMaterial
+var _step_left := 0.0
+var _burst_frames: SpriteFrames
+## The damage number each enemy got last (instance id -> Label): a crit is announced right after the
+## damage, so it restyles that number instead of drawing a second one.
+var _last_numbers := {}
 
 
 func _ready() -> void:
@@ -47,11 +53,15 @@ func _ready() -> void:
 	if not Tuning.GAME_FEEL_ENABLED:
 		return
 	Events.enemy_damaged.connect(_on_enemy_damaged)
+	Events.player_crit.connect(_on_player_crit)
 	Events.enemy_killed.connect(_on_enemy_killed)
 	Events.player_damaged.connect(_on_player_damaged)
 	Events.player_health_changed.connect(_on_player_health_changed)
 	Events.player_dashed.connect(_on_player_dashed)
+	Events.skill_used.connect(_on_skill_used)
 	Events.boss_attack_struck.connect(_on_boss_attack_struck)
+	Events.lava_surge_warned.connect(func(_room: Node, _stage: int) -> void:
+		shake(Tuning.TEMPLE_SURGE_WARN_SHAKE))
 	Events.boss_phase_changed.connect(func(_id: StringName, _phase: int) -> void:
 		hit_stop(Tuning.HIT_STOP_BOSS_PHASE)
 		shake(Tuning.SHAKE_BOSS_PHASE))
@@ -74,6 +84,7 @@ func _process(delta: float) -> void:
 		_hit_stop_until = 0
 		Engine.time_scale = 1.0
 	_update_shake(real_delta)
+	_update_walk_dust(delta)
 	if _low_health_on:
 		_pulse_time += real_delta
 		var tint := Tuning.LOW_HEALTH_PULSE
@@ -134,7 +145,36 @@ func _on_enemy_damaged(enemy: Node, amount: int) -> void:
 	if body == null or not is_instance_valid(body):
 		return
 	burst(body.global_position + Vector2(0, -8), _color_of(enemy), Tuning.HIT_PARTICLES, Tuning.HIT_PARTICLE_SPEED)
-	damage_number(body.global_position + Vector2(0, -20), amount, enemy is Boss)
+	if _last_numbers.size() > 64:
+		for id in _last_numbers.keys():
+			if not is_instance_valid(_last_numbers[id]):
+				_last_numbers.erase(id)
+	_last_numbers[enemy.get_instance_id()] = damage_number(body.global_position + Vector2(0, -20), amount, enemy is Boss)
+
+
+## A crit: the number of that hit turns gold and bigger (or is drawn so if the enemy showed none), with
+## a touch more hit stop and shake.
+func _on_player_crit(enemy: Node, damage: int) -> void:
+	var body := enemy as Node2D
+	if body == null or not is_instance_valid(body):
+		return
+	var label: Label = _last_numbers.get(enemy.get_instance_id())
+	if label == null or not is_instance_valid(label):
+		label = damage_number(body.global_position + Vector2(0, -20), damage, enemy is Boss)
+	if label != null:
+		_style_crit(label)
+	hit_stop(Tuning.CRIT_HIT_STOP)
+	shake(Tuning.CRIT_SHAKE)
+
+
+func _style_crit(label: Label) -> void:
+	label.add_theme_font_size_override("font_size", Tuning.DAMAGE_NUMBER_CRIT_SIZE)
+	label.add_theme_color_override("font_color", Tuning.DAMAGE_NUMBER_CRIT_COLOR)
+	label.set_meta("crit", true)
+	# Wider box, same centre, so the bigger digits stay centred over the enemy.
+	var old := label.size
+	label.size = Vector2(48, 24)
+	label.position -= (label.size - old) / 2.0
 
 
 func _on_enemy_killed(enemy: Node) -> void:
@@ -168,12 +208,76 @@ func _on_player_dashed(_direction: Vector2) -> void:
 	if player == null:
 		return
 	burst(player.global_position, Tuning.DASH_DUST_COLOR, Tuning.DASH_DUST, Tuning.DASH_DUST_SPEED)
+	squash_and_stretch(player)
 	for i in Tuning.DASH_GHOSTS:
-		if i > 0:
-			await get_tree().create_timer(Tuning.DASH_GHOST_EVERY, false).timeout
-		if not is_instance_valid(player):
-			return
-		afterimage(player)
+		if i == 0:
+			afterimage(player)
+		else:
+			# A timer signal, not an await: nothing resumes on a GameFeel freed by a scene change.
+			get_tree().create_timer(Tuning.DASH_GHOST_EVERY * i, false).timeout.connect(
+					func() -> void:
+						if is_instance_valid(player):
+							afterimage(player))
+
+
+## A cast: a ring of sparks in the skill's color bursts at Nico's feet and the color washes over him.
+func _on_skill_used(skill_id: StringName, _direction: Vector2, _affected: int) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
+		return
+	var skill := load(GameState.SKILL_PATH % skill_id) as SkillData
+	var color: Color = skill.color if skill != null else Color.WHITE
+	if Tuning.CAST_BURST and _cast_burst_frames() != null:
+		var burst := AnimatedSprite2D.new()
+		burst.sprite_frames = _cast_burst_frames()
+		burst.modulate = color
+		burst.z_as_relative = false
+		burst.z_index = RoomTheme.GROUND_FX_Z
+		burst.animation_finished.connect(burst.queue_free)
+		_keep_still(burst)
+		add_child(burst)
+		burst.global_position = player.global_position + Vector2(0, -6)
+		burst.play(&"start")
+	if Tuning.CAST_FLASH_SECONDS > 0.0 and player.has_method("flash"):
+		player.flash(color * 1.6, Tuning.CAST_FLASH_SECONDS, Tuning.CAST_FLASH_STRENGTH)
+
+
+func _cast_burst_frames() -> SpriteFrames:
+	if _burst_frames == null and ResourceLoader.exists(CAST_BURST_FRAMES):
+		_burst_frames = load(CAST_BURST_FRAMES)
+	return _burst_frames
+
+
+## The dodge's weight on the picture: squashed wide as it starts, stretched tall as it lands, then
+## settled. The tween lives on the sprite, so it ends with it.
+func squash_and_stretch(actor: Node2D) -> void:
+	if Tuning.DASH_SQUASH == Vector2.ONE and Tuning.DASH_STRETCH_END == Vector2.ONE:
+		return
+	var sprite := actor.get_node_or_null("Sprite") as Node2D
+	if sprite == null:
+		return
+	var dash_time: float = actor.get("dash_time") if actor.get("dash_time") != null else 0.15
+	sprite.scale = Tuning.DASH_SQUASH
+	var tween := sprite.create_tween()
+	tween.tween_property(sprite, "scale", Tuning.DASH_STRETCH_END, dash_time).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(sprite, "scale", Vector2.ONE, Tuning.DASH_STRETCH_SETTLE) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## A pinch of dust under Nico's feet at every step while he walks.
+func _update_walk_dust(delta: float) -> void:
+	if Tuning.WALK_DUST <= 0:
+		return
+	var player := get_tree().get_first_node_in_group("player") as CharacterBody2D
+	if player == null or player.get("state") != 1 or player.velocity.length() < 5.0:
+		_step_left = 0.0
+		return
+	_step_left -= delta
+	if _step_left > 0.0:
+		return
+	_step_left = Tuning.WALK_DUST_EVERY
+	puff(player.global_position + Vector2(0, 1), -player.velocity.normalized(), Tuning.WALK_DUST_COLOR,
+			Tuning.WALK_DUST, Tuning.WALK_DUST_SPEED)
 
 
 ## A still silhouette of the actor's current frame that fades where it stands.
@@ -254,10 +358,44 @@ func burst(at: Vector2, color: Color, count: int, speed: float) -> void:
 	get_tree().create_timer(sparks.lifetime + 0.1, false).timeout.connect(sparks.queue_free)
 
 
-## A number that rises and fades over `at` (world position).
-func damage_number(at: Vector2, amount: int, boss := false) -> void:
-	if Tuning.DAMAGE_NUMBER_TIME <= 0.0 or amount <= 0:
+## A soft puff of dust at `at` (world position) drifting `away` (from the feet, against the walk),
+## lying on the ground under every actor; it frees itself.
+func puff(at: Vector2, away: Vector2, color: Color, count: int, speed: float) -> void:
+	if count <= 0:
 		return
+	var dust := CPUParticles2D.new()
+	dust.texture = RoomDressing.pixel()
+	dust.one_shot = true
+	dust.explosiveness = 1.0
+	dust.amount = count
+	dust.lifetime = 0.35
+	dust.direction = away if away != Vector2.ZERO else Vector2.UP
+	dust.spread = 50.0
+	dust.initial_velocity_min = speed * 0.5
+	dust.initial_velocity_max = speed
+	dust.gravity = Vector2(0, -8.0)
+	dust.damping_min = 10.0
+	dust.damping_max = 20.0
+	dust.scale_amount_min = 1.0
+	dust.scale_amount_max = 2.0
+	dust.color = color
+	var fade := Gradient.new()
+	fade.set_color(0, Color.WHITE)
+	fade.set_color(1, Color(1, 1, 1, 0))
+	dust.color_ramp = fade
+	dust.z_as_relative = false
+	dust.z_index = RoomTheme.GROUND_FX_Z
+	_keep_still(dust)
+	add_child(dust)
+	dust.global_position = at
+	dust.emitting = true
+	get_tree().create_timer(dust.lifetime + 0.1, false).timeout.connect(dust.queue_free)
+
+
+## A number that rises and fades over `at` (world position); returns it (null when numbers are off).
+func damage_number(at: Vector2, amount: int, boss := false) -> Label:
+	if Tuning.DAMAGE_NUMBER_TIME <= 0.0 or amount <= 0:
+		return null
 	var label := Label.new()
 	label.text = str(amount)
 	label.add_theme_font_size_override("font_size", Tuning.DAMAGE_NUMBER_SIZE)
@@ -279,6 +417,7 @@ func damage_number(at: Vector2, amount: int, boss := false) -> void:
 	tween.parallel().tween_property(label, "modulate:a", 0.0, Tuning.DAMAGE_NUMBER_TIME * 0.5) \
 			.set_delay(Tuning.DAMAGE_NUMBER_TIME * 0.5)
 	tween.tween_callback(label.queue_free)
+	return label
 
 
 func _color_of(enemy: Node) -> Color:

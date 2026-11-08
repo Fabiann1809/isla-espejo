@@ -1,15 +1,9 @@
 """Draws the Caracol de escoria's art (temple enemy, island 3) pixel by pixel.
 
-The bestiary pack's snail, scaled from 128 px down to the game, came out blurred (area averaging
-smears its outline and its spiral), so this snail is drawn at the game's own pixel size instead,
-following the pack's sheet: a big round red-hot shell with a thin bright yellow spiral glowing on it
-(what reads first), a solid block of mauve slag for a head with a horn swept back, a sunken yellow
-eye and heavy gold jaw plates, a squat
-body, all of it sitting in a puddle of lava. It is built from a few parts (pool, shell, body, head)
-that each animation moves frame by frame, as in the pack's sheet: idle, move, attack (spits a ball
-of lava), special (the shell sinks into the ground and a ring of fire bursts from the pool at ground
-level), hurt and death (it melts down into a crust of slag). It also draws the lava patch of its
-burning trail (GroundHazard.art).
+A cooled, faceted basalt shell carries a recessed lava spiral. The soft molten foot and two
+independently flexing eyestalks contrast with the heavy shell. All shapes are drawn at native
+resolution with a one-pixel outline and clustered upper-left highlights, using temple colors.
+The six animations preserve the existing cell sizes, frame counts and ground alignment.
 
 Writes into `assets/sprites/caracol_escoria/`:
     caracol_escoria_<animation>.png   64x64 cells, facing right, feet (the pool's last row) on
@@ -25,7 +19,7 @@ Needs Pillow.
 import math
 import os
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites", "caracol_escoria")
 CELL = 64
@@ -33,50 +27,29 @@ TRAIL_CELL = 24
 ## Last row of the lava pool it sits in; its outline goes on the row below.
 GROUND = 53
 
-PALETTE = {
-    "O": (26, 10, 14),     # outline
-    "L": (66, 14, 18),     # inner line (shell against head and body)
-    # shell and lava
-    "S0": (62, 10, 14),
-    "S1": (122, 18, 18),
-    "S2": (196, 34, 12),
-    "S3": (240, 70, 10),
-    "S4": (247, 124, 20),
-    "Y": (252, 188, 44),
-    "Y2": (255, 240, 140),
-    # head: mauve slag
-    "B0": (50, 24, 34),
-    "B1": (88, 46, 60),
-    "B2": (134, 84, 96),
-    "B3": (176, 128, 132),
-    "B4": (214, 174, 170),
-    # body: darker, redder slag
-    "R1": (78, 22, 32),
-    "R2": (122, 42, 52),
-    "R3": (164, 74, 80),
-    # gold jaw and horn tips
-    "G0": (112, 64, 14),
-    "G1": (196, 136, 28),
-    "G2": (246, 208, 92),
-    "W": (255, 243, 224),  # hurt flash
-}
+# A compact subset of the scenery palette; aliases keep the cooling/effect helpers shared.
+from temple_palette import (OUTLINE, STONE_COOL_D, STONE_COOL_1, STONE_COOL_2,
+                            STONE_COOL_3, STONE_3, CRUST_1, LAVA_D, LAVA_1,
+                            LAVA_3, LAVA_4, LAVA_HI, LAVA_CORE)
+PALETTE = {k: c[:3] for k, c in {
+    "O": OUTLINE, "L": STONE_COOL_D,
+    "S0": CRUST_1, "S1": LAVA_D, "S2": LAVA_1, "S3": LAVA_3,
+    "S4": LAVA_4, "Y": LAVA_HI, "Y2": LAVA_CORE,
+    "B0": STONE_COOL_D, "B1": STONE_COOL_1, "B2": STONE_COOL_2,
+    "B3": STONE_COOL_3, "B4": STONE_3,
+    "R1": LAVA_D, "R2": LAVA_1, "R3": LAVA_3,
+    "G0": LAVA_D, "G1": LAVA_4, "G2": LAVA_HI, "W": LAVA_CORE,
+}.items()}
 ## Death: each step cools the lava and dims the slag.
 COOL_STEPS = [
     {"Y2": "Y", "Y": "S4", "S4": "S3", "S3": "S2", "G2": "G1"},
     {"Y": "S3", "S4": "S2", "S3": "S2", "S2": "S1", "B4": "B3", "B3": "B2", "R3": "R2", "G1": "G0"},
     {"S3": "S1", "S2": "S1", "S1": "S0", "B3": "B2", "B2": "B1", "R3": "R2", "R2": "R1", "G0": "B1"},
 ]
-## The special and the hurt: the shell turns white-hot.
-BLAZE = {"S0": "S1", "S1": "S2", "S2": "S3", "S3": "S4", "S4": "Y", "Y": "Y2"}
-
 ## Rest pose (cell coordinates).
 SHELL = (24.5, 37.5, 12.0)          # center x, center y, radius
-## The spiral's eye sits low and back in the shell, as in the pack.
-SPIRAL_EYE = (-1.2, 1.0)
-SPIRAL_PITCH = 3.8                  # px between the turns of its line
-HEAD = (43.0, 32.5, 6.0, 7.0)       # center x, center y, half width, half height
-BODY = (39.5, 45.0, 7.5, 8.0)       # center x, center y, radius x, radius y
-POOL = (29.5, 51.5, 19.0, 2.6)      # center x, center y, radius x, radius y
+HEAD = (44.0, 41.0, 6.0, 6.0)       # center x, center y, half width, half height
+POOL = (30.5, 51.5, 19.0, 2.0)      # center x, center y, radius x, radius y
 ## Lava ball (spit): 5x5, relative to its top-left corner.
 BALL = {(1, 0): "Y2", (2, 0): "Y", (3, 0): "S4",
         (0, 1): "Y2", (1, 1): "Y2", (2, 1): "Y", (3, 1): "Y", (4, 1): "S4",
@@ -132,181 +105,125 @@ class Canvas:
         return img
 
 
-def in_ellipse(x, y, cx, cy, rx, ry):
-    return ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1.0
-
-
-def lit(nx, ny):
-    """How much a surface with normal (nx, ny) faces the light (upper left)."""
-    return -0.55 * nx - 0.8 * ny
-
-
-def pixel_perfect(pts):
-    """Drops the doubled corners of a 1 px line so it stays clean."""
-    out = []
-    for p in pts:
-        if p in out:
-            continue
-        out.append(p)
-        if len(out) >= 3:
-            a, b, c = out[-3], out[-2], out[-1]
-            if (a[0] == b[0] or a[1] == b[1]) and (b[0] == c[0] or b[1] == c[1]) and \
-                    a[0] != c[0] and a[1] != c[1]:
-                out.pop(-2)
-    return out
-
-
 # --- the snail ---------------------------------------------------------------------------------
 
 def pose(**kw):
     p = dict(sdx=0, sdy=0, squash=0, hdx=0, hdy=0, bdx=0, front=0, back=0, mouth=0, glob=0,
-             blink=False, glow=1, spin=0.0, blaze=False, phase=0, flash=False, cool=0, sink=0,
+             blink=False, glow=1, phase=0, flash=False, cool=0, sink=0,
              head_in=0, pool=None, pool_ry=None, pool_glow=1, pool_cool=0, fire=0, slag=None, fx=())
     p.update(kw)
     return p
 
 
+def polygon(canvas, points, color):
+    mask = Image.new("1", (canvas.size, canvas.size))
+    ImageDraw.Draw(mask).polygon([(round(x), round(y)) for x, y in points], fill=1)
+    for y in range(canvas.size):
+        for x in range(canvas.size):
+            if mask.getpixel((x, y)):
+                canvas.set(x, y, color)
+
+
+def line(canvas, points, color):
+    mask = Image.new("1", (canvas.size, canvas.size))
+    ImageDraw.Draw(mask).line([(round(x), round(y)) for x, y in points], fill=1)
+    for y in range(canvas.size):
+        for x in range(canvas.size):
+            if mask.getpixel((x, y)):
+                canvas.set(x, y, color)
+
+
 def draw_shell(p):
-    """The round shell: dark, saturated red-hot stone shaded for volume (darker low and right),
-    with one thin bright spiral line glowing on it from its pale eye out to the rim (Archimedean,
-    so its turns keep one spacing and read as a spiral, not rings)."""
+    """Fixed stone plates: only the light inside their fissures breathes."""
+    shell = Canvas(CELL)
     cx, cy, r = SHELL
     cx += p["sdx"]
     cy += p["sdy"]
-    ry = r - p["squash"]
-    ecx, ecy = cx + SPIRAL_EYE[0], cy + SPIRAL_EYE[1] * ry / r
-    shell = Canvas(CELL)
-    glow = p["glow"]
-    line_lit = ["S4", "Y", "Y", "Y2"][glow]
-    line_dark = ["S3", "S4", "Y", "Y"][glow]
-    core = ["Y", "Y2", "Y2", "Y2"][glow]
-    for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
-        for x in range(int(cx - r) - 1, int(cx + r) + 2):
-            if not in_ellipse(x, y, cx, cy, r, ry):
-                continue
-            nx, ny = (x + 0.5 - cx) / r, (y + 0.5 - cy) / ry
-            l = lit(nx, ny)
-            q = math.hypot(nx, ny)
-            base = "S3" if l > 0.75 else "S2" if l > -0.2 else "S1"
-            if q > 0.84 and l < 0.2:
-                base = "S1" if l > -0.4 else "S0"
-            dx, dy = x + 0.5 - ecx, (y + 0.5 - ecy) * r / ry
-            d = math.hypot(dx, dy)
-            ang = (math.atan2(dy, dx) + p["spin"]) % math.tau
-            ph = (d - SPIRAL_PITCH * ang / math.tau) % SPIRAL_PITCH
-            col = base
-            if d < 1.0:
-                col = core
-            elif d < 2.0:
-                # the spiral's eye glows a little around it
-                col = line_lit if l > -0.3 else line_dark
-            elif ph < 0.85 + 0.6 * d / r and q < 0.92:
-                # the line widens as it winds out, so it reads as a spiral and not as rings
-                col = line_lit if l > -0.15 else line_dark
-            shell.set(x, y, col)
-    shell.lone_pixels_off()
-    if p["blaze"]:
-        shell.remap(BLAZE)
+    sy = (r - p["squash"]) / r
+    def pts(coords):
+        return [(cx+x, cy+y*sy) for x,y in coords]
+    polygon(shell, pts([(-12,-5),(-9,-10),(-4,-13),(3,-13),(9,-9),(13,-3),
+                        (13,4),(9,10),(2,12),(-6,11),(-12,6),(-14,0)]), "B1")
+    polygon(shell, pts([(-12,-5),(-9,-10),(-4,-13),(3,-13),(7,-10),(1,-8),
+                        (-6,-7),(-10,-1),(-13,1)]), "B3")
+    polygon(shell, pts([(-8,-5),(-3,-8),(5,-9),(10,-5),(8,1),(2,4),(-5,3),(-9,0)]), "B2")
+    polygon(shell, pts([(8,-5),(12,-2),(12,4),(8,9),(2,11),(-4,10),(2,6),(7,2)]), "B0")
+    line(shell, pts([(-10,-7),(-7,-10),(-3,-11),(1,-11)]), "B4")
+    line(shell, pts([(-12,1),(-11,5),(-8,8)]), "B2")
+    # A broad dark groove separates the spiral from the angular stone plates.
+    spiral = []
+    for i in range(181):
+        t = i / 180 * math.tau * 1.65
+        radius = 0.5 + i / 180 * 10.2
+        spiral.append((round(cx - 1 + math.cos(t)*radius),
+                       round(cy + math.sin(t)*radius*sy)))
+    groove = Canvas(CELL)
+    line(groove, spiral, "B0")
+    groove.outline("B0")
+    shell.over(groove)
+    hot = ["S2", "S3", "S4", "Y"][p["glow"]]
+    line(shell, spiral, hot)
+    # Branching fissures meet the coil without moving the rock itself.
+    for branch in [[(-7,-6),(-7,-9),(-5,-11)],[(8,1),(10,2),(11,5)],
+                   [(-5,7),(-6,9),(-5,10)]]:
+        line(shell, pts(branch), "S3" if p["glow"] > 1 else "S2")
+    if p["glow"] >= 2:
+        for x,y in spiral[35:65:4] + spiral[122:143:5]:
+            shell.set(x,y,"Y" if p["glow"]==3 else "S4")
     return shell
 
 
 def draw_head(p):
-    """A solid block of slag, wider at the jaw: one horn sweeping back over the shell with a gold
-    tip, a dark brow over a sunken yellow eye, and heavy gold plates on the jaw."""
-    hx, hy, hw, hh = HEAD
-    hx += p["hdx"]
-    hy += p["hdy"] + p["head_in"]
-    hxi, hyi = int(hx), int(hy)
+    """Rounded lava neck, with two staggered stalks that bend after the foot."""
     head = Canvas(CELL)
-    top = int(hy - hh)
-    bottom = int(hy + hh)
-    # The horn first, so the head's outline closes over its root: it rises from the back of the
-    # crown and curls back over the shell.
-    for (dx, dy, c) in ((-1, 0, "B3"), (-2, 0, "B2"), (-2, -1, "B4"), (-3, -1, "B3"), (-4, -1, "B2"),
-                        (-3, 0, "B1"), (-4, -2, "B4"), (-5, -2, "B3"), (-5, -1, "B1"), (-6, -2, "G1"),
-                        (-6, -1, "G0"), (-7, -2, "G2"), (-7, -1, "G1"), (-8, -1, "G2"), (-8, 0, "G1"),
-                        (-9, 0, "G0"), (-9, 1, "G1")):
-        head.set(hxi + dx, top + dy, c)
-    for y in range(top, bottom + 1):
-        t = (y - top) / max(1, bottom - top)
-        left = hx - hw + 0.5 - 1.5 * t       # its back swells toward the jaw
-        right = hx + hw - 0.5 + 0.8 * t
-        for x in range(int(left) - 1, int(right) + 2):
-            if not (left <= x + 0.5 <= right + 1):
-                continue
-            # round off the crown's corners
-            if y == top and (x + 0.5 < left + 1.5 or x + 0.5 > right - 0.5):
-                continue
-            nx = (x + 0.5 - (left + right + 1) / 2) / ((right + 1 - left) / 2)
-            ny = (y + 0.5 - hy) / hh
-            l = lit(nx, ny)
-            head.set(x, y, "B4" if l > 0.65 else "B3" if l > 0.15 else "B2" if l > -0.45 else "B1")
-    # cracks of the slag on the crown and the cheek
-    for (dx, dy) in ((-2, -5), (-1, -4), (-1, -3), (-4, 1), (-4, 2)):
-        head.set(hxi + dx, hyi + dy, "B1")
-    # A heavy brow, then the eye sunk under it.
-    ex, ey = hxi, hyi - 2
-    for x in range(ex - 2, ex + 4):
-        head.set(x, ey - 1, "B0")
-    head.set(ex - 1, ey, "B1")
-    head.set(ex + 2, ey, "B1")
-    if p["blink"]:
-        head.set(ex, ey + 1, "B0")
-        head.set(ex + 1, ey + 1, "B0")
-    else:
-        head.set(ex, ey, "Y2")
-        head.set(ex + 1, ey, "Y")
-        head.set(ex, ey + 1, "G1")
-        head.set(ex + 1, ey + 1, "G0")
-    # The snout's nostril.
-    head.set(hxi + 5, hyi, "B1")
-    # Mouth (a dark slit that opens) over a heavy gold jaw jutting past the face, bolted on by a
-    # gold plate at its hinge.
-    m = hyi + 3
-    gap = p["mouth"]
-    for dy in range(gap + 1):
-        for x in range(hxi - 1, hxi + 8):
-            if (x, m + dy) in head.px or dy > 0:
-                head.set(x, m + dy, "O")
-    if gap:
-        head.set(hxi + 1, m + 1, "S2")
-        head.set(hxi + 2, m + gap, "S3")
-    jy = m + gap + 1
-    for x in range(hxi - 2, hxi + 9):
-        head.set(x, jy, "G2" if x % 2 == 0 else "G1")
-        if x < hxi + 8:
-            head.set(x, jy + 1, "G1")
-        if hxi - 2 < x < hxi + 7:
-            head.set(x, jy + 2, "G0")
-    for (dx, dy, c) in ((-4, -1, "G2"), (-3, -1, "G1"), (-4, 0, "G1"), (-3, 0, "G1"), (-4, 1, "G0"),
-                        (-3, 1, "G0")):
-        head.set(hxi + dx, m + dy, c)
-    if p["glob"] == 1:
-        head.set(hxi + 6, m + 1, "S4")
-        head.set(hxi + 7, m + 1, "Y")
-    elif p["glob"] == 2:
-        for dx, dy, c in ((5, 1, "Y"), (6, 1, "Y2"), (7, 1, "Y"), (8, 1, "S4"), (6, 0, "S4"), (6, 2, "S4")):
-            head.set(hxi + dx, m + dy, c)
+    hx = round(HEAD[0] + p["hdx"] - p["head_in"])
+    hy = round(HEAD[1] + p["hdy"] + p["head_in"])
+    polygon(head, [(hx-5,hy-2),(hx-3,hy-5),(hx+2,hy-5),(hx+5,hy-2),
+                   (hx+6,hy+2),(hx+3,hy+5),(hx-7,hy+7)], "S2")
+    polygon(head, [(hx-4,hy-2),(hx-2,hy-4),(hx+2,hy-4),(hx+4,hy-1),
+                   (hx+3,hy+1),(hx-1,hy+2),(hx-4,hy+5)], "S3")
+    line(head, [(hx-2,hy-3),(hx+1,hy-3),(hx+3,hy-1)], "S4")
+    # Far stalk is shorter and darker. Near stalk lags a half beat behind it.
+    for k, (dx, height) in enumerate([(-3,10),(3,12)]):
+        bob = [0,-1,-1,0,1,1,0,0][(p["phase"]+k*2)%8]
+        ex = hx+dx + (1 if bob<0 else 0)
+        ey = hy-height+bob + p["head_in"]
+        line(head, [(hx+dx-1,hy-3),(ex-1,ey+3),(ex,ey+1)], "S2")
+        line(head, [(hx+dx,hy-3),(ex,ey+3),(ex+1,ey+1)], "S4" if k else "S3")
+        polygon(head, [(ex-1,ey-1),(ex+1,ey-2),(ex+3,ey),(ex+2,ey+2),(ex,ey+2)], "S1")
+        if not p["blink"]:
+            head.set(ex+1,ey,"Y2")
+            head.set(ex+2,ey,"O")
+            head.set(ex+1,ey+1,"Y")
+        else:
+            line(head, [(ex,ey+1),(ex+2,ey+1)], "O")
+    my = hy+2
+    line(head, [(hx+2,my),(hx+5,my-1)], "S0")
+    if p["mouth"]:
+        polygon(head, [(hx+2,my-1),(hx+6,my-1),(hx+6,my+p["mouth"]),
+                       (hx+3,my+p["mouth"])], "O")
+        head.set(hx+4,my+p["mouth"],"S4")
+    if p["glob"]:
+        head.set(hx+6,my,"Y")
+        head.set(hx+7,my,"S4")
     return head
 
 
 def draw_body(p):
-    """The squat body under the head, spreading forward into the pool."""
-    bx, by, brx, bry = BODY
-    bx += p["bdx"]
+    """Muscular, rippling foot; a pointed tail anchors the silhouette."""
     body = Canvas(CELL)
-    for y in range(int(by - bry) - 1, GROUND + 1):
-        for x in range(int(bx - brx) - 1, int(bx + brx) + 3 + p["front"]):
-            # a rounded hump that widens at the foot
-            w = brx + max(0.0, (y + 0.5 - by)) * 0.4 + (p["front"] if y > by else 0)
-            nx, ny = (x + 0.5 - bx) / w, (y + 0.5 - by) / bry
-            if nx * nx + min(ny, 0.0) ** 2 > 1.0:
-                continue
-            l = lit(nx, ny)
-            body.set(x, y, "R3" if l > 0.45 else "R2" if l > -0.25 else "R1")
-    # lava showing through cracks of its skin
-    for (dx, dy, c) in ((-3, 2, "S3"), (-2, 3, "S4"), (2, 1, "S2"), (3, 2, "S3")):
-        body.set(int(bx) + dx, int(by) + dy, c)
+    reach = p["front"]
+    bx = p["bdx"]
+    polygon(body, [(10+p["back"],49),(16,46),(24,45),(32+bx,43),
+                   (38+bx,39),(44+bx,41),(48+reach,46),(51+reach,50),
+                   (48+reach,52),(19,52)], "S2")
+    polygon(body, [(12,49),(21,47),(31+bx,46),(39+bx,43),(44+bx,44),
+                   (48+reach,48),(46+reach,50),(28,50),(19,51)], "S3")
+    line(body, [(15,49),(23,48),(29+bx,48)], "S4")
+    line(body, [(39+bx,45),(42+bx,46),(44+reach,48)], "S4")
+    for x in range(21,48,6):
+        y = 50 + ((x//6+p["phase"])%3==0)
+        line(body, [(x,y),(x+2,y-1)], "S1")
     return body
 
 
@@ -317,14 +234,14 @@ def lava_pool(cx, cy, rx, ry, glow, phase, cool=0, tail=False):
     for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
         for x in range(int(cx - rx) - 1, int(cx + rx) + 2):
             dx, dy = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
-            wob = 0.07 * math.sin(x * 0.9 + phase * 1.7)
+            wob = 0.12 * math.sin(x * 0.65 + phase * math.tau / 8)
             if dx * dx + dy * dy > 1.0 + wob:
                 continue
             # the swell of its surface: a few dips along the top so it never reads as a plank
             if dy < -0.45 and (x * 7 + phase) % 9 in (0, 4) and abs(dx) < 0.85:
                 continue
             if dy < -0.45:
-                col = "Y" if glow >= 1 else "S4"
+                col = "S4" if glow >= 1 else "S3"
             elif dy < 0.1:
                 col = "S4" if glow >= 1 else "S3"
             elif dy < 0.6:
@@ -492,12 +409,12 @@ def add_fx(canvas, fx):
 # --- animations -----------------------------------------------------------------------------
 
 def idle():
-    # It breathes: the spiral's light swells and turns a little, the head nods.
+    # Heat pulses inside a stationary spiral; the soft neck breathes and the stalks lag.
     glow = [1, 2, 3, 3, 2, 1]
-    hdy = [0, 0, 1, 1, 0, 0]
+    hdy = [0, -1, -1, 0, 1, 1]
     sq = [0, 0, 0, 1, 1, 0]
-    return [pose(glow=glow[i], hdy=hdy[i], squash=sq[i], sdy=sq[i] / 2.0, spin=-i * 0.18,
-                 blink=i == 4, phase=i) for i in range(6)]
+    return [pose(glow=glow[i], hdy=hdy[i], squash=sq[i], sdy=sq[i] / 2.0,
+                 blink=i == 4, phase=[0,1,2,4,5,6][i]) for i in range(6)]
 
 
 def walk():
@@ -510,7 +427,7 @@ def walk():
         e, t = reach[i], catch[i]
         frames.append(pose(front=e, back=-t, bdx=e // 2, hdx=e - (1 if t == 2 else 0),
                            hdy=1 if t == 2 else 0, sdx=t - 1 if t else 0, sdy=-1 if t == 1 else 0,
-                           glow=2 if i % 4 < 2 else 1, spin=-i * 0.25, phase=i))
+                           glow=2 if i % 4 < 2 else 1, phase=i))
     return frames
 
 
@@ -521,9 +438,9 @@ def attack():
     return [
         pose(hdx=-1, glow=2),
         pose(hdx=-2, hdy=-1, sdx=-1, glow=2, mouth=1),
-        pose(hdx=-3, hdy=-2, sdx=-1, glow=3, mouth=1, glob=1, spin=-0.4),
-        pose(hdx=-3, hdy=-2, sdx=-2, glow=3, mouth=2, glob=2, spin=-0.8, phase=1),
-        pose(hdx=-4, hdy=-2, sdx=-2, glow=3, mouth=2, glob=2, blaze=True, spin=-1.2, phase=2),
+        pose(hdx=-3, hdy=-2, sdx=-1, glow=3, mouth=1, glob=1),
+        pose(hdx=-3, hdy=-2, sdx=-2, glow=3, mouth=2, glob=2, phase=1),
+        pose(hdx=-4, hdy=-2, sdx=-2, glow=3, mouth=2, glob=2, phase=2),
         pose(hdx=2, front=1, bdx=1, glow=3, mouth=2, phase=3,
              fx=[(mx + 2, my - 3, 4, "Y"), (mx, my - 1, 1, "S4"), (mx - 1, my + 1, 1, "Y")]),
         pose(hdx=1, front=1, glow=2, mouth=1, phase=4,
@@ -537,13 +454,13 @@ def special():
     # from it at ground level, then dies down as the shell rises again.
     return [
         pose(glow=3, head_in=1, pool=21, pool_ry=3.0),
-        pose(glow=3, blaze=True, head_in=2, sink=4, pool=24, pool_ry=3.6, pool_glow=2, phase=1, fire=3),
-        pose(glow=3, blaze=True, head_in=3, sink=11, pool=26, pool_ry=4.0, pool_glow=2, phase=2, fire=7),
-        pose(glow=3, blaze=True, head_in=3, sink=20, pool=27, pool_ry=4.2, pool_glow=2, phase=3, fire=12,
+        pose(glow=3, head_in=2, sink=4, pool=24, pool_ry=3.6, pool_glow=2, phase=1, fire=3),
+        pose(glow=3, head_in=3, sink=11, pool=26, pool_ry=4.0, pool_glow=2, phase=2, fire=7),
+        pose(glow=3, head_in=3, sink=20, pool=27, pool_ry=4.2, pool_glow=2, phase=3, fire=12,
              fx=[(18, 30, 1, "Y"), (44, 28, 1, "S4")]),
-        pose(glow=3, blaze=True, head_in=3, sink=27, pool=27, pool_ry=4.2, pool_glow=2, phase=4, fire=20,
+        pose(glow=3, head_in=3, sink=27, pool=27, pool_ry=4.2, pool_glow=2, phase=4, fire=20,
              fx=[(14, 26, 1, "S4"), (36, 22, 1, "Y"), (50, 28, 1, "Y")]),
-        pose(glow=3, blaze=True, head_in=3, sink=27, pool=27, pool_ry=4.0, pool_glow=2, phase=5, fire=14,
+        pose(glow=3, head_in=3, sink=27, pool=27, pool_ry=4.0, pool_glow=2, phase=5, fire=14,
              fx=[(20, 20, 1, "S3"), (40, 18, 1, "S4"), (52, 24, 1, "S3")]),
         pose(glow=3, head_in=2, sink=12, pool=25, pool_ry=3.6, pool_glow=2, phase=6, fire=5,
              fx=[(26, 16, 1, "S3"), (46, 18, 1, "S3")]),
@@ -554,7 +471,7 @@ def special():
 def hurt():
     return [
         pose(flash=True, hdx=-1),
-        pose(hdx=-2, hdy=1, sdx=-1, squash=1, sdy=0.5, mouth=1, blink=True, glow=3, blaze=True),
+        pose(hdx=-2, hdy=1, sdx=-1, squash=1, sdy=0.5, mouth=1, blink=True, glow=3),
         pose(hdx=-1, glow=2),
         pose(glow=1),
     ]
@@ -601,7 +518,11 @@ def puddle(scale, glow, bubbles=(), cool=0, splash=False):
             q = math.hypot(dx, dy) / lobe
             if q > 1.0:
                 continue
-            col = "S1" if q > 0.82 else "S2" if q > 0.58 else "S3" if q > 0.3 else "S4"
+            col = "S1" if q > 0.83 else "S3"
+            if q < 0.78 and (math.sin(x*0.67+y*0.42) + math.cos(y*0.91-x*0.31)) > 0.35:
+                col = "B1" if y < cy else "B0"
+            elif q < 0.65 and (x+y*2)%7 in (0,1):
+                col = "S4"
             c.set(x, y, col)
     # hot spots drift around the core
     for (x, y) in glow:

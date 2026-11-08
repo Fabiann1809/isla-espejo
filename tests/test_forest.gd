@@ -124,10 +124,22 @@ func _test_built_level() -> void:
 	var npcs := level.get_tree().get_nodes_in_group("npcs")
 	var chests := level.get_tree().get_nodes_in_group("chests")
 	var elders := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"elder")
-	_check(npcs.size() == 1 and elders.size() == 1 and elders[0].get_parent().data.type == RoomData.RoomType.EVENT,
-			"the Anciano waits in the event room and he is the only one in the forest")
-	_check(npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"merchant").is_empty(),
-			"the Mercader is not in the forest (he belongs to the temple)")
+	var merchants := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"merchant")
+	_check(npcs.size() == 2 and elders.size() == 1 and elders[0].get_parent().data.type == RoomData.RoomType.EVENT,
+			"the Anciano waits in the event room")
+	var merchant_rooms: Array = merchants.map(func(n: Node) -> int: return n.get_parent().data.type)
+	merchant_rooms.sort()
+	_check(merchants.size() == 1 and merchant_rooms == [RoomData.RoomType.SPECIAL],
+			"the Mercader waits only in the special room")
+	if merchants.size() == 1:
+		var dialogue: Node = root.get_node("Dialogue")
+		var talked := []
+		var listener := func(id: StringName) -> void: talked.append(id)
+		dialogue.started.connect(listener)
+		merchants[0].get_node("Talk").interact(level.player)
+		_check(dialogue.active and talked == [&"merchant"], "talking to the Mercader starts his dialogue")
+		dialogue.started.disconnect(listener)
+		dialogue._finish()
 	var chests_ok := chests.size() == 2
 	for chest in chests:
 		chests_ok = chests_ok and chest.get_parent().data.type == RoomData.RoomType.REWARD

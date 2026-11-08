@@ -140,6 +140,7 @@ func _process_vase(delta: float) -> void:
 
 
 func _on_hurtbox_hit(_damage: int, _from_position: Vector2) -> void:
+	_interrupt_attack()
 	if is_whole():
 		_break()
 

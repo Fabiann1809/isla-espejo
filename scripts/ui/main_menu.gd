@@ -52,6 +52,7 @@ var _bat_halo: Sprite2D
 var _shot: Sprite2D
 var _glow: Sprite2D
 var _time := 0.0
+var _subtitle: Label
 
 
 func _ready() -> void:
@@ -190,6 +191,8 @@ func _add_title() -> void:
 	_picture("divider", DIVIDER_POS).name = "Divider"
 	var subtitle := UiKit.menu_label(UiText.t("menu_subtitle"), 16, Color(0.82, 0.78, 0.96))
 	add_child(subtitle)
+	# Kept to report a damaged save in its place (see _on_continue).
+	_subtitle = subtitle
 	_place(subtitle, SUBTITLE_RECT)
 
 
@@ -263,8 +266,16 @@ func _open(panel: Control) -> void:
 
 func _on_panel_closed() -> void:
 	_menu.show()
+	_cancel_start_confirm()
 	_footer.show()
 	_focus_first()
+
+
+## Back from a panel, the "borrar el progreso" question is forgotten: one press must never erase.
+func _cancel_start_confirm() -> void:
+	if _confirming_start:
+		_confirming_start = false
+		start_button.text = UiText.t("menu_start")
 
 
 ## With a save, the first press only asks for confirmation: starting over deletes the progress.
@@ -283,3 +294,5 @@ func _on_start() -> void:
 func _on_continue() -> void:
 	if SaveGame.load_save():
 		get_tree().change_scene_to_file(GAME_SCENE)
+	else:
+		_subtitle.text = UiText.t("save_corrupt")

@@ -1,6 +1,7 @@
 extends SceneTree
 ## The chapters are chained: the forest's exit leads to the ruins, whose map is built in the same level with
-## its own theme and tileset, and the player keeps what the boss gave.
+## its own theme and tileset, the ruins lead to the temple (the last chapter), and the player keeps what the
+## boss gave.
 ## `Level` and other autoload-using types must not be referenced here (autoload compile order).
 ## Run: godot --headless --path . --script res://tests/test_chapters.gd
 
@@ -15,8 +16,10 @@ func _initialize() -> void:
 	var events = root.get_node("Events")
 	var forest: Resource = load("res://data/scenarios/forest.tres")
 	var ruins: Resource = load("res://data/scenarios/ruins.tres")
+	var temple: Resource = load("res://data/scenarios/temple.tres")
 	_check(forest.next_scenario == ruins, "the forest leads to the ruins")
-	_check(ruins.next_scenario == null, "and the ruins are the last chapter so far")
+	_check(temple != null and ruins.next_scenario == temple, "the ruins lead to the temple")
+	_check(temple != null and temple.next_scenario == null, "and the temple is the last chapter")
 
 	var level: Node2D = load("res://scenes/levels/forest_level.tscn").instantiate()
 	level.seed_value = 11
@@ -38,6 +41,27 @@ func _initialize() -> void:
 			shapes += 1
 	_check(shapes == level.rooms.size() and shapes > 3, "every room of the new map is a ruin cave (%d)" % shapes)
 	_check(level.get_node_or_null("Map/Backdrop/Rock") != null, "with the ruins' rock around it")
+	# The ruins end with their boss: the portal stays sealed until the serpent dies, then leads on.
+	var serpent: Node2D = null
+	for enemy in get_nodes_in_group("enemies"):
+		if enemy.get("data") != null and enemy.data.id == &"stone_serpent":
+			serpent = enemy
+	_check(serpent != null and level.scenario.boss_scene != null, "the ruins' boss room holds the stone serpent")
+	var portals := get_nodes_in_group("exit_portals")
+	_check(portals.size() == 1 and level.scenario.objective_flag == &"ruins_boss_defeated"
+			and portals[0].required_flag == &"ruins_boss_defeated", "the ruins' portal waits for ruins_boss_defeated")
+	_check(portals.size() == 1 and not portals[0].is_open(), "the ruins' portal is sealed while the serpent lives")
+	if serpent != null and portals.size() == 1:
+		var done := {"scenarios": []}
+		events.scenario_completed.connect(func(id: StringName) -> void: done.scenarios.append(id))
+		portals[0].get_node("Use").interact(null)
+		_check(done.scenarios.is_empty(), "using the sealed portal does not leave the ruins")
+		serpent.get_node("Hurtbox").receive_hit(999, serpent.global_position)
+		await _frames(3)
+		_check(portals[0].is_open(), "the portal opens when the serpent dies")
+		portals[0].get_node("Use").interact(null)
+		await create_timer(2.5).timeout
+		_check(done.scenarios == [&"ruins"] and level.scenario == temple, "and it leads to the temple")
 	level.free()
 	quit(0 if _ok else 1)
 

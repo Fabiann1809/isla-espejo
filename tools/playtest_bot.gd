@@ -3,8 +3,10 @@ extends SceneTree
 ## time and damage per room, who hurt Nico, shots and hits, and pictures every few seconds. The bot
 ## walks from room to room by jumping (no pathfinding), then fights with the real input actions:
 ## it keeps its distance, turns to the nearest enemy, shoots and dodges when something gets close.
-##   godot --path . --script res://tools/playtest_bot.gd -- <seed> <output folder> [picture every s] [rooms] [boss]
-## With "boss" as the fifth argument the bot only fights the boss, with full health.
+##   godot --path . --script res://tools/playtest_bot.gd -- <seed> <output folder> [picture every s] [rooms] [boss] [level scene]
+## With "boss" as the fifth argument the bot only fights the boss, with full health ("all" plays
+## every room). The sixth argument names the level scene to play (default the forest; e.g.
+## res://scenes/levels/temple_level.tscn for the temple).
 
 const ROOM_TIME_LIMIT := 75.0
 const KEEP_DISTANCE := 90.0
@@ -31,6 +33,8 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	var map_seed := int(args[0]) if args.size() > 0 else 4242
 	_out = args[1] if args.size() > 1 else "user://"
+	# The pictures go there; make the folder if it does not exist yet.
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_out))
 	_shot_every = float(args[2]) if args.size() > 2 else 4.0
 	_max_rooms = int(args[3]) if args.size() > 3 else 999
 	await process_frame
@@ -46,7 +50,8 @@ func _initialize() -> void:
 	events.player_hit_enemy.connect(func(_e: Node, _a: int) -> void: _hits += 1)
 	events.player_died.connect(func() -> void: _dead = true)
 
-	_level = load("res://scenes/levels/forest_level.tscn").instantiate()
+	var scene_path: String = args[5] if args.size() > 5 else "res://scenes/levels/forest_level.tscn"
+	_level = load(scene_path).instantiate()
 	_level.seed_value = map_seed
 	root.add_child(_level)
 	await _wait(2.0)

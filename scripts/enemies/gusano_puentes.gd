@@ -41,6 +41,8 @@ func _ready() -> void:
 		push_error("BridgeWorm '%s' needs a BridgeWormData." % name)
 		_worm = BridgeWormData.new()
 	_hurtbox.invulnerability_check = func() -> bool: return not is_out()
+	interruptible = false
+	interrupt_opt_out_reason = "its warning (RISING) happens underground, where it has no hurtbox; " 			+ "once surfaced a hit goes through Enemy._on_hurtbox_hit and interrupts as usual"
 	_telegraph.hide()
 	_ripple = Ripple.new()
 	_ripple.name = "Ripple"

@@ -1,0 +1,53 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/skills/shadow_puff.png" id="1_x552w"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lf0tx"]
+atlas = ExtResource("1_x552w")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jrq56"]
+atlas = ExtResource("1_x552w")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4pra"]
+atlas = ExtResource("1_x552w")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jhbr2"]
+atlas = ExtResource("1_x552w")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yjiop"]
+atlas = ExtResource("1_x552w")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_115bv"]
+atlas = ExtResource("1_x552w")
+region = Rect2(160, 0, 32, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lf0tx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jrq56")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4pra")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jhbr2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yjiop")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_115bv")
+}],
+"loop": 0,
+"name": &"start",
+"speed": 14.0
+}]

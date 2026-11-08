@@ -11,6 +11,12 @@ extends Resource
 
 @export_group("Layout")
 @export var grid_size := Vector2i(5, 5)
+## Size of a grid cell in 16 px tiles: the room of the cell (RoomData.size_tiles, never bigger) is centred
+## in it. Both numbers are even.
+@export var cell_tiles := Vector2i(30, 18)
+## Tiles between the cells of two neighbours. A corridor is as long as the gap between the two doors
+## it joins: this plus what the two rooms leave free of their cells.
+@export var corridor_tiles := 3
 ## Length limits of the start-to-boss path, counting both ends.
 @export var min_main_path := 6
 @export var max_main_path := 11
@@ -51,6 +57,9 @@ extends Resource
 ## How often each enemy of the pool is picked, by enemy id (the scene's file name); a missing id
 ## counts as 1. The director's weights multiply these.
 @export var enemy_weights: Dictionary = {}
+## How many enemies of the pool one map fields (`EnemyRoster`, drawn by the seed and these weights).
+## 0 fields the whole pool.
+@export var roster_size := 0
 @export var boss_scene: PackedScene
 ## Optional mini boss that waits alone, in the middle of the room, in the last combat room before the
 ## boss room (it replaces that room's normal enemies).
@@ -58,6 +67,8 @@ extends Resource
 ## The doorway to the next chapter, placed in the boss room (marker ExitSpawn).
 @export var exit_scene: PackedScene
 @export var npc_scene: PackedScene
+## Optional character waiting in the start room (marker NpcSpawn), e.g. the temple's Mercader.
+@export var start_npc_scene: PackedScene
 ## Optional character waiting in the special room (marker SpecialSpawn), e.g. the Mercader.
 @export var special_npc_scene: PackedScene
 ## Chests that fill the reward rooms (one is picked for each).

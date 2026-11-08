@@ -55,7 +55,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("pause"):
+	# The phone's back button (ui_cancel) also resumes from the pause list itself; inside the
+	# options the options menu handles ui_cancel.
+	var back := is_open() and not options.visible and event.is_action_pressed("ui_cancel")
+	if not event.is_action_pressed("pause") and not back:
 		return
 	if is_open():
 		if options.is_controller_open():
@@ -64,9 +67,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			options.close()
 		else:
 			resume()
-	elif not Dialogue.active:
+	elif not Dialogue.active and not _shop_open():
 		pause()
 	get_viewport().set_input_as_handled()
+
+
+## The Mercader's shop pauses the game too and closes with the same key: it handles it first.
+func _shop_open() -> bool:
+	for menu in get_tree().get_nodes_in_group("shop_menu"):
+		if menu.is_open():
+			return true
+	return false
 
 
 func is_open() -> bool:

@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Resource" path="res://data/rooms/temple_boss.tres" id="1_xrnwb"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ancient_guardian.tscn" id="2_a55qm"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="3_28wuw"]
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="4_36bw2"]
+[ext_resource type="Resource" path="res://data/resources/heart.tres" id="5_p8jhx"]
+[ext_resource type="Resource" path="res://data/resources/arrows.tres" id="6_t54a4"]
+[ext_resource type="Resource" path="res://data/resources/pierce.tres" id="7_5lnbb"]
+[ext_resource type="Resource" path="res://data/resources/frost.tres" id="8_iksst"]
+[ext_resource type="Resource" path="res://data/resources/haste.tres" id="9_y4hgs"]
+[ext_resource type="Resource" path="res://data/resources/shield.tres" id="10_ow6r7"]
+[ext_resource type="Resource" path="res://data/resources/gold.tres" id="11_yfpg5"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/centinela_obsidiana.tscn" id="12_iyweh"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/carcelero_cadenas.tscn" id="13_ngq0o"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/acolito_brasero.tscn" id="14_nhjid"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/verdugo_piedra.tscn" id="15_ujpxo"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/duelista_maldito.tscn" id="16_pf3ev"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/salamandra_cristal.tscn" id="17_1rwap"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/caracol_escoria.tscn" id="18_kbt0s"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/carnero_basalto.tscn" id="19_kqmfv"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/manta_hollin.tscn" id="20_l7lv8"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/eco_espejo.tscn" id="21_2keys"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/monje_sin_rostro.tscn" id="22_gksq5"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/mascara_parasita.tscn" id="23_c4n40"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/oraculo_ceniza.tscn" id="24_me8kp"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/custodio_sello.tscn" id="25_c8bek"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ojo_sol.tscn" id="26_uy14h"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/campanero_bronce.tscn" id="27_ucipe"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/rueda_devoradora.tscn" id="28_gwo0s"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/arana_talladora.tscn" id="29_st08o"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/forjador_condenado.tscn" id="30_4flcf"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/baldosa_hambrienta.tscn" id="31_46xa4"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/manos_abismo.tscn" id="32_fy2g4"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/vasija_poseida.tscn" id="33_3fs31"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/relojero_trampas.tscn" id="34_vhmm6"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/nucleo_cria.tscn" id="35_50tb1"]
+[ext_resource type="PackedScene" path="res://scenes/world/exit_portal.tscn" id="36_u4jgo"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="37_kpqiw"]
+[ext_resource type="Resource" path="res://data/rooms/temple_pillar_court.tres" id="38_fadl1"]
+[ext_resource type="Resource" path="res://data/rooms/temple_isles.tres" id="39_os3xl"]
+[ext_resource type="Resource" path="res://data/rooms/temple_terraces.tres" id="40_1gtm0"]
+[ext_resource type="Resource" path="res://data/rooms/temple_trap_walk.tres" id="41_4wksi"]
+[ext_resource type="Resource" path="res://data/rooms/temple_lava_falls.tres" id="42_5s01c"]
+[ext_resource type="Resource" path="res://data/rooms/temple_surge_basin.tres" id="43_ks842"]
+[ext_resource type="Resource" path="res://data/rooms/temple_surge_tiers.tres" id="44_3h4ei"]
+[ext_resource type="Resource" path="res://data/rooms/temple_surge_bridges.tres" id="45_m20ps"]
+[ext_resource type="Resource" path="res://data/rooms/temple_sanctum.tres" id="46_3vb7c"]
+[ext_resource type="Resource" path="res://data/rooms/temple_event.tres" id="47_hf2lp"]
+[ext_resource type="Resource" path="res://data/rooms/temple_special.tres" id="48_wenho"]
+[ext_resource type="Script" path="res://scripts/world/scenario_data.gd" id="49_p5afu"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/merchant.tscn" id="50_h4ryt"]
+[ext_resource type="Resource" path="res://data/rooms/temple_start.tres" id="51_kx72m"]
+[ext_resource type="Resource" path="res://data/themes/temple.tres" id="52_n6rn7"]
+
+[resource]
+script = ExtResource("49_p5afu")
+id = &"temple"
+display_name = "Templo del Eclipse"
+chapter_title = "El templo conoce tu destino."
+cell_tiles = Vector2i(48, 32)
+max_main_path = 9
+side_rooms = 4
+reward_rooms = 2
+completion_text = "Capítulo 3 completado. La brújula está completa: Nico vuelve a casa."
+objective = "Encuentra al Guardián antiguo"
+objective_done = "Cruza el portal"
+objective_flag = &"temple_boss_defeated"
+theme = ExtResource("52_n6rn7")
+start_room = ExtResource("51_kx72m")
+boss_room = ExtResource("1_xrnwb")
+rooms = Array[ExtResource("37_kpqiw")]([ExtResource("38_fadl1"), ExtResource("39_os3xl"), ExtResource("40_1gtm0"), ExtResource("41_4wksi"), ExtResource("42_5s01c"), ExtResource("43_ks842"), ExtResource("44_3h4ei"), ExtResource("45_m20ps"), ExtResource("46_3vb7c"), ExtResource("47_hf2lp"), ExtResource("48_wenho")])
+enemy_pool = Array[PackedScene]([ExtResource("12_iyweh"), ExtResource("13_ngq0o"), ExtResource("14_nhjid"), ExtResource("15_ujpxo"), ExtResource("16_pf3ev"), ExtResource("17_1rwap"), ExtResource("18_kbt0s"), ExtResource("19_kqmfv"), ExtResource("20_l7lv8"), ExtResource("21_2keys"), ExtResource("22_gksq5"), ExtResource("23_c4n40"), ExtResource("24_me8kp"), ExtResource("25_c8bek"), ExtResource("26_uy14h"), ExtResource("27_ucipe"), ExtResource("28_gwo0s"), ExtResource("29_st08o"), ExtResource("30_4flcf"), ExtResource("31_46xa4"), ExtResource("32_fy2g4"), ExtResource("33_3fs31"), ExtResource("34_vhmm6"), ExtResource("35_50tb1")])
+roster_size = 10
+boss_scene = ExtResource("2_a55qm")
+exit_scene = ExtResource("36_u4jgo")
+special_npc_scene = ExtResource("50_h4ryt")
+chest_scenes = Array[PackedScene]([ExtResource("3_28wuw")])
+drops = Array[ExtResource("4_36bw2")]([ExtResource("5_p8jhx"), ExtResource("6_t54a4"), ExtResource("7_5lnbb"), ExtResource("8_iksst"), ExtResource("9_y4hgs"), ExtResource("10_ow6r7"), ExtResource("11_yfpg5")])

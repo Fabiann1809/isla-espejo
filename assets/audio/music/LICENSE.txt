@@ -1,5 +1,8 @@
-All tracks in this folder are released under CC0 1.0 (public domain) by their authors on
-OpenGameArt.org. Sources and authors are listed in CREDITS.md:
+Tracks in this folder come from OpenGameArt.org. Sources, authors and licenses are listed in
+CREDITS.md. CC0 1.0 (public domain):
   menu.ogg   - "Iremos Forest Theme Loop" by beardalaxy
   forest.ogg - "Beautiful Forest [Orchestra]" by nene
   boss.ogg   - "RPG Battle Theme II" by cleytonkauffman
+CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/), credit required:
+  temple.ogg       - "Ancient Temple" by Alexandr Zhelanov (https://opengameart.org/content/ancient-temple)
+  temple_surge.ogg - "LavaLand - One Loop" from "Lava Area Theme" by Wolfgang_ (https://opengameart.org/content/lava-area-theme)
