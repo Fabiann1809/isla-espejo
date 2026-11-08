@@ -28,70 +28,70 @@ rows = "##############################
 ##############################"
 
 [node name="Prop1" type="Node2D" parent="."]
+position = Vector2(96, 64)
+script = ExtResource("2")
+kind = 17
+size_tiles = Vector2i(2, 1)
+style = &"clean"
+
+[node name="Prop2" type="Node2D" parent="."]
+position = Vector2(336, 192)
+script = ExtResource("2")
+kind = 17
+size_tiles = Vector2i(2, 1)
+style = &"ruined"
+
+[node name="Prop3" type="Node2D" parent="."]
 position = Vector2(384, 176)
 script = ExtResource("2")
 kind = 3
 style = &"medallion_m"
 flipped = true
 
-[node name="Prop2" type="Node2D" parent="."]
+[node name="Prop4" type="Node2D" parent="."]
 position = Vector2(304, 224)
 script = ExtResource("2")
 kind = 3
 style = &"broken_m"
 flipped = true
 
-[node name="Prop3" type="Node2D" parent="."]
+[node name="Prop5" type="Node2D" parent="."]
 position = Vector2(160, 224)
 script = ExtResource("2")
 kind = 3
 style = &"medallion_m"
 
-[node name="Prop4" type="Node2D" parent="."]
+[node name="Prop6" type="Node2D" parent="."]
 position = Vector2(64, 176)
 script = ExtResource("2")
 kind = 3
 style = &"broken_m"
 
-[node name="Prop5" type="Node2D" parent="."]
+[node name="Prop7" type="Node2D" parent="."]
 position = Vector2(64, 80)
 script = ExtResource("2")
 kind = 3
 style = &"medallion_m"
 
-[node name="Prop6" type="Node2D" parent="."]
+[node name="Prop8" type="Node2D" parent="."]
 position = Vector2(128, 48)
 script = ExtResource("2")
 kind = 3
 style = &"broken_m"
 
-[node name="Prop7" type="Node2D" parent="."]
+[node name="Prop9" type="Node2D" parent="."]
 position = Vector2(272, 48)
 script = ExtResource("2")
 kind = 3
 style = &"medallion_m"
 flipped = true
 
-[node name="Prop8" type="Node2D" parent="."]
+[node name="Prop10" type="Node2D" parent="."]
 position = Vector2(400, 80)
 script = ExtResource("2")
 kind = 3
 style = &"broken_m"
 flipped = true
-
-[node name="Prop9" type="Node2D" parent="."]
-position = Vector2(96, 96)
-script = ExtResource("2")
-kind = 17
-size_tiles = Vector2i(2, 1)
-style = &"clean"
-
-[node name="Prop10" type="Node2D" parent="."]
-position = Vector2(336, 192)
-script = ExtResource("2")
-kind = 17
-size_tiles = Vector2i(2, 1)
-style = &"ruined"
 
 [node name="Prop11" type="Node2D" parent="."]
 position = Vector2(144, 32)
