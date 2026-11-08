@@ -14,7 +14,7 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER, CAMPFIRE,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
@@ -67,6 +67,7 @@ const FOOTS := {
 	Kind.SCONCE: Rect2(5, 9, 6, 6),
 	Kind.LANTERN: Rect2(5, 11, 6, 4),
 	Kind.CRYSTAL_BRAZIER: Rect2(3, 11, 10, 4),
+	Kind.CAMPFIRE: Rect2(2, 9, 12, 6),
 }
 const TALL_FOOT := Rect2(3, 22, 10, 8)
 ## Foot shadow of a prop: its center and size, relative to the prop's origin.
@@ -116,9 +117,14 @@ func _build() -> void:
 		Kind.STELE:
 			_tall(&"stele")
 		Kind.BRAZIER:
-			add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
+			if not _fire_art("brazier", FIRE_FPS):
+				add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.TORCH:
-			add_child(_animated([&"torch_a", &"torch_b", &"torch_c"], FIRE_FPS, Vector2.ZERO))
+			if not _fire_art("torch", FIRE_FPS):
+				add_child(_animated([&"torch_a", &"torch_b", &"torch_c"], FIRE_FPS, Vector2.ZERO))
+		Kind.CAMPFIRE:
+			if not _fire_art("campfire", FIRE_FPS):
+				add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.BANNER:
 			_tall([&"banner_a", &"banner_b", &"banner_blue"][rng.randi_range(0, 2)], false)
 		Kind.CRATE:
@@ -149,7 +155,8 @@ func _build() -> void:
 		Kind.SCONCE:
 			add_child(_animated([&"sconce_blue_a", &"sconce_blue_b", &"sconce_blue_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.LANTERN:
-			add_child(_animated([&"lantern_a", &"lantern_b"], FIRE_FPS / 2.0, Vector2.ZERO))
+			if not _fire_art("lantern", FIRE_FPS / 2.0):
+				add_child(_animated([&"lantern_a", &"lantern_b"], FIRE_FPS / 2.0, Vector2.ZERO))
 		Kind.CRYSTAL_BRAZIER:
 			add_child(_animated([&"crystal_brazier_a", &"crystal_brazier_b", &"crystal_brazier_c"], GLOW_FPS, Vector2.ZERO))
 		Kind.GRAVE:
@@ -158,15 +165,17 @@ func _build() -> void:
 		_collide(FOOTS[kind])
 	match kind:
 		Kind.TORCH:
-			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6))
+			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6) if not _has_fire_art("torch") else Vector2(8, -12))
 		Kind.BRAZIER:
-			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5))
+			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5) if not _has_fire_art("brazier") else Vector2(8, -8))
+		Kind.CAMPFIRE:
+			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.15, Vector2(8, 2))
 		Kind.CRYSTAL:
 			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS, Vector2(8, 14))
 		Kind.SCONCE:
 			_light(Tuning.RUIN_SCONCE_LIGHT, Tuning.RUIN_SCONCE_LIGHT_RADIUS, Vector2(8, 6))
 		Kind.LANTERN:
-			_light(Tuning.RUIN_LANTERN_LIGHT, Tuning.RUIN_LANTERN_LIGHT_RADIUS, Vector2(8, 8))
+			_light(Tuning.RUIN_LANTERN_LIGHT, Tuning.RUIN_LANTERN_LIGHT_RADIUS, Vector2(8, 8) if not _has_fire_art("lantern") else Vector2(8, 5))
 		Kind.CRYSTAL_BRAZIER:
 			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS * 1.2, Vector2(8, 6))
 	_foot_shadow()
@@ -234,6 +243,36 @@ func _light(color: Color, radius: float, at: Vector2) -> void:
 ## A tile that cycles through `frames` (see RuinAnim).
 func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
 	return RuinAnim.sprite(frames, fps, at)
+
+
+## True when the three frames of a fire or lamp (`<name>_0..2.png` in assets/sprites/ruins_props/) exist.
+func _has_fire_art(art_name: String) -> bool:
+	return _prop_texture("%s_0" % art_name) != null and _prop_texture("%s_1" % art_name) != null and _prop_texture("%s_2" % art_name) != null
+
+
+## The team's drawn fire or lamp: its three frames play in a loop, the feet on the tile's bottom edge. False when
+## the pictures are missing (the tileset's small ones are used).
+func _fire_art(art_name: String, fps: float) -> bool:
+	if not _has_fire_art(art_name):
+		return false
+	var frames := SpriteFrames.new()
+	frames.add_animation(&"burn")
+	frames.set_animation_speed(&"burn", fps)
+	frames.set_animation_loop(&"burn", true)
+	var first: Texture2D = null
+	for i in 3:
+		var texture := _prop_texture("%s_%d" % [art_name, i])
+		first = first if first != null else texture
+		frames.add_frame(&"burn", texture)
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = frames
+	sprite.centered = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = Vector2(TileArt.TILE / 2.0 - first.get_width() / 2.0, TileArt.TILE - first.get_height())
+	add_child(sprite)
+	sprite.frame = randi() % 3
+	sprite.play(&"burn")
+	return true
 
 
 ## A picture of assets/sprites/ruins_props/, or null when it is missing.
