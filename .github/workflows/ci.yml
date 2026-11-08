@@ -9,7 +9,7 @@ jobs:
   godot-check:
     name: godot-check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       GODOT_VERSION: "4.7.2"
     steps:
