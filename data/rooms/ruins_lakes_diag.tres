@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/ruins/lakes_diag.tscn" id="1_85q81"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_tlnp2"]
+
+[resource]
+script = ExtResource("2_tlnp2")
+id = &"ruins_lakes_diag"
+scene = ExtResource("1_85q81")
+weight = 0.9
+tags = Array[StringName]([&"standard"])
+min_enemies = 3
+max_enemies = 5

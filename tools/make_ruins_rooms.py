@@ -34,8 +34,8 @@ LANE_ROWS = range(7, 11)
 CENTER = (14, 8)
 
 # RuinProp.Kind values (keep in sync with scripts/world/ruin_prop.gd)
-ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER = range(26)
-SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, STATUE, VASE, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER}
+ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL, BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER, CAMPFIRE = range(27)
+SOLID = {ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, CRATE, BARREL, TERRACE, ALCOVE, STATUE, VASE, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER, CAMPFIRE}
 TALL = {PILLAR, CRYSTAL, STELE, BANNER}
 AREAS = {ROCKS, TERRACE, ALCOVE, SYMBOL, STATUE, ALTAR}
 PLATFORMS = {TERRACE, ALCOVE}
@@ -64,6 +64,8 @@ class Room:
         self.reserved = set()   # cells that must stay floor (lanes, stairs fronts)
         self.kept = set()       # cells no prop may use (a room's open corner for a scene RoomDressing adds)
         self.nooks = set()      # cells of the optional side spaces (no enemy spawns there)
+        self.planned = set()    # cells around the columns a room's composition will place: rock and water leave them alone
+        self.column_plan = []   # (x, y, style, flipped) of those columns
         self.lanes()
 
     # --- the plan ------------------------------------------------------------------------------------------------
@@ -82,7 +84,7 @@ class Room:
         """An irregular ellipse of `char`, never over a reserved cell and only over `only_on` cells."""
         for y in range(1, ROWS - 1):
             for x in range(1, COLUMNS - 1):
-                if (x, y) in self.reserved or (only_on and self.g[y][x] not in only_on):
+                if (x, y) in self.reserved or (x, y) in self.planned or (only_on and self.g[y][x] not in only_on):
                     continue
                 d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
                 if d <= 1.0 + self.rng.uniform(-rough, rough) * (1.0 if d > 0.4 else 0.0):
@@ -122,7 +124,7 @@ class Room:
             nxt = [row[:] for row in self.g]
             for y in range(1, ROWS - 1):
                 for x in range(1, COLUMNS - 1):
-                    if (x, y) in self.reserved or self.g[y][x] not in ".#":
+                    if (x, y) in self.reserved or (x, y) in self.planned or self.g[y][x] not in ".#":
                         continue
                     rock = sum(1 for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx or dy) and self.g[y + dy][x + dx] == "#")
                     if self.g[y][x] == "." and rock >= 6:
@@ -226,6 +228,41 @@ class Room:
                     self.g[y][x] = "#"
         return seen
 
+    def plan(self, spots):
+        """Columns this room's composition will stand: (x, y, style, flipped). Their cells and a ring around them are
+        kept open floor while the rock and the water are drawn, so the composition is never eaten by the terrain."""
+        for x, y, style, flip in spots:
+            self.column_plan.append((x, y, style, flip))
+            for tx in range(x - 1, x + 2):
+                for ty in range(y - 1, y + 3):
+                    if self.inside(tx, ty):
+                        self.planned.add((tx, ty))
+                        if self.g[ty][tx] in "#~":
+                            self.g[ty][tx] = "."
+
+    def place_planned(self):
+        """Stands the planned columns: each at its own cell, or one step away when something is in the way."""
+        for x, y, style, flip in self.column_plan:
+            for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+                if self.put(PILLAR, x + dx, y + dy, style=style, flip=flip):
+                    break
+
+    def smooth_water(self, rounds=2):
+        """Rounds a lake's shore: a floor cell with five or more water neighbours floods, a water cell with three or
+        fewer dries (the lanes and the planned columns stay as they are)."""
+        for _ in range(rounds):
+            nxt = [row[:] for row in self.g]
+            for y in range(1, ROWS - 1):
+                for x in range(1, COLUMNS - 1):
+                    if (x, y) in self.reserved or (x, y) in self.planned or self.g[y][x] not in ".~":
+                        continue
+                    wet = sum(1 for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx or dy) and self.g[y + dy][x + dx] in "~=rw")
+                    if self.g[y][x] == "." and wet >= 5:
+                        nxt[y][x] = "~"
+                    elif self.g[y][x] == "~" and wet <= 3:
+                        nxt[y][x] = "."
+            self.g = nxt
+
     def thin_water(self):
         """Water needs two cells of width in both directions, or its shore tiles look wrong."""
         changed = True
@@ -248,7 +285,7 @@ class Room:
             xc = round(x_center + bend * amplitude * math.sin(y / period + phase) + (1 - bend) * amplitude * math.sin(8.5 / period + phase))
             for x in range(1, COLUMNS - 1):
                 if abs(x - xc) <= width / 2.0 and self.g[y][x] != "#" or (abs(x - xc) <= width / 2.0 and self.g[y][x] == "#" and y in (1, ROWS - 2)):
-                    if (x, y) in self.reserved and y not in LANE_ROWS:
+                    if ((x, y) in self.reserved and y not in LANE_ROWS) or (x, y) in self.planned:
                         continue
                     self.g[y][x] = "~"
         for y in LANE_ROWS:
@@ -267,7 +304,7 @@ class Room:
     def occupied(self):
         taken = set()
         for prop in self.props:
-            size = prop[3] if len(prop) > 3 else (1, 1)
+            size = prop[3] if len(prop) > 3 and prop[3] else (1, 1)
             for tx, ty in footprint(prop[0], prop[1], prop[2], size):
                 taken.add((tx, ty))
         for points in self.spawns.values():
@@ -290,13 +327,16 @@ class Room:
                         return False
         return True
 
-    def put(self, kind, x, y, size=None, margin=0):
+    def put(self, kind, x, y, size=None, margin=0, style="", flip=False):
+        # A carved pillar is tall (its crown rises 3 to 4 tiles above its foot): never so close to the top that it pokes out of the room.
+        if kind == PILLAR and style and y < (3 if style.endswith("_m") else 2):
+            return False
         if self.can_put(kind, x, y, size or (1, 1), margin):
-            self.props.append((kind, x, y, size) if size else (kind, x, y))
+            self.props.append((kind, x, y, size, style, flip))
             return True
         return False
 
-    def scatter(self, kind, count, near_rock=None, min_dist=4, margin=1, region=None, tries=500, size=None):
+    def scatter(self, kind, count, near_rock=None, min_dist=4, margin=1, region=None, tries=500, size=None, style=""):
         """Props at free floor cells chosen by the room's seed: near a rock edge (True), away from
         every wall (False) or anywhere (None); never closer than `min_dist` to another of their kind."""
         placed = []
@@ -313,16 +353,16 @@ class Room:
                 continue
             if any(math.hypot(x - px, y - py) < min_dist for px, py in placed):
                 continue
-            if self.put(kind, x, y, size=size, margin=margin):
+            if self.put(kind, x, y, size=size, margin=margin, style=style):
                 placed.append((x, y))
         return placed
 
-    def put_near(self, kind, wanted, size=None, radius=3, margin=0):
+    def put_near(self, kind, wanted, size=None, radius=3, margin=0, style="", flip=False):
         """The prop at the free spot closest to `wanted` (a plan that moved the floor around it)."""
         for r in range(radius + 1):
             for dx in range(-r, r + 1):
                 for dy in range(-r, r + 1):
-                    if max(abs(dx), abs(dy)) == r and self.put(kind, wanted[0] + dx, wanted[1] + dy, size, margin):
+                    if max(abs(dx), abs(dy)) == r and self.put(kind, wanted[0] + dx, wanted[1] + dy, size, margin, style, flip):
                         return True
         return False
 
@@ -372,7 +412,7 @@ class Room:
         solid = set()
         for prop in self.props:
             kind, x, y = prop[0], prop[1], prop[2]
-            size = prop[3] if len(prop) > 3 else (1, 1)
+            size = prop[3] if len(prop) > 3 and prop[3] else (1, 1)
             if self.raised:
                 assert kind not in (TERRACE, ALCOVE), f"{self.filename}: a raised room has no platforms"
             for tx, ty in footprint(kind, x, y, size):
@@ -430,6 +470,8 @@ class Room:
         for number, prop in enumerate(self.props, start=1):
             kind, x, y = prop[0], prop[1], prop[2]
             size = prop[3] if len(prop) > 3 else None
+            style = prop[4] if len(prop) > 4 else ""
+            flip = prop[5] if len(prop) > 5 else False
             block = [f'[node name="Prop{number}" type="Node2D" parent="."]',
                      f'position = Vector2({x * TILE}, {y * TILE})',
                      'script = ExtResource("2")']
@@ -437,6 +479,10 @@ class Room:
                 block.append(f'kind = {kind}')
             if size:
                 block.append(f'size_tiles = Vector2i({size[0]}, {size[1]})')
+            if style:
+                block.append(f'style = &"{style}"')
+            if flip:
+                block.append('flipped = true')
             text.append("\n".join(block) + "\n")
         if self.player_spawn:
             text.append(f'[node name="PlayerSpawn" type="Marker2D" parent="."]\nposition = Vector2{self.player_spawn}\n')
@@ -448,13 +494,118 @@ class Room:
             f.write("\n".join(text))
 
 
-def pair(room, kind, wanted, size=None, radius=2, margin=1):
-    """The same prop twice, mirrored across the room's vertical axis, so a pair guards a door or flanks the way."""
+def lake(room, lobes, bridge=False):
+    """A lake as the union of tilted ellipses (`lobes`: cx, cy, rx, ry, angle in degrees) with an uneven shore that is
+    then rounded, so it reads as a kidney or a bay and not as a disc. It leaves the lane columns alone; where it
+    crosses the lane rows it needs a bridge (`bridge`: planks between two parapets, like the rivers), and without
+    one it leaves the lanes dry."""
+    for y in range(1, ROWS - 1):
+        for x in range(1, COLUMNS - 1):
+            if x in LANE_COLUMNS or room.g[y][x] != "." or (x, y) in room.planned:
+                continue
+            if (x, y) in room.reserved and not (bridge and y in LANE_ROWS):
+                continue
+            for cx, cy, rx, ry, angle in lobes:
+                a = math.radians(angle)
+                dx, dy = x - cx, y - cy
+                u = (dx * math.cos(a) + dy * math.sin(a)) / rx
+                v = (-dx * math.sin(a) + dy * math.cos(a)) / ry
+                d = u * u + v * v
+                if d <= 1.0 + room.rng.uniform(-0.18, 0.18) * (1.0 if d > 0.5 else 0.0):
+                    room.g[y][x] = "~"
+                    break
+    room.smooth_water(2)
+    if bridge:
+        for y in LANE_ROWS:
+            for x in range(1, COLUMNS - 1):
+                if room.g[y][x] == "~":
+                    room.g[y][x] = "r" if y in (7, 10) else "="
+
+
+# --- where the columns stand: a room's composition, never a scatter ------------------------------------------------
+WHOLE_M, BROKEN_M, WHOLE_S, BROKEN_S = "medallion_m", "broken_m", "medallion_s", "broken_s"
+
+
+def gate(side, styles):
+    """The two columns at a door, right at the rim of the room, one on each side of its lane (a whole one and a broken one
+    make the pair): the north row stands against the top edge, the south row on the lip of the cliff, the side ones by the water."""
+    first, second = styles
+    if side == "N":
+        return [(11, 3, first, False), (18, 3, second, True)]
+    if side == "S":
+        return [(11, 15, first, False), (18, 15, second, True)]
+    if side == "W":
+        return [(2, 5, first, False), (2, 11, second, False)]
+    return [(27, 5, first, True), (27, 11, second, True)]
+
+
+def avenue(ys_north, ys_south, north, south):
+    """Two lines of columns that walk along the vertical lane, one on each side, north and south of the middle.
+    `north` and `south` give the (left, right) styles of each row."""
+    spots = []
+    for y, (left, right) in zip(ys_north, north):
+        spots += [(11, y, left, False), (18, y, right, True)]
+    for y, (left, right) in zip(ys_south, south):
+        spots += [(11, y, left, False), (18, y, right, True)]
+    return spots
+
+
+def colonnade(y, left_xs, right_xs, left_styles, right_styles):
+    """A row of columns on each side of the way, three tiles apart (a column is two tiles wide, so they never touch):
+    whole and broken in turn, the right side swapped so the two rows do not mirror each other."""
+    return ([(x, y, style, False) for x, style in zip(left_xs, left_styles)]
+            + [(x, y, style, True) for x, style in zip(right_xs, right_styles)])
+
+
+def ring(room, center, rx, ry, count, styles, start=22.5):
+    """Columns around a round arena, a whole one then a broken one: where the old hall's ring still stands."""
+    for i in range(count):
+        angle = math.radians(start + 360.0 * i / count)
+        x = round(center[0] + rx * math.cos(angle))
+        y = round(center[1] + ry * math.sin(angle)) - 1
+        placed = False
+        for r_ in range(0, 3):
+            for dx in range(-r_, r_ + 1):
+                for dy in range(-r_, r_ + 1):
+                    if not placed and max(abs(dx), abs(dy)) == r_ and room.put(PILLAR, x + dx, y + dy, style=styles[i % len(styles)], flip=x > 14):
+                        placed = True
+
+
+def bridge_gates(room):
+    """A pair of columns at every bridge, on the rim of the room (the top edge and the cliff lip) beside its shore: a
+    whole one and a broken one."""
+    row = room.g[8]
+    runs, x = [], 1
+    while x < COLUMNS - 1:
+        if row[x] == "=":
+            start = x
+            while x < COLUMNS - 1 and row[x] == "=":
+                x += 1
+            runs.append((start, x - 1))
+        else:
+            x += 1
+    for start, end in runs:
+        if end < 14:
+            room.put_near(PILLAR, (end + 2, 3), radius=2, style=WHOLE_M)
+            room.put_near(PILLAR, (end + 2, 15), radius=2, style=BROKEN_M)
+        else:
+            room.put_near(PILLAR, (start - 2, 3), radius=2, style=BROKEN_M, flip=True)
+            room.put_near(PILLAR, (start - 2, 15), radius=2, style=WHOLE_M, flip=True)
+
+
+def pair(room, kind, wanted, size=None, radius=2, margin=1, style=""):
+    """The same prop twice, mirrored across the room's vertical axis, so a pair guards a door or flanks the way.
+    The second one is drawn mirrored too (its fallen drum, its staff), as a `style` of picture."""
     width = size[0] if size else 1
     mirror = (COLUMNS - 1 - wanted[0] - (width - 1), wanted[1])
-    first = room.put_near(kind, wanted, size, radius, margin)
-    second = room.put_near(kind, mirror, size, radius, margin)
+    first = room.put_near(kind, wanted, size, radius, margin, style)
+    second = room.put_near(kind, mirror, size, radius, margin, style, flip=True)
     return first and second
+
+
+def columns(room, style, wanted, radius=3, margin=2):
+    """A mirrored pair of carved pillars (`medallion_s|m`, `broken_s|m`: see RuinProp.style)."""
+    return pair(room, PILLAR, wanted, radius=radius, margin=margin, style=style)
 
 
 def vignette(room, kinds, away_from=(14.5, 8.5), taken_corners=None):
@@ -508,14 +659,14 @@ def little(room, boulders=0, stalagmites=0):
     room.scatter(STALAGMITE, stalagmites, near_rock=True, min_dist=8, margin=2)
 
 
-def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0):
+def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0, statue="", statue_at=(8, 4)):
     """The old temple's leftovers, composed: statues stand as guardians in a mirrored pair (or alone on a side),
     banners hang in a pair along the top wall, vases and graves form one small corner scene, fallen armor another,
     the engraved symbol or the altar marks the heart of the room."""
     if statues >= 2:
-        pair(room, STATUE, (8, 4), size=(2, 1), radius=3, margin=2)
+        pair(room, STATUE, statue_at, size=(2, 1), radius=3, margin=2, style=statue)
     elif statues:
-        room.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1))
+        room.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1), style=statue)
     if banners >= 2:
         pair(room, BANNER, (9, 1), radius=2, margin=0)
     elif banners:
@@ -536,22 +687,24 @@ def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, 
         room.put_near(ALTAR, altar, size=(2, 2), radius=3)
 
 
-# --- Start: a wide cavern with a lit landing --------------------------------------------------------------------------
+# --- Start: a wide cavern with a lit landing; a whole and a broken column guard each of its two doors ----------------
 r = Room("start", "RuinsStart")
+r.plan(gate("N", (WHOLE_M, BROKEN_M)) + gate("S", (BROKEN_M, WHOLE_M)))
 r.edge_blobs(4, size=(1.6, 3.0))
 r.islands([(6, 4), (24, 13)], radius=(1.0, 1.6))
 r.smooth()
 r.nook(CRATE)
 r.connect()
 r.player_spawn = (240, 144)
+r.place_planned()
 lit(r, crystals=2, torches=2, lanterns=1)
 little(r, boulders=1, stalagmites=1)
 # The Mercader waits a few tiles from Nico's spawn, off the door lanes.
 r.spawns = {"NpcSpawn": [r.marker_near((19, 5), off_lanes=True)]}
-story(r, statues=1, vases=1, armor=1, banners=1)
+story(r, vases=1)
 r.finish()
 
-# --- Boss (raised): a round arena in the rock, ringed by pillars, crystals and braziers ------------------------
+# --- Boss (raised): a round arena whose top is a gate of two statues and blue candles, the rest left open --------------
 r = Room("boss", "RuinsBoss", raised=True)
 r.fill("#")
 r.blob(14.5, 8.5, 12.5, 7.2, char=".", only_on="#", rough=0.12)
@@ -561,13 +714,24 @@ r.smooth(1)
 r.connect()
 r.player_spawn = (240, 232)
 r.spawns = {"BossSpawn": [(240, 88)], "ExitSpawn": [(240, 40)]}
-r.scatter(CRYSTAL, 3, near_rock=True, min_dist=10, margin=2)
-r.scatter(PILLAR, 4, near_rock=True, min_dist=9, margin=2)
-r.scatter(BRAZIER, 2, near_rock=False, min_dist=12, margin=2)
-story(r, statues=2, armor=1, symbol=(14, 8), banners=2)
+# The top of the arena is a gate: the two statues stand far apart on each side of the way to the exit, a blue candle (crystal) beside
+# each, the banners between them. Below there is nothing: no big columns and no braziers, the arena is left to the fight.
+r.put_near(STATUE, (8, 4), size=(2, 1), radius=2, margin=0, style="clean")
+r.put_near(STATUE, (20, 4), size=(2, 1), radius=2, margin=0, style="ruined")
+for prop in [p_ for p_ in r.props if p_[0] == STATUE]:
+    r.put_near(CRYSTAL, (prop[1] - 1, 3), radius=1, margin=0)
+    r.put_near(CRYSTAL, (prop[1] + 2, 3), radius=1, margin=0)
+pair(r, BANNER, (12, 2), radius=1, margin=0)
+# What is left of the old ring: two small broken columns at the upper sides, nothing below.
+r.put_near(PILLAR, (4, 6), radius=1, style=BROKEN_S)
+r.put_near(PILLAR, (25, 6), radius=1, style=BROKEN_S, flip=True)
+# Two large braziers burn at the south side, on each side of the way in, to light the fight.
+r.put_near(BRAZIER, (8, 14), radius=2, margin=0, style="large")
+r.put_near(BRAZIER, (21, 14), radius=2, margin=0, style="large", flip=True)
+story(r, armor=1, symbol=(14, 8))
 r.finish()
 
-# --- Combat: two winding rivers crossed by bridges on the way to the doors ------------------------------------------
+# --- Combat: two winding rivers crossed by bridges; a column of each kind stands at the shore end of every bridge ---------
 r = Room("river", "RuinsRiver")
 r.edge_blobs(3, size=(1.4, 2.6))
 r.river(6.5, 0.4)
@@ -575,18 +739,21 @@ r.river(23.5, 2.6)
 r.smooth(1)
 r.thin_water()
 r.connect()
+bridge_gates(r)
 lit(r, crystals=2, torches=2)
 little(r, boulders=1, stalagmites=1)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=1, armor=1)
+story(r, vases=1, armor=1)
 r.finish()
 
-# --- Combat (ambush): blocks of rock leave narrow passages, enemies jump out of them ----------------------------------
+# --- Combat (ambush): blocks of rock leave narrow passages; two ruined gates mark the side doors ----------------------
 r = Room("narrow", "RuinsNarrow")
+r.plan(gate("W", (BROKEN_M, BROKEN_S)) + gate("E", (WHOLE_M, BROKEN_M)))
 r.edge_blobs(5, size=(2.0, 3.6))
 r.islands([(8, 4), (21, 13), (11, 13), (18, 4)], radius=(1.4, 2.2))
 r.smooth()
 r.connect()
+r.place_planned()
 lit(r, crystals=2, torches=2)
 little(r, stalagmites=2)
 r.scatter(SPIKES, 2, near_rock=False, min_dist=8, margin=2)
@@ -594,34 +761,37 @@ r.spawns = {"EnemySpawns": r.spawn_points(6)}
 story(r, vases=1, armor=1, graves=1)
 r.finish()
 
-# --- Combat: two raised platforms with their stairs on the south side ------------------------------------------------
+# --- Combat: two raised platforms with their stairs on the south side; the south plaza has a ruined colonnade -------
 r = Room("terraces", "RuinsTerraces")
+r.plan([(5, 15, BROKEN_S, False), (9, 15, WHOLE_M, False), (19, 15, BROKEN_M, True), (23, 15, BROKEN_S, True)])
 r.edge_blobs(4, size=(1.6, 3.0))
 r.platform(TERRACE, 2, 1, (10, 7))
 r.platform(TERRACE, 18, 1, (10, 7))
 r.smooth(1)
 r.connect()
+r.place_planned()
 lit(r, crystals=2, torches=1, braziers=1)
-r.scatter(PILLAR, 2, near_rock=False, min_dist=10, margin=2, region=(2, 12, 27, 16))
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=1, symbol=(13, 13), banners=1)
+story(r, vases=1, symbol=(13, 13), banners=1)
 r.finish()
 
-# --- Combat (raised): a wide plateau with pillars and braziers ---------------------------------------------------------
+# --- Combat (raised): a plateau with two colonnades, one along the north and one along the south, whole and broken in turn
 r = Room("plateau", "RuinsPlateau", raised=True)
+r.plan(colonnade(3, (4, 8), (21, 25), (WHOLE_M, BROKEN_M), (BROKEN_M, WHOLE_M)) + colonnade(15, (4, 8), (21, 25), (BROKEN_M, WHOLE_M), (WHOLE_M, BROKEN_M)))
 r.edge_blobs(4, size=(1.6, 3.0))
-r.islands([(7, 4), (22, 13)], radius=(1.0, 1.6))
+r.islands([(5, 14), (24, 3)], radius=(1.0, 1.6))
 r.smooth()
 r.connect()
-r.scatter(PILLAR, 3, near_rock=False, min_dist=10, margin=2)
+r.place_planned()
 lit(r, braziers=2, torches=1)
 little(r, boulders=1)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=1, symbol=(13, 8), banners=1)
+story(r, vases=1, symbol=(13, 8), banners=1)
 r.finish()
 
-# --- Combat (watch): two waterfalls feed pools in a cave; enemies stand guard around them -------------------------
+# --- Combat (watch): two waterfalls feed pools in a cave; two gates of columns watch the middle ------------------------
 r = Room("falls", "RuinsFalls")
+r.plan(gate("N", (BROKEN_M, WHOLE_M)) + gate("S", (WHOLE_M, BROKEN_M)))
 r.edge_blobs(3, size=(1.6, 3.0))
 for fall_x, pool in ((4, (5.0, 7.0)), (24, (25.0, 7.0))):
     for y in (1, 2, 3):
@@ -638,58 +808,112 @@ for fall_x, pool in ((4, (5.0, 7.0)), (24, (25.0, 7.0))):
 r.smooth(1)
 r.thin_water()
 r.connect()
+r.place_planned()
 lit(r, crystals=2, torches=2)
 little(r, boulders=1)
 r.scatter(SPIKES, 2, near_rock=False, min_dist=8, margin=2)
 r.spawns = {"EnemySpawns": r.spawn_points(7)}
-story(r, statues=1, armor=1)
+story(r, armor=1)
 r.finish()
 
-# --- Event: the Viajera's camp ---------------------------------------------------------------------------------------------------
+# --- Combat: two kidney-shaped lakes, one on each side, each crossed by a bridge on the way to the doors ---------------
+r = Room("lakes_twin", "RuinsLakesTwin")
+r.edge_blobs(2, size=(1.4, 2.4))
+lake(r, [(6.0, 5.8, 4.8, 3.6, 18), (7.8, 11.6, 4.4, 4.2, -14), (4.6, 8.6, 3.0, 3.4, 0)], bridge=True)
+lake(r, [(23.0, 5.8, 4.8, 3.6, -18), (21.2, 11.6, 4.4, 4.2, 14), (24.4, 8.6, 3.0, 3.4, 0)], bridge=True)
+r.smooth(1)
+r.thin_water()
+r.connect()
+bridge_gates(r)
+lit(r, crystals=2, torches=2)
+little(r, boulders=1)
+r.spawns = {"EnemySpawns": r.spawn_points(6)}
+story(r, vases=1, armor=1)
+r.finish()
+
+# --- Combat: two long lakes on a diagonal, the way between them dry; a square of columns marks the crossing ----------
+r = Room("lakes_diag", "RuinsLakesDiag")
+r.plan([(19, 3, WHOLE_M, False), (24, 3, BROKEN_M, True), (5, 15, BROKEN_M, False), (10, 15, WHOLE_M, False)])
+r.edge_blobs(2, size=(1.4, 2.4))
+lake(r, [(7.0, 4.4, 6.0, 3.0, 16), (11.5, 3.2, 3.0, 2.2, 0)])
+lake(r, [(22.0, 13.6, 6.0, 3.0, 16), (17.5, 14.6, 3.0, 2.2, 0)])
+r.smooth(1)
+r.thin_water()
+r.connect()
+r.place_planned()
+lit(r, crystals=2, torches=1, braziers=1)
+little(r, stalagmites=1)
+r.spawns = {"EnemySpawns": r.spawn_points(6)}
+story(r, vases=1, graves=1)
+r.finish()
+
+# --- Combat (watch): two bays against the north wall, a plaza to the south with a ruined gate and two stumps -----------
+r = Room("lakes_bays", "RuinsLakesBays")
+r.plan(gate("S", (BROKEN_M, WHOLE_M)) + [(6, 15, BROKEN_S, False), (23, 15, BROKEN_S, True)])
+r.edge_blobs(2, size=(1.4, 2.4))
+lake(r, [(6.6, 1.0, 6.8, 4.4, 0), (11.2, 2.2, 3.0, 2.8, 0)])
+lake(r, [(22.4, 1.0, 6.8, 4.4, 0), (17.8, 2.2, 3.0, 2.8, 0)])
+r.smooth(1)
+r.thin_water()
+r.connect()
+r.place_planned()
+lit(r, crystals=2, torches=2, braziers=2)
+r.spawns = {"EnemySpawns": r.spawn_points(7)}
+story(r, symbol=(13, 7), banners=1)
+r.finish()
+
+# --- Event: the Viajera's camp; a ruined gate at the north door ------------------------------------------------------
 r = Room("event", "RuinsEvent")
+r.plan(gate("N", (BROKEN_M, BROKEN_M)))
 r.edge_blobs(4, size=(1.6, 3.0))
 r.islands([(7, 4)], radius=(1.0, 1.6))
 r.smooth()
 r.nook(BARREL)
 r.connect()
-lit(r, crystals=1, torches=1, braziers=1, lanterns=1)
+r.place_planned()
+lit(r, crystals=1, torches=1, lanterns=1)
+# The Viajera's fire, a few tiles from where she waits.
+r.put_near(CAMPFIRE, (10, 6), radius=3, margin=1)
 r.put_near(CRATE, (24, 12))
 r.put_near(BARREL, (25, 13))
 little(r, boulders=1)
 r.spawns = {"NpcSpawn": [r.marker_near((7, 6))]}
-story(r, statues=1, vases=1, symbol=(10, 12), graves=1)
+story(r, vases=1, symbol=(10, 12), graves=1)
 r.finish()
 
-# --- Reward: an alcove (a small room) with the chest, reached by its own stairs --------------------------------------
+# --- Reward: an alcove (a small room) with the chest, its stairs framed by two whole columns -----------------------
 r = Room("reward", "RuinsReward")
+r.plan([(4, 15, WHOLE_S, False), (25, 15, WHOLE_S, True)] + gate("S", (BROKEN_M, WHOLE_M)))
 r.edge_blobs(4, size=(1.6, 3.0))
 r.platform(ALCOVE, 2, 1, (8, 7))
 r.smooth(1)
 r.connect()
+r.place_planned()
 lit(r, crystals=2, torches=1, braziers=1)
-r.scatter(PILLAR, 1, near_rock=False, min_dist=10, margin=2, region=(18, 2, 27, 6))
 little(r, stalagmites=1)
 r.spawns = {"ChestSpawn": [(88, 56)]}
-story(r, statues=1, vases=2, banners=1)
+story(r, vases=2, banners=1)
 r.finish()
 
-# --- Special: a shrine around the middle -----------------------------------------------------------------------------------------
+# --- Special: a shrine around the middle; a whole column beside the altar, a ruined gate at the south door --------
 r = Room("special", "RuinsSpecial")
 # The Mercader's shop (RoomDressing) takes the north-east quarter: the floor there stays open and free of props.
 shop = {(x, y) for x in range(17, 25) for y in range(2, 8)}
 r.reserved |= shop
 r.kept |= shop
+r.plan([(10, 3, WHOLE_M, False)] + gate("S", (WHOLE_M, BROKEN_M)))
 r.edge_blobs(4, size=(1.6, 3.0))
 r.smooth()
 r.nook(STELE)
 r.connect()
+r.place_planned()
 for wanted in ((8, 4), (21, 4), (8, 13), (21, 13)):
     r.put_near(CRYSTAL, wanted, radius=4)
 for wanted in ((11, 5), (18, 12)):
     r.put_near(BRAZIER, wanted, radius=3)
 little(r, boulders=1)
 r.spawns = {"SpecialSpawn": [(344, 92)]}
-story(r, statues=1, vases=1, symbol=(13, 7), altar=(13, 3), banners=1)
+story(r, vases=1, symbol=(13, 7), altar=(13, 3), banners=1)
 r.finish()
 
 print("ruins rooms written and validated")

@@ -39,18 +39,35 @@ func _initialize() -> void:
 
 	var level := await _build(theme)
 	var room = level.rooms[level.layout.start_cell]
-	_check(room.get_node_or_null("WallRocks") != null and room.get_node_or_null("WallTrees") == null,
-			"a ruins room has rock walls and no tree walls")
-	_check(room.get_node("WallRocks").get_child_count() > 20, "its side and bottom walls are columns (%d)" % room.get_node("WallRocks").get_child_count())
-	var rock_layer := level.get_node_or_null("Map/Backdrop/Rock") as TileMapLayer
-	_check(rock_layer != null and rock_layer.get_used_cells().size() > 500, "solid rock fills the space around the map")
-	_check(level.get_node_or_null("Map/Backdrop/Ground0") == null and level.get_node_or_null("ForestBoundary") == null,
-			"and no forest backdrop or boundary")
-	var corridor_columns := 0
-	for corridor in level.get_node("Map/Corridors").get_children():
-		if corridor.is_in_group(RoomProp.CANOPY_GROUP):
-			corridor_columns += 1
-	_check(corridor_columns > 0, "the corridors' walls are columns too (%d)" % corridor_columns)
+	if Tuning.RUIN_ABYSS:
+		# Islands over deep water: no columns on the walls, the sea around the map, parapets along the corridors.
+		_check(room.get_node_or_null("WallRocks") == null and room.get_node_or_null("WallTrees") == null,
+				"a ruins room has neither rock columns nor tree walls: its walls are water and cliffs")
+		var sea := level.get_node_or_null("Map/Backdrop/Sea0") as TileMapLayer
+		_check(sea != null and sea.get_used_cells().size() > 500, "deep water fills the space around the map")
+		_check(level.get_node_or_null("Map/Backdrop/Ground0") == null and level.get_node_or_null("ForestBoundary") == null,
+				"and no forest backdrop or boundary")
+		var parapets := 0
+		for corridor in level.get_node("Map/Corridors").get_children():
+			if corridor is TileMapLayer and corridor.name.begins_with("Corridor") and not corridor.name.begins_with("CorridorGround"):
+				for cell in corridor.get_used_cells():
+					var coords: Vector2i = corridor.get_cell_atlas_coords(cell)
+					if coords == TileArt.coords(&"bridge_rail_h") or coords == TileArt.coords(&"bridge_rail_v"):
+						parapets += 1
+		_check(parapets > 0, "the corridors are causeways with a parapet along each side (%d tiles)" % parapets)
+	else:
+		_check(room.get_node_or_null("WallRocks") != null and room.get_node_or_null("WallTrees") == null,
+				"a ruins room has rock walls and no tree walls")
+		_check(room.get_node("WallRocks").get_child_count() > 20, "its side and bottom walls are columns (%d)" % room.get_node("WallRocks").get_child_count())
+		var rock_layer := level.get_node_or_null("Map/Backdrop/Rock") as TileMapLayer
+		_check(rock_layer != null and rock_layer.get_used_cells().size() > 500, "solid rock fills the space around the map")
+		_check(level.get_node_or_null("Map/Backdrop/Ground0") == null and level.get_node_or_null("ForestBoundary") == null,
+				"and no forest backdrop or boundary")
+		var corridor_columns := 0
+		for corridor in level.get_node("Map/Corridors").get_children():
+			if corridor.is_in_group(RoomProp.CANOPY_GROUP):
+				corridor_columns += 1
+		_check(corridor_columns > 0, "the corridors' walls are columns too (%d)" % corridor_columns)
 	level.free()
 
 	var forest := await _build(load("res://data/themes/forest.tres"))

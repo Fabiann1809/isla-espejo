@@ -40,7 +40,8 @@ func _initialize() -> void:
 		if room.get_node_or_null("Shape") != null:
 			shapes += 1
 	_check(shapes == level.rooms.size() and shapes > 3, "every room of the new map is a ruin cave (%d)" % shapes)
-	_check(level.get_node_or_null("Map/Backdrop/Rock") != null, "with the ruins' rock around it")
+	var around: String = "Map/Backdrop/Sea0" if Tuning.RUIN_ABYSS else "Map/Backdrop/Rock"
+	_check(level.get_node_or_null(around) != null, "with the ruins' %s around it" % ("deep water" if Tuning.RUIN_ABYSS else "rock"))
 	# The ruins end with their boss: the portal stays sealed until the serpent dies, then leads on.
 	var serpent: Node2D = null
 	for enemy in get_nodes_in_group("enemies"):

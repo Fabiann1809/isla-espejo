@@ -14,7 +14,7 @@ extends Node2D
 
 enum Kind {
 	ROCKS, STALAGMITE, BOULDER, PILLAR, CRYSTAL, STELE, BRAZIER, TORCH, BANNER, CRATE, BARREL,
-	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER,
+	BRIDGE, WATERFALL, TERRACE, ALCOVE, RIVER, SPIKES, STATUE, VASE, ARMOR, SYMBOL, ALTAR, GRAVE, SCONCE, LANTERN, CRYSTAL_BRAZIER, CAMPFIRE,
 }
 
 @export var kind: Kind = Kind.STALAGMITE
@@ -22,10 +22,22 @@ enum Kind {
 @export var size_tiles := Vector2i(2, 2)
 ## BRIDGE: true when it runs along x (its planks side by side from left to right).
 @export var horizontal := true
+## Which picture a PILLAR or a STATUE draws (assets/sprites/ruins_props/): a pillar's is `medallion_s`,
+## `medallion_m`, `broken_s` or `broken_m`; a statue's is `clean`, `vines`, `cracked`, `ruined`, `plain`, `ivy`,
+## `worn` or `headless` (empty: a standing one chosen by the prop's place). Without the picture the tileset's
+## own pieces are used.
+@export var style: StringName = &""
+## The picture mirrored: the second of a pair, so its fallen drum or its staff faces the other way.
+@export var flipped := false
 
 ## Props that are part of the ground: drawn with the floor, never over an actor.
 const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER, Kind.SPIKES,
 		Kind.ARMOR, Kind.SYMBOL]
+const PROP_ART := "res://assets/sprites/ruins_props/%s.png"
+## Width of a pillar's body in its picture (outline included): where its middle is when a fallen drum widens it.
+const PILLAR_BODY := {&"medallion_s": 24, &"medallion_m": 32, &"broken_s": 24, &"broken_m": 32}
+## The statues that stand (the other two, `ruined` and `headless`, are what is left of one).
+const STANDING_STATUES: Array[StringName] = [&"clean", &"vines", &"plain", &"ivy", &"worn", &"cracked"]
 const WORLD_BITS := 1
 const WATER_BITS := 1 << (Heights.WATER_LAYER - 1)
 ## Water stops bodies a little inside its picture, so the shore is walkable.
@@ -55,6 +67,7 @@ const FOOTS := {
 	Kind.SCONCE: Rect2(5, 9, 6, 6),
 	Kind.LANTERN: Rect2(5, 11, 6, 4),
 	Kind.CRYSTAL_BRAZIER: Rect2(3, 11, 10, 4),
+	Kind.CAMPFIRE: Rect2(2, 9, 12, 6),
 }
 const TALL_FOOT := Rect2(3, 22, 10, 8)
 ## Foot shadow of a prop: its center and size, relative to the prop's origin.
@@ -97,15 +110,23 @@ func _build() -> void:
 		Kind.BOULDER:
 			add_child(TileArt.sprite([&"boulder_a", &"boulder_b"][rng.randi_range(0, 1)]))
 		Kind.PILLAR:
-			_tall(&"pillar")
+			if not _art_pillar():
+				_tall(&"pillar")
 		Kind.CRYSTAL:
 			_tall(&"crystal", true, [&"crystal_top", &"crystal_top_b"], GLOW_FPS)
 		Kind.STELE:
 			_tall(&"stele")
 		Kind.BRAZIER:
-			add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
+			if style == &"large" and _fire_art("brazier_large", FIRE_FPS):
+				pass
+			elif not _fire_art("brazier", FIRE_FPS):
+				add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.TORCH:
-			add_child(_animated([&"torch_a", &"torch_b", &"torch_c"], FIRE_FPS, Vector2.ZERO))
+			if not _fire_art("torch", FIRE_FPS):
+				add_child(_animated([&"torch_a", &"torch_b", &"torch_c"], FIRE_FPS, Vector2.ZERO))
+		Kind.CAMPFIRE:
+			if not _fire_art("campfire", FIRE_FPS):
+				add_child(_animated([&"brazier_a", &"brazier_b", &"brazier_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.BANNER:
 			_tall([&"banner_a", &"banner_b", &"banner_blue"][rng.randi_range(0, 2)], false)
 		Kind.CRATE:
@@ -123,7 +144,8 @@ func _build() -> void:
 		Kind.SPIKES:
 			_spikes()
 		Kind.STATUE:
-			_statue(rng)
+			if not _art_statue(rng):
+				_statue(rng)
 		Kind.VASE:
 			add_child(TileArt.sprite([&"vase_a", &"vase_b", &"vase_c", &"urn_a", &"urn_b"][rng.randi_range(0, 4)]))
 		Kind.ARMOR:
@@ -135,7 +157,8 @@ func _build() -> void:
 		Kind.SCONCE:
 			add_child(_animated([&"sconce_blue_a", &"sconce_blue_b", &"sconce_blue_c"], FIRE_FPS, Vector2.ZERO))
 		Kind.LANTERN:
-			add_child(_animated([&"lantern_a", &"lantern_b"], FIRE_FPS / 2.0, Vector2.ZERO))
+			if not _fire_art("lantern", FIRE_FPS / 2.0):
+				add_child(_animated([&"lantern_a", &"lantern_b"], FIRE_FPS / 2.0, Vector2.ZERO))
 		Kind.CRYSTAL_BRAZIER:
 			add_child(_animated([&"crystal_brazier_a", &"crystal_brazier_b", &"crystal_brazier_c"], GLOW_FPS, Vector2.ZERO))
 		Kind.GRAVE:
@@ -144,15 +167,20 @@ func _build() -> void:
 		_collide(FOOTS[kind])
 	match kind:
 		Kind.TORCH:
-			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6))
+			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6) if not _has_fire_art("torch") else Vector2(8, -12))
 		Kind.BRAZIER:
-			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5))
+			if style == &"large" and _has_fire_art("brazier_large"):
+				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.45, Vector2(8, -14))
+			else:
+				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5) if not _has_fire_art("brazier") else Vector2(8, -8))
+		Kind.CAMPFIRE:
+			_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.15, Vector2(8, 2))
 		Kind.CRYSTAL:
 			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS, Vector2(8, 14))
 		Kind.SCONCE:
 			_light(Tuning.RUIN_SCONCE_LIGHT, Tuning.RUIN_SCONCE_LIGHT_RADIUS, Vector2(8, 6))
 		Kind.LANTERN:
-			_light(Tuning.RUIN_LANTERN_LIGHT, Tuning.RUIN_LANTERN_LIGHT_RADIUS, Vector2(8, 8))
+			_light(Tuning.RUIN_LANTERN_LIGHT, Tuning.RUIN_LANTERN_LIGHT_RADIUS, Vector2(8, 8) if not _has_fire_art("lantern") else Vector2(8, 5))
 		Kind.CRYSTAL_BRAZIER:
 			_light(Tuning.RUIN_CRYSTAL_LIGHT, Tuning.RUIN_CRYSTAL_LIGHT_RADIUS * 1.2, Vector2(8, 6))
 	_foot_shadow()
@@ -220,6 +248,84 @@ func _light(color: Color, radius: float, at: Vector2) -> void:
 ## A tile that cycles through `frames` (see RuinAnim).
 func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
 	return RuinAnim.sprite(frames, fps, at)
+
+
+## True when the three frames of a fire or lamp (`<name>_0..2.png` in assets/sprites/ruins_props/) exist.
+func _has_fire_art(art_name: String) -> bool:
+	return _prop_texture("%s_0" % art_name) != null and _prop_texture("%s_1" % art_name) != null and _prop_texture("%s_2" % art_name) != null
+
+
+## The team's drawn fire or lamp: its three frames play in a loop, the feet on the tile's bottom edge. False when
+## the pictures are missing (the tileset's small ones are used).
+func _fire_art(art_name: String, fps: float) -> bool:
+	if not _has_fire_art(art_name):
+		return false
+	var frames := SpriteFrames.new()
+	frames.add_animation(&"burn")
+	frames.set_animation_speed(&"burn", fps)
+	frames.set_animation_loop(&"burn", true)
+	var first: Texture2D = null
+	var count := 0
+	while count < 8:
+		var texture := _prop_texture("%s_%d" % [art_name, count])
+		if texture == null:
+			break
+		first = first if first != null else texture
+		frames.add_frame(&"burn", texture)
+		count += 1
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = frames
+	sprite.centered = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = Vector2(TileArt.TILE / 2.0 - first.get_width() / 2.0, TileArt.TILE - first.get_height())
+	add_child(sprite)
+	sprite.frame = randi() % count
+	sprite.play(&"burn")
+	return true
+
+
+## A picture of assets/sprites/ruins_props/, or null when it is missing.
+func _prop_texture(file_name: String) -> Texture2D:
+	var path := PROP_ART % file_name
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
+func _prop_sprite(texture: Texture2D, at: Vector2) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.centered = false
+	sprite.flip_h = flipped
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = at
+	add_child(sprite)
+	return sprite
+
+
+## The team's carved pillar (medallion or snapped, small or medium) standing on the lower tile of the two the
+## prop covers; only its foot blocks. False when `style` has no picture.
+func _art_pillar() -> bool:
+	if not PILLAR_BODY.has(style):
+		return false
+	var texture := _prop_texture("pillar_%s" % style)
+	if texture == null:
+		return false
+	var width := float(texture.get_width())
+	var body: float = PILLAR_BODY[style]
+	var left := 8.0 - body / 2.0 if not flipped else 8.0 - width + body / 2.0
+	_prop_sprite(texture, Vector2(left, 2.0 * TileArt.TILE - texture.get_height()))
+	_collide(TALL_FOOT)
+	return true
+
+
+## A hooded statue on its carved plinth (two tiles wide, one deep: `position` is the plinth's left tile, the
+## figure rises above). Its base blocks. False when the picture is missing.
+func _art_statue(rng: RandomNumberGenerator) -> bool:
+	var variant: StringName = style if style != &"" else STANDING_STATUES[rng.randi_range(0, STANDING_STATUES.size() - 1)]
+	var texture := _prop_texture("statue_%s" % variant)
+	if texture == null:
+		return false
+	_prop_sprite(texture, Vector2(TileArt.TILE - texture.get_width() / 2.0, TileArt.TILE - texture.get_height()))
+	return true
 
 
 ## A statue two tiles wide and three high standing on its plinth: `position` is the plinth's left tile, the

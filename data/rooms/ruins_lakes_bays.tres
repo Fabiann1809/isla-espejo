@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/ruins/lakes_bays.tscn" id="1_0p71m"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_nl5e4"]
+
+[resource]
+script = ExtResource("2_nl5e4")
+id = &"ruins_lakes_bays"
+scene = ExtResource("1_0p71m")
+weight = 0.8
+tags = Array[StringName]([&"watch"])
+dark = true
+min_enemies = 3
+max_enemies = 5

@@ -28,67 +28,82 @@ rows = "##############################
 ##############################"
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(112, 208)
+position = Vector2(128, 64)
 script = ExtResource("2")
-kind = 4
+kind = 17
+size_tiles = Vector2i(2, 1)
+style = &"clean"
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(304, 32)
+position = Vector2(320, 64)
 script = ExtResource("2")
-kind = 4
+kind = 17
+size_tiles = Vector2i(2, 1)
+style = &"ruined"
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(368, 192)
+position = Vector2(112, 48)
 script = ExtResource("2")
 kind = 4
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(416, 80)
-script = ExtResource("2")
-kind = 3
-
-[node name="Prop5" type="Node2D" parent="."]
-position = Vector2(112, 64)
-script = ExtResource("2")
-kind = 3
-
-[node name="Prop6" type="Node2D" parent="."]
-position = Vector2(160, 224)
-script = ExtResource("2")
-kind = 3
-
-[node name="Prop7" type="Node2D" parent="."]
-position = Vector2(320, 224)
-script = ExtResource("2")
-kind = 3
-
-[node name="Prop8" type="Node2D" parent="."]
-position = Vector2(320, 96)
-script = ExtResource("2")
-kind = 6
-
-[node name="Prop9" type="Node2D" parent="."]
 position = Vector2(160, 48)
 script = ExtResource("2")
-kind = 17
-size_tiles = Vector2i(2, 1)
+kind = 4
+
+[node name="Prop5" type="Node2D" parent="."]
+position = Vector2(304, 48)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop6" type="Node2D" parent="."]
+position = Vector2(352, 48)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop7" type="Node2D" parent="."]
+position = Vector2(192, 32)
+script = ExtResource("2")
+kind = 8
+
+[node name="Prop8" type="Node2D" parent="."]
+position = Vector2(272, 32)
+script = ExtResource("2")
+kind = 8
+flipped = true
+
+[node name="Prop9" type="Node2D" parent="."]
+position = Vector2(48, 80)
+script = ExtResource("2")
+kind = 3
+style = &"broken_s"
 
 [node name="Prop10" type="Node2D" parent="."]
-position = Vector2(144, 32)
+position = Vector2(384, 80)
 script = ExtResource("2")
-kind = 8
+kind = 3
+style = &"broken_s"
+flipped = true
 
 [node name="Prop11" type="Node2D" parent="."]
-position = Vector2(320, 32)
+position = Vector2(128, 224)
 script = ExtResource("2")
-kind = 8
+kind = 6
+style = &"large"
 
 [node name="Prop12" type="Node2D" parent="."]
-position = Vector2(64, 192)
+position = Vector2(336, 224)
+script = ExtResource("2")
+kind = 6
+style = &"large"
+flipped = true
+
+[node name="Prop13" type="Node2D" parent="."]
+position = Vector2(48, 176)
 script = ExtResource("2")
 kind = 19
 
-[node name="Prop13" type="Node2D" parent="."]
+[node name="Prop14" type="Node2D" parent="."]
 position = Vector2(224, 128)
 script = ExtResource("2")
 kind = 20

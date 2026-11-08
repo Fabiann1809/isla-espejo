@@ -1,0 +1,111 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/room_base.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/world/ruin_prop.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/world/ruin_shape.gd" id="3"]
+
+[node name="RuinsLakesTwin" instance=ExtResource("1")]
+
+[node name="Shape" type="Node2D" parent="."]
+script = ExtResource("3")
+rows = "##############################
+#................##..........#
+#................##..........#
+#..~~~~~~............~~~~~~..#
+#.~~~~~~~~..........~~~~~~~~.#
+#.~~~~~~~~~........~~~~~~~~~##
+#.~~~~~~~~~........~~~~~~~~~##
+#.rrrrrrrrrr.......rrrrrrrrr.#
+#.=========........=========.#
+#.==========......==========.#
+#.rrrrrrrrrrr....rrrrrrrrrrr.#
+#..~~~~~~~~~~....~~~~~~~~~~..#
+#...~~~~~~~~~.....~~~~~~~~...#
+#...~~~~~~~~~.....~~~~~~~....#
+#....~~~~~~~......~~~~~~~....#
+#.....~~~~~........~~~~~.....#
+#............................#
+##############################"
+
+[node name="Prop1" type="Node2D" parent="."]
+position = Vector2(192, 48)
+script = ExtResource("2")
+kind = 3
+style = &"medallion_m"
+
+[node name="Prop2" type="Node2D" parent="."]
+position = Vector2(192, 240)
+script = ExtResource("2")
+kind = 3
+style = &"broken_m"
+
+[node name="Prop3" type="Node2D" parent="."]
+position = Vector2(272, 48)
+script = ExtResource("2")
+kind = 3
+style = &"broken_m"
+flipped = true
+
+[node name="Prop4" type="Node2D" parent="."]
+position = Vector2(272, 240)
+script = ExtResource("2")
+kind = 3
+style = &"medallion_m"
+flipped = true
+
+[node name="Prop5" type="Node2D" parent="."]
+position = Vector2(16, 80)
+script = ExtResource("2")
+kind = 7
+
+[node name="Prop6" type="Node2D" parent="."]
+position = Vector2(448, 64)
+script = ExtResource("2")
+kind = 7
+flipped = true
+
+[node name="Prop7" type="Node2D" parent="."]
+position = Vector2(80, 16)
+script = ExtResource("2")
+kind = 4
+
+[node name="Prop8" type="Node2D" parent="."]
+position = Vector2(320, 16)
+script = ExtResource("2")
+kind = 4
+flipped = true
+
+[node name="Prop9" type="Node2D" parent="."]
+position = Vector2(384, 240)
+script = ExtResource("2")
+kind = 2
+
+[node name="Prop10" type="Node2D" parent="."]
+position = Vector2(16, 16)
+script = ExtResource("2")
+kind = 18
+
+[node name="Prop11" type="Node2D" parent="."]
+position = Vector2(448, 16)
+script = ExtResource("2")
+kind = 19
+
+[node name="EnemySpawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(264, 104)
+
+[node name="P2" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(248, 232)
+
+[node name="P3" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(216, 56)
+
+[node name="P4" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(232, 88)
+
+[node name="P5" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(232, 120)
+
+[node name="P6" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(232, 56)

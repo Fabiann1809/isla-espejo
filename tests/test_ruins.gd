@@ -23,9 +23,9 @@ func _initialize() -> void:
 	for room in scenario.rooms:
 		kinds[room.type] = kinds.get(room.type, 0) + 1
 		raised += room.height
-	_check(scenario.rooms.size() + 2 == 10 and kinds.get(RoomData.RoomType.COMBAT, 0) == 5 and kinds.has(RoomData.RoomType.EVENT)
+	_check(scenario.rooms.size() + 2 == 13 and kinds.get(RoomData.RoomType.COMBAT, 0) == 8 and kinds.has(RoomData.RoomType.EVENT)
 			and kinds.has(RoomData.RoomType.REWARD) and kinds.has(RoomData.RoomType.SPECIAL),
-			"it has 10 room designs: start, boss, 5 combat, event, reward and special")
+			"it has 13 room designs: start, boss, 8 combat (3 of them lakes), event, reward and special")
 	_check(raised == 1 and scenario.boss_room.height == 1, "the boss arena and one combat room are raised")
 	var tags := {}
 	for room in scenario.rooms:

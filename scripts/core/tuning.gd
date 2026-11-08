@@ -286,6 +286,10 @@ const RUIN_DARK_FADE_SECONDS := 1.6
 ## wanders, base chance of a formation and how much the noise swings it (open pockets, dense stands), noise
 ## frequency, tiles left bare beside the way, tiles from the way where the middle and the deep rings begin, how
 ## far the search for the nearest floor goes, px of a picture that may overlap a floor, and how much each ring darkens.
+## The Ruinas' rooms are islands: every rock cell of a plan, the room's walls and the space around and between the rooms
+## are deep water, a floor's edge drops into it in a cliff (RuinShape, AbyssBackdrop) and the corridors are causeways
+## with low parapets. Off: rock walls and the cave of columns, as before.
+const RUIN_ABYSS := true
 const RUIN_BACKDROP_FORMATIONS := true
 const RUIN_BACKDROP_STEP := 15.0
 const RUIN_BACKDROP_JITTER := 5.0

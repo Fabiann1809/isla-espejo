@@ -617,12 +617,31 @@ func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> vo
 	scenario.theme.fill(layer, _cells(floor_rect), scenario.theme.path_tile)
 	for wall in walls:
 		if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
-			_plant_corridor_rocks(parent, wall)
+			if Tuning.RUIN_ABYSS:
+				# A causeway over the water: a low stone parapet along each side.
+				scenario.theme.fill(layer, _cells(wall), &"bridge_rail_h" if wall.size.x > wall.size.y else &"bridge_rail_v")
+				_shade_water_beside(layer, floor_rect, wall)
+			else:
+				_plant_corridor_rocks(parent, wall)
 		elif scenario.theme.forest_art_details:
 			_plant_corridor_trees(parent, wall)
 		else:
 			scenario.theme.fill(layer, _cells(wall), scenario.theme.border_tile)
 	WallBuilder.add_walls(parent, walls, WallBuilder.WALL_COLOR, false)
+
+
+## The shade a causeway throws on the water at one side: a row of the darker water just outside its parapet.
+func _shade_water_beside(layer: TileMapLayer, floor_rect: Rect2, wall: Rect2) -> void:
+	var tile := float(TileArt.TILE)
+	var outside: Rect2
+	if wall.size.x > wall.size.y:
+		outside = Rect2(wall.position.x, wall.position.y - tile if wall.position.y < floor_rect.position.y else wall.end.y, wall.size.x, tile)
+	else:
+		outside = Rect2(wall.position.x - tile if wall.position.x < floor_rect.position.x else wall.end.x, wall.position.y, tile, wall.size.y)
+	var cells := _cells(outside)
+	for y in range(cells.position.y, cells.end.y):
+		for x in range(cells.position.x, cells.end.x):
+			layer.set_cell(Vector2i(x, y), 0, TileArt.coords([&"abyss_shade_a", &"abyss_shade_b"][(x + y) % 2]))
 
 
 ## A corridor wall as a row of rock columns, like the rooms' walls (y-sorted with the actors).
@@ -694,7 +713,10 @@ func _build_backdrop() -> void:
 	for rect in _corridor_floors:
 		_mark(walkable, _cells(rect))
 	if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
-		RockBackdrop.build(_map, area, walkable, taken, current_seed)
+		if Tuning.RUIN_ABYSS:
+			AbyssBackdrop.build(_map, area, walkable, taken, current_seed)
+		else:
+			RockBackdrop.build(_map, area, walkable, taken, current_seed)
 		return
 	ForestBackdrop.build(_map, area, walkable, taken, current_seed)
 	if scenario.theme.forest_art_details:

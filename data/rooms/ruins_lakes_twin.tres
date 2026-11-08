@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/ruins/lakes_twin.tscn" id="1_oga1b"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_l88s0"]
+
+[resource]
+script = ExtResource("2_l88s0")
+id = &"ruins_lakes_twin"
+scene = ExtResource("1_oga1b")
+weight = 0.9
+tags = Array[StringName]([&"standard"])

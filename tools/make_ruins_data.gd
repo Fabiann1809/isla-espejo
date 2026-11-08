@@ -15,6 +15,9 @@ const ROOMS := [
 	[&"ruins_plateau", RoomData.RoomType.COMBAT, "plateau", 1.0, [&"standard"], 2, 4, 1, false],
 	[&"ruins_narrow", RoomData.RoomType.COMBAT, "narrow", 0.8, [&"ambush"], 4, 6, 0, true],
 	[&"ruins_falls", RoomData.RoomType.COMBAT, "falls", 0.8, [&"watch"], 3, 5, 0, true],
+	[&"ruins_lakes_twin", RoomData.RoomType.COMBAT, "lakes_twin", 0.9, [&"standard"], 2, 4, 0, false],
+	[&"ruins_lakes_diag", RoomData.RoomType.COMBAT, "lakes_diag", 0.9, [&"standard"], 3, 5, 0, false],
+	[&"ruins_lakes_bays", RoomData.RoomType.COMBAT, "lakes_bays", 0.8, [&"watch"], 3, 5, 0, true],
 	[&"ruins_event", RoomData.RoomType.EVENT, "event", 1.0, [], 0, 0, 0, false],
 	[&"ruins_reward", RoomData.RoomType.REWARD, "reward", 1.0, [], 0, 0, 0, false],
 	[&"ruins_special", RoomData.RoomType.SPECIAL, "special", 1.0, [], 0, 0, 0, false],
@@ -58,6 +61,7 @@ func _initialize() -> void:
 	scenario.boss_room = saved[&"ruins_boss"]
 	var rooms: Array[RoomData] = []
 	for id in [&"ruins_river", &"ruins_terraces", &"ruins_plateau", &"ruins_narrow", &"ruins_falls",
+			&"ruins_lakes_twin", &"ruins_lakes_diag", &"ruins_lakes_bays",
 			&"ruins_event", &"ruins_reward", &"ruins_special"]:
 		rooms.append(saved[id])
 	scenario.rooms = rooms

@@ -8,9 +8,9 @@ func _initialize() -> void:
 	var theme := RoomTheme.new()
 	theme.tileset = load("res://data/tilesets/ruins.tres")
 	theme.floor_tile = TileArt.GRASS
-	theme.floor_variants.assign([&"floor_b", &"floor_crack", &"floor_moss"])
+	theme.floor_variants.assign([&"floor_b", &"floor_crack"])
 	theme.floor_variant_chance = 0.05
-	theme.decor_tiles.assign([&"pebbles", &"moss_clump_a", &"moss_clump_b", &"rubble_a", &"rubble_b"])
+	theme.decor_tiles.assign([&"pebbles", &"rubble_a", &"rubble_b"])
 	theme.decor_chance = 0.025
 	theme.path_tile = TileArt.DIRT
 	theme.wall_style = RoomTheme.WallStyle.ROCKS
