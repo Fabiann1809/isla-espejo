@@ -126,54 +126,55 @@ def brazier(frame):
 
 
 def brazier_large(frame):
-    """The big brazier of the boss's arena: a wide carved plinth, a shaft with a glowing rune, a deep bowl heaped with coals, a
-    tall flame with two lesser tongues at its sides and sparks that rise frame by frame. 40x58, four frames."""
-    cv = Cv(40, 58)
-    cv.rect(4, 51, 35, 56, M)                     # plinth
-    cv.rect(4, 51, 35, 51, L)
-    cv.rect(4, 56, 35, 56, S1)
-    cv.rect(32, 52, 35, 55, M0)
-    cv.rect(8, 47, 31, 50, M2)
-    cv.rect(8, 47, 31, 47, L)
-    cv.rect(11, 33, 28, 46, M)                    # shaft
-    cv.rect(11, 33, 13, 46, L)
-    cv.rect(26, 33, 28, 46, M0)
-    for y in range(36, 44):                       # a carved diamond with a blue spark
-        half = 4 - abs(y - 39.5) // 1
-        for x in range(int(19.5 - half), int(20 + half)):
+    """The big brazier of the boss's arena, a size between the small one and a pillar: a wide carved plinth, a shaft with a
+    glowing rune, a deep bowl heaped with coals, a tall flame with two lesser tongues and sparks that rise frame by frame.
+    32x46, four frames."""
+    cv = Cv(32, 46)
+    cv.rect(3, 40, 28, 44, M)                     # plinth
+    cv.rect(3, 40, 28, 40, L)
+    cv.rect(3, 44, 28, 44, S1)
+    cv.rect(25, 41, 28, 43, M0)
+    cv.rect(6, 37, 25, 39, M2)
+    cv.rect(6, 37, 25, 37, L)
+    cv.rect(9, 29, 22, 36, M)                     # shaft
+    cv.rect(9, 29, 10, 36, L)
+    cv.rect(20, 29, 22, 36, M0)
+    for y in range(30, 36):                       # a carved diamond with a blue spark
+        half = 3 - abs(y - 32.5) // 1
+        for x in range(int(15.5 - half), int(16 + half)):
             cv.put(x, y, S2)
-    cv.put(19, 39, C("#5cc8ff"))
-    cv.put(20, 40, C("#5cc8ff"))
-    cv.put(19, 40, C("#d8f6ff"))
-    cv.rect(9, 44, 30, 46, M2)
-    cv.rect(9, 44, 30, 44, L)
-    for y in range(22, 33):                       # the bowl
-        t = (y - 22) / 10.0
-        half = int(round(15 - 5 * t))
-        for x in range(20 - half, 20 + half):
-            c = M if x > 12 else L
-            if x >= 20 + half - 4:
+    cv.put(15, 32, C("#5cc8ff"))
+    cv.put(16, 33, C("#5cc8ff"))
+    cv.put(15, 33, C("#d8f6ff"))
+    cv.rect(7, 35, 24, 36, M2)
+    cv.rect(7, 35, 24, 35, L)
+    for y in range(21, 29):                       # the bowl
+        t = (y - 21) / 7.0
+        half = int(round(12 - 4 * t))
+        for x in range(16 - half, 16 + half):
+            c = M if x > 10 else L
+            if x >= 16 + half - 3:
                 c = M0
-            if y == 22:
-                c = HI if x < 24 else L
-            if y == 32:
+            if y == 21:
+                c = HI if x < 20 else L
+            if y == 28:
                 c = S1
             cv.put(x, y, c)
-    cv.rect(2, 20, 37, 22, L)
-    cv.rect(2, 20, 37, 20, HI)
-    cv.rect(3, 23, 36, 23, M2)
-    for x in range(5, 35):                        # a heap of coals
-        cv.put(x, 19, EMBER[(x + frame) % 3])
+    cv.rect(1, 18, 30, 20, L)
+    cv.rect(1, 18, 30, 18, HI)
+    cv.rect(2, 21, 29, 21, M2)
+    for x in range(4, 28):                        # a heap of coals
+        cv.put(x, 17, EMBER[(x + frame) % 3])
         if (x + frame) % 4:
-            cv.put(x, 18, EMBER[(x + 2 * frame) % 3])
-    flame(cv, 20, 18, 26, 18, frame, 4)
-    flame(cv, 13, 18, 14, 8, frame + 1, 6)
-    flame(cv, 27, 18, 14, 8, frame + 2, 7)
+            cv.put(x, 16, EMBER[(x + 2 * frame) % 3])
+    flame(cv, 16, 16, 16, 14, frame, 4)
+    flame(cv, 10, 16, 9, 6, frame + 1, 6)
+    flame(cv, 22, 16, 9, 6, frame + 2, 7)
     rng = random.Random(21)
-    for i in range(6):                            # sparks drifting up, one step per frame
-        x0 = rng.randrange(10, 31)
-        y = 12 - ((frame * 4 + i * 5) % 22)
-        cv.put(x0 + (i % 3) - 1, max(0, y + 12), FIRE[3] if i % 2 else FIRE[2])
+    for i in range(5):                            # sparks drifting up, one step per frame
+        x0 = rng.randrange(8, 25)
+        y = 10 - ((frame * 3 + i * 4) % 16)
+        cv.put(x0 + (i % 3) - 1, max(0, y + 8), FIRE[3] if i % 2 else FIRE[2])
     return cv.outline().img
 
 

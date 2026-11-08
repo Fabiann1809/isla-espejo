@@ -170,7 +170,7 @@ func _build() -> void:
 			_light(Tuning.RUIN_TORCH_LIGHT, Tuning.RUIN_TORCH_LIGHT_RADIUS, Vector2(8, 6) if not _has_fire_art("torch") else Vector2(8, -12))
 		Kind.BRAZIER:
 			if style == &"large" and _has_fire_art("brazier_large"):
-				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.7, Vector2(8, -14))
+				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS * 1.45, Vector2(8, -14))
 			else:
 				_light(Tuning.RUIN_BRAZIER_LIGHT, Tuning.RUIN_BRAZIER_LIGHT_RADIUS, Vector2(8, 5) if not _has_fire_art("brazier") else Vector2(8, -8))
 		Kind.CAMPFIRE:
