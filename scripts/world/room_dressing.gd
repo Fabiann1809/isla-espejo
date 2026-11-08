@@ -52,6 +52,11 @@ static func _dress_arena(room: Room, rng: RandomNumberGenerator) -> void:
 		root.name = "ArenaRoot%d" % i
 		floor_layer.add_child(root)
 	_place_stones(room, arena, rng)
+	var runes := ArenaRunes.new()
+	runes.name = "ArenaRunes"
+	var boss_spots := room.spawn_points("BossSpawn")
+	runes.position = boss_spots[0] if not boss_spots.is_empty() else room.center()
+	floor_layer.add_child(runes)
 	if Tuning.DOOR_TORCHES:
 		for door in room.open_doors:
 			for spot in _beside_door(room, door):

@@ -14,6 +14,7 @@ player_scene = ExtResource("3")
 unlock_all_skills = false
 end_after_last_chapter = true
 chapter_intro = true
+room_transitions = true
 
 [node name="Hud" parent="." instance=ExtResource("4")]
 

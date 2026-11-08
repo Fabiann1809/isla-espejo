@@ -26,8 +26,10 @@ const SHADE_SORT_Y := 1000000.0
 ## Presents each island when its chapter starts: the camera shows the forest from afar and glides down to
 ## Nico while the island's name appears (see ChapterIntro). The real game turns it on; sandboxes start at once.
 @export var chapter_intro := false
-## Plays the intro even without a screen (tests).
+## Plays the intro (and the room transitions) even without a screen (tests).
 var intro_in_headless := false
+## A short transition (a dip of the screen and a breath of the camera) when Nico enters the boss's arena (see RoomTransition).
+@export var room_transitions := false
 
 ## Extra room tag -> weight multiplier, applied on top of the director's plan (debugging).
 var weight_modifiers := {}
@@ -90,6 +92,11 @@ func _ready() -> void:
 	_veil.color.a = 1.0
 	_intro_requested = _intro_allowed()
 	generate(seed_value)
+	if room_transitions and Tuning.ROOM_TRANSITIONS_ENABLED and (intro_in_headless or DisplayServer.get_name() != "headless"):
+		var transition := RoomTransition.new()
+		transition.name = "RoomTransition"
+		add_child(transition)
+		transition.start(self)
 	if _intro_requested:
 		_start_intro()
 	else:

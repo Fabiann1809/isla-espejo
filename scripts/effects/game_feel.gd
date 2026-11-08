@@ -68,6 +68,8 @@ func _ready() -> void:
 	Events.boss_defeated.connect(func(_id: StringName) -> void:
 		hit_stop(Tuning.HIT_STOP_BOSS_DEFEATED)
 		shake(Tuning.SHAKE_BOSS_DEFEATED))
+	Events.boss_awakened.connect(func(_id: StringName, _at: Vector2) -> void: shake(Tuning.SHAKE_BOSS_AWAKEN))
+	Events.portal_opened.connect(func(_at: Vector2) -> void: shake(Tuning.SHAKE_PORTAL_OPEN))
 
 
 func _exit_tree() -> void:

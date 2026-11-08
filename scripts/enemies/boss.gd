@@ -21,6 +21,12 @@ var _roots_spots: Array[Vector2] = []
 var _roots_art: Array[Node2D] = []
 var _roots_sprouted := false
 var _engaged := false
+## Plays `BossData.intro_dialogue` before the fight (tests that only want the fight turn it off).
+var play_intro_dialogue := true
+## True while that conversation is on: the boss waits, the fight has not begun.
+var _holding := false
+## The boss has noticed Nico but he is still too far for the talk: it waits asleep for him to come closer.
+var _waiting_to_talk := false
 var _last_pattern: Pattern = Pattern.ROOTS
 var _visual: Node2D
 
@@ -32,9 +38,17 @@ func _ready() -> void:
 		push_error("Boss '%s' needs a BossData." % name)
 		_boss = BossData.new()
 	_build_visual()
+	if _talks_first() and _visual != null:
+		_visual.modulate = Tuning.BOSS_DORMANT_TINT       # asleep, grey and still, until it notices Nico
 
 
 func _physics_process(delta: float) -> void:
+	if _holding:
+		velocity = Vector2.ZERO
+		if _waiting_to_talk and _target_is_valid() 				and global_position.distance_to(target.global_position) <= Tuning.BOSS_TALK_DISTANCE:
+			_waiting_to_talk = false
+			_awaken_then_talk()
+		return
 	super(delta)
 	_enforce_territory()
 
@@ -103,7 +117,8 @@ func apply_slow(factor: float, duration: float) -> void:
 # --- Behaviour ---------------------------------------------------------------------------------
 
 func _process_chase(_delta: float) -> void:
-	if not _target_is_valid():
+	if _holding or not _target_is_valid():
+		velocity = Vector2.ZERO
 		return
 	var to_target := target.global_position - global_position
 	facing = to_target.normalized()
@@ -210,11 +225,68 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 
 func _acquire_target(player: Node2D) -> void:
 	super(player)
-	if not _engaged:
-		_engaged = true
-		for line in _boss.intro_lines:
-			Events.message_requested.emit(line)
-		Events.boss_health_changed.emit(_boss.id, health.current, health.max_health, _boss.display_name)
+	if _engaged:
+		return
+	_engaged = true
+	if _talks_first():
+		# It stays asleep until Nico is close enough to see both, then it wakes up and they talk; it holds
+		# still until the fight begins.
+		_holding = true
+		_waiting_to_talk = true
+		velocity = Vector2.ZERO
+	else:
+		_begin_fight()
+
+
+func _talks_first() -> bool:
+	return play_intro_dialogue and _boss.intro_dialogue != &""
+
+
+## The boss rises from its sleep (it lights up, swells, kicks up dust, the screen trembles), then they talk.
+func _awaken_then_talk() -> void:
+	Events.boss_awakened.emit(_boss.id, global_position)
+	if _visual != null:
+		var rest := _visual.scale
+		var tween := create_tween().set_parallel(true)
+		tween.tween_property(_visual, "modulate", Color.WHITE, Tuning.BOSS_AWAKEN_SECONDS)
+		tween.tween_property(_visual, "scale", rest * 1.12, Tuning.BOSS_AWAKEN_SECONDS * 0.5) 				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(_visual, "scale", rest, Tuning.BOSS_AWAKEN_SECONDS * 0.5)
+	var dust := CPUParticles2D.new()
+	dust.texture = RoomDressing.pixel()
+	dust.one_shot = true
+	dust.amount = 26
+	dust.lifetime = 1.0
+	dust.explosiveness = 0.9
+	dust.position = Vector2(0, 8)
+	dust.direction = Vector2.UP
+	dust.spread = 90.0
+	dust.gravity = Vector2(0, 30)
+	dust.initial_velocity_min = 25.0
+	dust.initial_velocity_max = 55.0
+	dust.scale_amount_min = 1.0
+	dust.scale_amount_max = 2.0
+	dust.color = Color(0.55, 0.45, 0.3, 0.9)
+	dust.emitting = true
+	add_child(dust)
+	await get_tree().create_timer(Tuning.BOSS_AWAKEN_SECONDS).timeout
+	if not is_inside_tree() or state == State.DEAD:
+		return
+	if Dialogue.start(_boss.intro_dialogue):
+		Dialogue.finished.connect(_on_intro_dialogue_finished, CONNECT_ONE_SHOT)
+	else:
+		_holding = false
+		_begin_fight()
+
+
+func _on_intro_dialogue_finished(_id: StringName, _state: StringName) -> void:
+	_holding = false
+	_begin_fight()
+
+
+func _begin_fight() -> void:
+	for line in _boss.intro_lines:
+		Events.message_requested.emit(line)
+	Events.boss_health_changed.emit(_boss.id, health.current, health.max_health, _boss.display_name)
 
 
 func _on_died() -> void:

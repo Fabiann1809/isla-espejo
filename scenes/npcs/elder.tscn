@@ -6,5 +6,6 @@
 [node name="Elder" instance=ExtResource("1")]
 dialogue_id = &"elder"
 sprite_frames = ExtResource("2")
-sprite_scale = 0.5
+sprite_scale = 0.6
+talk_on_enter = true
 body_color = Color(0.8, 0.8, 0.85, 1)

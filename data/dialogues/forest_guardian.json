@@ -1,0 +1,26 @@
+{
+	"speaker": "El Guardián",
+	"states": {
+		"first": [
+			"Los árboles me lo contaron: un viajero con la brújula rota.",
+			{"speaker": "Nico", "text": "Necesito el fragmento que guardas. Es la única forma de volver a casa."},
+			"El fragmento late con el corazón del bosque. Quien lo toma, no se marcha nunca.",
+			{"speaker": "Nico", "text": "Entonces lo tomaré igual."},
+			"Nadie abandona la isla. Que las raíces decidan."
+		],
+		"again": [
+			"Las raíces aún no han terminado contigo."
+		],
+		"final": [
+			"El bosque… te reconoce."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["forest_boss_defeated"]},
+		{"state": "again", "requires": ["met_forest_guardian"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_forest_guardian"]
+	}
+}

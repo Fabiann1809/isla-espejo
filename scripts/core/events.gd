@@ -15,6 +15,10 @@ signal chest_opened(chest: Node)
 ## Boss health, so the HUD can show its bar. Emitted when the fight starts and on every hit.
 signal boss_health_changed(boss_id: StringName, current: int, maximum: int, boss_name: String)
 signal boss_defeated(boss_id: StringName)
+## The boss rises from its sleep when it notices Nico (before they talk), for camera and sound.
+signal boss_awakened(boss_id: StringName, at: Vector2)
+## The exit portal opens after the boss falls (it was sealed), for camera and sound.
+signal portal_opened(at: Vector2)
 ## A boss starts warning an attack (`pattern`: &"slam" or &"roots"), for sound.
 signal boss_attack_warned(boss_id: StringName, pattern: StringName)
 ## The warned attack lands at `at` (world position), for the screen shake and sound.

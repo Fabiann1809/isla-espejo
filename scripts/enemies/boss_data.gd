@@ -43,6 +43,9 @@ extends EnemyData
 @export var pickup_scene: PackedScene
 
 @export_group("Texts")
+## Conversation (a file in data/dialogues/) that plays when the boss first sees the player, before the fight.
+## Empty = the fight begins at once and `intro_lines` are shown as messages.
+@export var intro_dialogue: StringName = &""
 ## Lines shown when the fight begins, as "Speaker: text" (Spanish).
 @export var intro_lines: Array[String] = []
 ## Lines shown when the boss falls, same format.
