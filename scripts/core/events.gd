@@ -39,6 +39,12 @@ signal player_dashed(direction: Vector2)
 ## An arrow of Nico's hit a wall, a tree or a rock at `at` (world position), for sound.
 signal arrow_blocked(at: Vector2)
 signal player_hit_enemy(enemy: Node, damage: int)
+## One of Nico's arrows crit `enemy` (`damage` is the multiplied damage the hit dealt), for the damage number and sound.
+signal player_crit(enemy: Node, damage: int)
+## The Mercader's shop: an item was bought, or a purchase was refused (`reason`: no_gold, maxed,
+## full_health). Sound and the HUD listen; the shop never plays a sound itself.
+signal shop_bought(item_id: StringName)
+signal shop_denied(reason: StringName)
 signal player_damaged(amount: int, source_position: Vector2)
 signal player_health_changed(current: int, maximum: int)
 signal player_died
@@ -48,6 +54,9 @@ signal player_stealth_changed(active: bool)
 # Run resources (hearts, arrow orb, gold); lost when the run ends
 signal resource_collected(resource_id: StringName)
 signal player_gold_changed(total: int)
+## A temporary buff started or was refreshed (`duration` seconds) or ended (`duration` 0); several run at once.
+## A shield also reports how many hits it can still absorb.
+signal player_buff_charges_changed(buff_id: StringName, charges: int)
 ## A timed effect started (`duration` > 0, with the color of its icon) or ended (`duration` = 0).
 signal player_buff_changed(buff_id: StringName, duration: float, color: Color)
 
@@ -55,6 +64,8 @@ signal player_buff_changed(buff_id: StringName, duration: float, color: Color)
 signal skill_unlocked(skill_id: StringName)
 ## `affected` = how many enemies the skill touched (the AI uses it to read the play style).
 signal skill_used(skill_id: StringName, direction: Vector2, affected: int)
+## A skill key pressed while that skill cannot be cast (locked, cooling down, busy).
+signal skill_blocked(slot: int)
 
 # Enemies
 signal enemy_damaged(enemy: Node, amount: int)
@@ -69,3 +80,10 @@ signal room_entered(room: Node)
 signal room_exited(room: Node)
 ## Every enemy of the room is dead.
 signal room_cleared(room: Node)
+
+## The lava of a `surge` room is about to rise to flood `stage` levels (a warning: tremor, text).
+signal lava_surge_warned(room: Node, stage: int)
+## The lava of a room rose and now floods `stage` levels (1 or 2).
+signal lava_surge_started(room: Node, stage: int)
+## The lava of a room went back down for good.
+signal lava_surge_receded(room: Node)

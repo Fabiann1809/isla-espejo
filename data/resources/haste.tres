@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="1_bdv3m"]
+
+[resource]
+script = ExtResource("1_bdv3m")
+id = &"haste"
+display_name = "Viento veloz"
+message = "¡Corres y disparas más rápido!"
+kind = 3
+effect = 2
+color = Color(0.5, 0.95, 0.55, 1)
+duration = 10.0
+drop_chance = 0.025
+max_on_floor = 1
+lifetime = 10.0

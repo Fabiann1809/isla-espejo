@@ -7,4 +7,5 @@
 dialogue_id = &"merchant"
 sprite_frames = ExtResource("2")
 sprite_scale = 0.5
+opens_shop = true
 body_color = Color(0.55, 0.4, 0.25, 1)

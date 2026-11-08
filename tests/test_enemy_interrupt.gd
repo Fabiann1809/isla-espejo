@@ -33,6 +33,7 @@ func _initialize() -> void:
 			if scenario.miniboss_scene != null:
 				scenes[scenario.miniboss_scene.resource_path] = scenario.miniboss_scene
 	var rested := []
+	var opted_out := []
 	var too_soon := []
 	var untouched := true
 	var armored_ok := true
@@ -49,6 +50,10 @@ func _initialize() -> void:
 		enemy.get_node("Hurtbox").receive_hit(0, player.global_position)
 		untouched = untouched and enemy._attack_cooldown_left <= before
 		await _frames(int(enemy.data.hurt_time * 60) + 2)
+		if not enemy.interruptible:
+			opted_out.append("%s (%s)" % [path.get_file(), enemy.interrupt_opt_out_reason])
+			enemy.free()
+			continue
 		enemy._start_attack()
 		var attacking: bool = enemy.state == ATTACK
 		enemy.get_node("Hurtbox").receive_hit(0, player.global_position)
@@ -62,9 +67,11 @@ func _initialize() -> void:
 		else:
 			too_soon.append(path.get_file())
 		enemy.free()
-	_check(too_soon.is_empty() and rested.size() == scenes.size(),
+	_check(too_soon.is_empty() and rested.size() + opted_out.size() == scenes.size(),
 			"every enemy rests %.1f s after its hurt when an attack is cut short (%s; failed: %s)"
 			% [tuning.INTERRUPTED_ATTACK_COOLDOWN, rested, too_soon])
+	for entry in opted_out:
+		print("OPT-OUT (not interruptible): ", entry)
 	_check(untouched, "a hit outside an attack adds no rest")
 	_check(armored_ok, "an enemy with attack armor keeps attacking when hit")
 	level.free()

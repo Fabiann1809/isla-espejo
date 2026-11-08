@@ -42,6 +42,15 @@ var attack_cooldown := 0.35
 var attack_move_factor := 0.3
 ## How visible the player is to enemies (1 = normal). The Sombra skill lowers it for a while.
 var visibility := 1.0
+## Chance (0..1) that an arrow crits and the damage multiplier of a crit (see Tuning).
+var crit_chance := Tuning.PLAYER_CRIT_CHANCE
+var crit_multiplier := Tuning.PLAYER_CRIT_MULTIPLIER
+## Shop upgrades of the journey (GameState.apply_upgrades sets them on every map): extra arrow damage,
+## extra crit chance and the extra hearts already added to the maximum health.
+var bonus_damage := 0
+var crit_bonus := 0.0
+var _health_bonus := 0
+var _crit_rng := RandomNumberGenerator.new()
 
 var _state_time_left := 0.0
 var _dash_cooldown_left := 0.0
@@ -64,11 +73,11 @@ var _side_flip := false
 var _move_hold_left := 0.0
 ## Gold carried in this run (lost when the run ends, see clear_run_resources()).
 var gold := 0
-## Arrows added to every shot while the arrow orb lasts, and the angle between them.
-var _extra_arrows := 0
-var _arrow_spread := 0.0
-var _buff_left := 0.0
-var _buff_id := StringName()
+## Running temporary buffs (see ResourceData.is_buff): id -> {"data": ResourceData, "left": seconds,
+## "charges": int}. Taking the same buff again only restarts its time.
+var _buffs := {}
+## The bubble drawn around Nico while a shield lasts.
+var _shield_bubble: ShieldBubble
 ## A ranged attack has started and its projectile has not left yet.
 var _shot_pending := false
 ## Pulled by an enemy (a chain): dragged toward `_pull_to` at `_pull_speed` for a while. A dodge
@@ -79,12 +88,19 @@ var _pull_left := 0.0
 ## Slowed by an enemy (a burning trail): walking speed multiplied by `_slow_factor` for a while.
 var _slow_factor := 1.0
 var _slow_left := 0.0
+## A flash of color over the art (a cast), fading over `_flash_total` seconds; see flash().
+var _flash_color := Color.WHITE
+var _flash_strength := 0.0
+var _flash_left := 0.0
+var _flash_total := 0.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var skills: SkillManager = $SkillManager
 @onready var _hurtbox: Hurtbox = $Hurtbox
 ## Nico's art (the old colored square `Placeholder` stays hidden as a fallback).
 @onready var _body: AnimatedSprite2D = $Sprite
+## How far the camera leads Nico (px, 0 = off). The level sets it from its theme on every map.
+var camera_look_ahead := Tuning.CAMERA_LOOK_AHEAD
 @onready var _camera: Camera2D = $Camera2D
 @onready var _interact_area: Area2D = $InteractArea
 
@@ -135,12 +151,10 @@ func _physics_process(delta: float) -> void:
 		if _stealth_left <= 0.0:
 			end_stealth()
 
-	if _buff_left > 0.0:
-		_buff_left -= delta
-		if _buff_left <= 0.0:
-			_end_arrow_buff()
+	_tick_buffs(delta)
 
 	_interact_block_left = maxf(_interact_block_left - delta, 0.0)
+	_flash_left = maxf(_flash_left - delta, 0.0)
 	_slow_left = maxf(_slow_left - delta, 0.0)
 	_pull_left = maxf(_pull_left - delta, 0.0)
 	_move_dir = Vector2.ZERO if _locked else Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -169,6 +183,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_interaction()
 	_update_visuals(delta)
+	_update_camera_lead(delta)
 
 
 ## Makes `new_weapon` the active weapon: its numbers drive the next attacks.
@@ -178,6 +193,28 @@ func equip(new_weapon: WeaponData) -> void:
 	attack_time = weapon.attack_time
 	attack_cooldown = weapon.attack_cooldown
 	attack_move_factor = weapon.move_factor
+
+
+## Damage of one arrow before a crit: the weapon's plus the shop's upgrade.
+func arrow_damage() -> int:
+	return attack_damage + bonus_damage
+
+
+## Chance that an arrow crits (0 with `Tuning.CRITS_ENABLED` off), shop upgrades included.
+func total_crit_chance() -> float:
+	if not Tuning.CRITS_ENABLED:
+		return 0.0
+	return clampf(crit_chance + crit_bonus, 0.0, 1.0)
+
+
+## Sets what the shop sold (`damage` extra arrow damage, `crit` extra crit chance, `hearts` extra
+## maximum health). Idempotent: the hearts already added are remembered, so a new map adds none twice.
+func set_upgrades(damage: int, crit: float, hearts: int) -> void:
+	bonus_damage = damage
+	crit_bonus = crit
+	if hearts != _health_bonus:
+		health.increase_max(hearts - _health_bonus)
+		_health_bonus = hearts
 
 
 ## True while the player cannot be damaged (dash i-frames, after a hit, or dead).
@@ -206,6 +243,7 @@ func is_stealthed() -> bool:
 ## Makes enemies notice the player only from `new_visibility` of their normal range.
 func start_stealth(duration: float, new_visibility: float) -> void:
 	var was_stealthed := is_stealthed()
+	break_pull()
 	_stealth_left = duration
 	visibility = new_visibility
 	if not was_stealthed:
@@ -220,10 +258,20 @@ func end_stealth() -> void:
 	Events.player_stealth_changed.emit(false)
 
 
+## Washes `color` over Nico's art at `strength` (0..1), fading out over `seconds` (GameFeel calls it
+## when he casts). The breath overlay follows the tint, so it shows while he stands still too.
+func flash(color: Color, seconds: float, strength: float) -> void:
+	_flash_color = color
+	_flash_strength = strength
+	_flash_total = maxf(seconds, 0.01)
+	_flash_left = _flash_total
+
+
 ## Drags the player toward `toward` (world position) at `pull_speed` for up to `duration` seconds,
 ## or until close to it. Nico cannot walk meanwhile, but a dodge breaks free.
 func apply_pull(toward: Vector2, pull_speed: float, duration: float) -> void:
-	if state == State.DEAD:
+	# A dodge breaks free, so a chain cannot catch him in the middle of one either.
+	if state == State.DEAD or state == State.DASH:
 		return
 	_pull_to = toward
 	_pull_speed = pull_speed
@@ -232,6 +280,11 @@ func apply_pull(toward: Vector2, pull_speed: float, duration: float) -> void:
 
 func is_pulled() -> bool:
 	return _pull_left > 0.0
+
+
+## Ends a pull at once (a dodge, a teleport).
+func break_pull() -> void:
+	_pull_left = 0.0
 
 
 ## Multiplies the walking speed by `factor` (0.5 = half as fast) for `duration` seconds; overlapping
@@ -252,28 +305,143 @@ func add_gold(amount: int) -> void:
 	Events.player_gold_changed.emit(gold)
 
 
-## The arrow orb: every shot sends extra arrows in a fan for `data.duration` seconds (taking
-## another orb restarts the time).
-func start_arrow_buff(data: ResourceData) -> void:
-	_extra_arrows = data.extra_arrows
-	_arrow_spread = deg_to_rad(data.spread_degrees)
-	_buff_left = data.duration
-	_buff_id = data.id
+## Starts a temporary buff for `data.duration` seconds; taking the same one again restarts its time
+## (and refills a shield). Several different buffs run at once.
+func start_buff(data: ResourceData) -> void:
+	_buffs[data.id] = {"data": data, "left": data.duration, "charges": data.shield_charges}
 	Events.player_buff_changed.emit(data.id, data.duration, data.color)
+	if _is_shield(data):
+		_show_shield_bubble(data.color)
+		Events.player_buff_charges_changed.emit(data.id, data.shield_charges)
 
 
-func _end_arrow_buff() -> void:
-	_extra_arrows = 0
-	_buff_left = 0.0
-	Events.player_buff_changed.emit(_buff_id, 0.0, Color.WHITE)
-	_buff_id = StringName()
+## The arrow orb's old name.
+func start_arrow_buff(data: ResourceData) -> void:
+	start_buff(data)
+
+
+func has_buff(id: StringName) -> bool:
+	return _buffs.has(id)
+
+
+## Seconds left of the buff `id` (0 = not running).
+func buff_left(id: StringName) -> float:
+	return _buffs[id]["left"] if _buffs.has(id) else 0.0
+
+
+func buff_ids() -> Array:
+	return _buffs.keys()
+
+
+## Hits the shield can still absorb (0 without one).
+func shield_charges() -> int:
+	var data := buff_data(ResourceData.Effect.SHIELD)
+	return _buffs[data.id]["charges"] if data != null else 0
+
+
+## The data of the running BUFF with this effect, or null.
+func buff_data(effect: ResourceData.Effect) -> ResourceData:
+	for entry in _buffs.values():
+		var data: ResourceData = entry["data"]
+		if data.kind == ResourceData.Kind.BUFF and data.effect == effect:
+			return data
+	return null
+
+
+func _is_shield(data: ResourceData) -> bool:
+	return data.kind == ResourceData.Kind.BUFF and data.effect == ResourceData.Effect.SHIELD
+
+
+## The data of the running arrow fan, or null.
+func _fan_data() -> ResourceData:
+	for entry in _buffs.values():
+		if entry["data"].kind == ResourceData.Kind.ARROWS:
+			return entry["data"]
+	return null
+
+
+func _tick_buffs(delta: float) -> void:
+	for id in _buffs.keys():
+		_buffs[id]["left"] -= delta
+		if _buffs[id]["left"] <= 0.0:
+			_end_buff(id)
+
+
+func _end_buff(id: StringName) -> void:
+	if not _buffs.has(id):
+		return
+	var data: ResourceData = _buffs[id]["data"]
+	_buffs.erase(id)
+	if _is_shield(data):
+		_hide_shield_bubble()
+	Events.player_buff_changed.emit(id, 0.0, Color.WHITE)
+
+
+func end_all_buffs() -> void:
+	for id in _buffs.keys():
+		_end_buff(id)
+
+
+func _show_shield_bubble(color: Color) -> void:
+	if _shield_bubble == null:
+		_shield_bubble = ShieldBubble.new()
+		add_child(_shield_bubble)
+	_shield_bubble.color = color
+
+
+func _hide_shield_bubble() -> void:
+	if _shield_bubble != null:
+		_shield_bubble.queue_free()
+		_shield_bubble = null
+
+
+## Walking speed with the haste buff (slows are applied by the callers).
+func move_speed() -> float:
+	var haste := buff_data(ResourceData.Effect.HASTE)
+	return speed * (1.0 + haste.speed_bonus) if haste != null else speed
+
+
+## The weapon's time between shots, shorter while haste lasts.
+func shot_cooldown() -> float:
+	var haste := buff_data(ResourceData.Effect.HASTE)
+	return attack_cooldown * (1.0 - haste.cooldown_cut) if haste != null else attack_cooldown
 
 
 ## Drops everything earned during the run (gold and timed effects); skills and story stay in GameState.
 func clear_run_resources() -> void:
-	if _buff_left > 0.0:
-		_end_arrow_buff()
+	end_all_buffs()
 	add_gold(-gold)
+
+
+## Forgets what only mattered on the map just left: a chain's pull, a slow, the stealth, the
+## invulnerability, buffered presses, the skills' cooldowns and every temporary buff (they are for
+## the map they were taken on). Health and gold stay: they are the run's. The Level calls it when it
+## puts Nico on a new map.
+func reset_for_new_map() -> void:
+	if state == State.DEAD:
+		return
+	end_all_buffs()
+	break_pull()
+	_pull_speed = 0.0
+	_slow_left = 0.0
+	_slow_factor = 1.0
+	end_stealth()
+	_invulnerable_left = 0.0
+	_attack_buffer_left = 0.0
+	_dash_buffer_left = 0.0
+	_interact_block_left = 0.0
+	skills.reset_cooldowns()
+	if state in [State.DASH, State.ATTACK, State.HURT]:
+		_set_attack_active(false)
+		_enter_state(State.IDLE, 0.0)
+
+
+## Where Nico's arrows and skill effects live: the map, so they go away with it, or his parent in a
+## bare scene.
+func effects_parent() -> Node:
+	var parent := get_parent()
+	var map := parent.get_node_or_null("Map") if parent != null else null
+	return map if map != null else parent
 
 
 ## Limits the camera to a rectangle in world coordinates (usually the level bounds).
@@ -286,14 +454,30 @@ func set_camera_limits(bounds: Rect2) -> void:
 
 ## Moves the camera straight to the player (after a jump to another map) instead of gliding.
 func snap_camera() -> void:
+	_camera.position = Vector2.ZERO
 	_camera.reset_smoothing()
 	Placement.reset(_camera)
+
+
+## The camera leads Nico a little where he walks (or dodges), so the way ahead is seen first; it
+## settles back over him when he stops.
+func _update_camera_lead(delta: float) -> void:
+	if camera_look_ahead <= 0.0:
+		return
+	var lead := Vector2.ZERO
+	if state == State.MOVE or state == State.DASH:
+		lead = (_action_dir if state == State.DASH else _move_dir.normalized()) * camera_look_ahead
+	_camera.position = _camera.position.lerp(lead, 1.0 - exp(-Tuning.CAMERA_LOOK_AHEAD_SPEED * delta))
 
 
 ## Puts the player in the hurt state and pushes it away from `from_position`.
 func hurt(from_position: Vector2) -> void:
 	if is_invulnerable():
 		return
+	# A hit during the wind-up cancels the shot: its cooldown is given back, the player owes nothing
+	# for an arrow that never left.
+	if _shot_pending:
+		_attack_cooldown_left = 0.0
 	_set_attack_active(false)
 	_action_dir = (global_position - from_position).normalized()
 	_invulnerable_left = hit_invulnerability_time
@@ -349,20 +533,53 @@ func _on_dialogue_finished(_dialogue_id: StringName, _state: StringName) -> void
 
 
 func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
-	health.take_damage(damage, from_position)
+	if _absorb_with_shield():
+		return
+	# Published before the health drops: the profile closes the run on `player_died`, so a damage
+	# event after it would be lost and the killing blow would never count.
 	Events.player_damaged.emit(damage, from_position)
+	health.take_damage(damage, from_position)
 	if not health.is_dead():
 		hurt(from_position)
 
 
-func _on_arrow_hit(hurtbox: Hurtbox) -> void:
+## The shield takes the hit instead of Nico: no damage and no knockback, only the i-frames of a hit.
+func _absorb_with_shield() -> bool:
+	var data := buff_data(ResourceData.Effect.SHIELD)
+	if data == null or _buffs[data.id]["charges"] <= 0:
+		return false
+	_buffs[data.id]["charges"] -= 1
+	_invulnerable_left = data.shield_invulnerability
+	flash(data.color, Tuning.SHIELD_FLASH_SECONDS, Tuning.SHIELD_FLASH_STRENGTH)
+	if _shield_bubble != null:
+		_shield_bubble.pulse()
+	var left: int = _buffs[data.id]["charges"]
+	Events.player_buff_charges_changed.emit(data.id, left)
+	if left <= 0:
+		_end_buff(data.id)
+	return true
+
+
+## Every arrow of a frost shot slows what it hits.
+func _on_frost_hit(hurtbox: Hurtbox) -> void:
+	var data := buff_data(ResourceData.Effect.FROST)
+	var target: Node = hurtbox.owner
+	if data != null and target != null and target.has_method("apply_slow"):
+		target.apply_slow(data.slow_factor, data.slow_seconds)
+
+
+func _on_arrow_hit(hurtbox: Hurtbox, damage: int) -> void:
 	var target: Node = hurtbox.owner
 	attack_hit.emit(target)
-	Events.player_hit_enemy.emit(target, attack_damage)
+	Events.player_hit_enemy.emit(target, damage)
+
+
+func _on_crit_landed(hurtbox: Hurtbox, damage: int) -> void:
+	Events.player_crit.emit(hurtbox.owner, damage)
 
 
 func _process_free(_delta: float) -> void:
-	velocity = _move_dir * speed * (_slow_factor if _slow_left > 0.0 else 1.0)
+	velocity = _move_dir * move_speed() * (_slow_factor if _slow_left > 0.0 else 1.0)
 	state = State.MOVE if _move_dir != Vector2.ZERO else State.IDLE
 
 	if _locked:
@@ -392,7 +609,7 @@ func _buffer_presses() -> void:
 
 
 func _start_dash() -> void:
-	_pull_left = 0.0
+	break_pull()
 	_action_dir = facing
 	_dash_cooldown_left = dash_cooldown
 	_enter_state(State.DASH, dash_time)
@@ -410,7 +627,7 @@ func _process_dash(delta: float) -> void:
 func _start_attack() -> void:
 	end_stealth()
 	_action_dir = facing
-	_attack_cooldown_left = attack_cooldown
+	_attack_cooldown_left = shot_cooldown()
 	_set_attack_active(true)
 	_enter_state(State.ATTACK, attack_time)
 	attacked.emit(_action_dir)
@@ -418,8 +635,9 @@ func _start_attack() -> void:
 
 
 func _process_attack(delta: float) -> void:
-	velocity = _move_dir * speed * attack_move_factor
-	if _shot_pending and 1.0 - _state_time_left / attack_time >= weapon.release_at:
+	velocity = _move_dir * move_speed() * attack_move_factor
+	# The last tick of the attack always releases a pending shot (a release_at of 1.0 included).
+	if _shot_pending and (_state_time_left - delta <= 0.0 or 1.0 - _state_time_left / attack_time >= weapon.release_at):
 		_fire()
 	_state_time_left -= delta
 	if _state_time_left <= 0.0:
@@ -450,16 +668,34 @@ func _fire() -> void:
 	var pose := FacingView.attack_animation(_action_dir, _body.sprite_frames)
 	var muzzle := global_position + FacingView.attack_muzzle(pose, FacingView.attack_flips(_action_dir))
 	# The middle arrow is the real shot (the AI counts its hit); the others of the fan are extra.
-	var count := 1 + _extra_arrows
+	var fan := _fan_data()
+	var count := 1 + (fan.extra_arrows if fan != null else 0)
+	var spread := deg_to_rad(fan.spread_degrees) if fan != null else 0.0
+	var pierce := buff_data(ResourceData.Effect.PIERCE)
+	var frost := buff_data(ResourceData.Effect.FROST)
 	for i in count:
 		var arrow: Arrow = weapon.projectile_scene.instantiate()
-		var angle := _arrow_spread * (i - (count - 1) / 2.0)
-		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, attack_damage)
+		var angle := spread * (i - (count - 1) / 2.0)
+		# Every arrow rolls its own crit; a crit is the same Hitbox hit with multiplied damage.
+		var crit := _crit_rng.randf() < total_crit_chance()
+		var damage := arrow_damage()
+		if crit:
+			damage = maxi(roundi(damage * crit_multiplier), damage)
+		arrow.setup(_action_dir.rotated(angle), weapon.projectile_speed, weapon.projectile_range, damage)
+		arrow.crit = crit
+		if pierce != null:
+			arrow.max_hits = pierce.pierce_count
+			arrow.tint = pierce.color
+		if frost != null:
+			arrow.tint = frost.color
+			arrow.hit_landed.connect(_on_frost_hit)
 		arrow.height_level = Heights.level_of(self)
 		if i == (count - 1) / 2:
-			arrow.hit_landed.connect(_on_arrow_hit)
+			arrow.hit_landed.connect(_on_arrow_hit.bind(damage))
+		if crit:
+			arrow.hit_landed.connect(_on_crit_landed.bind(damage))
 		arrow.blocked.connect(func(at: Vector2) -> void: Events.arrow_blocked.emit(at))
-		get_parent().add_child(arrow)
+		effects_parent().add_child(arrow)
 		arrow.global_position = muzzle
 		Placement.reset(arrow)
 	Events.player_shot.emit(_action_dir, _nearest_enemy_distance(weapon.projectile_range))
@@ -476,6 +712,10 @@ func _nearest_enemy_distance(reach: float) -> float:
 		if distance <= reach and (best < 0.0 or distance < best):
 			best = distance
 	return best
+
+
+func _is_walk(anim: StringName) -> bool:
+	return String(anim).begins_with("walk")
 
 
 ## `<base>_side` if Nico's art has it, else nothing (the state keeps its old look).
@@ -520,16 +760,23 @@ func _update_visuals(delta: float) -> void:
 			one_shot_time = attack_time
 		State.DASH:
 			one_shot = _side_art(&"dash")
-			one_shot_time = dash_time
+			one_shot_time = dash_time if one_shot != StringName() else 0.0
 		State.HURT:
 			one_shot = _side_art(&"hurt")
-			one_shot_time = hurt_time
+			one_shot_time = hurt_time if one_shot != StringName() else 0.0
 		State.DEAD:
 			one_shot = _side_art(&"death")
 	if one_shot != StringName():
 		wanted = one_shot
 	if _body.animation != wanted:
+		# Turning from one walking view to another keeps the step: the cycle goes on from the same
+		# frame instead of starting over, so a turn never stutters.
+		var keep_step := Tuning.WALK_KEEP_STEP and _is_walk(_body.animation) and _is_walk(wanted)
+		var frame := _body.frame
+		var progress := _body.frame_progress
 		_body.play(wanted)
+		if keep_step and frame < _body.sprite_frames.get_frame_count(wanted):
+			_body.set_frame_and_progress(frame, progress)
 	# The swing, the dash and the hurt fit exactly in their state's time; death plays at its own
 	# pace and stays on its last frame; walk follows the real speed so the feet slide less.
 	if one_shot_time > 0.0:
@@ -555,3 +802,5 @@ func _update_visuals(delta: float) -> void:
 				_body.modulate = Color(0.7, 0.5, 1.0, 0.5)
 			else:
 				_body.modulate = Color.WHITE
+			if _flash_left > 0.0:
+				_body.modulate = _body.modulate.lerp(_flash_color, _flash_strength * _flash_left / _flash_total)

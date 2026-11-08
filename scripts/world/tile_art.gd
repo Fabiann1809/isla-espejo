@@ -178,6 +178,58 @@ static func blob_tile(pattern_role: StringName, inner_role: StringName, inside: 
 	return tiles[4]
 
 
+## A 47-tile blob pattern (the temple's `lava_rim` and `ledge`): one tile per distinct mask of the
+## 8 neighbours of a cell, with the bits N=1 NE=2 E=4 SE=8 S=16 SW=32 W=64 NW=128 set when that
+## neighbour is inside the area, a corner only counting when both edges beside it are inside.
+## The tiles are ordered as `blob_masks()`: the nine-slice in reading order, the inner corners
+## (SE, SW, NE, NW), then the other 34 masks ascending (the same list the temple sheet's json keeps
+## as `blob_masks`, written by tools/make_temple_tileset_art.py). Stray corner bits are dropped.
+static func blob47_tile(pattern_role: StringName, mask: int) -> Vector2i:
+	return pattern(pattern_role)[blob_masks().find(normalise_blob_mask(mask))]
+
+
+## The 8-neighbour mask of `cell` for an area (`inside` says whether a cell belongs to it).
+static func blob_mask(inside: Callable, cell: Vector2i) -> int:
+	var mask := 0
+	for i in BLOB_NEIGHBOURS.size():
+		if inside.call(cell + BLOB_NEIGHBOURS[i]):
+			mask |= 1 << i
+	return normalise_blob_mask(mask)
+
+
+## Drops the corner bits whose two edges are not both inside, so masks that draw alike are equal.
+static func normalise_blob_mask(mask: int) -> int:
+	for corner in [[2, 1, 4], [8, 4, 16], [32, 16, 64], [128, 64, 1]]:
+		if not (mask & corner[1] and mask & corner[2]):
+			mask &= ~corner[0]
+	return mask
+
+
+## The 47 masks in the order of a 47-tile blob pattern (built once).
+static func blob_masks() -> Array[int]:
+	if _blob_masks.is_empty():
+		var nine_slice: Array[int] = [4 | 8 | 16, 64 | 32 | 16 | 8 | 4, 64 | 32 | 16,
+				1 | 2 | 4 | 8 | 16, 255, 1 | 128 | 64 | 32 | 16,
+				1 | 2 | 4, 64 | 128 | 1 | 2 | 4, 1 | 128 | 64]
+		var inner: Array[int] = [255 ^ 8, 255 ^ 32, 255 ^ 2, 255 ^ 128]
+		var rest: Array[int] = []
+		for raw in 256:
+			var mask := normalise_blob_mask(raw)
+			if not (mask in nine_slice or mask in inner or mask in rest):
+				rest.append(mask)
+		rest.sort()
+		_blob_masks.append_array(nine_slice)
+		_blob_masks.append_array(inner)
+		_blob_masks.append_array(rest)
+	return _blob_masks
+
+
+## Neighbour offsets by mask bit (bit i = BLOB_NEIGHBOURS[i]): N, NE, E, SE, S, SW, W, NW.
+const BLOB_NEIGHBOURS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0), Vector2i(1, 1),
+		Vector2i(0, 1), Vector2i(-1, 1), Vector2i(-1, 0), Vector2i(-1, -1)]
+static var _blob_masks: Array[int] = []
+
+
 ## The sheet coordinates of a nine-slice pattern role for cell (x, y) of a `size`-cell area.
 static func nine_slice_tile(pattern_role: StringName, x: int, y: int, size: Vector2i) -> Vector2i:
 	var column := 0 if x == 0 else (2 if x == size.x - 1 else 1)

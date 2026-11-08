@@ -15,11 +15,19 @@ const CELL_FEET_ROW := 30.0
 @export var body_color := Color(0.75, 0.7, 0.6)
 @export var sprite_frames: SpriteFrames
 @export var sprite_scale := ART_SCALE
+## A merchant: once his conversation ends, the shop (ShopMenu) opens for the player who spoke to him.
+@export var opens_shop := false
 
 @onready var _talk: Interactable = $Talk
 @onready var _body: ColorRect = $Body
 @onready var _name: Label = $Name
 @onready var _sprite: AnimatedSprite2D = $Sprite
+
+var _shop: ShopMenu
+var _talker: Node
+## Seconds until the next gesture (only with a "gesture" animation).
+var _gesture_left := 0.0
+var _gesture_rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -33,12 +41,57 @@ func _ready() -> void:
 		_sprite.visible = true
 		_sprite.play(&"idle")
 		add_child(IdleBreath.new())
+		if _has_gesture():
+			_gesture_rng.randomize()
+			_gesture_left = _next_gesture_delay()
+			_sprite.animation_finished.connect(_on_sprite_animation_finished)
 		# The name sits right above the head, whatever the scale.
 		_name.offset_bottom = FEET_Y - 2.0 * CELL_FEET_ROW * sprite_scale - 2.0
 		_name.offset_top = _name.offset_bottom - 18.0
 	_name.text = Dialogue.load_dialogue(dialogue_id).get("speaker", "")
 	_talk.interacted.connect(_on_talk)
+	if opens_shop:
+		Events.dialogue_finished.connect(_on_dialogue_finished)
 
 
-func _on_talk(_player: Node) -> void:
+func _process(delta: float) -> void:
+	if not _has_gesture() or _sprite.animation == &"gesture":
+		return
+	_gesture_left -= delta
+	if _gesture_left <= 0.0:
+		play_gesture()
+
+
+## Plays the NPC's gesture once, then it stands still on "idle" again.
+func play_gesture() -> void:
+	if _has_gesture():
+		_sprite.play(&"gesture")
+
+
+func _has_gesture() -> bool:
+	return Tuning.NPC_GESTURES_ENABLED and sprite_frames != null and sprite_frames.has_animation(&"gesture")
+
+
+func _next_gesture_delay() -> float:
+	return _gesture_rng.randf_range(Tuning.NPC_GESTURE_MIN, Tuning.NPC_GESTURE_MAX)
+
+
+func _on_sprite_animation_finished() -> void:
+	if _sprite.animation == &"gesture":
+		_sprite.play(&"idle")
+		_gesture_left = _next_gesture_delay()
+
+
+func _on_talk(player: Node) -> void:
+	_talker = player
+	play_gesture()
 	Dialogue.start(dialogue_id)
+
+
+func _on_dialogue_finished(finished_id: StringName, _state: StringName) -> void:
+	if finished_id != dialogue_id or _talker == null or not Tuning.SHOP_ENABLED:
+		return
+	if _shop == null:
+		_shop = ShopMenu.new()
+		add_child(_shop)
+	_shop.open(_talker)

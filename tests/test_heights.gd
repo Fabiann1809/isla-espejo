@@ -1,7 +1,8 @@
 extends SceneTree
-## Two height levels (see scripts/world/heights.gd): terrace footprints block only low actors, edges
-## and rails only high ones, water only low ones, stairs change the level halfway, and arrows only
-## stop at what blocks their level. Flat rooms (nothing on layers 8 and 9) are not affected.
+## Three height levels (see scripts/world/heights.gd): terrace footprints block only low actors, edges
+## and rails only level-1 ones, top edges (layer 10) only level-2 ones, water only low ones, stairs
+## change the level halfway, and arrows only stop at what blocks their level from below (a level-1 arrow
+## at a layer-11 cliff). Flat rooms (nothing on layers 8 to 11) are not affected.
 ## Run: godot --headless --path . --script res://tests/test_heights.gd
 
 var _ok := true
@@ -73,6 +74,72 @@ func _initialize() -> void:
 	_check(is_instance_valid(high_arrow) and high_arrow.global_position.x > 240.0, "a high arrow flies over a terrace")
 	_check(is_instance_valid(high_arrow) and not high_arrow.is_queued_for_deletion(), "and a rail does not stop it")
 
+	# Three levels (the temple): layer 10 blocks level-2 actors, layer 11 is a cliff of height 2 that
+	# only level-1 projectiles see. From the left: a footprint (8), a rail (9), a top edge (10), a cliff (11).
+	_wall(room, Rect2(-440, -200, 16, 160), 8)
+	_wall(room, Rect2(-404, -200, 8, 160), 9)
+	_wall(room, Rect2(-376, -200, 24, 160), 10)
+	_wall(room, Rect2(-330, -200, 24, 160), 11)
+	var top_stairs := _stairs(room, Vector2(-200, -120), Vector2(64, 40), Vector2.RIGHT, 1)
+	await _frames(2)
+	_check(Heights.MID == 1 and Heights.HIGH == Heights.MID and Heights.TOP == 2 and Heights.LEVELS == 3,
+			"the levels are LOW, MID (alias HIGH) and TOP")
+	_check(Heights.block_layer(0) == 8 and Heights.block_layer(1) == 9 and Heights.block_layer(2) == 10,
+			"each level has its own blocking layer")
+
+	Heights.set_level(player, Heights.TOP)
+	_check(player.get_collision_mask_value(10) and not player.get_collision_mask_value(8)
+			and not player.get_collision_mask_value(9) and not player.get_collision_mask_value(11)
+			and not player.get_collision_mask_value(7),
+			"a level-2 body only has the mask bit of layer 10")
+	await _walk(player, Vector2(-460, -120), "move_right", 60)
+	_check(player.global_position.x > -396.0 and player.global_position.x < -352.0,
+			"a level-2 Nico is stopped by layer 10 and passes layers 8 and 9 (x = %.0f)" % player.global_position.x)
+
+	Heights.set_level(player, Heights.MID)
+	_check(player.get_collision_mask_value(9) and not player.get_collision_mask_value(11),
+			"a level-1 body never has the mask bit of layer 11")
+	await _walk(player, Vector2(-344, -120), "move_right", 40)
+	_check(player.global_position.x > -300.0,
+			"a level-1 Nico is not stopped by layer 11 (x = %.0f)" % player.global_position.x)
+
+	# Stairs with low_level 1 switch between levels 1 and 2.
+	_check(top_stairs.low_level == 1, "a StairZone exports its low level")
+	await _walk(player, Vector2(-220, -120), "move_right", 24)
+	_check(Heights.level_of(player) == Heights.TOP,
+			"stairs with low_level 1 move Nico up to level 2 (x = %.0f)" % player.global_position.x)
+	await _walk(player, player.global_position, "move_left", 40)
+	_check(Heights.level_of(player) == Heights.MID, "and back down to level 1")
+	Heights.set_level(player, Heights.LOW)
+	player.global_position = Vector2(60, 60)
+
+	# Arrows: a level-1 arrow flies over rails and top edges and stops at a cliff; a level-2 one over all.
+	var mid_arrow := _arrow(room, Vector2(-460, -150), Heights.MID)
+	var top_arrow := _arrow(room, Vector2(-460, -90), Heights.TOP)
+	_check(mid_arrow.get_node("WallSensor").get_collision_mask_value(11)
+			and not mid_arrow.get_node("WallSensor").get_collision_mask_value(8)
+			and not mid_arrow.get_node("WallSensor").get_collision_mask_value(9)
+			and not mid_arrow.get_node("WallSensor").get_collision_mask_value(10),
+			"a level-1 arrow's sensor sees only layer 11 (and the world)")
+	await _frames(36)
+	_check(not is_instance_valid(mid_arrow) or mid_arrow.is_queued_for_deletion(),
+			"a level-1 arrow flies over a layer-9 rail and stops at a layer-11 cliff")
+	_check(is_instance_valid(top_arrow) and not top_arrow.is_queued_for_deletion()
+			and top_arrow.global_position.x > -306.0,
+			"a level-2 arrow is stopped by none of 8, 9, 10, 11 (x = %.0f)" % (top_arrow.global_position.x if is_instance_valid(top_arrow) else -999.0))
+
+	# Flyers: a body whose mask never had the water bit.
+	var walker: Node2D = load("res://scenes/enemies/grunt.tscn").instantiate()
+	room.add_child(walker)
+	await _frames(2)
+	var bat := CharacterBody2D.new()
+	bat.collision_mask = 1
+	_check(Heights.is_flyer(bat) and not Heights.is_flyer(walker), "a flyer is detected and a walker is not")
+	_check(Heights.level_of(bat) == Heights.LOW and not bat.get_collision_mask_value(7),
+			"asking a fresh body whether it flies gives it its level without a water bit")
+	bat.free()
+	walker.queue_free()
+
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
@@ -90,9 +157,10 @@ func _wall(room: Node, rect: Rect2, layer: int) -> StaticBody2D:
 	return body
 
 
-func _stairs(room: Node, center: Vector2, size: Vector2, direction: Vector2) -> Area2D:
+func _stairs(room: Node, center: Vector2, size: Vector2, direction: Vector2, low_level: int = 0) -> Area2D:
 	var zone: Area2D = load("res://scripts/world/stair_zone.gd").new()
 	zone.direction = direction
+	zone.low_level = low_level
 	var shape := CollisionShape2D.new()
 	shape.shape = RectangleShape2D.new()
 	shape.shape.size = size

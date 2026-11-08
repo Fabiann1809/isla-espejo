@@ -33,6 +33,8 @@ func _ready() -> void:
 		push_error("HungryTile '%s' needs a HungryTileData." % name)
 		_tile = HungryTileData.new()
 	_hurtbox.invulnerability_check = func() -> bool: return not is_revealed()
+	interruptible = false
+	interrupt_opt_out_reason = "its warning (TELL) is a hidden tile that cannot be hit; " 			+ "once revealed a hit goes through Enemy._on_hurtbox_hit and interrupts as usual"
 	_hitbox.hit_landed.connect(_on_bite_landed)
 	_set_revealed(false)
 

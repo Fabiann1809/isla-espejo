@@ -144,4 +144,6 @@ func _clear_warning() -> void:
 	_lane = null
 	if _flash != null and _flash.is_valid():
 		_flash.kill()
+		if _sprite != null:
+			_sprite.modulate = Color.WHITE
 	_flash = null

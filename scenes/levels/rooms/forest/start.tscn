@@ -142,3 +142,8 @@ kind = 4
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 position = Vector2(240, 144)
+
+[node name="NpcSpawn" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="NpcSpawn"]
+position = Vector2(304, 104)

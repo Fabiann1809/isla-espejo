@@ -3,8 +3,9 @@ extends SkillEffect
 ## Sombra: short teleport in the facing direction (stopping before walls) that also makes the player
 ## harder to detect for a while. Attacking breaks the stealth.
 
-## World and water: Sombra never lands Nico inside a tree, a wall or a pond.
-const WORLD_MASK := 1 | 1 << 6
+## The enemy layer, left out of the teleport's check: Sombra may land Nico next to an enemy, never
+## inside a tree, a wall, a pond or a ledge of the level he is on (the rest of his own mask).
+const ENEMY_BIT := 1 << 2
 const WALL_GAP := 1.0
 
 @export var stealth_time := 3.0
@@ -26,9 +27,9 @@ func activate(caster: Node2D, skill: SkillData, direction: Vector2) -> int:
 	if caster.has_method("start_stealth"):
 		caster.start_stealth(stealth_time, visibility)
 
-	var parent := caster.get_parent()
-	parent.add_child(SkillZone.circle(origin, 14.0, skill.color, 0.4))
-	parent.add_child(SkillZone.circle(destination, 14.0, skill.color, 0.4))
+	var parent := effects_parent(caster)
+	parent.add_child(SkillZone.circle(origin, 14.0, skill.color, 0.4, Callable(), skill.zone_frames))
+	parent.add_child(SkillZone.circle(destination, 14.0, skill.color, 0.4, Callable(), skill.zone_frames))
 	return hunters
 
 
@@ -41,7 +42,8 @@ func _safe_destination(caster: Node2D, motion: Vector2) -> Vector2:
 	params.shape = body.shape
 	params.transform = Transform2D(0.0, caster.global_position)
 	params.motion = motion
-	params.collision_mask = WORLD_MASK
+	var body_mask: int = caster.collision_mask if caster is CollisionObject2D else 1
+	params.collision_mask = body_mask & ~ENEMY_BIT
 	var result := caster.get_world_2d().direct_space_state.cast_motion(params)
 	var fraction: float = result[0] if result.size() == 2 else 1.0
 	var travelled := maxf(motion.length() * fraction - WALL_GAP, 0.0)

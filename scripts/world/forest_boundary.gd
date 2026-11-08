@@ -5,9 +5,6 @@ extends Node2D
 ## canopies and bushes, creating a lush, dark forest backdrop while keeping
 ## room interiors and corridor floors completely unobstructed.
 
-const CELL_SIZE := Vector2(480, 288)
-const CORRIDOR_LENGTH := 48.0
-const STRIDE := CELL_SIZE + Vector2(CORRIDOR_LENGTH, CORRIDOR_LENGTH)
 const DOOR_WIDTH := 64.0
 
 const CANOPY_DARK_COUNT := 9
@@ -19,6 +16,8 @@ var _sil_canopies: Array[Texture2D] = []
 var _dark_trees: Array[Texture2D] = []
 var _sil_trees: Array[Texture2D] = []
 var _bushes: Array[Texture2D] = []
+## The map's geometry (its rooms and corridors): the Level that owns this boundary.
+var _level: Level
 
 
 func _init() -> void:
@@ -50,8 +49,10 @@ func _load_textures() -> void:
 			_bushes.append(tex)
 
 
-## Generates the dark forest filling the black void and gaps between rooms.
-func generate(layout: MapLayout, bounds: Rect2, seed_val: int) -> void:
+## Generates the dark forest filling the black void and gaps between rooms. `level` knows where the
+## rooms and corridors are (`Level.room_rect`, `Level.corridor_floor`).
+func generate(layout: MapLayout, bounds: Rect2, seed_val: int, level: Level) -> void:
+	_level = level
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(seed_val + 77777)
 
@@ -59,22 +60,18 @@ func generate(layout: MapLayout, bounds: Rect2, seed_val: int) -> void:
 	# room interiors and walkable corridor floors.
 	var protected_rects: Array[Rect2] = []
 	for coord: Vector2i in layout.cells:
-		var origin := Vector2(coord) * STRIDE
 		# Protect playable room interior (keeps 16 px walls open for forest depth)
-		protected_rects.append(Rect2(origin + Vector2(16, 16), CELL_SIZE - Vector2(32, 32)))
+		protected_rects.append(level.room_rect(coord).grow(-16.0))
 
 	for coord: Vector2i in layout.cells:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if layout.are_connected(coord, coord + dir):
-				var origin := Vector2(coord) * STRIDE
+				# The corridor's floor and 4 px of each room's doorway.
+				var corridor := level.corridor_floor(coord, dir)
 				if dir == Vector2i.RIGHT:
-					var x := origin.x + CELL_SIZE.x - 4.0
-					var y := origin.y + CELL_SIZE.y / 2.0 - DOOR_WIDTH / 2.0
-					protected_rects.append(Rect2(x, y, CORRIDOR_LENGTH + 8.0, DOOR_WIDTH))
+					protected_rects.append(corridor.grow_individual(4.0, 0.0, 4.0, 0.0))
 				else:
-					var x := origin.x + CELL_SIZE.x / 2.0 - DOOR_WIDTH / 2.0
-					var y := origin.y + CELL_SIZE.y - 4.0
-					protected_rects.append(Rect2(x, y, DOOR_WIDTH, CORRIDOR_LENGTH + 8.0))
+					protected_rects.append(corridor.grow_individual(0.0, 4.0, 0.0, 4.0))
 
 	# 2. Outer margin around bounds into the black void
 	var outer_margin := 180.0
@@ -107,8 +104,7 @@ func _is_protected(pt: Vector2, rects: Array[Rect2]) -> bool:
 func _dist_to_rooms(pt: Vector2, layout: MapLayout) -> float:
 	var min_d := 999999.0
 	for coord: Vector2i in layout.cells:
-		var origin := Vector2(coord) * STRIDE
-		var room_rect := Rect2(origin, CELL_SIZE)
+		var room_rect := _level.room_rect(coord)
 		var dx := maxf(maxf(room_rect.position.x - pt.x, 0.0), pt.x - room_rect.end.x)
 		var dy := maxf(maxf(room_rect.position.y - pt.y, 0.0), pt.y - room_rect.end.y)
 		var d := sqrt(dx * dx + dy * dy)

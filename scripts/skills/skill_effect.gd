@@ -11,6 +11,14 @@ func activate(_caster: Node2D, _skill: SkillData, _direction: Vector2) -> int:
 	return 0
 
 
+## Where a skill's visual lives: the caster's map when it has one (so the effect goes away with the
+## map), else the caster's parent.
+static func effects_parent(caster: Node) -> Node:
+	if caster.has_method("effects_parent"):
+		return caster.effects_parent()
+	return caster.get_parent()
+
+
 ## Living enemies whose center is within `radius` of `center`.
 static func enemies_near(tree: SceneTree, center: Vector2, radius: float) -> Array[Node2D]:
 	var found: Array[Node2D] = []

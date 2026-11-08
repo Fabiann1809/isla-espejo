@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/surge_tiers.tscn" id="1_upn4n"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_ff2mw"]
+
+[resource]
+script = ExtResource("2_ff2mw")
+id = &"temple_surge_tiers"
+scene = ExtResource("1_upn4n")
+weight = 2.0
+tags = Array[StringName]([&"surge"])
+size_tiles = Vector2i(42, 28)
+max_enemies = 3
+enemy_affinity = {
+&"acolito_brasero": 1.5,
+&"arana_talladora": 0.0,
+&"nucleo_cria": 0.0,
+&"ojo_sol": 1.5
+}
+surge_stages = 2
+kills_stage_1 = 4
+kills_to_recede = 4
+max_alive = 4

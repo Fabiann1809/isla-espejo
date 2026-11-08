@@ -41,8 +41,8 @@ func _initialize() -> void:
 		_check(Input.is_action_pressed(action), "%s pressed" % action)
 		mapper.apply({"type": "action", "name": action, "pressed": false})
 
-	_check(not mapper.apply({"type": "action", "name": "pause", "pressed": true}), "unknown action name rejected")
-	_check(not Input.is_action_pressed("pause"), "rejected action does not press")
+	_check(not mapper.apply({"type": "action", "name": "debug_overlay", "pressed": true}), "unknown action name rejected")
+	_check(not Input.is_action_pressed("debug_overlay"), "rejected action does not press")
 	_check(not mapper.apply({"type": "action", "name": "move_left", "pressed": true}), "move_* is not a button action")
 	_check(not Input.is_action_pressed("move_left"), "move_left not pressed through action")
 	_check(not mapper.apply({"type": "action", "name": 5, "pressed": true}), "non-string name rejected")
@@ -66,6 +66,7 @@ func _initialize() -> void:
 
 	_test_min_hold()
 	_test_watchdog()
+	await _test_menu_events()
 
 	print("RESULT: ", "OK" if _ok else "FAILED")
 	quit(0 if _ok else 1)
@@ -148,3 +149,75 @@ func _test_watchdog() -> void:
 	_check(not Input.is_action_pressed("move_left") and Input.is_action_pressed("attack"),
 			"the watchdog only releases movement")
 	mapper.release_all()
+
+
+## The same messages also arrive as ui_* events so Control focus, menus and the shop see them.
+func _test_menu_events() -> void:
+	await process_frame
+	var seen: Array = []
+	var recorder := Node.new()
+	recorder.set_script(load("res://tests/event_recorder.gd"))
+	recorder.seen = seen
+	root.add_child(recorder)
+	var mapper = load("res://scripts/net/remote_control_mapper.gd").new()
+
+	mapper.apply({"type": "move", "x": 1.0, "y": 0.2}, 20000)
+	_check(seen == ["ui_right:1"], "stick right fires ui_right once")
+	_check(Input.is_action_pressed("ui_right"), "ui_right is pressed")
+	mapper.apply({"type": "move", "x": 1.0, "y": 0.0}, 20050)
+	_check(seen == ["ui_right:1"], "same direction fires nothing new")
+	mapper.tick(20300)
+	_check(seen == ["ui_right:1"], "no repeat before the delay")
+	mapper.apply({"type": "move", "x": 1.0, "y": 0.0}, 20400)
+	mapper.tick(20450)
+	_check(seen.size() == 3 and seen[2] == "ui_right:1", "key repeat after the delay")
+	mapper.tick(20500)
+	_check(seen.size() == 3, "next repeat waits for the interval")
+	mapper.apply({"type": "move", "x": 1.0, "y": 0.0}, 20590)
+	mapper.tick(20600)
+	_check(seen.size() == 5, "repeats every interval while held")
+	mapper.apply({"type": "move", "x": 0.0, "y": 1.0}, 20610)
+	_check(not Input.is_action_pressed("ui_right") and Input.is_action_pressed("ui_down"), "direction change swaps ui actions")
+	mapper.apply({"type": "move", "x": 0.3, "y": 0.3}, 20620)
+	_check(not Input.is_action_pressed("ui_down"), "a small stick movement is no menu direction")
+	mapper.apply({"type": "move", "x": -0.2, "y": -0.9}, 20630)
+	_check(Input.is_action_pressed("ui_up"), "stick up fires ui_up")
+	mapper.tick(21000)
+	_check(not Input.is_action_pressed("ui_up"), "the watchdog releases the menu direction")
+
+	seen.clear()
+	mapper.apply({"type": "action", "name": "attack", "pressed": true}, 22000)
+	_check(seen == ["ui_accept:1"], "attack fires ui_accept and no raw attack event")
+	_check(Input.is_action_pressed("attack") and Input.is_action_pressed("ui_accept"), "attack stays polled too")
+	mapper.apply({"type": "action", "name": "interact", "pressed": true}, 22001)
+	_check(seen == ["ui_accept:1"], "interact while attack is held does not fire ui_accept twice")
+	mapper.tick(22020)
+	mapper.tick(22040)
+	mapper.apply({"type": "action", "name": "attack", "pressed": false}, 22050)
+	_check(Input.is_action_pressed("ui_accept"), "ui_accept stays while interact holds it")
+	mapper.tick(22060)
+	mapper.tick(22080)
+	mapper.apply({"type": "action", "name": "interact", "pressed": false}, 22090)
+	_check(not Input.is_action_pressed("ui_accept") and seen[-1] == "ui_accept:0", "ui_accept released with the last button")
+
+	seen.clear()
+	mapper.apply({"type": "action", "name": "dash", "pressed": true}, 23000)
+	_check(seen == ["ui_cancel:1"], "dash fires ui_cancel")
+	mapper.tick(23020)
+	mapper.tick(23040)
+	mapper.apply({"type": "action", "name": "dash", "pressed": false}, 23050)
+	_check(seen[-1] == "ui_cancel:0", "dash release lets go of ui_cancel")
+
+	seen.clear()
+	_check(mapper.apply({"type": "action", "name": "pause", "pressed": true}, 24000), "the pause button is accepted")
+	_check(seen == ["pause:1"], "pause fires the pause action as an event")
+	mapper.tick(24020)
+	mapper.tick(24040)
+	mapper.apply({"type": "action", "name": "pause", "pressed": false}, 24050)
+	_check(seen[-1] == "pause:0", "pause release is sent")
+
+	mapper.apply({"type": "move", "x": 0.0, "y": 1.0}, 25000)
+	mapper.apply({"type": "action", "name": "dash", "pressed": true}, 25000)
+	mapper.release_all()
+	_check(not Input.is_action_pressed("ui_down") and not Input.is_action_pressed("ui_cancel"), "release_all lets go of the ui events")
+	recorder.free()

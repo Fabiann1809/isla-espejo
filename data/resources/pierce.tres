@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/resource_data.gd" id="1_evb3v"]
+
+[resource]
+script = ExtResource("1_evb3v")
+id = &"pierce"
+display_name = "Flechas perforantes"
+message = "¡Tus flechas atraviesan enemigos!"
+kind = 3
+color = Color(0.75, 0.55, 0.95, 1)
+drop_chance = 0.025
+max_on_floor = 1
+lifetime = 10.0

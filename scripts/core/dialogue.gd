@@ -37,6 +37,14 @@ func _process(delta: float) -> void:
 		_advance()
 
 
+## ui_accept (Enter, Space, a pad's A, the phone's attack and interact buttons) advances too: the
+## polling above misses a press that arrives later in the frame than this node's `_process`.
+func _input(event: InputEvent) -> void:
+	if active and _line_time >= MIN_LINE_TIME and event.is_action_pressed("ui_accept"):
+		get_viewport().set_input_as_handled()
+		_advance()
+
+
 ## Starts the conversation `dialogue_id` (a file name in data/dialogues/). Returns false if it
 ## cannot be played.
 func start(dialogue_id: StringName) -> bool:

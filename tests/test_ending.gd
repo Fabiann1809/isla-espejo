@@ -1,6 +1,6 @@
 extends SceneTree
-## The end of the last chapter built so far (the ruins): taking its exit ends the journey with the ending
-## screen (the run's summary with the victory texts) instead of building another map.
+## The end of the last chapter (the temple): taking its exit ends the journey with the ending screen (the
+## run's summary with the victory texts) instead of building another map.
 ## `Level` and other autoload-using types must not be referenced here (autoload compile order).
 ## Run: godot --headless --path . --script res://tests/test_ending.gd
 
@@ -19,13 +19,13 @@ func _initialize() -> void:
 			"the ending texts live in the profile config")
 
 	var level: Node2D = load("res://scenes/levels/forest_level.tscn").instantiate()
-	level.scenario = load("res://data/scenarios/ruins.tres")
+	level.scenario = load("res://data/scenarios/temple.tres")
 	level.seed_value = 5
 	level.completion_delay = 0.05
 	root.add_child(level)
 	await _frames(3)
 	_check(level.end_after_last_chapter and level.scenario.next_scenario == null,
-			"the ruins are the last chapter and the real level ends the journey after it")
+			"the temple is the last chapter and the real level ends the journey after it")
 	var ended := {"count": 0}
 	level.journey_ended.connect(func() -> void: ended.count += 1)
 	var builds := {"count": 0}
@@ -34,7 +34,7 @@ func _initialize() -> void:
 	_check(not panel.visible, "no summary while playing")
 
 	profile.begin_run()
-	events.scenario_completed.emit(&"ruins")
+	events.scenario_completed.emit(&"temple")
 	_check(not panel.visible, "finishing a chapter shows nothing before the veil falls")
 	await create_timer(2.0).timeout
 	_check(ended.count == 1, "taking the last exit ends the journey")
@@ -44,7 +44,7 @@ func _initialize() -> void:
 	_check(texts.ending_line in lines and texts.ending_continue in lines and not texts.continue in lines,
 			"it speaks of the ending, not of trying again")
 
-	events.scenario_completed.emit(&"ruins")
+	events.scenario_completed.emit(&"temple")
 	await create_timer(0.5).timeout
 	_check(ended.count == 1, "the exit cannot end the journey twice")
 	level.free()

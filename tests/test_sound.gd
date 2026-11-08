@@ -10,6 +10,7 @@ const NEEDED_CUES := [
 	&"ui_click", &"ui_hover", &"boss_warn", &"boss_slam", &"boss_roots", &"boss_defeated",
 	&"skill_roots", &"skill_current", &"skill_shadow", &"fragment", &"portal", &"alert",
 	&"attack_shot", &"attack_summon", &"attack_planta_tiradora", &"dialogue",
+	&"attack_melee", &"attack_trap", &"attack_charge", &"attack_dive", &"death_centinela_obsidiana",
 ]
 
 var _ok := true
@@ -90,6 +91,13 @@ func _initialize() -> void:
 	_check(sound.current_music == StringName(), "dying fades the music out")
 	sound.play_music(&"menu")
 	_check(sound.current_music == &"menu", "the menu has its own music")
+	# The temple: its own track, an urgent one while a lava surge is up, and back after it.
+	events.level_started.emit(&"temple", 1)
+	_check(sound.current_music == &"temple", "the temple plays its own music")
+	events.lava_surge_started.emit(null, 1)
+	_check(sound.current_music == &"temple_surge", "a lava surge switches to the surge track")
+	events.lava_surge_receded.emit(null)
+	_check(sound.current_music == &"temple", "when the lava recedes the temple music comes back")
 
 	# Cross-fade: the new track starts rising at once, and a change in the middle of a fade keeps
 	# the audible track instead of cutting it.

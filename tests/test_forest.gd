@@ -127,8 +127,10 @@ func _test_built_level() -> void:
 	var merchants := npcs.filter(func(n: Node) -> bool: return n.dialogue_id == &"merchant")
 	_check(npcs.size() == 2 and elders.size() == 1 and elders[0].get_parent().data.type == RoomData.RoomType.EVENT,
 			"the Anciano waits in the event room")
-	_check(merchants.size() == 1 and merchants[0].get_parent().data.type == RoomData.RoomType.SPECIAL,
-			"the Mercader waits in the special room")
+	var merchant_rooms: Array = merchants.map(func(n: Node) -> int: return n.get_parent().data.type)
+	merchant_rooms.sort()
+	_check(merchants.size() == 1 and merchant_rooms == [RoomData.RoomType.SPECIAL],
+			"the Mercader waits only in the special room")
 	if merchants.size() == 1:
 		var dialogue: Node = root.get_node("Dialogue")
 		var talked := []

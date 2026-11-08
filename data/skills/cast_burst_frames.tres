@@ -1,0 +1,39 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/skills/cast_burst.png" id="1_43iri"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4c2i"]
+atlas = ExtResource("1_43iri")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_iudfs"]
+atlas = ExtResource("1_43iri")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jnnmo"]
+atlas = ExtResource("1_43iri")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mi0kl"]
+atlas = ExtResource("1_43iri")
+region = Rect2(96, 0, 32, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4c2i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_iudfs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jnnmo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mi0kl")
+}],
+"loop": 0,
+"name": &"start",
+"speed": 14.0
+}]

@@ -26,7 +26,8 @@ var _is_last := false
 func _ready() -> void:
 	var font := UiKit.pixel_font()
 	if font != null:
-		for label: Label in [_text, _name, _arrow]:
+		# Not the arrow: the pixel font has no ▼ / ■, the theme's font does.
+		for label: Label in [_text, _name]:
 			label.add_theme_font_override("font", font)
 
 

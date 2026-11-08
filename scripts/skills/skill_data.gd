@@ -16,6 +16,12 @@ extends Resource
 @export var range := 60.0
 ## Damage to affected enemies (0 for pure control skills).
 @export var damage := 0
-## Placeholder color for the HUD icon and the visual effect, until real art exists.
+## Color of the skill: the cast burst, the HUD slot without an icon, the zone drawn without art.
 @export var color := Color.WHITE
 @export var effect: SkillEffect
+## The zone's art (data/skills/<id>_frames.tres, built by tools/make_skill_frames.gd from the
+## strips of tools/make_skill_art.py): `start` plays once, `loop` holds while the zone lasts and
+## `end` plays once before it goes. Empty = the zone is drawn with shapes.
+@export var zone_frames: SpriteFrames
+## The HUD icon (24x24). Empty = a square of `color`.
+@export var icon: Texture2D

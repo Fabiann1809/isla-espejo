@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RoomData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/rooms/temple/boss.tscn" id="1_c0rib"]
+[ext_resource type="Script" path="res://scripts/world/room_data.gd" id="2_jp838"]
+
+[resource]
+script = ExtResource("2_jp838")
+id = &"temple_boss"
+type = 5
+scene = ExtResource("1_c0rib")
+height = 1
+size_tiles = Vector2i(42, 28)
+min_enemies = 0
+max_enemies = 0

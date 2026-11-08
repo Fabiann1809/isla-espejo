@@ -94,10 +94,14 @@ var _status_tinted := false
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# An enemy lives on the height of the room that holds it.
+	# An enemy lives on the height of the floor it is born on: the platform's level in a temple
+	# room (Room.height_at), else the height of the room that holds it.
 	var level := Heights.level_of(self)
-	if get_parent() != null and "height" in get_parent():
-		level = get_parent().height
+	var parent := get_parent()
+	if parent != null and parent.has_method("height_at"):
+		level = parent.height_at(position)
+	elif parent != null and "height" in parent:
+		level = parent.height
 	Heights.set_level(self, level)
 	if data == null:
 		push_error("Enemy '%s' has no EnemyData assigned." % name)
@@ -170,6 +174,15 @@ func is_dead() -> bool:
 	return state == State.DEAD
 
 
+## True when no wall, tree or rock stands between the enemy and `other` (ponds do not count: a
+## melee attack reaches across the water's edge as the sight does).
+func has_clear_path_to(other: Node2D) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(
+			global_position, other.global_position, 1 << (WORLD_LAYER - 1))
+	query.exclude = [get_rid()]
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
 ## Status effects used by player skills.
 func apply_root(duration: float) -> void:
 	if state != State.DEAD:
@@ -239,6 +252,15 @@ func is_rooted() -> bool:
 	return _root_left > 0.0
 
 
+## False for an enemy whose attack cannot be cut short by a hit because it is untouchable for the
+## whole warning (see `interrupt_opt_out_reason`). `tests/test_enemy_interrupt.gd` skips the
+## "hit during the attack" check for these and prints who opted out and why. Prefer fixing the hit
+## path to opting out.
+var interruptible := true
+## Why `interruptible` is false (shown by the test). Empty for everyone else.
+var interrupt_opt_out_reason := ""
+
+
 ## A hit or a push during an attack cuts it short: a short rest after the hurt before the next
 ## warning, so a cut attack is not started again at once.
 func _interrupt_attack() -> void:
@@ -278,7 +300,8 @@ func _process_chase(_delta: float) -> void:
 		return
 	var to_target := target.global_position - global_position
 	facing = to_target.normalized()
-	if to_target.length() <= data.attack_range and _attack_cooldown_left == 0.0:
+	# In reach and nothing of the world in between: a swing never lands through a rock or a tree.
+	if to_target.length() <= data.attack_range and _attack_cooldown_left == 0.0 and has_clear_path_to(target):
 		_start_attack()
 		return
 	# Keep a little distance once in range instead of pushing into the player.
@@ -408,6 +431,11 @@ func _hit_world() -> bool:
 
 ## Walks back to where it was spawned (a patrol leg to its home point).
 func _return_home() -> void:
+	# An enemy that cannot walk (a planted shooter) only waits: a patrol leg at no speed would show
+	# it pedalling in place for as long as the leg lasts.
+	if data.move_speed * _speed_scale() <= 0.0:
+		_enter_idle()
+		return
 	state = State.PATROL
 	_patrol_point = _home
 	_start_patrol_leg()

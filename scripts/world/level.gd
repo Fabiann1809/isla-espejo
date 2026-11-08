@@ -8,9 +8,6 @@ signal generated(layout: MapLayout)
 ## The exit of the last chapter was taken (only with `end_after_last_chapter`): the journey is over.
 signal journey_ended
 
-const CELL_SIZE := Vector2(480, 288)
-const CORRIDOR_LENGTH := 48.0
-const STRIDE := CELL_SIZE + Vector2(CORRIDOR_LENGTH, CORRIDOR_LENGTH)
 const CORRIDOR_COLOR := Color(0.15, 0.22, 0.17)
 ## The forest shade's sort point: below every room, so it is drawn after all their floors.
 const SHADE_SORT_Y := 1000000.0
@@ -36,6 +33,8 @@ var intro_in_headless := false
 var weight_modifiers := {}
 ## What the director decided for the current map.
 var plan: DirectorPlan = DirectorPlan.neutral()
+## The enemies this map fields (`EnemyRoster`: the whole pool unless the scenario has a `roster_size`).
+var roster: Array[PackedScene] = []
 var layout: MapLayout
 var current_seed := 0
 ## Grid coordinate -> Room node.
@@ -55,6 +54,9 @@ var _completing := false
 ## Floor and wall rectangles of the corridors of the current map (world px), for the backdrop.
 var _corridor_floors: Array[Rect2] = []
 var _corridor_walls: Array[Rect2] = []
+## The temple's bridges of the current map (`TempleBridge`), in the corridors' order: their landings
+## are stone the backdrop keeps clear.
+var _bridges: Array = []
 var _boundary: Node2D
 ## The next map will be presented by the intro (its title card replaces the small chapter message).
 var _intro_requested := false
@@ -100,6 +102,7 @@ func generate(new_seed := 0) -> void:
 	# First close the previous run (the profile learns from it), then let the director read the result.
 	Events.level_started.emit(scenario.id, current_seed)
 	plan = Director.make_plan() if use_director else DirectorPlan.neutral()
+	roster = EnemyRoster.pick(scenario.enemy_pool, scenario.roster_size, current_seed, scenario.enemy_weights, plan)
 	layout = MapGenerator.generate(scenario, current_seed, _room_weights())
 	var problems := layout.validate()
 	if not problems.is_empty():
@@ -121,6 +124,7 @@ func generate(new_seed := 0) -> void:
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = current_seed + 1
+	_use_shadow_style()
 	_build_rooms(rng)
 	_build_corridors()
 	_compute_bounds()
@@ -137,8 +141,14 @@ func generate(new_seed := 0) -> void:
 
 ## Tells the HUD what to do now: the objective, or the follow-up once the boss is down.
 func _announce_objective() -> void:
-	var done := scenario.objective_flag != &"" and GameState.has_flag(scenario.objective_flag)
+	var done := not _has_boss() or (scenario.objective_flag != &"" and GameState.has_flag(scenario.objective_flag))
 	Events.objective_changed.emit(scenario.objective_done if done else scenario.objective)
+
+
+## A chapter without its boss yet (the ruins, for now) has nothing to defeat: its exit is open and
+## its objective is to cross it.
+func _has_boss() -> bool:
+	return scenario.boss_scene != null
 
 
 ## The director's room weights combined with any manual ones.
@@ -250,15 +260,80 @@ func _on_player_died() -> void:
 		player.clear_run_resources()
 	GameState.reset()
 	SaveGame.scenario_id = &""
-	SaveGame.save()
+	SaveGame.save(true)
 
 
 func room_at(coord: Vector2i) -> Room:
 	return rooms.get(coord)
 
 
+# --- geometry ------------------------------------------------------------------------------------------------------
+## The map is a grid of cells of `scenario.cell_tiles`, `scenario.corridor_tiles` apart. Each room is
+## centred in its cell, so a room smaller than the cell leaves a margin on every side and the corridor
+## that joins two neighbours spans the gap between their facing doors (the doors are the middle of each
+## room, which is the middle of the cell: neighbours always line up). All sizes are in world px.
+
+## Size of a grid cell.
+func cell_size() -> Vector2:
+	return Vector2(scenario.cell_tiles * TileArt.TILE)
+
+
+## Distance between the origins of two neighbouring cells.
+func stride() -> Vector2:
+	return cell_size() + Vector2.ONE * float(scenario.corridor_tiles * TileArt.TILE)
+
+
+## Top-left of the grid cell (not of its room: see `room_origin`).
 func cell_origin(coord: Vector2i) -> Vector2:
-	return Vector2(coord) * STRIDE
+	return Vector2(coord) * stride()
+
+
+## Size of the room of a cell, from its RoomData.
+func room_size(coord: Vector2i) -> Vector2:
+	return Vector2(layout.get_cell(coord).room_data.size_tiles * TileArt.TILE)
+
+
+## Top-left of the room of a cell: centred in the cell, on whole tiles.
+func room_origin(coord: Vector2i) -> Vector2:
+	var slack: Vector2i = scenario.cell_tiles - layout.get_cell(coord).room_data.size_tiles
+	return cell_origin(coord) + Vector2(slack / 2 * TileArt.TILE)
+
+
+## The room of a cell, walls included, in world px.
+func room_rect(coord: Vector2i) -> Rect2:
+	return Rect2(room_origin(coord), room_size(coord))
+
+
+## The floor of the corridor from the room at `coord` to its neighbour to the RIGHT or DOWN: from the
+## first room's edge to the second room's, one door wide.
+func corridor_floor(coord: Vector2i, dir: Vector2i) -> Rect2:
+	var from := room_rect(coord)
+	var to := room_rect(coord + dir)
+	var half_door := Room.DOOR_WIDTH / 2.0
+	if dir == Vector2i.RIGHT:
+		var y := cell_origin(coord).y + cell_size().y / 2.0
+		return Rect2(from.end.x, y - half_door, to.position.x - from.end.x, Room.DOOR_WIDTH)
+	var x := cell_origin(coord).x + cell_size().x / 2.0
+	return Rect2(x - half_door, from.end.y, Room.DOOR_WIDTH, to.position.y - from.end.y)
+
+
+## What is wrong with a room in this scenario's cell ("" when nothing): it is larger than the cell, or
+## the difference is odd, so it cannot be centred on whole tiles.
+func room_fit_problem(room_data: RoomData) -> String:
+	var slack: Vector2i = scenario.cell_tiles - room_data.size_tiles
+	if slack.x < 0 or slack.y < 0:
+		return "Room '%s' (%s tiles) is larger than the cell (%s tiles) of scenario '%s'" % [room_data.id, room_data.size_tiles, scenario.cell_tiles, scenario.id]
+	if slack.x % 2 != 0 or slack.y % 2 != 0:
+		return "Room '%s' (%s tiles) cannot be centred on whole tiles in the cell (%s tiles): sizes must be even" % [room_data.id, room_data.size_tiles, scenario.cell_tiles]
+	return ""
+
+
+func _check_room_fits(room_data: RoomData) -> void:
+	var problem := room_fit_problem(room_data)
+	if problem != "":
+		push_error(problem)
+	var slack: Vector2i = scenario.cell_tiles - room_data.size_tiles
+	assert(slack.x % 2 == 0 and slack.y % 2 == 0, "room and cell sizes must have an even difference")
 
 
 func _clear() -> void:
@@ -280,7 +355,8 @@ func _build_rooms(rng: RandomNumberGenerator) -> void:
 		var room: Room = cell.room_data.scene.instantiate()
 		room.theme = scenario.theme
 		room.setup(cell.room_data, cell.doors)
-		room.position = cell_origin(coord)
+		_check_room_fits(cell.room_data)
+		room.position = room_origin(coord)
 		_map.add_child(room)
 		rooms[coord] = room
 		_populate(room, cell, rng)
@@ -297,20 +373,50 @@ func _populate(room: Room, cell: MapLayout.Cell, rng: RandomNumberGenerator) -> 
 				return
 			var data := cell.room_data
 			var count := rng.randi_range(data.min_enemies, maxi(data.min_enemies, data.max_enemies))
-			room.spawn_enemies(scenario.enemy_pool, plan.adjust_count(count), rng, plan, scenario.enemy_weights)
+			var weights := EnemyRoster.room_weights(scenario.enemy_weights, data.enemy_affinity)
+			room.spawn_enemies(roster, plan.adjust_count(count), rng, plan, weights, _attach_surge_spawn_points(room, weights))
 		RoomData.RoomType.BOSS:
 			_spawn_single(room, scenario.boss_scene, "BossSpawn")
 			var portal := _spawn_single(room, scenario.exit_scene, "ExitSpawn")
 			if portal != null:
 				portal.scenario_id = scenario.id
+				if portal.has_method("seal_with"):
+					# A chapter whose boss is not built yet keeps its way out open.
+					portal.seal_with(scenario.objective_flag if _has_boss() else &"")
+		RoomData.RoomType.START:
+			_spawn_single(room, scenario.start_npc_scene, "NpcSpawn")
 		RoomData.RoomType.EVENT:
 			_spawn_single(room, scenario.npc_scene, "NpcSpawn")
 		RoomData.RoomType.SPECIAL:
 			_spawn_single(room, scenario.special_npc_scene, "SpecialSpawn")
 		RoomData.RoomType.REWARD:
 			if not scenario.chest_scenes.is_empty():
-				_spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
+				var chest := _spawn_single(room, scenario.chest_scenes[rng.randi_range(0, scenario.chest_scenes.size() - 1)], "ChestSpawn")
+				if chest is Chest:
+					# Same map seed, same prize: the roll depends on the seed and the room only.
+					chest.rng.seed = current_seed * 31 + cell.coord.x * 7 + cell.coord.y + 4
 	RoomDressing.dress(room)
+
+
+## Attaches the LavaSurge to a surge room (RoomData.surge_stages > 0, the temple) and returns its spawn
+## points. The room gets its LavaSurge, fed with the map's roster,
+## the director's plan and the room's weights; its own enemies are born only on the cells that stay
+## safe when the lava is highest, so the fight is always reachable. Empty for any other room: the
+## room's markers are used.
+func _attach_surge_spawn_points(room: Room, weights: Dictionary) -> Array[Vector2]:
+	var points: Array[Vector2] = []
+	if room.data.surge_stages <= 0 or not Tuning.TEMPLE_SURGE_ENABLED:
+		return points
+	var surge := LavaSurge.attach_to(room, roster, scenario.enemy_pool, current_seed)
+	if surge == null:
+		return points
+	surge.director_plan = plan
+	surge.base_weights = weights
+	for cell in surge.safe_spawn_cells():
+		points.append(Vector2(cell) * TileArt.TILE + Vector2.ONE * TileArt.TILE / 2.0)
+	if points.is_empty():
+		push_warning("Surge room '%s' has no safe spawn cells: its enemies fall back to the editor markers" % room.data.id)
+	return points
 
 
 ## The last combat room on the way to the boss, if the scenario has a mini boss.
@@ -348,6 +454,7 @@ func _spawn_single(room: Room, scene: PackedScene, container: String) -> Node2D:
 func _build_corridors() -> void:
 	_corridor_floors.clear()
 	_corridor_walls.clear()
+	_bridges.clear()
 	var corridors := Node2D.new()
 	corridors.name = "Corridors"
 	corridors.y_sort_enabled = true
@@ -360,28 +467,19 @@ func _build_corridors() -> void:
 
 
 func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
-	var origin := cell_origin(coord)
-	var half_door := Room.DOOR_WIDTH / 2.0
-	var floor_rect: Rect2
-	var walls: Array[Rect2] = []
-	if dir == Vector2i.RIGHT:
-		var y := origin.y + CELL_SIZE.y / 2.0
-		var x := origin.x + CELL_SIZE.x
-		floor_rect = Rect2(x, y - half_door, CORRIDOR_LENGTH, Room.DOOR_WIDTH)
-		walls.append(Rect2(x, y - half_door - Room.WALL, CORRIDOR_LENGTH, Room.WALL))
-		walls.append(Rect2(x, y + half_door, CORRIDOR_LENGTH, Room.WALL))
-	else:
-		var x := origin.x + CELL_SIZE.x / 2.0
-		var y := origin.y + CELL_SIZE.y
-		floor_rect = Rect2(x - half_door, y, Room.DOOR_WIDTH, CORRIDOR_LENGTH)
-		walls.append(Rect2(x - half_door - Room.WALL, y, Room.WALL, CORRIDOR_LENGTH))
-		walls.append(Rect2(x + half_door, y, Room.WALL, CORRIDOR_LENGTH))
+	var floor_rect := corridor_floor(coord, dir)
+	if floor_rect.size.x <= 0.0 or floor_rect.size.y <= 0.0:
+		push_error("No corridor between %s and %s: the rooms touch or overlap" % [coord, coord + dir])
+	var walls := _corridor_walls_of(floor_rect, dir)
 	_corridor_floors.append(floor_rect)
 	_corridor_walls.append_array(walls)
 
 	if scenario.theme != null:
-		_paint_corridor(parent, floor_rect, walls)
-		_dress_stairs(parent, floor_rect, coord, dir)
+		if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+			_build_bridge(parent, floor_rect, walls, coord, dir)
+		else:
+			_paint_corridor(parent, floor_rect, walls)
+			_dress_stairs(parent, floor_rect, coord, dir)
 		return
 	var floor_visual := ColorRect.new()
 	floor_visual.color = CORRIDOR_COLOR
@@ -393,17 +491,69 @@ func _add_corridor(parent: Node, coord: Vector2i, dir: Vector2i) -> void:
 	WallBuilder.add_walls(parent, walls)
 
 
+## The two wall rectangles of a corridor, one tile thick, along its floor (first north or west).
+func _corridor_walls_of(floor_rect: Rect2, dir: Vector2i) -> Array[Rect2]:
+	var walls: Array[Rect2] = []
+	if dir == Vector2i.RIGHT:
+		walls.append(Rect2(floor_rect.position.x, floor_rect.position.y - Room.WALL, floor_rect.size.x, Room.WALL))
+		walls.append(Rect2(floor_rect.position.x, floor_rect.end.y, floor_rect.size.x, Room.WALL))
+	else:
+		walls.append(Rect2(floor_rect.position.x - Room.WALL, floor_rect.position.y, Room.WALL, floor_rect.size.y))
+		walls.append(Rect2(floor_rect.end.x, floor_rect.position.y, Room.WALL, floor_rect.size.y))
+	return walls
+
+
 ## A corridor between rooms of different height is a staircase: steps on its floor and a StairZone
-## that changes the level of whoever crosses it, in the direction from the low room to the high one.
+## that changes the level of whoever crosses it, in the direction from the low room to the high one,
+## from the lower room's level to the one above it (the Ruinas climb 0 to 1; the temple also 1 to 2).
+## The temple's corridors are bridges, flat or climbing, and are built whole by `_build_bridge`.
 func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector2i) -> void:
-	if scenario.theme.wall_style != RoomTheme.WallStyle.ROCKS:
+	var style := scenario.theme.wall_style
+	if style == RoomTheme.WallStyle.LAVA:
+		_build_bridge(parent, floor_rect, _corridor_walls_of(floor_rect, dir), coord, dir)
+		return
+	if style != RoomTheme.WallStyle.ROCKS:
 		return
 	var from_height := layout.get_cell(coord).room_data.height
 	var to_height := layout.get_cell(coord + dir).room_data.height
 	if from_height == to_height:
 		return
+	if absi(from_height - to_height) > 1:
+		# A staircase climbs one level: the generator never joins rooms two levels apart (MapLayout.validate).
+		push_error("No staircase between %s (height %d) and %s (height %d): two levels apart" % [coord, from_height, coord + dir, to_height])
+		return
 	var uphill := Vector2(dir) if to_height > from_height else Vector2(-dir)
 	var vertical := dir == Vector2i.DOWN
+	_dress_ruin_stairs(parent, floor_rect, uphill, vertical)
+	var zone := StairZone.new()
+	zone.direction = uphill
+	zone.low_level = mini(from_height, to_height)
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = floor_rect.size
+	shape.shape = rectangle
+	zone.add_child(shape)
+	zone.position = floor_rect.get_center()
+	parent.add_child(zone)
+
+
+## A temple corridor: a stone causeway over the lava (`TempleBridge`), with a landing at mid-span when
+## it is long and one stretch of steps when its rooms are one level apart. Two levels apart is a
+## layout error (the generator never makes it): nothing is built.
+func _build_bridge(parent: Node, floor_rect: Rect2, walls: Array[Rect2], coord: Vector2i, dir: Vector2i) -> void:
+	var from_height := layout.get_cell(coord).room_data.height
+	var to_height := layout.get_cell(coord + dir).room_data.height
+	if absi(from_height - to_height) > 1:
+		push_error("No staircase between %s (height %d) and %s (height %d): two levels apart" % [coord, from_height, coord + dir, to_height])
+		return
+	var bridge := TempleBridge.new(scenario.theme, floor_rect, walls, from_height, to_height, dir, _bridges.size())
+	bridge.build(parent)
+	_bridges.append(bridge)
+
+
+## The Ruinas' staircase: steps between two stone parapets (the outermost cells of the corridor's
+## width, solid) with a torch on each at the top.
+func _dress_ruin_stairs(parent: Node, floor_rect: Rect2, uphill: Vector2, vertical: bool) -> void:
 	var steps: StringName = &"stairs_steps" if vertical else &"stairs_steps_h"
 	var tile := float(TileArt.TILE)
 	var stairs := Node2D.new()
@@ -443,24 +593,15 @@ func _dress_stairs(parent: Node, floor_rect: Rect2, coord: Vector2i, dir: Vector
 			top = Vector2(floor_rect.position.x if uphill.x < 0.0 else floor_rect.end.x - tile, rail.position.y)
 		torch.position = top
 		parent.add_child(torch)
-	var zone := StairZone.new()
-	zone.direction = uphill
-	var shape := CollisionShape2D.new()
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = floor_rect.size
-	shape.shape = rectangle
-	zone.add_child(shape)
-	zone.position = floor_rect.get_center()
-	parent.add_child(zone)
 
 
 ## A themed corridor: path tiles on the floor and the border tile (trees) along its walls.
 ## Only collision comes from the wall rectangles.
 func _paint_corridor(parent: Node, floor_rect: Rect2, walls: Array[Rect2]) -> void:
-	# Grass under the whole corridor: the trees of its walls and the rounded path edges have
-	# transparent corners.
 	# Numbered names: siblings with the same name would be renamed by the engine.
 	var number := parent.get_child_count()
+	# Grass under the whole corridor: the trees of its walls and the rounded path edges have
+	# transparent corners.
 	var ground := scenario.theme.new_layer(parent, "CorridorGround%d" % number)
 	scenario.theme.fill(ground, _cells(floor_rect), scenario.theme.floor_tile)
 	for wall in walls:
@@ -505,19 +646,46 @@ func _plant_corridor_trees(parent: Node, wall: Rect2) -> void:
 		parent.add_child(TreeWall.tree(foot, rng))
 
 
-## The deep forest around and between the rooms (themed scenarios only).
+## The deep forest around and between the rooms (themed scenarios only): rock for the Ruinas, the
+## lava sea for the temple.
 func _build_backdrop() -> void:
 	if scenario.theme == null or not Tuning.BACKDROP_ENABLED:
 		return
 	var walkable := {}
 	for coord: Vector2i in layout.cells:
-		_mark(walkable, _cells(Rect2(cell_origin(coord), CELL_SIZE)))
-	for rect in _corridor_floors:
-		_mark(walkable, _cells(rect))
+		_mark(walkable, _cells(room_rect(coord)))
 	var taken := {}
 	for rect in _corridor_walls:
 		_mark(taken, _cells(rect))
-	var area := _cells(bounds).grow(Tuning.BACKDROP_MARGIN_TILES)
+	var area := _cells(bounds).grow(_backdrop_margin())
+	if scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		# A bridge is lava too: the sea runs open under it, so the corridors are "taken", not islands;
+		# a landing is stone of its own, rimmed by the sea and kept clear of its islets.
+		for rect in _corridor_floors:
+			_mark(taken, _cells(rect))
+		var landings := {}
+		for bridge in _bridges:
+			for cell: Vector2i in bridge.taken_cells():
+				taken[cell] = true
+			for cell: Vector2i in bridge.stone_cells():
+				landings[cell] = true
+		# The islands are the rooms' stone, not their rectangles: the sea's crust and shores measure
+		# from the shapes' cells, so no rectangle shows around a room.
+		var stone := {}
+		for coord: Vector2i in layout.cells:
+			var room: Room = rooms[coord]
+			var shape := room.get_node_or_null("Shape")
+			var origin := Vector2i(room_origin(coord)) / TileArt.TILE
+			if shape != null and shape.has_method("island_cells"):
+				for cell: Vector2i in shape.island_cells():
+					stone[origin + cell] = true
+			else:
+				_mark(stone, _cells(room_rect(coord)))
+		stone.merge(landings)
+		LavaBackdrop.build(_map, area, stone, taken, current_seed, walkable)
+		return
+	for rect in _corridor_floors:
+		_mark(walkable, _cells(rect))
 	if scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		RockBackdrop.build(_map, area, walkable, taken, current_seed)
 		return
@@ -533,7 +701,7 @@ func _build_forest_shade(area: Rect2i) -> void:
 	var clearing := {}
 	for coord: Vector2i in layout.cells:
 		var room: Room = rooms[coord]
-		var origin := Vector2i(cell_origin(coord)) / TileArt.TILE
+		var origin := Vector2i(room_origin(coord)) / TileArt.TILE
 		for y in room.size_tiles.y:
 			for x in room.size_tiles.x:
 				if not room.is_wall_cell(Vector2i(x, y)):
@@ -588,7 +756,8 @@ func _build_forest_shade(area: Rect2i) -> void:
 ## Dirt paths (doors and corridors) drawn with the rounded edges of the dirt patch instead of
 ## square tiles. Rooms and corridors are separate layers, so the edges are decided on the whole map.
 func _soften_paths() -> void:
-	if scenario.theme == null or not Tuning.SOFT_PATH_EDGES:
+	# The temple has no earth paths: its floors are stone and its corridors are bridges.
+	if scenario.theme == null or not Tuning.SOFT_PATH_EDGES or scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
 		return
 	var path_tile := TileArt.coords(scenario.theme.path_tile)
 	var path_center := TileArt.pattern(TileArt.DIRT_PATCH)[4]
@@ -612,7 +781,9 @@ func _soften_paths() -> void:
 		var offset := Vector2i(layer.global_position) / TileArt.TILE
 		for cell in layer.get_used_cells_by_id(0, path_tile):
 			path[cell + offset] = true
-	if DirtArt.available():
+	# The forest's earth stays in the forest: a rock-walled theme (the ruins) keeps its own worn
+	# stone paths from the tileset.
+	if DirtArt.available() and scenario.theme.wall_style != RoomTheme.WallStyle.ROCKS:
 		_paint_dirt(layers, path, path_tile, floor_tile)
 		return
 	var on_path := func(cell: Vector2i) -> bool: return path.has(cell)
@@ -665,6 +836,13 @@ func _paint_dirt(layers: Array[TileMapLayer], path: Dictionary, path_tile: Vecto
 		DirtArt.repaint_patch(patch, earth)
 
 
+## How far the backdrop (and the camera) reach past the rooms, in tiles: the temple's sea shows wider.
+func _backdrop_margin() -> int:
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		return Tuning.TEMPLE_BACKDROP_MARGIN_TILES
+	return Tuning.BACKDROP_MARGIN_TILES
+
+
 static func _mark(cells: Dictionary, rect: Rect2i) -> void:
 	for y in range(rect.position.y, rect.end.y):
 		for x in range(rect.position.x, rect.end.x):
@@ -679,22 +857,44 @@ func _compute_bounds() -> void:
 	bounds = Rect2()
 	var first := true
 	for coord: Vector2i in layout.cells:
-		var rect := Rect2(cell_origin(coord), CELL_SIZE)
+		var rect := room_rect(coord)
 		bounds = rect if first else bounds.merge(rect)
 		first = false
 
 
 func _add_shadows() -> void:
-	var alpha := -1.0
-	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
-		alpha = Tuning.RUIN_SHADOW_ALPHA
 	for node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("npcs"):
 		if _map.is_ancestor_of(node):
-			ActorShadow.attach(node, alpha)
+			ActorShadow.attach_styled(node)
 	if player != null:
-		ActorShadow.attach(player, alpha)
-## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void.
+		ActorShadow.attach_styled(player)
+
+
+## The map's shadow style, set before the rooms are built so every actor (also those that appear
+## later, see Room.register_enemy) gets the same shadow.
+func _use_shadow_style() -> void:
+	var alpha := -1.0
+	var size_scale := 1.0
+	var drop := 0.0
+	var bottom := -1.0
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
+		alpha = Tuning.RUIN_SHADOW_ALPHA
+	elif scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		# The temple's platforms need everyone plainly on the ground: a stronger shadow, anchored under
+		# the feet so it never sticks out below them.
+		alpha = Tuning.TEMPLE_SHADOW_ALPHA
+		size_scale = Tuning.TEMPLE_SHADOW_SCALE
+		drop = Tuning.TEMPLE_SHADOW_DROP
+		bottom = Tuning.TEMPLE_SHADOW_BOTTOM
+	ActorShadow.use_style(alpha, size_scale, drop, bottom)
+
+
+## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void; for the
+## temple, solid collision around the sea, so nothing ever leaves the map.
 func _build_boundary() -> void:
+	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
+		_build_lava_boundary()
+		return
 	if scenario.theme == null or not Tuning.FOREST_BOUNDARY_ENABLED 			or scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		return
 	var boundary_script = load("res://scripts/world/forest_boundary.gd")
@@ -704,7 +904,24 @@ func _build_boundary() -> void:
 	_boundary.name = "ForestBoundary"
 	add_child(_boundary)
 	move_child(_boundary, 0)
-	_boundary.generate(layout, bounds, current_seed)
+	_boundary.generate(layout, bounds, current_seed, self)
+
+
+## Four invisible walls just outside the sea's area (the camera's limits).
+func _build_lava_boundary() -> void:
+	var area := bounds.grow(_backdrop_margin() * TileArt.TILE)
+	var thick := float(TileArt.TILE)
+	var rects: Array[Rect2] = [
+		Rect2(area.position.x - thick, area.position.y - thick, area.size.x + 2.0 * thick, thick),
+		Rect2(area.position.x - thick, area.end.y, area.size.x + 2.0 * thick, thick),
+		Rect2(area.position.x - thick, area.position.y, thick, area.size.y),
+		Rect2(area.end.x, area.position.y, thick, area.size.y),
+	]
+	_boundary = Node2D.new()
+	_boundary.name = "LavaBoundary"
+	add_child(_boundary)
+	move_child(_boundary, 0)
+	WallBuilder.add_walls(_boundary, rects, WallBuilder.WALL_COLOR, false)
 
 
 func _place_player() -> void:
@@ -715,11 +932,20 @@ func _place_player() -> void:
 		add_child(player)
 	# Idempotent: whatever the player has earned (skills) is on the player for every map.
 	GameState.apply_to_player(player)
+	# What only mattered on the map just left (a pull, a slow, cooldowns) is forgotten.
+	if player.has_method("reset_for_new_map"):
+		player.reset_for_new_map()
+	if "camera_look_ahead" in player:
+		var lead: float = scenario.theme.camera_look_ahead if scenario.theme != null else -1.0
+		player.camera_look_ahead = lead if lead >= 0.0 else Tuning.CAMERA_LOOK_AHEAD
 	var start_room: Room = rooms[layout.start_cell]
 	Placement.teleport(player, start_room.global_position + start_room.player_spawn())
-	Heights.set_level(player, Heights.LOW)
+	# Nico starts on the height of the start room (the ground, everywhere so far).
+	Heights.set_level(player, start_room.height)
 	if player.has_method("set_camera_limits"):
-		player.set_camera_limits(bounds)
+		# The backdrop is painted this far past the rooms: the camera may show the top wall's crowns
+		# and the side walls of the edge rooms instead of cutting them at the room's line.
+		player.set_camera_limits(bounds.grow(_backdrop_margin() * TileArt.TILE))
 	# A new map starts somewhere else: the camera jumps there instead of gliding across the world.
 	if player.has_method("snap_camera"):
 		player.snap_camera()

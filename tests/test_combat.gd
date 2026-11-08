@@ -25,6 +25,8 @@ func _initialize() -> void:
 	await _frames(3)
 
 	var player = room.get_node("Player")
+	# Exact damage is checked here: no random crits (tests/test_crits.gd covers them).
+	player.crit_chance = 0.0
 	var hurtbox: Hurtbox = player.get_node("Hurtbox")
 	var dummy = room.get_node("Dummy3")
 	_check(player.health.current == 5 and player.health.max_health == 5, "player starts with 5 health")

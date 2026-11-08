@@ -20,10 +20,14 @@ extends Resource
 ## center, right, bottom-left, bottom, bottom-right); inner corners list 4 (SE, SW, NE, NW: the
 ## diagonal that is NOT part of the area).
 @export var patterns: Dictionary[StringName, Array] = {}
+## Name -> the frames of an animated tile, consecutive cells of one row of the sheet (the lava's
+## flow, a bubble, a pulsing rune...). Empty for packs with no animated tiles.
+@export var animations: Dictionary[StringName, Array] = {}
 
 var _tile_set: TileSet
 var _textures := {}
 var _typed_patterns := {}
+var _typed_animations := {}
 
 
 func coords(role: StringName) -> Vector2i:
@@ -43,6 +47,17 @@ func pattern(role: StringName) -> Array[Vector2i]:
 			push_error("Tileset profile %s has no pattern for the role '%s'." % [resource_path, role])
 		_typed_patterns[role] = result
 	return _typed_patterns[role]
+
+
+## The frames of an animated tile (shared: do not modify the array); empty when there is no such
+## animation.
+func animation(name: StringName) -> Array[Vector2i]:
+	if not _typed_animations.has(name):
+		var result: Array[Vector2i] = []
+		if animations.has(name):
+			result.assign(animations[name])
+		_typed_animations[name] = result
+	return _typed_animations[name]
 
 
 ## Where a tile is in the sheet, in pixels.

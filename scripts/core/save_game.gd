@@ -22,20 +22,23 @@ func _ready() -> void:
 	Events.fragment_collected.connect(func(_id: StringName) -> void: save())
 	Events.boss_defeated.connect(func(_id: StringName) -> void: save())
 	GameState.skill_learned.connect(func(_id: StringName) -> void: save())
+	GameState.upgrade_changed.connect(func(_id: StringName, _level: int) -> void: save())
 
 
 func has_save() -> bool:
 	return FileAccess.file_exists(save_path)
 
 
-func save() -> void:
+## `quiet` writes without telling the HUD (a death wipes the progress: nothing to celebrate).
+func save(quiet := false) -> void:
 	if not persistence_enabled:
 		return
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file != null:
 		file.store_string(JSON.stringify(to_dict(), "\t"))
 		file.close()
-		Events.game_saved.emit()
+		if not quiet:
+			Events.game_saved.emit()
 
 
 func to_dict() -> Dictionary:

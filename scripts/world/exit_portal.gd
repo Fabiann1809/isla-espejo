@@ -53,7 +53,15 @@ func _process(delta: float) -> void:
 
 
 func is_open() -> bool:
-	return GameState.has_flag(required_flag)
+	return required_flag == &"" or GameState.has_flag(required_flag)
+
+
+## Seals the portal until `flag` is set (empty = open from the start); the Level sets the chapter's
+## own flag here, so a flag earned on an earlier island never opens a later exit.
+func seal_with(flag: StringName) -> void:
+	required_flag = flag
+	if is_inside_tree():
+		_refresh()
 
 
 func _refresh() -> void:

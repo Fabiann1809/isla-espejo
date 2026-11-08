@@ -57,12 +57,15 @@ func _initialize() -> void:
 			and ProjectSettings.get_setting("display/window/stretch/scale_mode") == "integer",
 			"2D transforms snap to pixels at 480x270 with integer scaling")
 	_check(_level.player.get_node("Camera2D").zoom == Vector2(1, 1), "the camera keeps its zoom of 1 (the whole 480x270 view)")
+	_check(is_equal_approx(_level.player.camera_look_ahead, load("res://scripts/core/tuning.gd").CAMERA_LOOK_AHEAD),
+			"outside the temple the camera follows Nico with no lead (Tuning.CAMERA_LOOK_AHEAD)")
 
 	var start_room = _level.rooms[layout.start_cell]
 	var spawn: Vector2 = start_room.global_position + start_room.player_spawn()
 	_check(_level.player.global_position.distance_to(spawn) < 1.0, "player starts at the start room spawn")
 	var cam: Camera2D = _level.player.get_node("Camera2D")
-	_check(cam.limit_left == int(_level.bounds.position.x) and cam.limit_bottom == int(_level.bounds.end.y),
+	var margin: float = Tuning.BACKDROP_MARGIN_TILES * TileArt.TILE
+	_check(cam.limit_left == int(_level.bounds.position.x - margin) and cam.limit_bottom == int(_level.bounds.end.y + margin),
 			"camera limits cover the whole map")
 
 	# --- Every connection is physically walkable by a player-sized body; closed sides are walls

@@ -42,6 +42,14 @@ func _process(delta: float) -> void:
 		dismissed.emit()
 
 
+## ui_accept (Enter, a pad's A, the phone's attack and interact buttons) dismisses it too.
+func _input(event: InputEvent) -> void:
+	if _panel.visible and _visible_time >= MIN_DISPLAY_TIME and event.is_action_pressed("ui_accept"):
+		get_viewport().set_input_as_handled()
+		_panel.hide()
+		dismissed.emit()
+
+
 func _on_run_finished(summary: Dictionary) -> void:
 	if summary.reason == "death":
 		_show(summary, false)

@@ -35,7 +35,7 @@ func _initialize() -> void:
 	var shots_before: int = root.get_node("PlayerProfile").stats.shots
 	player.die()
 	await _frames(2)
-	_check(player.gold == 0 and player._extra_arrows == 0, "dying drops the gold and the orb")
+	_check(player.gold == 0 and player.buff_ids().is_empty(), "dying drops the gold and the orb")
 	_check(state.fragments.is_empty() and state.skills.is_empty() and state.flags.is_empty(),
 			"dying drops fragments, skills and defeated bosses")
 	_check(save.scenario_id == &"", "the saved chapter goes back to the beginning")

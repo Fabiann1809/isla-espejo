@@ -63,8 +63,11 @@ func _initialize() -> void:
 
 
 ## Builds MAPS maps of every scenario with the real Level and checks each combat room's enemies
-## against its fair share of the scenario's weights (the mini boss room holds only the mini boss).
+## against its fair share of the room's weights: the scenario's times the room's `enemy_affinity`,
+## over the map's roster (the temple fields a subset of its pool). The mini boss room holds only the
+## mini boss.
 func _check_real_maps() -> void:
+	var roster_script: GDScript = load("res://scripts/world/enemy_roster.gd")
 	var level = load("res://scenes/levels/forest_level.tscn").instantiate()
 	level.use_director = false
 	root.add_child(level)
@@ -77,11 +80,6 @@ func _check_real_maps() -> void:
 			continue
 		level.scenario = scenario
 		var base: Dictionary = scenario.enemy_weights
-		var weights := {}
-		var weight_sum := 0.0
-		for scene in scenario.enemy_pool:
-			weights[_id(scene)] = float(base.get(_id(scene), 1.0))
-			weight_sum += weights[_id(scene)]
 		var rooms := 0
 		var over := []
 		for map_seed in MAPS:
@@ -89,6 +87,12 @@ func _check_real_maps() -> void:
 			for coord in level.layout.cells:
 				if level.layout.cells[coord].type != COMBAT or coord == level._guard_cell:
 					continue
+				var weights: Dictionary = roster_script.room_weights(base, level.layout.cells[coord].room_data.enemy_affinity)
+				var weight_sum := 0.0
+				var roster_ids := []
+				for scene in level.roster:
+					roster_ids.append(_id(scene))
+					weight_sum += maxf(float(weights.get(_id(scene), 1.0)), 0.0)
 				var in_room := {}
 				var count := 0
 				for child in level.rooms[coord].get_children():
@@ -100,7 +104,9 @@ func _check_real_maps() -> void:
 					continue
 				rooms += 1
 				for id in in_room:
-					if in_room[id] > ceili(count * weights.get(id, 0.0) / weight_sum):
+					# An enemy outside the roster has weight 0: it must not be spawned at all.
+					var weight := float(weights.get(id, 1.0)) if id in roster_ids else 0.0
+					if in_room[id] > ceili(count * weight / weight_sum):
 						over.append("seed %d %s: %s" % [map_seed + 1, coord, in_room])
 						break
 		_check(rooms > 0 and over.is_empty(), "%s: real maps spawn each room's fair share (%d rooms, over: %s)"

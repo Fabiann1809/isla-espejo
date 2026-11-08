@@ -110,6 +110,7 @@ func _fire(direction: Vector2) -> void:
 	facing = direction.normalized()
 	_pose_left = _echo.shot_pose_time
 	var orb: EnemyOrb = _echo.projectile_scene.instantiate()
+	orb.height_level = Heights.level_of(self)
 	orb.setup(facing, _echo.projectile_speed, _echo.projectile_range, ceili(data.attack_damage * damage_multiplier))
 	orb.position = position + facing * _echo.muzzle_distance
 	orb.modulate = _echo.shot_tint
