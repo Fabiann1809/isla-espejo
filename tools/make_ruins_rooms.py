@@ -715,10 +715,10 @@ r.connect()
 r.player_spawn = (240, 232)
 r.spawns = {"BossSpawn": [(240, 88)], "ExitSpawn": [(240, 40)]}
 ring(r, (14.5, 8.5), 11.4, 6.5, 8, [WHOLE_M, BROKEN_M])
-# The statues first (they are the room's heart), then what is left of the light.
-r.scatter(STATUE, 1, near_rock=False, min_dist=9, margin=1, size=(2, 1), style="headless", region=(2, 2, 12, 6))
-r.scatter(STATUE, 1, near_rock=False, min_dist=9, margin=1, size=(2, 1), style="ruined", region=(17, 2, 27, 6))
-story(r, statues=2, statue="clean", statue_at=(9, 12), armor=1, symbol=(14, 8), banners=2)
+# Only two statues, on a diagonal so the arena stays open: a whole one in the north-west and a destroyed one in the south-east.
+r.put_near(STATUE, (6, 4), size=(2, 1), radius=3, margin=1, style="clean")
+r.put_near(STATUE, (21, 12), size=(2, 1), radius=3, margin=1, style="ruined")
+story(r, armor=1, symbol=(14, 8), banners=2)
 r.scatter(CRYSTAL, 3, near_rock=True, min_dist=7, margin=1)
 r.scatter(BRAZIER, 2, near_rock=False, min_dist=8, margin=1)
 r.finish()
