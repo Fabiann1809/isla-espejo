@@ -521,6 +521,27 @@ def split_open(upper, hive, k, cx):
     return out
 
 
+## Two stone pillars under the slab, one each side, reaching the floor: the hive rests on them
+## instead of hanging in midair. Fixed in place (they never sway or fall with the comb).
+SUPPORTS = [(7, 12, 22), (51, 56, 22)]
+
+
+def draw_supports():
+    c = Canvas(CELL)
+    for xa, xb, top in SUPPORTS:
+        for y in range(top, GROUND - 3):
+            for x in range(xa, xb + 1):
+                edge = "R3" if x == xa else "R1" if x == xb else "R2"
+                if (y - top) % 8 == 7:
+                    edge = "R1"  # a joint between two blocks
+                c.set(x, y, edge)
+        # a wider base sitting on the floor
+        for y in range(GROUND - 3, GROUND):
+            for x in range(xa - 2, xb + 3):
+                c.set(x, y, "R2" if x not in (xa - 2, xb + 2) else "R1")
+    return c
+
+
 def draw_core(p):
     hive = draw_hive(p)
     if p["cracks"]:
@@ -539,6 +560,7 @@ def draw_core(p):
     if p["split"]:
         upper = split_open(upper, hive, p["split"], int(HIVE_CX + p["sway"]))
     body = Canvas(CELL)
+    body.over(draw_supports())
     body.over(upper)
     left_dy, right_dy = p["ledge_dy"]
     if left_dy or right_dy:
