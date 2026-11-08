@@ -704,7 +704,7 @@ r.spawns = {"NpcSpawn": [r.marker_near((19, 5), off_lanes=True)]}
 story(r, vases=1)
 r.finish()
 
-# --- Boss (raised): a round arena ringed by what is left of its columns, with the statues that guarded it ---------
+# --- Boss (raised): a round arena whose top is a gate of two statues and blue candles, the rest left open --------------
 r = Room("boss", "RuinsBoss", raised=True)
 r.fill("#")
 r.blob(14.5, 8.5, 12.5, 7.2, char=".", only_on="#", rough=0.12)
@@ -714,14 +714,18 @@ r.smooth(1)
 r.connect()
 r.player_spawn = (240, 232)
 r.spawns = {"BossSpawn": [(240, 88)], "ExitSpawn": [(240, 40)]}
-# Only two statues, on a diagonal so the arena stays open: a whole one in the north-west and a destroyed one in the south-east.
-# They go first, so the columns of the ring take what is left around them.
-r.put_near(STATUE, (6, 4), size=(2, 1), radius=2, margin=1, style="clean")
-r.put_near(STATUE, (21, 12), size=(2, 1), radius=2, margin=1, style="ruined")
-ring(r, (14.5, 8.5), 11.4, 6.5, 8, [WHOLE_M, BROKEN_M])
-story(r, armor=1, symbol=(14, 8), banners=2)
-r.scatter(CRYSTAL, 3, near_rock=True, min_dist=7, margin=1)
-r.scatter(BRAZIER, 2, near_rock=False, min_dist=8, margin=1)
+# The top of the arena is a gate: the two statues stand far apart on each side of the way to the exit, a blue candle (crystal) beside
+# each, the banners between them. Below there is nothing: no big columns and no braziers, the arena is left to the fight.
+r.put_near(STATUE, (8, 4), size=(2, 1), radius=2, margin=0, style="clean")
+r.put_near(STATUE, (20, 4), size=(2, 1), radius=2, margin=0, style="ruined")
+for prop in [p_ for p_ in r.props if p_[0] == STATUE]:
+    r.put_near(CRYSTAL, (prop[1] - 1, 3), radius=1, margin=0)
+    r.put_near(CRYSTAL, (prop[1] + 2, 3), radius=1, margin=0)
+pair(r, BANNER, (12, 2), radius=1, margin=0)
+# What is left of the old ring: two small broken columns at the upper sides, nothing below.
+r.put_near(PILLAR, (4, 6), radius=1, style=BROKEN_S)
+r.put_near(PILLAR, (25, 6), radius=1, style=BROKEN_S, flip=True)
+story(r, armor=1, symbol=(14, 8))
 r.finish()
 
 # --- Combat: two winding rivers crossed by bridges; a column of each kind stands at the shore end of every bridge ---------
