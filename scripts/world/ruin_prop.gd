@@ -22,10 +22,22 @@ enum Kind {
 @export var size_tiles := Vector2i(2, 2)
 ## BRIDGE: true when it runs along x (its planks side by side from left to right).
 @export var horizontal := true
+## Which picture a PILLAR or a STATUE draws (assets/sprites/ruins_props/): a pillar's is `medallion_s`,
+## `medallion_m`, `broken_s` or `broken_m`; a statue's is `clean`, `vines`, `cracked`, `ruined`, `plain`, `ivy`,
+## `worn` or `headless` (empty: a standing one chosen by the prop's place). Without the picture the tileset's
+## own pieces are used.
+@export var style: StringName = &""
+## The picture mirrored: the second of a pair, so its fallen drum or its staff faces the other way.
+@export var flipped := false
 
 ## Props that are part of the ground: drawn with the floor, never over an actor.
 const FLAT_KINDS: Array[Kind] = [Kind.BRIDGE, Kind.WATERFALL, Kind.TERRACE, Kind.ALCOVE, Kind.RIVER, Kind.SPIKES,
 		Kind.ARMOR, Kind.SYMBOL]
+const PROP_ART := "res://assets/sprites/ruins_props/%s.png"
+## Width of a pillar's body in its picture (outline included): where its middle is when a fallen drum widens it.
+const PILLAR_BODY := {&"medallion_s": 24, &"medallion_m": 32, &"broken_s": 24, &"broken_m": 32}
+## The statues that stand (the other two, `ruined` and `headless`, are what is left of one).
+const STANDING_STATUES: Array[StringName] = [&"clean", &"vines", &"plain", &"ivy", &"worn", &"cracked"]
 const WORLD_BITS := 1
 const WATER_BITS := 1 << (Heights.WATER_LAYER - 1)
 ## Water stops bodies a little inside its picture, so the shore is walkable.
@@ -97,7 +109,8 @@ func _build() -> void:
 		Kind.BOULDER:
 			add_child(TileArt.sprite([&"boulder_a", &"boulder_b"][rng.randi_range(0, 1)]))
 		Kind.PILLAR:
-			_tall(&"pillar")
+			if not _art_pillar():
+				_tall(&"pillar")
 		Kind.CRYSTAL:
 			_tall(&"crystal", true, [&"crystal_top", &"crystal_top_b"], GLOW_FPS)
 		Kind.STELE:
@@ -123,7 +136,8 @@ func _build() -> void:
 		Kind.SPIKES:
 			_spikes()
 		Kind.STATUE:
-			_statue(rng)
+			if not _art_statue(rng):
+				_statue(rng)
 		Kind.VASE:
 			add_child(TileArt.sprite([&"vase_a", &"vase_b", &"vase_c", &"urn_a", &"urn_b"][rng.randi_range(0, 4)]))
 		Kind.ARMOR:
@@ -220,6 +234,50 @@ func _light(color: Color, radius: float, at: Vector2) -> void:
 ## A tile that cycles through `frames` (see RuinAnim).
 func _animated(frames: Array[StringName], fps: float, at: Vector2) -> AnimatedSprite2D:
 	return RuinAnim.sprite(frames, fps, at)
+
+
+## A picture of assets/sprites/ruins_props/, or null when it is missing.
+func _prop_texture(file_name: String) -> Texture2D:
+	var path := PROP_ART % file_name
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
+func _prop_sprite(texture: Texture2D, at: Vector2) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.centered = false
+	sprite.flip_h = flipped
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = at
+	add_child(sprite)
+	return sprite
+
+
+## The team's carved pillar (medallion or snapped, small or medium) standing on the lower tile of the two the
+## prop covers; only its foot blocks. False when `style` has no picture.
+func _art_pillar() -> bool:
+	if not PILLAR_BODY.has(style):
+		return false
+	var texture := _prop_texture("pillar_%s" % style)
+	if texture == null:
+		return false
+	var width := float(texture.get_width())
+	var body: float = PILLAR_BODY[style]
+	var left := 8.0 - body / 2.0 if not flipped else 8.0 - width + body / 2.0
+	_prop_sprite(texture, Vector2(left, 2.0 * TileArt.TILE - texture.get_height()))
+	_collide(TALL_FOOT)
+	return true
+
+
+## A hooded statue on its carved plinth (two tiles wide, one deep: `position` is the plinth's left tile, the
+## figure rises above). Its base blocks. False when the picture is missing.
+func _art_statue(rng: RandomNumberGenerator) -> bool:
+	var variant: StringName = style if style != &"" else STANDING_STATUES[rng.randi_range(0, STANDING_STATUES.size() - 1)]
+	var texture := _prop_texture("statue_%s" % variant)
+	if texture == null:
+		return false
+	_prop_sprite(texture, Vector2(TileArt.TILE - texture.get_width() / 2.0, TileArt.TILE - texture.get_height()))
+	return true
 
 
 ## A statue two tiles wide and three high standing on its plinth: `position` is the plinth's left tile, the

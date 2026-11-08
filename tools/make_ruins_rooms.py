@@ -267,7 +267,7 @@ class Room:
     def occupied(self):
         taken = set()
         for prop in self.props:
-            size = prop[3] if len(prop) > 3 else (1, 1)
+            size = prop[3] if len(prop) > 3 and prop[3] else (1, 1)
             for tx, ty in footprint(prop[0], prop[1], prop[2], size):
                 taken.add((tx, ty))
         for points in self.spawns.values():
@@ -290,13 +290,13 @@ class Room:
                         return False
         return True
 
-    def put(self, kind, x, y, size=None, margin=0):
+    def put(self, kind, x, y, size=None, margin=0, style="", flip=False):
         if self.can_put(kind, x, y, size or (1, 1), margin):
-            self.props.append((kind, x, y, size) if size else (kind, x, y))
+            self.props.append((kind, x, y, size, style, flip))
             return True
         return False
 
-    def scatter(self, kind, count, near_rock=None, min_dist=4, margin=1, region=None, tries=500, size=None):
+    def scatter(self, kind, count, near_rock=None, min_dist=4, margin=1, region=None, tries=500, size=None, style=""):
         """Props at free floor cells chosen by the room's seed: near a rock edge (True), away from
         every wall (False) or anywhere (None); never closer than `min_dist` to another of their kind."""
         placed = []
@@ -313,16 +313,16 @@ class Room:
                 continue
             if any(math.hypot(x - px, y - py) < min_dist for px, py in placed):
                 continue
-            if self.put(kind, x, y, size=size, margin=margin):
+            if self.put(kind, x, y, size=size, margin=margin, style=style):
                 placed.append((x, y))
         return placed
 
-    def put_near(self, kind, wanted, size=None, radius=3, margin=0):
+    def put_near(self, kind, wanted, size=None, radius=3, margin=0, style="", flip=False):
         """The prop at the free spot closest to `wanted` (a plan that moved the floor around it)."""
         for r in range(radius + 1):
             for dx in range(-r, r + 1):
                 for dy in range(-r, r + 1):
-                    if max(abs(dx), abs(dy)) == r and self.put(kind, wanted[0] + dx, wanted[1] + dy, size, margin):
+                    if max(abs(dx), abs(dy)) == r and self.put(kind, wanted[0] + dx, wanted[1] + dy, size, margin, style, flip):
                         return True
         return False
 
@@ -372,7 +372,7 @@ class Room:
         solid = set()
         for prop in self.props:
             kind, x, y = prop[0], prop[1], prop[2]
-            size = prop[3] if len(prop) > 3 else (1, 1)
+            size = prop[3] if len(prop) > 3 and prop[3] else (1, 1)
             if self.raised:
                 assert kind not in (TERRACE, ALCOVE), f"{self.filename}: a raised room has no platforms"
             for tx, ty in footprint(kind, x, y, size):
@@ -430,6 +430,8 @@ class Room:
         for number, prop in enumerate(self.props, start=1):
             kind, x, y = prop[0], prop[1], prop[2]
             size = prop[3] if len(prop) > 3 else None
+            style = prop[4] if len(prop) > 4 else ""
+            flip = prop[5] if len(prop) > 5 else False
             block = [f'[node name="Prop{number}" type="Node2D" parent="."]',
                      f'position = Vector2({x * TILE}, {y * TILE})',
                      'script = ExtResource("2")']
@@ -437,6 +439,10 @@ class Room:
                 block.append(f'kind = {kind}')
             if size:
                 block.append(f'size_tiles = Vector2i({size[0]}, {size[1]})')
+            if style:
+                block.append(f'style = &"{style}"')
+            if flip:
+                block.append('flipped = true')
             text.append("\n".join(block) + "\n")
         if self.player_spawn:
             text.append(f'[node name="PlayerSpawn" type="Marker2D" parent="."]\nposition = Vector2{self.player_spawn}\n')
@@ -448,13 +454,19 @@ class Room:
             f.write("\n".join(text))
 
 
-def pair(room, kind, wanted, size=None, radius=2, margin=1):
-    """The same prop twice, mirrored across the room's vertical axis, so a pair guards a door or flanks the way."""
+def pair(room, kind, wanted, size=None, radius=2, margin=1, style=""):
+    """The same prop twice, mirrored across the room's vertical axis, so a pair guards a door or flanks the way.
+    The second one is drawn mirrored too (its fallen drum, its staff), as a `style` of picture."""
     width = size[0] if size else 1
     mirror = (COLUMNS - 1 - wanted[0] - (width - 1), wanted[1])
-    first = room.put_near(kind, wanted, size, radius, margin)
-    second = room.put_near(kind, mirror, size, radius, margin)
+    first = room.put_near(kind, wanted, size, radius, margin, style)
+    second = room.put_near(kind, mirror, size, radius, margin, style, flip=True)
     return first and second
+
+
+def columns(room, style, wanted, radius=3, margin=2):
+    """A mirrored pair of carved pillars (`medallion_s|m`, `broken_s|m`: see RuinProp.style)."""
+    return pair(room, PILLAR, wanted, radius=radius, margin=margin, style=style)
 
 
 def vignette(room, kinds, away_from=(14.5, 8.5), taken_corners=None):
@@ -508,14 +520,14 @@ def little(room, boulders=0, stalagmites=0):
     room.scatter(STALAGMITE, stalagmites, near_rock=True, min_dist=8, margin=2)
 
 
-def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0):
+def story(room, statues=0, vases=0, armor=0, symbol=None, altar=None, graves=0, banners=0, statue="", statue_at=(8, 4)):
     """The old temple's leftovers, composed: statues stand as guardians in a mirrored pair (or alone on a side),
     banners hang in a pair along the top wall, vases and graves form one small corner scene, fallen armor another,
     the engraved symbol or the altar marks the heart of the room."""
     if statues >= 2:
-        pair(room, STATUE, (8, 4), size=(2, 1), radius=3, margin=2)
+        pair(room, STATUE, statue_at, size=(2, 1), radius=3, margin=2, style=statue)
     elif statues:
-        room.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1))
+        room.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1), style=statue)
     if banners >= 2:
         pair(room, BANNER, (9, 1), radius=2, margin=0)
     elif banners:
@@ -548,7 +560,7 @@ lit(r, crystals=2, torches=2, lanterns=1)
 little(r, boulders=1, stalagmites=1)
 # The Mercader waits a few tiles from Nico's spawn, off the door lanes.
 r.spawns = {"NpcSpawn": [r.marker_near((19, 5), off_lanes=True)]}
-story(r, statues=1, vases=1, armor=1, banners=1)
+story(r, statues=2, statue="clean", statue_at=(9, 4), vases=1)
 r.finish()
 
 # --- Boss (raised): a round arena in the rock, ringed by pillars, crystals and braziers ------------------------
@@ -562,9 +574,13 @@ r.connect()
 r.player_spawn = (240, 232)
 r.spawns = {"BossSpawn": [(240, 88)], "ExitSpawn": [(240, 40)]}
 r.scatter(CRYSTAL, 3, near_rock=True, min_dist=10, margin=2)
-r.scatter(PILLAR, 4, near_rock=True, min_dist=9, margin=2)
+columns(r, "medallion_m", (6, 4), radius=4)
+columns(r, "medallion_m", (6, 12), radius=4)
+columns(r, "broken_s", (10, 2), radius=3)
 r.scatter(BRAZIER, 2, near_rock=False, min_dist=12, margin=2)
-story(r, statues=2, armor=1, symbol=(14, 8), banners=2)
+r.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1), style="headless")
+r.scatter(STATUE, 1, near_rock=False, min_dist=11, margin=2, size=(2, 1), style="ruined")
+story(r, armor=1, symbol=(14, 8), banners=2)
 r.finish()
 
 # --- Combat: two winding rivers crossed by bridges on the way to the doors ------------------------------------------
@@ -578,7 +594,8 @@ r.connect()
 lit(r, crystals=2, torches=2)
 little(r, boulders=1, stalagmites=1)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=1, armor=1)
+columns(r, "broken_s", (10, 4), radius=3)
+story(r, vases=1, armor=1)
 r.finish()
 
 # --- Combat (ambush): blocks of rock leave narrow passages, enemies jump out of them ----------------------------------
@@ -591,7 +608,7 @@ lit(r, crystals=2, torches=2)
 little(r, stalagmites=2)
 r.scatter(SPIKES, 2, near_rock=False, min_dist=8, margin=2)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, vases=1, armor=1, graves=1)
+story(r, statues=1, statue="worn", vases=1, armor=1, graves=1)
 r.finish()
 
 # --- Combat: two raised platforms with their stairs on the south side ------------------------------------------------
@@ -602,9 +619,9 @@ r.platform(TERRACE, 18, 1, (10, 7))
 r.smooth(1)
 r.connect()
 lit(r, crystals=2, torches=1, braziers=1)
-r.scatter(PILLAR, 2, near_rock=False, min_dist=10, margin=2, region=(2, 12, 27, 16))
+columns(r, "broken_m", (6, 13), radius=3)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=1, symbol=(13, 13), banners=1)
+story(r, statues=1, statue="ivy", vases=1, symbol=(13, 13), banners=1)
 r.finish()
 
 # --- Combat (raised): a wide plateau with pillars and braziers ---------------------------------------------------------
@@ -613,11 +630,12 @@ r.edge_blobs(4, size=(1.6, 3.0))
 r.islands([(7, 4), (22, 13)], radius=(1.0, 1.6))
 r.smooth()
 r.connect()
-r.scatter(PILLAR, 3, near_rock=False, min_dist=10, margin=2)
+columns(r, "medallion_m", (7, 5), radius=3)
+columns(r, "medallion_m", (7, 12), radius=3)
 lit(r, braziers=2, torches=1)
 little(r, boulders=1)
 r.spawns = {"EnemySpawns": r.spawn_points(6)}
-story(r, statues=1, vases=1, symbol=(13, 8), banners=1)
+story(r, vases=1, symbol=(13, 8), banners=1)
 r.finish()
 
 # --- Combat (watch): two waterfalls feed pools in a cave; enemies stand guard around them -------------------------
@@ -642,7 +660,7 @@ lit(r, crystals=2, torches=2)
 little(r, boulders=1)
 r.scatter(SPIKES, 2, near_rock=False, min_dist=8, margin=2)
 r.spawns = {"EnemySpawns": r.spawn_points(7)}
-story(r, statues=1, armor=1)
+story(r, statues=2, statue="vines", statue_at=(10, 12), armor=1)
 r.finish()
 
 # --- Event: the Viajera's camp ---------------------------------------------------------------------------------------------------
@@ -657,7 +675,7 @@ r.put_near(CRATE, (24, 12))
 r.put_near(BARREL, (25, 13))
 little(r, boulders=1)
 r.spawns = {"NpcSpawn": [r.marker_near((7, 6))]}
-story(r, statues=1, vases=1, symbol=(10, 12), graves=1)
+story(r, statues=1, statue="cracked", vases=1, symbol=(10, 12), graves=1)
 r.finish()
 
 # --- Reward: an alcove (a small room) with the chest, reached by its own stairs --------------------------------------
@@ -667,10 +685,9 @@ r.platform(ALCOVE, 2, 1, (8, 7))
 r.smooth(1)
 r.connect()
 lit(r, crystals=2, torches=1, braziers=1)
-r.scatter(PILLAR, 1, near_rock=False, min_dist=10, margin=2, region=(18, 2, 27, 6))
 little(r, stalagmites=1)
 r.spawns = {"ChestSpawn": [(88, 56)]}
-story(r, statues=1, vases=2, banners=1)
+story(r, statues=2, statue="clean", statue_at=(11, 11), vases=2, banners=1)
 r.finish()
 
 # --- Special: a shrine around the middle -----------------------------------------------------------------------------------------
@@ -688,8 +705,9 @@ for wanted in ((8, 4), (21, 4), (8, 13), (21, 13)):
 for wanted in ((11, 5), (18, 12)):
     r.put_near(BRAZIER, wanted, radius=3)
 little(r, boulders=1)
+columns(r, "medallion_s", (9, 13), radius=3)
 r.spawns = {"SpecialSpawn": [(344, 92)]}
-story(r, statues=1, vases=1, symbol=(13, 7), altar=(13, 3), banners=1)
+story(r, statues=1, statue="plain", vases=1, symbol=(13, 7), altar=(13, 3), banners=1)
 r.finish()
 
 print("ruins rooms written and validated")

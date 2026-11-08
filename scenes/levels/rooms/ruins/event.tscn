@@ -36,6 +36,7 @@ kind = 7
 position = Vector2(432, 96)
 script = ExtResource("2")
 kind = 7
+flipped = true
 
 [node name="Prop3" type="Node2D" parent="."]
 position = Vector2(80, 16)
@@ -72,6 +73,7 @@ position = Vector2(368, 64)
 script = ExtResource("2")
 kind = 17
 size_tiles = Vector2i(2, 1)
+style = &"cracked"
 
 [node name="Prop10" type="Node2D" parent="."]
 position = Vector2(16, 256)

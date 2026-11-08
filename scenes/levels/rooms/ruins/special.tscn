@@ -63,28 +63,42 @@ script = ExtResource("2")
 kind = 2
 
 [node name="Prop8" type="Node2D" parent="."]
+position = Vector2(176, 176)
+script = ExtResource("2")
+kind = 3
+style = &"medallion_s"
+
+[node name="Prop9" type="Node2D" parent="."]
+position = Vector2(288, 240)
+script = ExtResource("2")
+kind = 3
+style = &"medallion_s"
+flipped = true
+
+[node name="Prop10" type="Node2D" parent="."]
 position = Vector2(48, 192)
 script = ExtResource("2")
 kind = 17
 size_tiles = Vector2i(2, 1)
+style = &"plain"
 
-[node name="Prop9" type="Node2D" parent="."]
+[node name="Prop11" type="Node2D" parent="."]
 position = Vector2(176, 16)
 script = ExtResource("2")
 kind = 8
 
-[node name="Prop10" type="Node2D" parent="."]
+[node name="Prop12" type="Node2D" parent="."]
 position = Vector2(16, 16)
 script = ExtResource("2")
 kind = 18
 
-[node name="Prop11" type="Node2D" parent="."]
+[node name="Prop13" type="Node2D" parent="."]
 position = Vector2(208, 112)
 script = ExtResource("2")
 kind = 20
 size_tiles = Vector2i(2, 2)
 
-[node name="Prop12" type="Node2D" parent="."]
+[node name="Prop14" type="Node2D" parent="."]
 position = Vector2(176, 48)
 script = ExtResource("2")
 kind = 21
