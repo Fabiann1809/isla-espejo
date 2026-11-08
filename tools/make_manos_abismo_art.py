@@ -77,12 +77,12 @@ COOL_STEPS = [
 ## Fingers, index to little: knuckle on the palm (from its center), angle from straight up (deg,
 ## + leans forward), length of the two joints.
 FINGERS = [
-    ((3.5, -3.5), 22, (4.0, 3.4)),
-    ((1.2, -5.0), 7, (4.4, 3.8)),
-    ((-1.4, -5.0), -7, (4.4, 3.4)),
-    ((-3.8, -3.6), -22, (3.4, 3.0)),
+    ((5.0, -3.6), 32, (5.4, 4.6)),
+    ((2.0, -5.8), 11, (6.0, 5.2)),
+    ((-2.2, -5.8), -11, (5.8, 4.8)),
+    ((-5.4, -3.6), -32, (4.8, 4.2)),
 ]
-THUMB = ((4.8, 0.5), 70, (3.0, 2.8))
+THUMB = ((5.6, 0.8), 72, (4.0, 3.6))
 
 
 class Canvas:
@@ -218,10 +218,10 @@ def draw_hand(p):
         if (x, y) in c.px and i % 6 < 4:
             c.set(x, y, glow if i % 6 in (1, 2) else "S2")
     # palm
-    for y in range(int(palm[1]) - 7, int(palm[1]) + 8):
-        for x in range(int(palm[0]) - 7, int(palm[0]) + 8):
-            if in_ellipse(x, y, palm[0], palm[1], 5.6, 5.4):
-                c.set(x, y, rock(lit((x + 0.5 - palm[0]) / 5.6, (y + 0.5 - palm[1]) / 5.4)))
+    for y in range(int(palm[1]) - 8, int(palm[1]) + 9):
+        for x in range(int(palm[0]) - 8, int(palm[0]) + 9):
+            if in_ellipse(x, y, palm[0], palm[1], 6.8, 6.2):
+                c.set(x, y, rock(lit((x + 0.5 - palm[0]) / 6.8, (y + 0.5 - palm[1]) / 6.2)))
     # cracks from the wrist toward the knuckles
     for kx in (-2, 3):
         for i, (x, y) in enumerate(polyline([(round(palm[0]), round(palm[1] + 3)), (round(palm[0] + kx), round(palm[1] - 3))])):
@@ -241,8 +241,8 @@ def draw_hand(p):
         a2 = a1 + curl * (75 if not is_thumb else 40)
         j = (k[0] + l1 * math.sin(math.radians(a1)), k[1] - l1 * math.cos(math.radians(a1)))
         t = (j[0] + l2 * math.sin(math.radians(a2)), j[1] - l2 * math.cos(math.radians(a2)))
-        capsule(c, k, j, 1.7, 1.5)
-        capsule(c, j, t, 1.5, 0.9)
+        capsule(c, k, j, 2.2, 1.9)
+        capsule(c, j, t, 1.9, 1.2)
         c.set(round(j[0] - 0.5), round(j[1] - 0.5), "S3" if p["glow"] else "S2")
         tips.append(t)
     for (x, y) in tips:
@@ -381,16 +381,18 @@ def attack():
 
 
 def special():
-    # a pool spreads, the fingers break its surface and the hand rises in a burst of lava
+    # a pool spreads and the hand rises out of it as one rigid piece: only the sink and the splash
+    # change, so the fingers never stretch open and fold back (the game plays this strip backwards
+    # to sink, so every frame must keep the same pose)
     return [
         pose(sink=40, pool=6.0, splash=0, phase=0),
         pose(sink=40, pool=10.0, splash=1, phase=1),
-        pose(sink=20, pool=17.0, splash=1, curl=0.8, phase=2),
-        pose(sink=12, pool=18.0, splash=2, curl=0.6, phase=3, fx=[(CX - 13, GROUND - 14, 1, "S4"), (CX + 14, GROUND - 12, 1, "Y")]),
-        pose(sink=6, pool=18.0, splash=2, curl=0.3, phase=4, fx=[(CX - 15, GROUND - 18, 2, "S4"), (CX + 16, GROUND - 16, 1, "S3")]),
-        pose(sink=2, pool=18.0, splash=2, curl=0.0, spread=1.3, phase=5, fx=[(CX - 16, GROUND - 10, 1, "S3")]),
-        pose(sink=0, pool=17.0, splash=1, curl=0.1, spread=1.2, phase=6),
-        pose(sink=0, pool=17.0, splash=1, curl=0.35, phase=0),
+        pose(sink=20, pool=17.0, splash=1, phase=2),
+        pose(sink=12, pool=18.0, splash=2, phase=3, fx=[(CX - 13, GROUND - 14, 1, "S4"), (CX + 14, GROUND - 12, 1, "Y")]),
+        pose(sink=6, pool=18.0, splash=2, phase=4, fx=[(CX - 15, GROUND - 18, 2, "S4"), (CX + 16, GROUND - 16, 1, "S3")]),
+        pose(sink=2, pool=18.0, splash=2, phase=5, fx=[(CX - 16, GROUND - 10, 1, "S3")]),
+        pose(sink=0, pool=17.0, splash=1, phase=6),
+        pose(sink=0, pool=17.0, splash=1, phase=0),
     ]
 
 
