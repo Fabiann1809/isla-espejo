@@ -62,7 +62,7 @@ func give_prize(player: Node) -> String:
 			upgrade_given = upgrade.upgrade_id
 			GameState.add_upgrade(upgrade.upgrade_id)
 			GameState.apply_upgrades(player)
-			return UiText.t("chest_upgrade") % upgrade.display_name
+			return UiText.t("chest_upgrade") % UiText.data(upgrade.display_name)
 	var coins := rng.randi_range(mini(gold_min, gold_max), maxi(gold_min, gold_max))
 	player.add_gold(coins)
 	return UiText.t("chest_gold") % coins

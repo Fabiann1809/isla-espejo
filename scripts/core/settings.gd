@@ -15,6 +15,9 @@ var volume := 0.8
 var music_volume := 0.8
 var sfx_volume := 1.0
 var fullscreen := false
+## Language of the player-facing text: "es" (Spanish, the source) or "en" (English).
+var language := "es"
+const LANGUAGES := ["es", "en"]
 
 
 func _ready() -> void:
@@ -41,6 +44,14 @@ func set_music_volume(value: float) -> void:
 func set_sfx_volume(value: float) -> void:
 	sfx_volume = clampf(value, 0.0, 1.0)
 	apply()
+	save()
+	changed.emit()
+
+
+func set_language(value: String) -> void:
+	if not LANGUAGES.has(value):
+		return
+	language = value
 	save()
 	changed.emit()
 
@@ -72,7 +83,7 @@ func _apply_bus(bus_name: StringName, value: float) -> void:
 
 func to_dict() -> Dictionary:
 	return {"version": VERSION, "volume": volume, "music_volume": music_volume,
-			"sfx_volume": sfx_volume, "fullscreen": fullscreen}
+			"sfx_volume": sfx_volume, "fullscreen": fullscreen, "language": language}
 
 
 func from_dict(data: Dictionary) -> bool:
@@ -83,6 +94,8 @@ func from_dict(data: Dictionary) -> bool:
 	music_volume = clampf(float(data.get("music_volume", music_volume)), 0.0, 1.0)
 	sfx_volume = clampf(float(data.get("sfx_volume", sfx_volume)), 0.0, 1.0)
 	fullscreen = bool(data.get("fullscreen", fullscreen))
+	var saved_language := str(data.get("language", language))
+	language = saved_language if LANGUAGES.has(saved_language) else language
 	return true
 
 

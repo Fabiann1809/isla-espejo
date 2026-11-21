@@ -123,7 +123,7 @@ func buy(index: int) -> Shop.Result:
 	var result := Shop.buy(item, _player)
 	match result:
 		Shop.Result.BOUGHT:
-			_say(UiText.t("shop_bought") % item.display_name, MESSAGE_OK)
+			_say(UiText.t("shop_bought") % UiText.data(item.display_name), MESSAGE_OK)
 		Shop.Result.NO_GOLD:
 			_say(UiText.t("shop_no_gold"), MESSAGE_REFUSED)
 		Shop.Result.MAXED:
@@ -157,8 +157,8 @@ func _build_row(item: ShopItem) -> Button:
 	text.alignment = BoxContainer.ALIGNMENT_CENTER
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(text)
-	text.add_child(_ignore(UiKit.menu_label(item.display_name, 11, UiKit.GOLD, HORIZONTAL_ALIGNMENT_LEFT)))
-	text.add_child(_ignore(UiKit.menu_label(item.description, 9, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT)))
+	text.add_child(_ignore(UiKit.menu_label(UiText.data(item.display_name), 11, UiKit.GOLD, HORIZONTAL_ALIGNMENT_LEFT)))
+	text.add_child(_ignore(UiKit.menu_label(UiText.data(item.description), 9, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT)))
 
 	var numbers := VBoxContainer.new()
 	numbers.add_theme_constant_override("separation", -1)

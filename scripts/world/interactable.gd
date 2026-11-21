@@ -11,7 +11,7 @@ signal interacted(player: Node)
 ## Spanish, from the scene; empty = the generic prompt of data/ui/texts.json.
 @export var prompt := "":
 	get:
-		return prompt if prompt != "" else UiText.t("prompt_default")
+		return UiText.data(prompt) if prompt != "" else UiText.t("prompt_default")
 var enabled := true
 
 

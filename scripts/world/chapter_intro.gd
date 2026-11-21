@@ -139,9 +139,9 @@ func _build(scenario: ScenarioData) -> void:
 	box.add_theme_constant_override("separation", 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(box)
-	title_label = UiKit.menu_label(scenario.display_name, Tuning.INTRO_TITLE_SIZE, UiKit.GOLD)
+	title_label = UiKit.menu_label(UiText.data(scenario.display_name), Tuning.INTRO_TITLE_SIZE, UiKit.GOLD)
 	title_label.custom_minimum_size = Vector2(440, 0)
 	box.add_child(title_label)
 	box.add_child(UiKit.divider())
-	subtitle_label = UiKit.menu_label(scenario.chapter_title, Tuning.INTRO_SUBTITLE_SIZE, Color(0.86, 0.82, 0.98))
+	subtitle_label = UiKit.menu_label(UiText.data(scenario.chapter_title), Tuning.INTRO_SUBTITLE_SIZE, Color(0.86, 0.82, 0.98))
 	box.add_child(subtitle_label)

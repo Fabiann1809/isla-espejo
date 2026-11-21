@@ -1,0 +1,30 @@
+{
+	"speaker": "El Mercader",
+	"states": {
+		"first": [
+			"Well, a customer. Few make it this far with both legs intact.",
+			{"speaker": "Nico", "text": "I'm looking for a way home. Do you know how to leave the island?"},
+			"Want to keep going? Everything has a price, traveler.",
+			"Relax, looking is free. But the island keeps count… and so do I. Take a look at my wares."
+		],
+		"again": [
+			"You're still standing. That's worth something.",
+			"I know things about the road, the forest and what lies beyond. But what's known has to be paid for, and I'm not offering discounts today.",
+			"If you bring gold, I've got wares. There's always something worth buying."
+		],
+		"final": [
+			{"speaker": "Nico", "text": "I beat the Guardian. The green fragment is already shining in my compass."},
+			"A fragment… Cheap, compared to what's coming.",
+			"Tell me, traveler: have you never wondered why the island lets so few people leave?",
+			"Don't look at me like that. I only sell prices. Answers cost extra… and so do my wares."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["forest_boss_defeated"]},
+		{"state": "again", "requires": ["met_merchant"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_merchant"]
+	}
+}

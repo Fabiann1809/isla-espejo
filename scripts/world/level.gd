@@ -142,14 +142,14 @@ func generate(new_seed := 0) -> void:
 	_add_shadows()
 	generated.emit(layout)
 	if scenario.chapter_title != "" and not _intro_requested:
-		Events.message_requested.emit(scenario.chapter_title)
+		Events.message_requested.emit(UiText.data(scenario.chapter_title))
 	_announce_objective()
 
 
 ## Tells the HUD what to do now: the objective, or the follow-up once the boss is down.
 func _announce_objective() -> void:
 	var done := not _has_boss() or (scenario.objective_flag != &"" and GameState.has_flag(scenario.objective_flag))
-	Events.objective_changed.emit(scenario.objective_done if done else scenario.objective)
+	Events.objective_changed.emit(UiText.data(scenario.objective_done if done else scenario.objective))
 
 
 ## A chapter without its boss yet (the ruins, for now) has nothing to defeat: its exit is open and
@@ -172,7 +172,7 @@ func _on_scenario_completed(_scenario_id: StringName) -> void:
 		return
 	_completing = true
 	if scenario.completion_text != "":
-		Events.message_requested.emit(scenario.completion_text)
+		Events.message_requested.emit(UiText.data(scenario.completion_text))
 	await get_tree().create_timer(completion_delay).timeout
 	await _fade_veil(1.0, Tuning.MAP_VEIL_FADE_OUT)
 	if scenario.next_scenario == null and end_after_last_chapter:

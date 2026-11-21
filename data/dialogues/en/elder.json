@@ -1,0 +1,29 @@
+{
+	"speaker": "El Anciano",
+	"states": {
+		"first": [
+			"Another traveler… The island has been waiting for you.",
+			{"speaker": "Nico", "text": "Where am I? My compass is broken and I need to get home."},
+			"If you want to find the way back, you'll first have to learn to listen to the island.",
+			"The forest keeps something that belongs to you. But not everything it guards wants to be found."
+		],
+		"again": [
+			"The Guardian watches over the heart of the forest, at the end of the path.",
+			"Its roots will slow you down. If you defeat it, the island may lend you its strength.",
+			"And remember: the island watches how you fight."
+		],
+		"final": [
+			{"speaker": "Nico", "text": "I did it. The green fragment… the compass is shining again."},
+			"One of three. The Mountain Ruins hold the next one.",
+			"Be careful. The island learns from you more than you think."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["forest_boss_defeated"]},
+		{"state": "again", "requires": ["met_elder"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_elder"]
+	}
+}

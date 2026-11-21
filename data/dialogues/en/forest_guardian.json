@@ -1,0 +1,26 @@
+{
+	"speaker": "El Guardián",
+	"states": {
+		"first": [
+			"The trees told me about a traveler with a broken compass.",
+			{"speaker": "Nico", "text": "I need the fragment you're guarding. It's the only way to get home."},
+			"The fragment beats with the heart of the forest. Whoever takes it never leaves.",
+			{"speaker": "Nico", "text": "Then I'll take it anyway."},
+			"No one leaves the island. Let the roots decide."
+		],
+		"again": [
+			"The roots are not finished with you yet."
+		],
+		"final": [
+			"The forest… recognizes you."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["forest_boss_defeated"]},
+		{"state": "again", "requires": ["met_forest_guardian"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_forest_guardian"]
+	}
+}

@@ -190,7 +190,10 @@ func _play_sfx() -> void:
 
 
 func _load_story() -> Dictionary:
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(STORY_PATH))
+	var path := STORY_PATH
+	if Settings.language != "es" and FileAccess.file_exists(STORY_PATH.get_base_dir() + "/" + Settings.language + "/prologue.json"):
+		path = STORY_PATH.get_base_dir() + "/" + Settings.language + "/prologue.json"
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return parsed if parsed is Dictionary else {}
 
 

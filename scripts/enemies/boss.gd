@@ -218,7 +218,7 @@ func _on_hurtbox_hit(damage: int, from_position: Vector2) -> void:
 		if player != null:
 			_acquire_target(player)
 	_flash_hit()
-	Events.boss_health_changed.emit(_boss.id, health.current, health.max_health, _boss.display_name)
+	Events.boss_health_changed.emit(_boss.id, health.current, health.max_health, UiText.data(_boss.display_name))
 	if phase == 1 and health.current <= health.max_health * _boss.phase_two_threshold:
 		_enter_phase_two()
 
@@ -286,7 +286,7 @@ func _on_intro_dialogue_finished(_id: StringName, _state: StringName) -> void:
 func _begin_fight() -> void:
 	for line in _boss.intro_lines:
 		Events.message_requested.emit(line)
-	Events.boss_health_changed.emit(_boss.id, health.current, health.max_health, _boss.display_name)
+	Events.boss_health_changed.emit(_boss.id, health.current, health.max_health, UiText.data(_boss.display_name))
 
 
 func _on_died() -> void:

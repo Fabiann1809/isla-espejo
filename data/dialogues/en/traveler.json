@@ -1,0 +1,31 @@
+{
+	"speaker": "La Viajera",
+	"states": {
+		"first": [
+			"Stop. Don't take another step… Are you real? Here, sometimes, things aren't.",
+			{"speaker": "Nico", "text": "I'm Nico. I was shipwrecked on this island and I'm looking for the pieces of my compass to get home."},
+			"Home…? I know I've been here before… but I don't remember how I got here.",
+			"Look at the walls: names, tally marks, drawings of ships. Other travelers crossed these ruins before us.",
+			"None of them wrote down how they got out."
+		],
+		"again": [
+			"The ruins are not empty. Something crawls through the stone passages, and it has been here longer than any of us.",
+			"The Stone Serpent guards the blue fragment. It slides between the levels: when you lose sight of it, don't stand still.",
+			"And don't trust the silence. The stones of this place… listen."
+		],
+		"final": [
+			{"speaker": "Nico", "text": "The Serpent has fallen. The blue fragment is already shining in my compass."},
+			"So it's true. What this island puts in front of you can be beaten.",
+			"While you were fighting, I remembered something: a temple, an eclipse… and a man who talked about prices.",
+			"Go to the temple, Nico. If you find the way home, maybe I'll remember it too."
+		]
+	},
+	"rules": [
+		{"state": "final", "requires": ["ruins_boss_defeated"]},
+		{"state": "again", "requires": ["met_traveler"]},
+		{"state": "first"}
+	],
+	"on_finish": {
+		"first": ["met_traveler"]
+	}
+}

@@ -58,5 +58,5 @@ func _on_taken(player: Node) -> void:
 		player.skills.unlock(skill)
 	Events.message_requested.emit(fragment_message)
 	if skill != null:
-		Events.message_requested.emit(skill_message % skill.display_name)
+		Events.message_requested.emit(skill_message % UiText.data(skill.display_name))
 	queue_free()

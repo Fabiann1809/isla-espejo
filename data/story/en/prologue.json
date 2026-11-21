@@ -1,0 +1,43 @@
+{
+	"scenes": [
+		{
+			"id": "tormenta",
+			"video": "res://assets/video/prologue/01_tormenta.ogv",
+			"duration": 9.0,
+			"lines": [
+				{"speaker": "", "text": "The storm came without warning.", "at": 1.0, "until": 6.4, "place": "bottom"}
+			],
+			"sfx": [
+				{"at": 1.35, "cue": "thunder"},
+				{"at": 3.55, "cue": "thunder"},
+				{"at": 5.65, "cue": "thunder"},
+				{"at": 7.25, "cue": "thunder"}
+			]
+		},
+		{
+			"id": "despertar",
+			"video": "res://assets/video/prologue/02_despertar.ogv",
+			"duration": 10.57,
+			"lines": [
+				{"speaker": "", "text": "When Nico opened his eyes, the sea was no longer around him.", "at": 2.4, "until": 8.8, "place": "top"}
+			]
+		},
+		{
+			"id": "brujula",
+			"video": "res://assets/video/prologue/03_brujula.ogv",
+			"duration": 11.0,
+			"lines": [
+				{"speaker": "Nico", "text": "My compass… is broken. What is this place?", "at": 3.2, "until": 8.0, "place": "bottom"}
+			]
+		},
+		{
+			"id": "isla",
+			"video": "res://assets/video/prologue/04_isla.ogv",
+			"duration": 11.77,
+			"lines": [
+				{"speaker": "Nico", "text": "I don't know where I am… but I have to get home.", "at": 3.0, "until": 9.4, "place": "bottom_right"}
+			]
+		}
+	],
+	"hint": "E / J: next scene   ·   Esc: skip"
+}

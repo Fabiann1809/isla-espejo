@@ -10,6 +10,7 @@ var music_slider: HSlider
 var sfx_slider: HSlider
 var fullscreen_check: CheckButton
 var controller_button: Button
+var language_button: Button
 var back_button: Button
 var controller_panel: ControllerPanel
 
@@ -30,6 +31,10 @@ func _ready() -> void:
 	fullscreen_check.text = UiText.t("options_fullscreen")
 	box.add_child(fullscreen_check)
 
+	language_button = UiKit.button("")
+	language_button.pressed.connect(_cycle_language)
+	box.add_child(language_button)
+
 	controller_button = UiKit.button(UiText.t("options_controller"))
 	box.add_child(controller_button)
 
@@ -44,6 +49,17 @@ func _ready() -> void:
 	controller_button.pressed.connect(_open_controller)
 	back_button.pressed.connect(close)
 	hide()
+
+
+## Switches to the next language in `Settings.LANGUAGES` and shows its name on the button.
+func _cycle_language() -> void:
+	var index := Settings.LANGUAGES.find(Settings.language)
+	Settings.set_language(Settings.LANGUAGES[(index + 1) % Settings.LANGUAGES.size()])
+	_refresh_language_button()
+
+
+func _refresh_language_button() -> void:
+	language_button.text = "%s: %s" % [UiText.t("options_language"), UiText.t("language_current")]
 
 
 func open() -> void:
@@ -103,6 +119,7 @@ func refresh() -> void:
 	music_slider.set_value_no_signal(Settings.music_volume)
 	sfx_slider.set_value_no_signal(Settings.sfx_volume)
 	fullscreen_check.set_pressed_no_signal(Settings.fullscreen)
+	_refresh_language_button()
 
 
 ## A labeled 0..1 slider in a row of `box`.

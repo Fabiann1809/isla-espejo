@@ -70,7 +70,7 @@ func start(dialogue_id: StringName) -> bool:
 
 ## The parsed file of a dialogue, or an empty dictionary (with a warning) if it is missing or broken.
 func load_dialogue(dialogue_id: StringName) -> Dictionary:
-	var path := DIALOGUE_DIR + String(dialogue_id) + ".json"
+	var path := _localized_path(DIALOGUE_DIR, String(dialogue_id) + ".json")
 	if not FileAccess.file_exists(path):
 		push_warning("Dialogue '%s' not found (%s)." % [dialogue_id, path])
 		return {}
@@ -79,6 +79,15 @@ func load_dialogue(dialogue_id: StringName) -> Dictionary:
 		push_warning("Dialogue '%s' is not valid JSON." % dialogue_id)
 		return {}
 	return json.data
+
+
+## `data/dialogues/en/<id>.json` when the language is English and that file exists, else the Spanish one.
+static func _localized_path(dir: String, file_name: String) -> String:
+	if Settings.language != "es":
+		var localized := dir + Settings.language + "/" + file_name
+		if FileAccess.file_exists(localized):
+			return localized
+	return dir + file_name
 
 
 ## The state whose conditions are met: the first rule whose required flags are all set wins.
