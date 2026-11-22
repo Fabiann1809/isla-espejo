@@ -12,16 +12,18 @@ var fullscreen_check: CheckButton
 var controller_button: Button
 var language_button: Button
 var language_notice: Label
-## True after a language change made inside a running game, which is only applied on the main menu.
-var _language_pending := false
+## The language this panel's texts were built in: the notice shows while the chosen one differs.
+var _built_language := ""
 var back_button: Button
 var controller_panel: ControllerPanel
 
 
 func _ready() -> void:
 	theme = UiKit.theme()
+	_built_language = Settings.language
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	# Tight on purpose: with the language row and its notice the panel must still fit in 270 px.
+	box.add_theme_constant_override("separation", 2)
 	add_child(box)
 	box.add_child(UiKit.menu_label(UiText.t("options_title"), 20, UiKit.GOLD))
 	box.add_child(UiKit.divider())
@@ -38,6 +40,7 @@ func _ready() -> void:
 	language_button.pressed.connect(_cycle_language)
 	box.add_child(language_button)
 	language_notice = UiKit.menu_label("", 9, UiKit.TEXT_DIM)
+	language_notice.hide()
 	box.add_child(language_notice)
 
 	controller_button = UiKit.button(UiText.t("options_controller"))
@@ -67,7 +70,6 @@ func _cycle_language() -> void:
 		get_tree().reload_current_scene.call_deferred()
 	else:
 		# Inside a run a reload would lose the progress, so the new language waits for the main menu.
-		_language_pending = true
 		_refresh_language_notice()
 
 
@@ -81,7 +83,11 @@ func _inside_main_menu() -> bool:
 
 
 func _refresh_language_notice() -> void:
-	language_notice.text = UiText.t("language_pending") if _language_pending else ""
+	language_notice.visible = Settings.language != _built_language
+	language_notice.text = UiText.t("language_pending") if language_notice.visible else ""
+	# An anchored panel grows with the notice but does not shrink by itself when it goes away.
+	reset_size()
+	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 
 
 func _refresh_language_button() -> void:
