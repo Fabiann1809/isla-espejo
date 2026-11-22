@@ -906,8 +906,10 @@ func _use_shadow_style() -> void:
 	var size_scale := 1.0
 	var drop := 0.0
 	var bottom := -1.0
+	var contact := false
 	if scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.ROCKS:
 		alpha = Tuning.RUIN_SHADOW_ALPHA
+		contact = true
 	elif scenario.theme != null and scenario.theme.wall_style == RoomTheme.WallStyle.LAVA:
 		# The temple's platforms need everyone plainly on the ground: a stronger shadow, anchored under
 		# the feet so it never sticks out below them.
@@ -915,7 +917,7 @@ func _use_shadow_style() -> void:
 		size_scale = Tuning.TEMPLE_SHADOW_SCALE
 		drop = Tuning.TEMPLE_SHADOW_DROP
 		bottom = Tuning.TEMPLE_SHADOW_BOTTOM
-	ActorShadow.use_style(alpha, size_scale, drop, bottom)
+	ActorShadow.use_style(alpha, size_scale, drop, bottom, contact)
 
 
 ## The dark outer forest of `diseño-de-paisajes` (its own art), over the backdrop's void; for the

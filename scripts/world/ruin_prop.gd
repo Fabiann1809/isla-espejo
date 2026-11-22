@@ -70,21 +70,30 @@ const FOOTS := {
 	Kind.CAMPFIRE: Rect2(2, 9, 12, 6),
 }
 const TALL_FOOT := Rect2(3, 22, 10, 8)
-## Foot shadow of a prop: its center and size, relative to the prop's origin.
+## Foot shadow of a prop drawn with the tileset: the x of its middle and the width of its base. One
+## drawn with a picture of PROP_ART takes both from the picture (`_art_span`).
 const FOOT_SHADOWS := {
-	Kind.STATUE: [Vector2(16, 12), Vector2(30, 8)],
-	Kind.ALTAR: [Vector2(16, 29), Vector2(30, 8)],
-	Kind.PILLAR: [Vector2(8, 30), Vector2(14, 5)],
-	Kind.CRYSTAL: [Vector2(8, 30), Vector2(14, 5)],
-	Kind.STELE: [Vector2(8, 30), Vector2(14, 5)],
-	Kind.BOULDER: [Vector2(8, 14), Vector2(13, 4)],
-	Kind.STALAGMITE: [Vector2(8, 14), Vector2(12, 4)],
-	Kind.BRAZIER: [Vector2(8, 14), Vector2(12, 4)],
-	Kind.VASE: [Vector2(8, 14), Vector2(10, 4)],
-	Kind.GRAVE: [Vector2(8, 14), Vector2(11, 4)],
-	Kind.SCONCE: [Vector2(8, 14), Vector2(10, 4)],
-	Kind.CRYSTAL_BRAZIER: [Vector2(8, 14), Vector2(13, 4)],
+	Kind.STATUE: Vector2(16, 30),
+	Kind.ALTAR: Vector2(16, 30),
+	Kind.PILLAR: Vector2(8, 14),
+	Kind.CRYSTAL: Vector2(8, 14),
+	Kind.STELE: Vector2(8, 14),
+	Kind.BOULDER: Vector2(8, 13),
+	Kind.STALAGMITE: Vector2(8, 14),
+	Kind.BRAZIER: Vector2(8, 12),
+	Kind.TORCH: Vector2(8, 10),
+	Kind.LANTERN: Vector2(8, 10),
+	Kind.CAMPFIRE: Vector2(8, 14),
+	Kind.CRATE: Vector2(8, 14),
+	Kind.BARREL: Vector2(8, 12),
+	Kind.VASE: Vector2(8, 12),
+	Kind.GRAVE: Vector2(8, 12),
+	Kind.SCONCE: Vector2(8, 10),
+	Kind.CRYSTAL_BRAZIER: Vector2(8, 13),
 }
+
+## Middle x and width of the prop's picture (zero: drawn with the tileset).
+var _art_span := Vector2.ZERO
 
 
 func is_flat() -> bool:
@@ -186,16 +195,20 @@ func _build() -> void:
 	_foot_shadow()
 
 
-## A soft shadow on the floor around the foot of the bigger props (and of the ones that burn), under their art.
+## A contact shadow as wide as the base of a standing prop, reaching just below it and drawn with the floor.
 func _foot_shadow() -> void:
 	if not Tuning.RUIN_PROP_SHADOWS or not FOOT_SHADOWS.has(kind):
 		return
-	var spec: Array = FOOT_SHADOWS[kind]
+	var span: Vector2 = _art_span if _art_span != Vector2.ZERO else FOOT_SHADOWS[kind]
+	var height := clampf(span.y * Tuning.RUIN_PROP_SHADOW_HEIGHT_FACTOR,
+			Tuning.RUIN_PROP_SHADOW_MIN_HEIGHT, Tuning.RUIN_PROP_SHADOW_MAX_HEIGHT)
 	var shadow := ActorShadow.new()
 	shadow.name = ActorShadow.NODE_NAME
-	shadow.position = spec[0]
-	shadow.size = spec[1]
+	shadow.position = Vector2(span.x, _footprint_height() + Tuning.RUIN_PROP_SHADOW_BOTTOM - height / 2.0)
+	shadow.size = Vector2(span.y, height)
 	shadow.alpha = Tuning.RUIN_PROP_SHADOW_ALPHA
+	shadow.z_as_relative = false
+	shadow.z_index = RoomTheme.FLOOR_Z
 	add_child(shadow)
 	move_child(shadow, 0)
 
@@ -279,6 +292,7 @@ func _fire_art(art_name: String, fps: float) -> bool:
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.position = Vector2(TileArt.TILE / 2.0 - first.get_width() / 2.0, TileArt.TILE - first.get_height())
 	add_child(sprite)
+	_art_span = Vector2(TileArt.TILE / 2.0, first.get_width())
 	sprite.frame = randi() % count
 	sprite.play(&"burn")
 	return true
@@ -298,6 +312,7 @@ func _prop_sprite(texture: Texture2D, at: Vector2) -> Sprite2D:
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.position = at
 	add_child(sprite)
+	_art_span = Vector2(at.x + texture.get_width() / 2.0, texture.get_width())
 	return sprite
 
 

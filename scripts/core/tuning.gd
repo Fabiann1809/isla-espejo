@@ -191,6 +191,11 @@ const SHADOW_WIDTH_FACTOR := 0.7
 const SHADOW_HEIGHT_FACTOR := 0.35
 ## Shadow strength on the Ruinas' dark stone, where the normal one barely shows.
 const RUIN_SHADOW_ALPHA := 0.6
+## The Ruinas' contact shadow, measured on each actor's own art: how far its lower edge reaches below
+## the last row of the feet (px). What flies (the diving enemies) keeps a smaller one, detached that much lower.
+const RUIN_SHADOW_BOTTOM := 2.5
+const RUIN_FLIER_SHADOW_SCALE := 0.6
+const RUIN_FLIER_SHADOW_BOTTOM := 7.0
 ## A soft shadow at the foot of trees, bushes, rocks and standing stones (GroundShadow), drawn with the
 ## floor: how dark, its color, how wide for the picture's width (and at least, px), how flat, and how
 ## far it leans from the foot (px; light from the upper left).
@@ -311,6 +316,12 @@ const RUIN_LANTERN_LIGHT := Color(1.0, 0.7, 0.3, 0.32)
 const RUIN_LANTERN_LIGHT_RADIUS := 44.0
 const RUIN_PROP_SHADOWS := true
 const RUIN_PROP_SHADOW_ALPHA := 0.42
+## A prop's shadow: how flat it is for its base's width, within these heights (px), and how far its
+## lower edge reaches below the base (px), so a rim shows under the art.
+const RUIN_PROP_SHADOW_HEIGHT_FACTOR := 0.3
+const RUIN_PROP_SHADOW_MIN_HEIGHT := 4.0
+const RUIN_PROP_SHADOW_MAX_HEIGHT := 8.0
+const RUIN_PROP_SHADOW_BOTTOM := 2.0
 ## Chance that a platform's front tile carries hanging vines.
 const RUIN_PLATFORM_VINE_CHANCE := 0.3
 ## Floor variety of a ruin room (RuinShape._build_floor_detail): drift of darker/paler slabs (noise
