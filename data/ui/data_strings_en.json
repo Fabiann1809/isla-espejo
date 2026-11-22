@@ -19,7 +19,7 @@
 	"Esqueleto": "Skeleton",
 	"Guardián del bosque": "Forest Guardian",
 	"Forjador condenado": "Damned Smith",
-	"Soldado (plantilla)": "Soldier (template)",
+	"Soldado (plantilla)": "Soldier",
 	"Gusano de los puentes": "Bridge Worm",
 	"Manos del abismo": "Hands of the Abyss",
 	"Manta de hollín": "Soot Manta",
@@ -80,5 +80,9 @@
 	"Encuentra al Guardián del bosque": "Find the Forest Guardian",
 	"Cruza el portal": "Cross the portal",
 	"Encuentra a la Serpiente de piedra": "Find the Stone Serpent",
-	"Encuentra al Guardián antiguo": "Find the Ancient Guardian"
+	"Encuentra al Guardián antiguo": "Find the Ancient Guardian",
+	"El Anciano": "The Elder",
+	"El Guardián": "The Guardian",
+	"El Mercader": "The Merchant",
+	"La Viajera": "The Traveler"
 }

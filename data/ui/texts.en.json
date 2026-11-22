@@ -39,7 +39,7 @@
 	"prompt_default": "Interact",
 	"chest_heal": "You find a potion: you recover %d health.",
 	"chest_gold": "You find %d gold coins.",
-	"chest_upgrade": "A Merchant upgrade: %s!",
+	"chest_upgrade": "An upgrade from the Merchant: %s!",
 	"fragment_taken": "Compass fragment obtained.",
 	"skill_learned": "Skill learned: %s",
 	"save_corrupt": "The saved game could not be read.",

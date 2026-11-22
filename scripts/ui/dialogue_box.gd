@@ -48,7 +48,7 @@ static func style_of(speaker: String) -> Dictionary:
 func show_line(speaker: String, text: String, is_last: bool) -> void:
 	_is_last = is_last
 	_apply_style(style_of(speaker))
-	_name.text = speaker
+	_name.text = UiText.data(speaker)
 	_tag.visible = speaker != ""
 	_text.text = text
 	_text.visible_ratio = 0.0
