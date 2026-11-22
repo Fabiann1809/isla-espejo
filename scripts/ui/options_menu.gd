@@ -11,6 +11,9 @@ var sfx_slider: HSlider
 var fullscreen_check: CheckButton
 var controller_button: Button
 var language_button: Button
+var language_notice: Label
+## True after a language change made inside a running game, which is only applied on the main menu.
+var _language_pending := false
 var back_button: Button
 var controller_panel: ControllerPanel
 
@@ -34,6 +37,8 @@ func _ready() -> void:
 	language_button = UiKit.button("")
 	language_button.pressed.connect(_cycle_language)
 	box.add_child(language_button)
+	language_notice = UiKit.menu_label("", 9, UiKit.TEXT_DIM)
+	box.add_child(language_notice)
 
 	controller_button = UiKit.button(UiText.t("options_controller"))
 	box.add_child(controller_button)
@@ -56,6 +61,27 @@ func _cycle_language() -> void:
 	var index := Settings.LANGUAGES.find(Settings.language)
 	Settings.set_language(Settings.LANGUAGES[(index + 1) % Settings.LANGUAGES.size()])
 	_refresh_language_button()
+	if _inside_main_menu():
+		# The title screen is built from the texts when it opens: rebuild it now (deferred, so this
+		# button's signal finishes first). Nothing is lost there: no journey is running.
+		get_tree().reload_current_scene.call_deferred()
+	else:
+		# Inside a run a reload would lose the progress, so the new language waits for the main menu.
+		_language_pending = true
+		_refresh_language_notice()
+
+
+func _inside_main_menu() -> bool:
+	var node: Node = self
+	while node != null:
+		if node is MainMenu:
+			return true
+		node = node.get_parent()
+	return false
+
+
+func _refresh_language_notice() -> void:
+	language_notice.text = UiText.t("language_pending") if _language_pending else ""
 
 
 func _refresh_language_button() -> void:

@@ -57,5 +57,6 @@
 	"shop_full_health": "Ya tienes la vida completa.",
 	"hud_upgrade_level": "Nv%d",
 	"options_language": "Idioma",
-	"language_current": "Español"
+	"language_current": "Español",
+	"language_pending": "Idioma cambiado. Se aplicará al volver al menú principal."
 }

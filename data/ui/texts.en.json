@@ -57,5 +57,6 @@
 	"shop_no_gold": "You don't have enough gold.",
 	"shop_maxed_msg": "You can't upgrade that any further.",
 	"shop_full_health": "You already have full health.",
-	"hud_upgrade_level": "Lv%d"
+	"hud_upgrade_level": "Lv%d",
+	"language_pending": "Language changed. It will apply when you return to the main menu."
 }
