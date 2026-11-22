@@ -13,6 +13,8 @@ signal cleared
 const TILE := 16
 const WALL := 16
 const DOOR_WIDTH := 64
+## How far outside the room Nico's origin may be when he really enters (his body plus a tick's step).
+const ENTRY_SLACK := 2 * TILE
 const FLOOR_COLORS := {
 	RoomData.RoomType.START: Color(0.2, 0.42, 0.28),
 	RoomData.RoomType.COMBAT: Color(0.18, 0.3, 0.2),
@@ -512,6 +514,10 @@ func _build_trigger() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
+	# A body placed on a map overlaps, for one physics tick, whatever lies where it was before (the
+	# origin for a new Nico): that is no entrance.
+	if not home_rect().grow(ENTRY_SLACK).has_point(body.global_position):
+		return
 	_set_player_light(body, true)
 	_fade_darkness(true)
 	player_inside = true
@@ -520,7 +526,7 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _on_body_exited(body: Node2D) -> void:
-	if not body.is_in_group("player"):
+	if not body.is_in_group("player") or not player_inside:
 		return
 	_set_player_light(body, false)
 	_fade_darkness(false)

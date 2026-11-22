@@ -1,7 +1,7 @@
 extends SceneTree
 ## The entrance to the boss's arena: the first time Nico steps in, the screen dips and the camera breathes in,
 ## with no name or text. Ordinary rooms (and the start room) have no transition, it does not repeat in the same
-## map, and a headless run without asking has none.
+## map, and a headless run without asking has none. Being placed on a map is no entrance either.
 ## Run: godot --headless --path . --script res://tests/test_room_transition.gd
 
 var _ok := true
@@ -73,7 +73,54 @@ func _initialize() -> void:
 
 	level.queue_free()
 	await process_frame
+	await _check_placing_is_no_entrance()
 	quit(0 if _ok else 1)
+
+
+## Nico's body is still where it was (the origin for a new Nico) during the first tick of a map. With
+## the boss's arena there the camera breathed in, the intro saved that zoom and the whole map was then
+## played at 1.029, where a black line showed along the rooms' edges.
+func _check_placing_is_no_entrance() -> void:
+	var scenario: ScenarioData = load("res://data/scenarios/forest.tres")
+	var generator: Script = load("res://scripts/world/map_generator.gd")
+	var map_seed := 0
+	for candidate in range(1, 500):
+		var layout = generator.generate(scenario, candidate, {})
+		if layout.cells.has(Vector2i.ZERO) and layout.get_cell(Vector2i.ZERO).type == RoomData.RoomType.BOSS:
+			map_seed = candidate
+			break
+	_check(map_seed > 0, "there is a map with the arena at the origin to test")
+	var level: Node2D = load("res://scenes/levels/forest_level.tscn").instantiate()
+	level.intro_in_headless = true
+	level.chapter_intro = false
+	level.use_director = false
+	level.seed_value = map_seed
+	root.add_child(level)
+	for i in 4:
+		await physics_frame
+	var camera: Camera2D = level.player.get_node("Camera2D")
+	var arena = level.rooms[Vector2i.ZERO]
+	_check(not arena.visited and camera.zoom == Vector2.ONE,
+			"a new Nico does not enter the arena that lies at the origin (zoom %.3f)" % camera.zoom.x)
+	_check(level.rooms[level.layout.start_cell].player_inside, "he is in the start room")
+
+	# The next map, built while he stands where its arena will be.
+	level.player.global_position = arena.global_position + arena.center()
+	for i in 6:
+		await physics_frame
+	_check(arena.player_inside, "walking into that arena still counts")
+	Engine.time_scale = 30.0
+	for i in 120:
+		await process_frame
+	Engine.time_scale = 1.0
+	level.generate(map_seed)
+	for i in 4:
+		await physics_frame
+	arena = level.rooms[Vector2i.ZERO]
+	_check(not arena.visited and camera.zoom == Vector2.ONE,
+			"nor the next map's arena where he stood on the last one (zoom %.3f)" % camera.zoom.x)
+	level.queue_free()
+	await process_frame
 
 
 func _check(condition: bool, message: String) -> void:

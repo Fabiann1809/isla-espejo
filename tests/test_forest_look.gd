@@ -27,6 +27,8 @@ func _initialize() -> void:
 	var bare_total := 0
 	var tiles_total := 0
 	var bare_maps: Array[int] = []
+	var no_grass_below := 0
+	var no_earth_below := 0
 	for map_seed in range(1, SEEDS + 1):
 		level.generate(map_seed)
 		await _frames(1)
@@ -35,8 +37,17 @@ func _initialize() -> void:
 		tiles_total += bare.tiles
 		if bare.bare > 0:
 			bare_maps.append(map_seed)
+		var holes := _holes_below(level)
+		no_grass_below += holes.grass
+		no_earth_below += holes.earth
 	_check(bare_total == 0, "%d maps: every visible tile has ground (%d of %d bare, seeds %s)"
 			% [SEEDS, bare_total, tiles_total, bare_maps])
+	_check(no_grass_below == 0,
+			"%d maps: the backdrop's grass runs under every room and corridor (%d tiles open to the background)"
+			% [SEEDS, no_grass_below])
+	_check(no_earth_below == 0,
+			"%d maps: every tile of earth lies on the same earth, so a gap is no green line across a path (%d differ)"
+			% [SEEDS, no_earth_below])
 
 	# --- Where paths meet (a T or a cross) their inner corners are rounded, not square.
 	var square_corners := 0
@@ -238,6 +249,38 @@ func _bare_tiles(level: Node) -> Dictionary:
 			if not covered.has(Vector2i(x, y)):
 				bare += 1
 	return {"bare": bare, "tiles": area.get_area()}
+
+
+## What a floor drawn a pixel off would uncover: floor tiles with no grass in the backdrop, and tiles
+## of earth (paths and patches) without the same earth in the backdrop.
+func _holes_below(level: Node) -> Dictionary:
+	var backdrop: Node = level.get_node("Map/Backdrop")
+	var grass: TileMapLayer = backdrop.get_node("Ground0")
+	var floors: Array[Rect2] = []
+	for coord: Vector2i in level.layout.cells:
+		floors.append(level.room_rect(coord))
+	floors.append_array(level._corridor_floors)
+	var report := {"grass": 0, "earth": 0}
+	for rect in floors:
+		var first := Vector2i(rect.position) / 16
+		var last := Vector2i(rect.end) / 16
+		for y in range(first.y, last.y):
+			for x in range(first.x, last.x):
+				if grass.get_cell_source_id(Vector2i(x, y)) < 0:
+					report.grass += 1
+	var dirt_art: Script = load("res://scripts/world/dirt_art.gd")
+	if not dirt_art.available():
+		return report
+	var earth: TileSet = load("res://scripts/world/area_art.gd").tile_set(dirt_art.DIRT)
+	var below := backdrop.get_node_or_null("PathsBelow") as TileMapLayer
+	for layer in level.get_node("Map").find_children("*", "TileMapLayer", true, false):
+		if layer.tile_set != earth or layer.get_parent() == backdrop:
+			continue
+		var offset := Vector2i((layer.global_position / 16.0).round())
+		for cell in layer.get_used_cells():
+			if below == null or below.get_cell_atlas_coords(cell + offset) != layer.get_cell_atlas_coords(cell):
+				report.earth += 1
+	return report
 
 
 ## Path tiles of the whole map (rooms and corridors): concave corners drawn with an inner-corner tile

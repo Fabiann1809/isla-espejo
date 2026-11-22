@@ -2,9 +2,10 @@ class_name ForestBackdrop
 extends RefCounted
 ## The deep forest around a generated map: the rooms' grass and a thick wood of the team's forest art
 ## (assets/art_forest/) on every tile that is not a room or a corridor, so nothing black shows
-## between rooms, in empty grid cells or around the corridors. The trees are scattered (no grid)
-## and packed close, and the ForestShade darkens this whole floor (see Level), so the forest reads
-## as one dark wood around bright clearings.
+## between rooms, in empty grid cells or around the corridors. The grass also runs under the rooms
+## and corridors: a floor drawn a pixel off would show the clear color there as a black line.
+## The trees are scattered (no grid) and packed close, and the ForestShade darkens this whole floor
+## (see Level), so the forest reads as one dark wood around bright clearings.
 ## Purely decorative: no collision, drawn below every floor. Same seed = same forest.
 ## The trees are painted into a few big pictures (chunks): thousands of sprites would cost frames.
 
@@ -28,8 +29,7 @@ static func build(parent: Node, area: Rect2i, walkable: Dictionary,
 	var grass := TileArt.coords(TileArt.GRASS)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
-			if not walkable.has(Vector2i(x, y)):
-				ground.set_cell(Vector2i(x, y), 0, grass)
+			ground.set_cell(Vector2i(x, y), 0, grass)
 
 	var trees := _plant(area, walkable, taken, map_seed)
 	var rects: Array[Rect2] = []

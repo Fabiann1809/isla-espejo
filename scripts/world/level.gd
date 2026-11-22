@@ -863,6 +863,21 @@ func _paint_dirt(layers: Array[TileMapLayer], path: Dictionary, path_tile: Vecto
 			dirt.set_cell(cell, 0, Vector2i(0, AreaArt.row(earth, cell + offset)))
 	for patch in patches:
 		DirtArt.repaint_patch(patch, earth)
+	_lay_earth_below(earth)
+
+
+## The same earth on the backdrop, over its grass: where a floor is drawn a pixel off (the camera's
+## zoom moves during the intro and the arena's breath) a path shows earth, not a green line.
+func _lay_earth_below(earth: Dictionary) -> void:
+	var backdrop := _map.get_node_or_null("Backdrop")
+	if backdrop == null:
+		return
+	var below := DirtArt.new_layer("PathsBelow")
+	backdrop.add_child(below)
+	# Over the grass (the first child), under the trees' pictures.
+	backdrop.move_child(below, 1)
+	for cell: Vector2i in earth:
+		below.set_cell(cell, 0, Vector2i(0, AreaArt.row(earth, cell)))
 
 
 ## How far the backdrop (and the camera) reach past the rooms, in tiles: the temple's sea shows wider.
